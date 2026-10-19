@@ -1,0 +1,23 @@
+# Frontend
+**/node_modules/
+**/dist/
+**/.vite/
+
+# Backend
+**/build/
+**/.gradle/
+*.class
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Local OS files
+.DS_Store
+Thumbs.db
