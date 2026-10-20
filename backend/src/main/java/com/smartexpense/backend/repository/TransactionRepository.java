@@ -3,6 +3,8 @@ package com.smartexpense.backend.repository;
 import com.smartexpense.backend.entity.Transaction;
 import com.smartexpense.backend.enums.TransactionType;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -14,6 +16,41 @@ import java.util.Optional;
 
 public interface TransactionRepository
         extends JpaRepository<Transaction, Long> {
+
+    @Query(
+        value = """
+            SELECT t FROM Transaction t
+            JOIN FETCH t.category
+            WHERE t.user.id = :userId
+              AND (:type IS NULL OR t.type = :type)
+              AND (:categoryId IS NULL OR t.category.id = :categoryId)
+              AND (:startDate IS NULL OR t.transactionDate >= :startDate)
+              AND (:endDate IS NULL OR t.transactionDate < :endDate)
+              AND (:keyword IS NULL OR LOWER(t.note) LIKE LOWER(
+                      CONCAT('%', :keyword, '%')
+                  ))
+        """,
+        countQuery = """
+            SELECT COUNT(t) FROM Transaction t
+            WHERE t.user.id = :userId
+              AND (:type IS NULL OR t.type = :type)
+              AND (:categoryId IS NULL OR t.category.id = :categoryId)
+              AND (:startDate IS NULL OR t.transactionDate >= :startDate)
+              AND (:endDate IS NULL OR t.transactionDate < :endDate)
+              AND (:keyword IS NULL OR LOWER(t.note) LIKE LOWER(
+                      CONCAT('%', :keyword, '%')
+                  ))
+        """
+    )
+    Page<Transaction> searchTransactions(
+            @Param("userId") Long userId,
+            @Param("type") TransactionType type,
+            @Param("categoryId") Long categoryId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
+            @Param("keyword") String keyword,
+            Pageable pageable
+    );
 
     // Lấy giao dịch của user, mới nhất lên trước
     List<Transaction> findByUserIdOrderByTransactionDateDescIdDesc(
