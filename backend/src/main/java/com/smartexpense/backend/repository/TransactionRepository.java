@@ -1,5 +1,6 @@
 package com.smartexpense.backend.repository;
 
+import com.smartexpense.backend.dto.dashboard.CategoryExpenseResponse;
 import com.smartexpense.backend.entity.Transaction;
 import com.smartexpense.backend.enums.TransactionType;
 
@@ -16,6 +17,29 @@ import java.util.Optional;
 
 public interface TransactionRepository
         extends JpaRepository<Transaction, Long> {
+
+    // Thống kê tổng tiền chi theo từng danh mục trong khoảng ngày
+    @Query("""
+        SELECT new com.smartexpense.backend.dto.dashboard.CategoryExpenseResponse(
+            c.id,
+            c.name,
+            SUM(t.amount)
+        )
+        FROM Transaction t
+        JOIN t.category c
+        WHERE t.user.id = :userId
+          AND t.type = :type
+          AND t.transactionDate >= :startDate
+          AND t.transactionDate < :endDate
+        GROUP BY c.id, c.name
+        ORDER BY SUM(t.amount) DESC
+    """)
+    List<CategoryExpenseResponse> sumExpensesByCategory(
+            @Param("userId") Long userId,
+            @Param("type") TransactionType type,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
 
     @Query(
         value = """
