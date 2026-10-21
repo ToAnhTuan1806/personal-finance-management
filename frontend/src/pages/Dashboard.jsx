@@ -67,7 +67,7 @@ export default function Dashboard() {
   const totalExpense = expenses.reduce((acc, curr) => acc + curr.value, 0)
 
   return (
-    <div className="py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
+    <div className="space-y-8">
       {/* Header Banner */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white p-6 sm:p-8 rounded-2xl shadow-lg relative overflow-hidden">
         {/* Subtle decorative glow */}
