@@ -241,20 +241,21 @@ export default function Dashboard() {
           </div>
 
           <div className="mt-4 w-full">
-            <ResponsiveContainer width="100%" height={260}>
-              <PieChart margin={{ top: 10, right: 20, bottom: 10, left: 20 }}>
+            <ResponsiveContainer width="100%" height={290}>
+              <PieChart margin={{ top: 35, right: 30, bottom: 10, left: 30 }}>
                 <Pie
                   data={expenses}
                   dataKey="value"
                   nameKey="name"
                   cx="50%"
-                  cy="45%"
-                  innerRadius={50}
-                  outerRadius={80}
+                  cy="50%"
+                  innerRadius={46}
+                  outerRadius={70}
                   paddingAngle={3}
                   label={({ name, percent }) =>
                     `${name} (${(percent * 100).toFixed(0)}%)`
                   }
+                  labelLine={{ stroke: '#94a3b8', strokeWidth: 1 }}
                 >
                   {expenses.map((item, index) => (
                     <Cell
