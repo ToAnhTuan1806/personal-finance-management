@@ -7,6 +7,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import Categories from './pages/Categories'
+import Transactions from './pages/Transactions'
 
 // Trang tạm cho chức năng chưa triển khai
 function Placeholder({ title }) {
@@ -42,11 +43,7 @@ export default function App() {
         <Route element={<MainLayout />}>
           <Route path="/" element={<Dashboard />} />
           <Route path="/categories" element={<Categories />} />
-
-          <Route
-            path="/transactions"
-            element={<Placeholder title="Quản lý giao dịch" />}
-          />
+          <Route path="/transactions" element={<Transactions />} />
 
           <Route
             path="/budgets"
