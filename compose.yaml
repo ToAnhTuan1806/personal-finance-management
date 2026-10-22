@@ -24,6 +24,7 @@ services:
       - smartexpense-net
 
   backend:
+    image: ${BACKEND_IMAGE:-smartexpense-backend:latest}
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -49,6 +50,7 @@ services:
       - smartexpense-net
 
   frontend:
+    image: ${FRONTEND_IMAGE:-smartexpense-frontend:latest}
     build:
       context: ./frontend
       dockerfile: Dockerfile
