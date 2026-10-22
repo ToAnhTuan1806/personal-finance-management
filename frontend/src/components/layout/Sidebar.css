@@ -1,0 +1,349 @@
+/* Lucian UX/UI Prompt #040 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#040 */
+
+.se040 {
+  --se-ease: cubic-bezier(.2, .8, .2, 1);
+  --se-spring: cubic-bezier(.34, 1.45, .64, 1);
+  --se-ink: #16151b;
+  --se-page: #f4f2ee;
+  --se-highlight: rgba(244, 242, 238, .15);
+  --se-accent: #6a57f2;
+  --se-gradient: linear-gradient(120deg, #7b61ff, #3d8bff 55%, #1fb89a);
+  --se-rail-width: 76px;
+
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+}
+
+.se040.is-expanded {
+  --se-rail-width: 220px;
+}
+
+.se040-rail {
+  position: fixed;
+  top: 12px;
+  bottom: 12px;
+  left: 12px;
+  width: var(--se-rail-width);
+  padding: 12px 10px;
+  border-radius: 24px;
+  background: var(--se-ink);
+  color: var(--se-page);
+  overflow: visible;
+  pointer-events: auto;
+  transition: width .6s var(--se-spring);
+}
+
+.se040-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 44px;
+  margin-bottom: 14px;
+  overflow: hidden;
+  transition: padding-right .3s;
+}
+
+.se040.is-expanded .se040-top {
+  padding-right: 44px;
+}
+
+.se040-logo {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin-left: 10px;
+  border-radius: 12px;
+  background: var(--se-gradient);
+  color: white;
+}
+
+.se040-name {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -.03em;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity .25s;
+}
+
+.se040.is-expanded .se040-name {
+  opacity: 1;
+  transition: opacity .3s .15s;
+}
+
+.se040-toggle {
+  position: absolute;
+  top: 21px;
+  right: -13px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1.5px solid rgba(255, 255, 255, .22);
+  border-radius: 50%;
+  background: var(--se-ink);
+  color: var(--se-page);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .25);
+  cursor: pointer;
+  z-index: 20;
+  transition:
+    transform .3s var(--se-spring),
+    background .2s,
+    border-color .2s,
+    color .2s,
+    top .5s var(--se-spring),
+    right .5s var(--se-spring),
+    width .3s,
+    height .3s,
+    border-radius .3s,
+    opacity .2s;
+}
+
+.se040-toggle:hover {
+  background: var(--se-accent);
+  border-color: var(--se-accent);
+  color: white;
+  transform: scale(1.1);
+}
+
+.se040.is-expanded .se040-toggle {
+  top: 18px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, .14);
+  background: rgba(255, 255, 255, .08);
+  box-shadow: none;
+  transform: none;
+}
+
+.se040.is-expanded .se040-toggle:hover {
+  background: rgba(255, 255, 255, .18);
+  border-color: rgba(255, 255, 255, .25);
+  color: white;
+  transform: scale(1.05);
+}
+
+.se040-rail:hover .se040-toggle,
+.se040-toggle:focus-visible,
+.se040.is-expanded .se040-toggle {
+  opacity: 1;
+}
+
+.se040-toggle svg {
+  transition: transform .5s var(--se-spring);
+}
+
+.se040-menu {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.se040-menu-row {
+  position: relative;
+  height: 48px;
+  list-style: none;
+}
+
+.se040-highlight {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 48px;
+  border-radius: 15px;
+  background: var(--se-highlight);
+  pointer-events: none;
+  transform: translateY(calc(var(--se-active-index) * 52px));
+  transition: transform .5s var(--se-spring);
+}
+
+.se040-highlight::before {
+  content: "";
+  position: absolute;
+  left: -10px;
+  top: 12px;
+  bottom: 12px;
+  width: 4px;
+  border-radius: 0 4px 4px 0;
+  background: var(--se-gradient);
+}
+
+.se040-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  height: 48px;
+  padding-left: 16px;
+  border-radius: 15px;
+  color: inherit;
+  opacity: .62;
+  text-decoration: none;
+  transition: opacity .25s;
+}
+
+.se040-item:hover,
+.se040-item.is-active {
+  opacity: 1;
+}
+
+.se040-icon {
+  flex: none;
+}
+
+.se040-item-text {
+  font-size: 14px;
+  font-weight: 650;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateX(-8px);
+  transition:
+    opacity .2s,
+    transform .35s var(--se-ease);
+}
+
+.se040.is-expanded .se040-item-text {
+  opacity: 1;
+  transform: translateX(0);
+  transition:
+    opacity .3s var(--se-ease),
+    transform .5s var(--se-spring);
+  transition-delay: calc(.12s + var(--se-index) * 35ms);
+}
+
+.se040-profile {
+  position: absolute;
+  bottom: 12px;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 52px;
+  padding: 0 10px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, .08);
+}
+
+.se040-avatar {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #7b61ff, #2f8fe0);
+  color: white;
+}
+
+.se040-profile-info {
+  min-width: 0;
+  opacity: 0;
+  white-space: nowrap;
+  transition: opacity .25s;
+}
+
+.se040-profile-info strong,
+.se040-profile-info small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.se040-profile-info strong {
+  font-size: 12px;
+}
+
+.se040-profile-info small {
+  font-size: 10px;
+  opacity: .65;
+}
+
+.se040.is-expanded .se040-profile-info {
+  opacity: 1;
+  transition-delay: .25s;
+}
+
+.se040 a:focus-visible,
+.se040 button:focus-visible {
+  outline: 2px solid var(--se-accent);
+  outline-offset: 3px;
+}
+
+/* Responsive: trên mobile luôn hiển thị tên menu */
+@media (max-width: 1023px) {
+  .se040-rail {
+    width: 220px;
+    transform: translateX(-120%);
+    transition: transform .35s var(--se-ease);
+  }
+
+  .se040.is-open .se040-rail {
+    transform: translateX(0);
+  }
+
+  .se040-name,
+  .se040-item-text,
+  .se040-profile-info {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .se040-toggle {
+    display: none;
+  }
+
+  .se040-overlay {
+    position: fixed;
+    inset: 0;
+    border: 0;
+    background: rgba(0, 0, 0, .45);
+    pointer-events: auto;
+  }
+}
+
+/* Ánh xạ màu cho Dark Mode */
+:root[data-theme="dark"] .se040,
+.dark .se040 {
+  --se-ink: #101928;
+  --se-page: #f8fafc;
+  --se-highlight: rgba(255, 255, 255, .12);
+  --se-accent: #60a5fa;
+  --se-gradient: linear-gradient(120deg, #60a5fa, #3b82f6 55%, #34d399);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .se040 {
+    --se-ink: #101928;
+    --se-page: #f8fafc;
+  }
+}
+
+@media (hover: none) {
+  .se040-toggle {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .se040 *,
+  .se040 *::before,
+  .se040 *::after {
+    transition-duration: .001ms !important;
+    animation-duration: .001ms !important;
+  }
+}

@@ -1,527 +1,656 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router'
 import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-} from 'recharts'
-import {
-  TrendingUp,
-  TrendingDown,
-  Wallet,
-  PiggyBank,
-  ArrowUpRight,
-  ArrowDownRight,
   PlusCircle,
   Calendar,
-  Utensils,
-  ShoppingBag,
-  Car,
-  Briefcase,
   AlertCircle,
   Filter,
+  ArrowUpRight,
+  ArrowDownRight,
+  ChevronRight,
+  RefreshCw,
+  Loader2,
+  Wallet,
+  TrendingDown,
+  Layers,
+  PieChart,
 } from 'lucide-react'
 
-// Dữ liệu mẫu chỉ dùng kiểm tra biểu đồ
-const expenses = [
-  { name: 'Ăn uống', value: 1500000, color: '#3b82f6', icon: Utensils },
-  { name: 'Mua sắm', value: 1000000, color: '#f59e0b', icon: ShoppingBag },
-  { name: 'Đi lại', value: 500000, color: '#10b981', icon: Car },
-]
-
-const monthlyTrends = [
-  { month: 'T5', income: 9000000, expense: 3200000 },
-  { month: 'T6', income: 9500000, expense: 2800000 },
-  { month: 'T7', income: 9200000, expense: 3400000 },
-  { month: 'T8', income: 10000000, expense: 3100000 },
-  { month: 'T9', income: 9800000, expense: 2900000 },
-  { month: 'T10', income: 10000000, expense: 3000000 },
-]
-
-const recentTransactions = [
-  { id: 1, title: 'Lương tháng 10', category: 'Thu nhập', type: 'income', amount: 10000000, date: '2026-10-05', icon: Briefcase },
-  { id: 2, title: 'Siêu thị WinMart', category: 'Ăn uống', type: 'expense', amount: 450000, date: '2026-10-18', icon: Utensils },
-  { id: 3, title: 'Đổ xăng xe máy', category: 'Đi lại', type: 'expense', amount: 120000, date: '2026-10-19', icon: Car },
-  { id: 4, title: 'Mua áo sơ mi Uniqlo', category: 'Mua sắm', type: 'expense', amount: 650000, date: '2026-10-20', icon: ShoppingBag },
-]
-
-const COLORS = ['#3b82f6', '#f59e0b', '#10b981', '#8b5cf6', '#ec4899']
+import AnimatedMetrics from '../components/dashboard/AnimatedMetrics'
+import ExpenseDonutChart from '../components/dashboard/ExpenseDonutChart'
+import dashboardService from '../services/dashboardService'
+import { getTransactions } from '../services/transactionService'
 
 const formatMoney = (amount) =>
   new Intl.NumberFormat('vi-VN', {
     style: 'currency',
     currency: 'VND',
-  }).format(amount)
+    maximumFractionDigits: 0,
+  }).format(Number(amount || 0))
+
+const getCurrentMonth = () => {
+  const now = new Date()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+
+  return `${now.getFullYear()}-${month}`
+}
+
+const formatMonth = (value) => {
+  if (!value) return ''
+
+  const [year, month] = value.split('-')
+  return `tháng ${month}/${year}`
+}
+
+const formatDate = (value) => {
+  if (typeof value !== 'string') return value || ''
+
+  const parts = value.split('-')
+
+  return parts.length === 3
+    ? `${parts[2]}/${parts[1]}/${parts[0]}`
+    : value
+}
+
+function ErrorSection({ message }) {
+  return (
+    <div
+      className="flex min-h-72 flex-col items-center justify-center
+        gap-3 rounded-2xl border border-rose-200 bg-rose-50
+        p-6 text-center text-sm text-rose-700"
+      role="status"
+    >
+      <AlertCircle size={28} />
+      <p>{message}</p>
+    </div>
+  )
+}
 
 export default function Dashboard() {
-  const [selectedPeriod, setSelectedPeriod] = useState('Tháng này (10/2026)')
+  const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth)
 
-  const totalExpense = expenses.reduce((acc, curr) => acc + curr.value, 0)
+  // null biểu thị chưa có dữ liệu hoặc API đã thất bại
+  const [summary, setSummary] = useState(null)
+  const [categoryExpenses, setCategoryExpenses] = useState(null)
+  const [recentTransactions, setRecentTransactions] = useState(null)
+
+  const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+  const [error, setError] = useState('')
+  const [reloadKey, setReloadKey] = useState(0)
+
+  // Các kỳ tháng gần nhất
+  const monthOptions = useMemo(() => {
+    const options = []
+    const today = new Date()
+
+    for (let index = 0; index < 12; index++) {
+      const date = new Date(
+        today.getFullYear(),
+        today.getMonth() - index,
+        1
+      )
+
+      const value = [
+        date.getFullYear(),
+        String(date.getMonth() + 1).padStart(2, '0'),
+      ].join('-')
+
+      options.push({
+        value,
+        label: `Tháng ${String(
+          date.getMonth() + 1
+        ).padStart(2, '0')}/${date.getFullYear()}`,
+      })
+    }
+
+    return options
+  }, [])
+
+  // Tải đồng thời 3 phần dữ liệu của Dashboard
+  useEffect(() => {
+    let ignore = false
+
+    Promise.allSettled([
+      dashboardService.getSummary(selectedMonth),
+      dashboardService.getExpenseChartData(selectedMonth),
+      getTransactions({
+        month: selectedMonth,
+        page: 0,
+        size: 5,
+      }),
+    ])
+      .then(([summaryResult, categoryResult, transactionResult]) => {
+        if (ignore) return
+
+        const failedSections = []
+
+        // 1. Tổng thu / chi / số dư
+        if (summaryResult.status === 'fulfilled') {
+          setSummary(summaryResult.value)
+        } else {
+          console.error(
+            'Dashboard summary:',
+            summaryResult.reason
+          )
+
+          setSummary(null)
+          failedSections.push('tổng quan tài chính')
+        }
+
+        // 2. Chi tiêu theo danh mục
+        if (categoryResult.status === 'fulfilled') {
+          setCategoryExpenses(categoryResult.value)
+        } else {
+          console.error(
+            'Dashboard categories:',
+            categoryResult.reason
+          )
+
+          setCategoryExpenses(null)
+          failedSections.push('chi tiêu theo danh mục')
+        }
+
+        // 3. Danh sách giao dịch gần đây
+        if (
+          transactionResult.status === 'fulfilled' &&
+          Array.isArray(transactionResult.value?.content)
+        ) {
+          setRecentTransactions(
+            transactionResult.value.content
+          )
+        } else {
+          if (transactionResult.status === 'rejected') {
+            console.error(
+              'Dashboard transactions:',
+              transactionResult.reason
+            )
+          }
+
+          setRecentTransactions(null)
+          failedSections.push('giao dịch gần đây')
+        }
+
+        if (failedSections.length > 0) {
+          setError(
+            `Không thể tải: ${failedSections.join(', ')}. ` +
+            'Vui lòng thử làm mới Dashboard.'
+          )
+        } else {
+          setError('')
+        }
+      })
+      .catch((err) => {
+        if (ignore) return
+
+        console.error('Dashboard:', err)
+        setError('Không thể tải dữ liệu Dashboard.')
+      })
+      .finally(() => {
+        if (!ignore) {
+          setLoading(false)
+          setRefreshing(false)
+        }
+      })
+
+    // Khi đổi tháng nhanh, bỏ qua phản hồi của tháng cũ
+    return () => {
+      ignore = true
+    }
+  }, [selectedMonth, reloadKey])
+
+  const handleRefresh = () => {
+    if (loading || refreshing) return
+
+    setRefreshing(true)
+    setLoading(true)
+    setReloadKey((previous) => previous + 1)
+  }
+
+  // Tính toán thông tin tài chính thực tế từ dữ liệu API đã tải
+  const financialInsights = useMemo(() => {
+    if (
+      !categoryExpenses ||
+      !Array.isArray(categoryExpenses) ||
+      categoryExpenses.length === 0
+    ) {
+      return null
+    }
+
+    const validCategories = categoryExpenses.filter(
+      (item) => Number(item.amount || 0) > 0
+    )
+
+    if (validCategories.length === 0) return null
+
+    const sorted = [...validCategories].sort(
+      (a, b) => Number(b.amount || 0) - Number(a.amount || 0)
+    )
+
+    const topCategory = sorted[0]
+    const totalExpense =
+      summary?.totalExpense != null
+        ? Number(summary.totalExpense)
+        : validCategories.reduce(
+            (sum, item) => sum + Number(item.amount || 0),
+            0
+          )
+
+    const topPercentage =
+      totalExpense > 0 && topCategory?.amount
+        ? Math.round((Number(topCategory.amount) / totalExpense) * 100)
+        : 0
+
+    return {
+      topCategoryName:
+        topCategory.categoryName || topCategory.name || 'Chưa đặt tên',
+      topCategoryAmount: Number(topCategory.amount || 0),
+      topPercentage,
+      activeCategoriesCount: validCategories.length,
+      totalExpense,
+    }
+  }, [categoryExpenses, summary])
 
   return (
     <div className="space-y-8">
-      {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white p-6 sm:p-8 rounded-2xl shadow-lg relative overflow-hidden">
-        {/* Subtle decorative glow */}
-        <div className="absolute -top-12 -right-12 w-56 h-56 bg-blue-500/20 rounded-full blur-3xl pointer-events-none" />
-        
-        <div className="relative z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 text-blue-200 text-xs font-semibold mb-3 border border-blue-400/20">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-            Dashboard Thử Nghiệm – Dữ liệu Mẫu
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-            SmartExpense
-          </h1>
-          <p className="mt-1 text-slate-300 text-sm sm:text-base max-w-xl">
-            Tổng quan tài chính cá nhân, theo dõi dòng tiền và kế hoạch ngân sách thông minh.
-          </p>
-        </div>
+      {/* Header Dashboard */}
+      <section
+        className="relative overflow-hidden rounded-2xl
+          bg-gradient-to-r from-blue-900 via-indigo-900
+          to-slate-900 p-6 text-white shadow-lg sm:p-8"
+      >
+        <div
+          className="pointer-events-none absolute -right-12 -top-12
+            h-56 w-56 rounded-full bg-blue-500/20 blur-3xl"
+        />
 
-        {/* Quick Actions & Links */}
-        <div className="flex flex-wrap items-center gap-3 relative z-10">
-          <Link
-            to="/transactions"
-            className="flex items-center gap-2 px-4 py-2.5 bg-blue-500 hover:bg-blue-600 active:scale-95 text-white font-medium text-sm rounded-xl shadow-md transition-all"
-          >
-            <PlusCircle className="h-4 w-4" />
-            <span>Thêm giao dịch</span>
-          </Link>
-          <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-xl text-xs font-medium border border-white/10">
-            <Calendar className="h-3.5 w-3.5 text-blue-300 shrink-0" />
-            <select
-              value={selectedPeriod}
-              onChange={(e) => setSelectedPeriod(e.target.value)}
-              className="bg-transparent text-white focus:outline-none cursor-pointer text-xs pr-1"
+        <div
+          className="relative z-10 flex flex-col gap-5
+            sm:flex-row sm:items-center sm:justify-between"
+        >
+          <div>
+            <span
+              className="mb-3 inline-flex items-center gap-2
+                rounded-full border border-blue-400/20
+                bg-blue-500/20 px-3 py-1
+                text-xs font-semibold text-blue-200"
             >
-              <option value="Tháng này (10/2026)" className="text-slate-900">Tháng này (10/2026)</option>
-              <option value="Tháng trước (09/2026)" className="text-slate-900">Tháng trước (09/2026)</option>
-              <option value="Tháng 08/2026" className="text-slate-900">Tháng 08/2026</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {/* Navigation Shortcuts */}
-      <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-xl border border-slate-200/80 shadow-sm">
-        <div className="flex items-center gap-2 text-slate-500 text-xs font-semibold uppercase tracking-wider">
-          <Filter className="h-4 w-4 text-blue-600" />
-          <span>Điều hướng nhanh:</span>
-        </div>
-        <nav className="flex flex-wrap gap-2 text-sm font-medium">
-          <Link
-            to="/login"
-            className="px-3 py-1.5 rounded-lg text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-          >
-            Đăng nhập
-          </Link>
-          <Link
-            to="/categories"
-            className="px-3 py-1.5 rounded-lg text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-          >
-            Danh mục chi tiêu
-          </Link>
-          <Link
-            to="/transactions"
-            className="px-3 py-1.5 rounded-lg text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-          >
-            Lịch sử giao dịch
-          </Link>
-          <Link
-            to="/budgets"
-            className="px-3 py-1.5 rounded-lg text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-          >
-            Quản lý ngân sách
-          </Link>
-        </nav>
-      </div>
-
-      {/* KPI Cards */}
-      <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-        {/* Tổng thu */}
-        <div className="rounded-2xl bg-white p-5 border border-slate-200/80 shadow-sm hover:shadow-md transition-all group">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Tổng thu nhập
+              <Wallet size={14} />
+              SmartExpense Dashboard
             </span>
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 group-hover:scale-110 transition-transform">
-              <TrendingUp className="h-5 w-5" />
-            </div>
-          </div>
-          <p className="mt-3 text-2xl font-black text-slate-900 tracking-tight">
-            {formatMoney(10000000)}
-          </p>
-          <div className="mt-2 flex items-center gap-1.5 text-xs text-emerald-600 font-medium">
-            <ArrowUpRight className="h-3.5 w-3.5" />
-            <span>+15% so với tháng trước</span>
-          </div>
-        </div>
 
-        {/* Tổng chi */}
-        <div className="rounded-2xl bg-white p-5 border border-slate-200/80 shadow-sm hover:shadow-md transition-all group">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Tổng chi tiêu
-            </span>
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-50 text-rose-600 group-hover:scale-110 transition-transform">
-              <TrendingDown className="h-5 w-5" />
-            </div>
-          </div>
-          <p className="mt-3 text-2xl font-black text-slate-900 tracking-tight">
-            {formatMoney(3000000)}
-          </p>
-          <div className="mt-2 flex items-center gap-1.5 text-xs text-rose-500 font-medium">
-            <ArrowDownRight className="h-3.5 w-3.5" />
-            <span>30% tổng thu nhập</span>
-          </div>
-        </div>
+            <h1 className="text-2xl font-extrabold sm:text-3xl">
+              Tổng quan tài chính
+            </h1>
 
-        {/* Số dư */}
-        <div className="rounded-2xl bg-white p-5 border border-slate-200/80 shadow-sm hover:shadow-md transition-all group">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Số dư tích lũy
-            </span>
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600 group-hover:scale-110 transition-transform">
-              <Wallet className="h-5 w-5" />
-            </div>
-          </div>
-          <p className="mt-3 text-2xl font-black text-blue-700 tracking-tight">
-            {formatMoney(7000000)}
-          </p>
-          <div className="mt-2 flex items-center gap-1.5 text-xs text-blue-600 font-medium">
-            <span className="inline-block h-1.5 w-1.5 rounded-full bg-blue-600"></span>
-            <span>Khả dụng 70% ngân sách</span>
-          </div>
-        </div>
-
-        {/* Ngân sách mục tiêu */}
-        <div className="rounded-2xl bg-white p-5 border border-slate-200/80 shadow-sm hover:shadow-md transition-all group">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Hạn mức chi còn lại
-            </span>
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600 group-hover:scale-110 transition-transform">
-              <PiggyBank className="h-5 w-5" />
-            </div>
-          </div>
-          <p className="mt-3 text-2xl font-black text-amber-600 tracking-tight">
-            {formatMoney(4500000)}
-          </p>
-          <div className="mt-2 flex items-center gap-1.5 text-xs text-slate-500">
-            <span>Ngân sách tháng: {formatMoney(7500000)}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Charts Section */}
-      <div className="grid gap-6 grid-cols-1 lg:grid-cols-12">
-        {/* Pie Chart: Chi tiêu theo danh mục */}
-        <div className="lg:col-span-5 rounded-2xl bg-white p-6 border border-slate-200/80 shadow-sm flex flex-col">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-            <div>
-              <h2 className="text-lg font-bold text-slate-900">
-                Chi tiêu theo danh mục
-              </h2>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Phân bổ chi tiết tháng 10/2026
-              </p>
-            </div>
-            <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full">
-              {expenses.length} danh mục
-            </span>
+            <p className="mt-2 max-w-xl text-sm text-slate-300">
+              Theo dõi thu nhập, chi tiêu và số dư
+              của bạn theo từng tháng.
+            </p>
           </div>
 
-          <div className="mt-4 w-full">
-            <ResponsiveContainer width="100%" height={290}>
-              <PieChart margin={{ top: 35, right: 30, bottom: 10, left: 30 }}>
-                <Pie
-                  data={expenses}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={46}
-                  outerRadius={70}
-                  paddingAngle={3}
-                  label={({ name, percent }) =>
-                    `${name} (${(percent * 100).toFixed(0)}%)`
-                  }
-                  labelLine={{ stroke: '#94a3b8', strokeWidth: 1 }}
-                >
-                  {expenses.map((item, index) => (
-                    <Cell
-                      key={item.name}
-                      fill={COLORS[index % COLORS.length]}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip
-                  formatter={(value) => [formatMoney(value), 'Số tiền']}
-                  contentStyle={{
-                    backgroundColor: '#ffffff',
-                    borderRadius: '12px',
-                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-                    border: '1px solid #e2e8f0',
-                    fontSize: '13px',
-                  }}
-                />
-                <Legend
-                  verticalAlign="bottom"
-                  height={32}
-                  formatter={(value) => (
-                    <span className="text-xs font-medium text-slate-700">{value}</span>
-                  )}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Category Quick Details */}
-          <div className="mt-4 pt-4 border-t border-slate-100 space-y-2">
-            {expenses.map((item, idx) => {
-              const Icon = item.icon || ShoppingBag
-              const percentage = ((item.value / totalExpense) * 100).toFixed(1)
-              return (
-                <div
-                  key={item.name}
-                  className="flex items-center justify-between text-xs py-1 px-2 rounded-lg hover:bg-slate-50 transition-colors"
-                >
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: COLORS[idx % COLORS.length] }}
-                    />
-                    <Icon className="h-3.5 w-3.5 text-slate-500" />
-                    <span className="font-medium text-slate-700">{item.name}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-slate-400">({percentage}%)</span>
-                    <span className="font-bold text-slate-900">
-                      {formatMoney(item.value)}
-                    </span>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* Bar Chart: Biến động Thu & Chi 6 tháng */}
-        <div className="lg:col-span-7 rounded-2xl bg-white p-6 border border-slate-200/80 shadow-sm flex flex-col">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-            <div>
-              <h2 className="text-lg font-bold text-slate-900">
-                Xu hướng Thu nhập & Chi tiêu
-              </h2>
-              <p className="text-xs text-slate-500 mt-0.5">
-                So sánh dòng tiền 6 tháng gần nhất
-              </p>
-            </div>
-            <div className="flex items-center gap-4 text-xs font-semibold">
-              <div className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded bg-blue-600"></span>
-                <span className="text-slate-600">Thu nhập</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded bg-rose-400"></span>
-                <span className="text-slate-600">Chi tiêu</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-4 w-full">
-            <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={monthlyTrends} barGap={6} margin={{ top: 10, right: 10, bottom: 0, left: -10 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                <XAxis
-                  dataKey="month"
-                  stroke="#94a3b8"
-                  fontSize={12}
-                  tickLine={false}
-                />
-                <YAxis
-                  stroke="#94a3b8"
-                  fontSize={11}
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={(val) => `${val / 1000000}M`}
-                />
-                <Tooltip
-                  formatter={(value) => [formatMoney(value)]}
-                  contentStyle={{
-                    backgroundColor: '#ffffff',
-                    borderRadius: '12px',
-                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-                    border: '1px solid #e2e8f0',
-                    fontSize: '12px',
-                  }}
-                />
-                <Bar
-                  dataKey="income"
-                  name="Thu nhập"
-                  fill="#3b82f6"
-                  radius={[6, 6, 0, 0]}
-                />
-                <Bar
-                  dataKey="expense"
-                  name="Chi tiêu"
-                  fill="#fb7185"
-                  radius={[6, 6, 0, 0]}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-          <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-            <span>Dòng tiền trung bình mỗi tháng dương 6.8M ₫</span>
-            <span className="text-emerald-600 font-semibold">✓ Quản lý ổn định</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Recent Activity & Smart Tip */}
-      <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">
-        {/* Recent Transactions List */}
-        <div className="lg:col-span-2 rounded-2xl bg-white p-6 border border-slate-200/80 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="text-base font-bold text-slate-900">
-                Giao dịch gần đây
-              </h3>
-              <p className="text-xs text-slate-500">
-                4 giao dịch mới nhất được ghi nhận
-              </p>
-            </div>
+          <div className="flex flex-wrap items-center gap-3">
             <Link
               to="/transactions"
-              className="text-xs font-semibold text-blue-600 hover:text-blue-700 hover:underline"
+              className="inline-flex items-center gap-2
+                rounded-xl bg-blue-500 px-4 py-2.5
+                text-sm font-semibold text-white
+                transition-colors hover:bg-blue-600"
             >
-              Xem tất cả &rarr;
+              <PlusCircle size={18} />
+              Quản lý giao dịch
+            </Link>
+
+            <div
+              className="flex items-center gap-2 rounded-xl
+                border border-white/10 bg-white/10
+                px-3 py-2 backdrop-blur-md"
+            >
+              <Calendar size={17} className="text-blue-300" />
+
+              <select
+                value={selectedMonth}
+                aria-label="Chọn tháng thống kê"
+                onChange={(event) => {
+                  setSelectedMonth(event.target.value)
+                  setLoading(true)
+                }}
+                className="cursor-pointer bg-transparent
+                  text-xs font-semibold text-white
+                  outline-none"
+              >
+                {monthOptions.map((option) => (
+                  <option
+                    key={option.value}
+                    value={option.value}
+                    className="text-slate-900"
+                  >
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Điều hướng nhanh */}
+      <section
+        className="flex flex-wrap items-center justify-between
+          gap-4 rounded-xl border border-slate-200
+          bg-white p-4 shadow-sm
+          dark:border-slate-800 dark:bg-[#182234]"
+      >
+        <div
+          className="flex items-center gap-2 text-xs font-semibold
+            uppercase tracking-wider text-slate-500 dark:text-slate-400"
+        >
+          <Filter size={17} className="text-blue-600 dark:text-blue-400" />
+          Điều hướng nhanh
+        </div>
+
+        <nav className="flex flex-wrap gap-2 text-sm font-medium">
+          <Link
+            to="/categories"
+            className="rounded-lg px-3 py-2 text-slate-600
+              hover:bg-blue-50 hover:text-blue-600
+              dark:text-slate-300 dark:hover:bg-blue-950/40 dark:hover:text-blue-400 transition-colors"
+          >
+            Danh mục
+          </Link>
+
+          <Link
+            to="/transactions"
+            className="rounded-lg px-3 py-2 text-slate-600
+              hover:bg-blue-50 hover:text-blue-600
+              dark:text-slate-300 dark:hover:bg-blue-950/40 dark:hover:text-blue-400 transition-colors"
+          >
+            Giao dịch
+          </Link>
+
+          <Link
+            to="/budgets"
+            className="rounded-lg px-3 py-2 text-slate-600
+              hover:bg-blue-50 hover:text-blue-600
+              dark:text-slate-300 dark:hover:bg-blue-950/40 dark:hover:text-blue-400 transition-colors"
+          >
+            Ngân sách
+          </Link>
+        </nav>
+      </section>
+
+      {/* Cảnh báo nếu một hoặc nhiều API thất bại */}
+      {error && !loading && (
+        <div
+          role="alert"
+          className="flex flex-wrap items-center justify-between
+            gap-3 rounded-xl border border-amber-200
+            bg-amber-50 p-4 text-sm text-amber-800
+            dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-300"
+        >
+          <div className="flex items-center gap-2">
+            <AlertCircle size={19} />
+            <span>{error}</span>
+          </div>
+
+          <button
+            type="button"
+            disabled={refreshing}
+            onClick={handleRefresh}
+            className="inline-flex items-center gap-2
+              font-semibold hover:underline disabled:opacity-50"
+          >
+            <RefreshCw
+              size={15}
+              className={refreshing ? 'animate-spin' : ''}
+            />
+            Thử lại
+          </button>
+        </div>
+      )}
+
+      {/* Lucian Labs #098 + #097 */}
+      {loading ? (
+        <div
+          className="flex min-h-72 items-center justify-center gap-3
+            rounded-2xl border border-slate-200 bg-white
+            dark:border-slate-800 dark:bg-[#182234]"
+          role="status"
+        >
+          <Loader2
+            size={24}
+            className="animate-spin text-blue-600 dark:text-blue-400"
+          />
+          <span className="text-sm text-slate-500 dark:text-slate-400">
+            Đang tải thống kê {formatMonth(selectedMonth)}...
+          </span>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+          {summary ? (
+            <AnimatedMetrics
+              income={summary.totalIncome}
+              expense={summary.totalExpense}
+              balance={summary.balance}
+              onRefresh={handleRefresh}
+              refreshing={refreshing}
+            />
+          ) : (
+            <ErrorSection message="Không tải được tổng thu, tổng chi và số dư." />
+          )}
+
+          {categoryExpenses !== null ? (
+            <ExpenseDonutChart
+              data={categoryExpenses}
+              title="Chi tiêu theo danh mục"
+              subtitle={`Phân bổ chi tiêu ${formatMonth(selectedMonth)}`}
+            />
+          ) : (
+            <ErrorSection message="Không tải được biểu đồ chi tiêu theo danh mục." />
+          )}
+        </div>
+      )}
+
+      {/* Giao dịch gần đây + Thông tin */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <section
+          className="rounded-2xl border border-slate-200
+            bg-white p-5 shadow-sm lg:col-span-2 sm:p-6
+            dark:border-slate-800 dark:bg-[#182234]"
+        >
+          <div
+            className="mb-4 flex flex-wrap items-center
+              justify-between gap-3"
+          >
+            <div>
+              <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                Giao dịch gần đây
+              </h2>
+
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                5 giao dịch gần nhất trong {formatMonth(selectedMonth)}
+              </p>
+            </div>
+
+            <Link
+              to="/transactions"
+              className="inline-flex items-center gap-1
+                text-xs font-semibold text-blue-600 dark:text-blue-400
+                hover:underline"
+            >
+              Xem tất cả
+              <ChevronRight size={15} />
             </Link>
           </div>
 
-          <div className="divide-y divide-slate-100">
-            {recentTransactions.map((tx) => {
-              const Icon = tx.icon
-              const isIncome = tx.type === 'income'
-              return (
-                <div
-                  key={tx.id}
-                  className="py-3 flex items-center justify-between hover:bg-slate-50/70 px-2 rounded-xl transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`h-10 w-10 rounded-xl flex items-center justify-center ${
-                        isIncome
-                          ? 'bg-emerald-50 text-emerald-600'
-                          : 'bg-rose-50 text-rose-500'
-                      }`}
-                    >
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-slate-900">
-                        {tx.title}
-                      </p>
-                      <div className="flex items-center gap-2 text-xs text-slate-400">
-                        <span>{tx.category}</span>
-                        <span>•</span>
-                        <span>{tx.date}</span>
+          {loading ? (
+            <div className="py-14 text-center text-sm text-slate-400 dark:text-slate-500">
+              Đang tải giao dịch...
+            </div>
+          ) : recentTransactions === null ? (
+            <p className="py-14 text-center text-sm text-rose-600 dark:text-rose-400">
+              Không tải được danh sách giao dịch.
+            </p>
+          ) : recentTransactions.length === 0 ? (
+            <p className="py-14 text-center text-sm text-slate-400 dark:text-slate-500">
+              Chưa có giao dịch trong {formatMonth(selectedMonth)}.
+            </p>
+          ) : (
+            <div className="divide-y divide-slate-100 dark:divide-slate-800">
+              {recentTransactions.map((transaction) => {
+                const isIncome = transaction.type === 'INCOME'
+
+                return (
+                  <div
+                    key={transaction.id}
+                    className="flex items-center justify-between
+                      gap-4 rounded-xl px-2 py-4
+                      transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/40"
+                  >
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span
+                        className={`flex h-10 w-10 shrink-0 items-center
+                          justify-center rounded-xl ${
+                            isIncome
+                              ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400'
+                              : 'bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400'
+                          }`}
+                        aria-hidden="true"
+                      >
+                        {isIncome
+                          ? <ArrowUpRight size={20} />
+                          : <ArrowDownRight size={20} />}
+                      </span>
+
+                      <div className="min-w-0">
+                        <p
+                          className="truncate text-sm font-semibold
+                            text-slate-900 dark:text-slate-100"
+                          title={transaction.note || transaction.categoryName}
+                        >
+                          {transaction.note ||
+                            transaction.categoryName ||
+                            'Giao dịch'}
+                        </p>
+
+                        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                          {transaction.categoryName || 'Chưa phân loại'}
+                          {' · '}
+                          {formatDate(transaction.transactionDate)}
+                        </p>
                       </div>
                     </div>
-                  </div>
 
-                  <span
-                    className={`text-sm font-bold ${
-                      isIncome ? 'text-emerald-600' : 'text-slate-800'
-                    }`}
-                  >
-                    {isIncome ? `+${formatMoney(tx.amount)}` : `-${formatMoney(tx.amount)}`}
+                    <span
+                      className={`shrink-0 text-sm font-bold ${
+                        isIncome
+                          ? 'text-emerald-600 dark:text-emerald-400'
+                          : 'text-rose-600 dark:text-rose-400'
+                      }`}
+                    >
+                      {isIncome ? '+' : '-'}
+                      {formatMoney(transaction.amount)}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </section>
+
+        {/* Thẻ thông tin tài chính tính toán từ API thực tế */}
+        <aside
+          className="flex flex-col gap-4 rounded-2xl
+            border border-slate-200 bg-white p-6 shadow-sm
+            dark:border-slate-800 dark:bg-[#182234]"
+        >
+          <div className="flex items-center gap-2">
+            <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
+              Thông tin tài chính
+            </h2>
+          </div>
+
+          {financialInsights ? (
+            <>
+              {/* Danh mục chi nhiều nhất */}
+              <div className="rounded-xl bg-slate-50 p-4 border border-slate-100 dark:bg-[#1E293B] dark:border-slate-800/80">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    Chi tiêu nhiều nhất
+                  </p>
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400">
+                    <TrendingDown size={15} />
                   </span>
                 </div>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* Budget Status & Quick Card */}
-        <div className="rounded-2xl bg-white p-6 border border-slate-200/80 shadow-sm flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-bold text-slate-900">
-                Tiến độ ngân sách
-              </h3>
-              <Link
-                to="/budgets"
-                className="text-xs font-semibold text-blue-600 hover:underline"
-              >
-                Chi tiết
-              </Link>
-            </div>
-
-            <div className="space-y-4">
-              {/* Category 1 */}
-              <div>
-                <div className="flex justify-between text-xs font-medium text-slate-700 mb-1">
-                  <span>Ăn uống</span>
-                  <span>1.5M / 2.0M ₫ (75%)</span>
-                </div>
-                <div className="w-full bg-slate-100 rounded-full h-2">
-                  <div
-                    className="bg-blue-600 h-2 rounded-full"
-                    style={{ width: '75%' }}
-                  ></div>
-                </div>
+                <p
+                  className="mt-2 text-base font-extrabold text-slate-900 dark:text-slate-100 truncate"
+                  title={financialInsights.topCategoryName}
+                >
+                  {financialInsights.topCategoryName}
+                </p>
+                <p className="mt-1 text-xs text-rose-600 dark:text-rose-400 font-semibold">
+                  {formatMoney(financialInsights.topCategoryAmount)}{' '}
+                  <span className="text-slate-400 dark:text-slate-500 font-normal">
+                    ({financialInsights.topPercentage}% tổng chi)
+                  </span>
+                </p>
               </div>
 
-              {/* Category 2 */}
-              <div>
-                <div className="flex justify-between text-xs font-medium text-slate-700 mb-1">
-                  <span>Mua sắm</span>
-                  <span>1.0M / 1.5M ₫ (66%)</span>
+              {/* Danh mục đang phát sinh chi tiêu */}
+              <div className="rounded-xl bg-slate-50 p-4 border border-slate-100 dark:bg-[#1E293B] dark:border-slate-800/80">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    Danh mục hoạt động
+                  </p>
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400">
+                    <Layers size={15} />
+                  </span>
                 </div>
-                <div className="w-full bg-slate-100 rounded-full h-2">
-                  <div
-                    className="bg-amber-500 h-2 rounded-full"
-                    style={{ width: '66%' }}
-                  ></div>
-                </div>
+                <p className="mt-2 text-base font-extrabold text-slate-900 dark:text-slate-100">
+                  {financialInsights.activeCategoriesCount} danh mục
+                </p>
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                  Tổng chi tiêu:{' '}
+                  <strong className="text-slate-800 dark:text-slate-200">
+                    {formatMoney(financialInsights.totalExpense)}
+                  </strong>
+                </p>
               </div>
 
-              {/* Category 3 */}
-              <div>
-                <div className="flex justify-between text-xs font-medium text-slate-700 mb-1">
-                  <span>Đi lại</span>
-                  <span>500K / 1.0M ₫ (50%)</span>
-                </div>
-                <div className="w-full bg-slate-100 rounded-full h-2">
-                  <div
-                    className="bg-emerald-500 h-2 rounded-full"
-                    style={{ width: '50%' }}
-                  ></div>
-                </div>
+              {/* Thẻ ghi nhận tính toàn vẹn */}
+              <div className="mt-auto rounded-xl border border-blue-100 bg-blue-50 p-4 text-xs text-blue-900 dark:border-blue-900/40 dark:bg-blue-950/30 dark:text-blue-300">
+                <p className="font-semibold">
+                  Dữ liệu tài chính thời gian thực
+                </p>
+                <p className="mt-1 leading-relaxed text-blue-800 dark:text-blue-300/80">
+                  Thống kê được tính trực tiếp từ dữ liệu {formatMonth(selectedMonth)}.
+                </p>
               </div>
+            </>
+          ) : (
+            <div className="flex flex-1 flex-col items-center justify-center text-center p-6 rounded-xl bg-slate-50 border border-slate-100 dark:bg-[#1E293B] dark:border-slate-800/80">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500 mb-3">
+                <PieChart size={24} />
+              </div>
+              <p className="font-bold text-sm text-slate-800 dark:text-slate-200">
+                Chưa có dữ liệu phân tích
+              </p>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 max-w-xs">
+                Tháng này chưa ghi nhận khoản chi tiêu nào. Thêm giao dịch để hệ thống phân tích danh mục chi nhiều nhất.
+              </p>
             </div>
-          </div>
+          )}
 
-          {/* Smart alert card */}
-          <div className="mt-6 p-4 rounded-xl bg-blue-50/60 border border-blue-100 flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-blue-600 shrink-0 mt-0.5" />
-            <div className="text-xs text-blue-900">
-              <span className="font-semibold block">Gợi ý tài chính:</span>
-              Bạn đang chi tiêu tốt trong tuần này! Mục ăn uống đã đạt 75% ngân sách, hãy cân nhắc nấu ăn tại nhà các ngày cuối tuần.
-            </div>
-          </div>
-        </div>
+          <Link
+            to="/budgets"
+            className="inline-flex items-center justify-center gap-2
+              rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white
+              hover:bg-blue-700 transition-colors shadow-sm shadow-blue-500/20 active:scale-95"
+          >
+            <Wallet size={18} />
+            Quản lý ngân sách
+          </Link>
+        </aside>
       </div>
     </div>
   )

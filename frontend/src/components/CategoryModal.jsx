@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { X, Loader2 } from 'lucide-react'
 
 function CategoryModalContent({
@@ -12,6 +12,16 @@ function CategoryModalContent({
     type: category?.type ?? 'EXPENSE',
   })
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && !saving) {
+        onClose()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [saving, onClose])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -51,12 +61,12 @@ function CategoryModalContent({
       role="dialog"
       aria-modal="true"
       aria-labelledby="category-modal-title"
-      className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-slate-100"
+      className="w-full max-w-md rounded-2xl bg-white dark:bg-[#182234] p-6 shadow-2xl border border-slate-100 dark:border-slate-800"
     >
-      <div className="mb-6 flex items-center justify-between pb-3 border-b border-slate-100">
+      <div className="mb-6 flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
         <h2
           id="category-modal-title"
-          className="text-lg font-bold text-slate-800"
+          className="text-lg font-bold text-slate-800 dark:text-slate-100"
         >
           {category ? 'Chỉnh sửa danh mục' : 'Thêm danh mục mới'}
         </h2>
@@ -65,7 +75,7 @@ function CategoryModalContent({
           onClick={onClose}
           disabled={saving}
           aria-label="Đóng"
-          className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+          className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg"
         >
           <X size={20} />
         </button>
@@ -73,7 +83,7 @@ function CategoryModalContent({
 
       <form noValidate onSubmit={handleSubmit}>
         <div className="mb-4">
-          <label htmlFor="category-name" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-700">
+          <label htmlFor="category-name" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
             Tên danh mục
           </label>
 
@@ -89,13 +99,13 @@ function CategoryModalContent({
             aria-invalid={!!error}
             className={`w-full rounded-xl border p-3 text-sm outline-none transition
               ${error
-                ? 'border-red-500 bg-red-50 focus:border-red-600'
-                : 'border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-500/20'}`}
+                ? 'border-red-500 bg-red-50 dark:bg-rose-950/30 text-rose-900 dark:text-rose-200 focus:border-red-600'
+                : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-[#1E293B] text-slate-800 dark:text-slate-100 focus:border-blue-600 focus:ring-2 focus:ring-blue-500/20'}`}
           />
         </div>
 
         <div className="mb-5">
-          <label htmlFor="category-type" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-700">
+          <label htmlFor="category-type" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
             Loại danh mục
           </label>
 
@@ -105,7 +115,7 @@ function CategoryModalContent({
             onChange={(e) =>
               setForm((prev) => ({ ...prev, type: e.target.value }))
             }
-            className="w-full rounded-xl border border-slate-300 p-3 text-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20 bg-white"
+            className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#1E293B] text-slate-800 dark:text-slate-100 p-3 text-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
           >
             <option value="EXPENSE">Chi tiêu (EXPENSE)</option>
             <option value="INCOME">Thu nhập (INCOME)</option>
@@ -113,7 +123,7 @@ function CategoryModalContent({
         </div>
 
         {error && (
-          <p role="alert" className="mb-4 text-xs font-medium text-red-600 bg-red-50 p-2.5 rounded-lg border border-red-200">
+          <p role="alert" className="mb-4 text-xs font-medium text-red-600 dark:text-rose-400 bg-red-50 dark:bg-rose-950/40 p-2.5 rounded-lg border border-red-200 dark:border-rose-900/50">
             {error}
           </p>
         )}
@@ -123,7 +133,7 @@ function CategoryModalContent({
             type="button"
             onClick={onClose}
             disabled={saving}
-            className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"
+            className="rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
           >
             Hủy
           </button>

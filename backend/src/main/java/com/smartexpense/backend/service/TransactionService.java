@@ -23,17 +23,20 @@ public class TransactionService {
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
 
-    // Lấy danh sách có lọc và phân trang
+    // Lấy danh sách giao dịch, lọc theo tháng hoặc khoảng ngày
     @Transactional(readOnly = true)
     public Page<TransactionResponse> getAll(
             Long userId,
             TransactionType type,
             Long categoryId,
             String month,
+            LocalDate startDate,
+            LocalDate endDate,
             String keyword,
             int page,
             int size) {
-        // Giới hạn kích thước trang để tránh truy vấn quá lớn
+
+        // Kiểm tra thông số phân trang
         if (page < 0 || size < 1 || size > 100) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
@@ -41,15 +44,62 @@ public class TransactionService {
             );
         }
 
-        LocalDate startDate = null;
-        LocalDate endDate = null;
+        boolean hasMonth = month != null && !month.isBlank();
+        boolean hasStartDate = startDate != null;
+        boolean hasEndDate = endDate != null;
+        boolean hasDateRange = hasStartDate || hasEndDate;
 
-        // Chuyển YYYY-MM thành khoảng ngày của tháng
-        if (month != null && !month.isBlank()) {
+        // Không cho lọc theo tháng và khoảng ngày cùng lúc
+        if (hasMonth && hasDateRange) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Chỉ được lọc theo tháng hoặc khoảng ngày"
+            );
+        }
+
+        // Khoảng ngày phải có đủ ngày bắt đầu và kết thúc
+        if (hasDateRange && (!hasStartDate || !hasEndDate)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Vui lòng cung cấp đủ startDate và endDate"
+            );
+        }
+
+        LocalDate fromDate = null;
+        LocalDate toDateExclusive = null;
+
+        if (hasDateRange) {
+            // Kiểm tra ngày bắt đầu <= ngày kết thúc
+            if (startDate.isAfter(endDate)) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu"
+                );
+            }
+
+            // Tránh tràn ngày khi cộng thêm 1
+            if (endDate.equals(LocalDate.MAX)) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Ngày kết thúc vượt giới hạn cho phép"
+                );
+            }
+
+            fromDate = startDate;
+
+            // Repository dùng điều kiện transactionDate < endDate
+            // nên cộng 1 ngày để bao gồm ngày kết thúc đã chọn
+            toDateExclusive = endDate.plusDays(1);
+
+        } else if (hasMonth) {
             try {
                 YearMonth yearMonth = YearMonth.parse(month);
-                startDate = yearMonth.atDay(1);
-                endDate = yearMonth.plusMonths(1).atDay(1);
+
+                fromDate = yearMonth.atDay(1);
+                toDateExclusive = yearMonth
+                        .plusMonths(1)
+                        .atDay(1);
+
             } catch (DateTimeParseException ex) {
                 throw new ResponseStatusException(
                         HttpStatus.BAD_REQUEST,
@@ -58,8 +108,13 @@ public class TransactionService {
             }
         }
 
-        String searchKeyword = (keyword == null || keyword.isBlank()) ? null : keyword.trim();
+        // Chuẩn hóa từ khóa tìm kiếm
+        String searchKeyword =
+                (keyword == null || keyword.isBlank())
+                        ? null
+                        : keyword.trim();
 
+        // Sắp xếp mới nhất trước
         Pageable pageable = PageRequest.of(
                 page,
                 size,
@@ -69,12 +124,13 @@ public class TransactionService {
                 )
         );
 
+        // Giữ nguyên Repository tìm kiếm của dự án
         return transactionRepository.searchTransactions(
                 userId,
                 type,
                 categoryId,
-                startDate,
-                endDate,
+                fromDate,
+                toDateExclusive,
                 searchKeyword,
                 pageable
         ).map(this::toResponse);

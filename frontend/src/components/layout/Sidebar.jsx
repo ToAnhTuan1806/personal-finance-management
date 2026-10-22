@@ -1,92 +1,176 @@
-import { NavLink } from 'react-router'
+/* Lucian UX/UI Prompt #040 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#040 */
+
+import { useEffect, useRef } from 'react'
+import { NavLink, useLocation } from 'react-router'
 import {
-  LayoutDashboard,
-  Tags,
-  ArrowLeftRight,
   Wallet,
+  LayoutDashboard,
+  ArrowLeftRight,
+  Tags,
+  PanelLeftClose,
   X,
+  UserRound,
 } from 'lucide-react'
 
+import './Sidebar.css'
+
 const menus = [
-  { path: '/', label: 'Tổng quan', icon: LayoutDashboard },
-  { path: '/categories', label: 'Danh mục', icon: Tags },
+  { path: '/', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/transactions', label: 'Giao dịch', icon: ArrowLeftRight },
+  { path: '/categories', label: 'Danh mục', icon: Tags },
   { path: '/budgets', label: 'Ngân sách', icon: Wallet },
 ]
 
-export default function Sidebar({ open, onClose }) {
+export default function Sidebar({
+  expanded,
+  mobileOpen,
+  onToggle,
+  onClose,
+  user,
+}) {
+  const location = useLocation()
+  const linksRef = useRef([])
+
+  const selected = menus.findIndex((item) =>
+    item.path === '/'
+      ? location.pathname === '/'
+      : location.pathname.startsWith(item.path)
+  )
+
+  const activeIndex = Math.max(0, selected)
+
+  // Focus mục đầu tiên khi mở menu trên điện thoại
+  useEffect(() => {
+    if (mobileOpen) linksRef.current[activeIndex]?.focus()
+  }, [mobileOpen, activeIndex])
+
+  // Lắng nghe phím Escape trên toàn trang khi drawer mobile đang mở
+  useEffect(() => {
+    if (!mobileOpen) return
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        onClose()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [mobileOpen, onClose])
+
+  // Di chuyển focus bằng phím mũi tên
+  const handleArrowKeys = (event, index) => {
+    const direction =
+      event.key === 'ArrowDown' ? 1 :
+      event.key === 'ArrowUp' ? -1 : 0
+
+    if (!direction) return
+
+    event.preventDefault()
+    const next = (index + direction + menus.length) % menus.length
+    linksRef.current[next]?.focus()
+  }
+
   return (
-    <>
-      {/* Lớp phủ khi mở menu trên điện thoại */}
-      {open && (
-        <div
-          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs lg:hidden transition-opacity"
+    <aside
+      className={`se040 ${expanded ? 'is-expanded' : ''}
+        ${mobileOpen ? 'is-open' : ''}`}
+      onKeyDown={(event) => {
+        if (event.key === 'Escape' && mobileOpen) onClose()
+      }}
+    >
+      {mobileOpen && (
+        <button
+          type="button"
+          className="se040-overlay"
           onClick={onClose}
+          aria-label="Đóng menu điều hướng"
+          tabIndex={-1}
         />
       )}
 
-      <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-64
-          flex-col border-r border-slate-200/80 bg-white
-          transition-transform duration-200 ease-in-out lg:translate-x-0
-          ${open ? 'translate-x-0 shadow-2xl' : '-translate-x-full'}`}
+      <nav
+        id="smart-sidebar"
+        className="se040-rail"
+        aria-label="Điều hướng SmartExpense"
       >
-        <div className="flex h-20 items-center justify-between border-b border-slate-100 px-6">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-700 to-indigo-600 text-white shadow-md shadow-blue-500/20">
-              <Wallet size={22} />
-            </div>
-            <div>
-              <span className="text-xl font-black tracking-tight text-blue-900 block leading-tight">
-                SmartExpense
-              </span>
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-blue-600 block">
-                Quản lý tài chính
-              </span>
-            </div>
+        <div
+          className="se040-top"
+          onClick={() => {
+            if (!expanded) onToggle()
+          }}
+          style={{ cursor: !expanded ? 'pointer' : 'default' }}
+          title={!expanded ? 'Mở rộng Sidebar' : undefined}
+        >
+          <div className="se040-logo" aria-hidden="true">
+            <Wallet size={21} />
           </div>
+          <span className="se040-name">SmartExpense</span>
 
-          <button
-            onClick={onClose}
-            aria-label="Đóng menu"
-            className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg lg:hidden"
-          >
-            <X size={20} />
-          </button>
-        </div>
-
-        <nav className="flex-1 space-y-1.5 p-4">
-          {menus.map(({ path, label, icon: Icon }) => (
-            <NavLink
-              key={path}
-              to={path}
-              end={path === '/'}
+          {mobileOpen && (
+            <button
+              type="button"
               onClick={onClose}
-              className={({ isActive }) =>
-                `flex items-center gap-3 rounded-xl px-4 py-3
-                text-sm font-semibold transition-all
-                ${isActive
-                  ? 'bg-blue-50 text-blue-700 shadow-xs'
-                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`
-              }
+              aria-label="Đóng Sidebar"
+              className="ml-auto rounded-lg p-1.5 text-slate-300 hover:bg-white/10 lg:hidden"
             >
-              {({ isActive }) => (
-                <>
-                  <Icon
-                    size={20}
-                    className={isActive ? 'text-blue-600' : 'text-slate-400'}
-                  />
-                  <span>{label}</span>
-                </>
-              )}
-            </NavLink>
-          ))}
-        </nav>
-
-        <div className="border-t border-slate-100 p-4 text-center text-xs text-slate-400">
-          SmartExpense v1.0 • Spring Boot + React
+              <X size={18} />
+            </button>
+          )}
         </div>
-      </aside>
-    </>
+
+        <button
+          type="button"
+          className="se040-toggle"
+          aria-label={expanded ? 'Thu gọn Sidebar' : 'Mở rộng Sidebar'}
+          title={expanded ? 'Thu gọn Sidebar' : 'Mở rộng Sidebar'}
+          aria-expanded={expanded}
+          onClick={onToggle}
+        >
+          <PanelLeftClose
+            size={expanded ? 17 : 14}
+            className={expanded ? 'rotate-0' : 'rotate-180'}
+          />
+        </button>
+
+        <ul
+          className="se040-menu"
+          style={{ '--se-active-index': activeIndex }}
+        >
+          <li className="se040-highlight" aria-hidden="true" />
+
+          {menus.map(({ path, label, icon: Icon }, index) => (
+            <li key={path} className="se040-menu-row">
+              <NavLink
+                ref={(element) => {
+                  linksRef.current[index] = element
+                }}
+                to={path}
+                end={path === '/'}
+                onClick={onClose}
+                onKeyDown={(event) => handleArrowKeys(event, index)}
+                title={label}
+                aria-label={label}
+                style={{ '--se-index': index }}
+                className={({ isActive }) =>
+                  `se040-item ${isActive ? 'is-active' : ''}`
+                }
+              >
+                <Icon size={22} className="se040-icon" />
+                <span className="se040-item-text">{label}</span>
+              </NavLink>
+            </li>
+          ))}
+        </ul>
+
+        <div className="se040-profile">
+          <div className="se040-avatar">
+            <UserRound size={19} />
+          </div>
+          <div className="se040-profile-info">
+            <strong>{user?.fullName || 'Người dùng'}</strong>
+            <small>{user?.email || 'Tài khoản SmartExpense'}</small>
+          </div>
+        </div>
+      </nav>
+    </aside>
   )
 }

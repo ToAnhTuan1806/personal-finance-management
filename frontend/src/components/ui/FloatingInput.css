@@ -1,0 +1,214 @@
+/* Lucian UX/UI Prompt #025 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#025 */
+
+.se025 {
+  --se025-surface: var(--se062-surface, #ffffff);
+  --se025-ink: var(--se062-ink, #16151b);
+  --se025-muted: var(--se062-muted, #8e8a97);
+  --se025-line: var(--se062-line, rgba(22, 21, 27, .17));
+  --se025-accent: var(--se062-accent, #6a57f2);
+  --se025-danger: var(--se062-danger, #d93a55);
+  --se025-mint: var(--se062-mint, #119c72);
+  --se025-ease: cubic-bezier(.2, .8, .2, 1);
+  --se025-spring: cubic-bezier(.34, 1.45, .64, 1);
+
+  width: 100%;
+}
+
+.se025-box {
+  position: relative;
+  height: 62px;
+}
+
+.se025-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 18px 48px 0 18px;
+  border: 0;
+  border-radius: 16px;
+  background: var(--se025-surface);
+  color: var(--se025-ink);
+  outline: none;
+  font-size: 16px;
+  font-weight: 560;
+}
+
+.se025.is-up .se025-input {
+  padding-top: 0;
+}
+
+.se025-line {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  border-radius: 16px;
+  pointer-events: none;
+}
+
+.se025-line i {
+  display: block;
+  border: 1.5px solid var(--se025-line);
+  transition: border-color .3s var(--se025-ease);
+}
+
+.se025-left {
+  width: 14px;
+  border-right: 0 !important;
+  border-radius: 16px 0 0 16px;
+}
+
+.se025-gap {
+  width: var(--se-gap, 0px);
+  border-left: 0 !important;
+  border-right: 0 !important;
+  transition:
+    width .35s var(--se025-ease),
+    border-color .3s var(--se025-ease);
+}
+
+.se025-right {
+  flex: 1;
+  border-left: 0 !important;
+  border-radius: 0 16px 16px 0;
+}
+
+.se025.is-up .se025-gap {
+  border-top-color: transparent !important;
+}
+
+.se025.is-focus .se025-line i {
+  border-color: var(--se025-accent);
+  border-width: 2px;
+}
+
+.se025.is-bad .se025-line i {
+  border-color: var(--se025-danger);
+}
+
+.se025.is-ok .se025-line i {
+  border-color: var(--se025-mint);
+}
+
+.se025-label {
+  position: absolute;
+  top: 21px;
+  left: 18px;
+  padding: 0 4px;
+  margin-left: -4px;
+  color: var(--se025-muted);
+  font-size: 16px;
+  font-weight: 560;
+  transform-origin: left top;
+  white-space: nowrap;
+  pointer-events: none;
+  transition:
+    transform .35s var(--se025-ease),
+    color .3s var(--se025-ease);
+}
+
+.se025.is-up .se025-label {
+  transform: translateY(-30px) scale(.8);
+  font-weight: 650;
+}
+
+.se025.is-focus .se025-label {
+  color: var(--se025-accent);
+}
+
+.se025.is-bad .se025-label {
+  color: var(--se025-danger);
+}
+
+.se025-check {
+  position: absolute;
+  top: 18px;
+  right: 16px;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--se025-mint);
+  color: white;
+  animation: se025-pop .45s var(--se025-spring);
+}
+
+.se025-eye {
+  position: absolute;
+  top: 9px;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--se025-muted);
+  cursor: pointer;
+  transition: color .2s;
+}
+
+.se025-eye:hover {
+  color: var(--se025-ink);
+}
+
+.se025-eye:focus-visible {
+  outline: 2px solid var(--se025-accent);
+  outline-offset: -4px;
+}
+
+.se025-caps {
+  margin: 5px 0 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #d6731e;
+}
+
+.se025-error {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 8px 0 0;
+  color: var(--se025-danger);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.se025-error span {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: var(--se025-danger);
+  color: white;
+  font-size: 11px;
+}
+
+.se025.is-bad .se025-box {
+  animation: se025-shake .42s var(--se025-ease);
+}
+
+@keyframes se025-shake {
+  20% { transform: translateX(-7px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(2px); }
+}
+
+@keyframes se025-pop {
+  from { transform: scale(0); }
+  to { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .se025 *,
+  .se025 *::before,
+  .se025 *::after {
+    animation-duration: .001ms !important;
+    transition-duration: .001ms !important;
+  }
+}

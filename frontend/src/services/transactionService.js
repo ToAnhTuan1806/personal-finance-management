@@ -78,7 +78,9 @@ export const getTransactions = async (params = {}) => {
     if (!err.response) {
       // Backend offline fallback
       let list = [...mockTransactions]
-      if (params.month) {
+      if (params.startDate && params.endDate) {
+        list = list.filter((t) => t.transactionDate >= params.startDate && t.transactionDate <= params.endDate)
+      } else if (params.month) {
         list = list.filter((t) => t.transactionDate.startsWith(params.month))
       }
       if (params.type) {

@@ -1,0 +1,308 @@
+/* Lucian UX/UI Prompt #062 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#062 */
+
+.se062-page {
+  --se062-page: #f4f2ee;
+  --se062-surface: #ffffff;
+  --se062-ink: #16151b;
+  --se062-muted: #8e8a97;
+  --se062-line: rgba(22, 21, 27, .17);
+  --se062-accent: #6a57f2;
+  --se062-danger: #d93a55;
+  --se062-mint: #119c72;
+  --se062-gradient: linear-gradient(120deg, #7b61ff, #3d8bff 55%, #1fb89a);
+  --se062-ease: cubic-bezier(.2, .8, .2, 1);
+  --se062-spring: cubic-bezier(.34, 1.45, .64, 1);
+
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 24px 16px;
+  background: var(--se062-page);
+  color: var(--se062-ink);
+}
+
+.se062-card {
+  position: relative;
+  width: min(100%, 390px);
+  min-height: 490px;
+  border-radius: 30px;
+  background: var(--se062-surface);
+  box-shadow:
+    0 0 0 1px rgba(22, 21, 27, .09),
+    0 30px 60px -36px rgba(40, 30, 80, .3);
+  overflow: hidden;
+}
+
+.se062-card.is-register {
+  min-height: 650px;
+}
+
+.se062-card.is-shaking {
+  animation: se062-no .5s cubic-bezier(.36, .07, .19, .97);
+}
+
+@keyframes se062-no {
+  15% { transform: translateX(-9px) rotate(-.6deg); }
+  30% { transform: translateX(8px) rotate(.5deg); }
+  45% { transform: translateX(-6px); }
+  60% { transform: translateX(4px); }
+  75% { transform: translateX(-2px); }
+}
+
+.se062-form-pane {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 490px;
+  padding: 30px 26px 26px;
+  transition:
+    transform .6s var(--se062-ease),
+    opacity .4s;
+}
+
+.se062-card.is-register .se062-form-pane {
+  min-height: 650px;
+}
+
+.se062-logo {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: var(--se062-gradient);
+  color: white;
+  box-shadow: 0 10px 20px -10px rgba(91, 72, 255, .6);
+}
+
+.se062-title {
+  margin: 18px 0 4px;
+  font-size: 24px;
+  font-weight: 850;
+  letter-spacing: -.045em;
+}
+
+.se062-subtitle {
+  margin: 0 0 22px;
+  color: var(--se062-muted);
+  font-size: 13.5px;
+}
+
+.se062-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.se062-server-error {
+  margin-bottom: 16px;
+  padding: 12px;
+  border: 1px solid var(--se062-danger);
+  border-radius: 12px;
+  color: var(--se062-danger);
+  background: color-mix(
+    in srgb,
+    var(--se062-danger) 7%,
+    var(--se062-surface)
+  );
+  font-size: 13px;
+}
+
+.se062-action {
+  position: relative;
+  align-self: center;
+  width: 100%;
+  height: 54px;
+  min-height: 54px;
+  margin-top: 26px;
+  border: 0;
+  border-radius: 17px;
+  background: var(--se062-ink);
+  color: var(--se062-page);
+  font-size: 15.5px;
+  font-weight: 760;
+  cursor: pointer;
+  overflow: hidden;
+  transition:
+    width .45s var(--se062-spring),
+    border-radius .45s var(--se062-spring),
+    background-color .4s,
+    transform .3s var(--se062-spring);
+}
+
+.se062-action:active {
+  transform: scale(.97);
+}
+
+.se062-action:focus-visible {
+  outline: 2px solid var(--se062-accent);
+  outline-offset: 3px;
+}
+
+.se062-action span {
+  transition: opacity .2s;
+}
+
+.se062-action.busy,
+.se062-action.ok {
+  width: 54px;
+  border-radius: 27px;
+}
+
+.se062-action.busy span,
+.se062-action.ok span {
+  opacity: 0;
+}
+
+.se062-spinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
+  border: 2.5px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  opacity: 0;
+  animation: se062-spin .7s linear infinite;
+}
+
+.se062-action.busy .se062-spinner {
+  opacity: 1;
+}
+
+.se062-action.ok {
+  background: var(--se062-mint);
+  color: #ffffff;
+}
+
+.se062-action-check {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 26px;
+  height: 26px;
+  margin: -13px 0 0 -13px;
+  opacity: 0;
+  transform: scale(.65);
+  transition:
+    opacity .3s,
+    transform .4s var(--se062-ease);
+}
+
+.se062-action.ok .se062-action-check {
+  opacity: 1;
+  transform: scale(1);
+}
+
+@keyframes se062-spin {
+  to { transform: rotate(360deg); }
+}
+
+.se062-footer {
+  margin-top: 18px;
+  text-align: center;
+  color: var(--se062-muted);
+  font-size: 13px;
+}
+
+.se062-footer a {
+  color: var(--se062-accent);
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.se062-footer a:hover {
+  text-decoration: underline;
+}
+
+.se062-welcome-pane {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 28px;
+  text-align: center;
+  opacity: 0;
+  transform: translateX(100%);
+  pointer-events: none;
+  transition:
+    transform .6s var(--se062-ease),
+    opacity .4s;
+}
+
+.se062-welcome-icon {
+  display: grid;
+  place-items: center;
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background: var(--se062-mint);
+  color: #ffffff;
+  box-shadow:
+    0 0 0 6px var(--se062-surface),
+    0 0 0 8px var(--se062-mint);
+}
+
+.se062-welcome-pane h2 {
+  margin: 22px 0 8px;
+  font-size: 23px;
+  font-weight: 800;
+}
+
+.se062-welcome-pane p {
+  color: var(--se062-muted);
+  font-size: 14px;
+}
+
+.se062-card.is-welcome .se062-form-pane {
+  opacity: 0;
+  transform: translateX(-30%);
+  pointer-events: none;
+}
+
+.se062-card.is-welcome .se062-welcome-pane {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+/* Chế độ tối: chỉ tác động đến phần Authentication */
+:root[data-theme="dark"] .se062-page,
+.dark .se062-page {
+  --se062-page: #0B1220;
+  --se062-surface: #182234;
+  --se062-ink: #F8FAFC;
+  --se062-muted: #94A3B8;
+  --se062-line: #334155;
+  --se062-accent: #60A5FA;
+  --se062-danger: #FB7185;
+  --se062-mint: #34D399;
+  --se062-gradient: linear-gradient(120deg, #60A5FA, #3B82F6 55%, #34D399);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .se062-page {
+    --se062-page: #0B1220;
+    --se062-surface: #182234;
+    --se062-ink: #F8FAFC;
+    --se062-muted: #94A3B8;
+    --se062-line: #334155;
+    --se062-accent: #60A5FA;
+    --se062-danger: #FB7185;
+    --se062-mint: #34D399;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .se062-page *,
+  .se062-page *::before,
+  .se062-page *::after {
+    animation-duration: .001ms !important;
+    transition-duration: .001ms !important;
+  }
+}

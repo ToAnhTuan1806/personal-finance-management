@@ -1,63 +1,112 @@
-import { useState } from 'react'
-import { Outlet, useNavigate } from 'react-router'
+import { useEffect, useState } from 'react'
+import { Outlet, useLocation, useNavigate } from 'react-router'
 import { LogOut, Menu } from 'lucide-react'
 
 import Sidebar from './Sidebar'
+import ThemeToggle from './ThemeToggle'
 import { useAuth } from '../../contexts/AuthContext'
 
+const pageTitles = {
+  '/': 'Dashboard',
+  '/transactions': 'Quản lý giao dịch',
+  '/categories': 'Quản lý danh mục',
+  '/budgets': 'Ngân sách hàng tháng',
+}
+
 export default function MainLayout() {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
 
-  // Đăng xuất và quay về Login
+  const [mobileOpen, setMobileOpen] = useState(false)
+
+  // Lưu trạng thái Sidebar khi tải lại trang
+  const [expanded, setExpanded] = useState(() => {
+    try {
+      return localStorage.getItem('smartSidebarExpanded') === 'true'
+    } catch {
+      return false
+    }
+  })
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('smartSidebarExpanded', String(expanded))
+    } catch {
+      // Vẫn dùng được menu nếu storage bị chặn
+    }
+  }, [expanded])
+
   const handleLogout = () => {
     logout()
     navigate('/login', { replace: true })
   }
 
+  const currentTitle = pageTitles[location.pathname] || 'SmartExpense'
+
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#0B1220] transition-colors duration-200">
       <Sidebar
-        open={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
+        expanded={expanded}
+        mobileOpen={mobileOpen}
+        onToggle={() => setExpanded((value) => !value)}
+        onClose={() => setMobileOpen(false)}
+        user={user}
       />
 
-      <div className="flex-1 lg:pl-64 flex flex-col min-w-0">
-        <header className="sticky top-0 z-30 flex h-20 items-center justify-between border-b border-slate-200/80 bg-white/95 backdrop-blur-md px-4 sm:px-8 shadow-xs">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            aria-label="Mở menu"
-            className="p-2 -ml-2 text-slate-600 hover:text-slate-900 rounded-lg lg:hidden"
-          >
-            <Menu size={24} />
-          </button>
+      <div
+        className={`min-h-screen transition-[padding] duration-[600ms]
+          motion-reduce:transition-none
+          ${expanded ? 'lg:pl-[244px]' : 'lg:pl-[100px]'}`}
+        style={{
+          transitionTimingFunction: 'cubic-bezier(.34,1.45,.64,1)',
+        }}
+      >
+        <header
+          className="sticky top-0 z-30 flex h-20 items-center
+            justify-between border-b border-slate-200
+            bg-white/95 px-4 backdrop-blur-sm sm:px-8
+            dark:border-slate-800 dark:bg-[#182234]/95 transition-colors duration-200"
+        >
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setMobileOpen(true)}
+              aria-label="Mở menu"
+              aria-controls="smart-sidebar"
+              aria-expanded={mobileOpen}
+              className="rounded-xl p-2 text-slate-600
+                hover:bg-slate-100 lg:hidden
+                dark:text-slate-300 dark:hover:bg-slate-800"
+            >
+              <Menu size={24} />
+            </button>
 
-          <h2 className="hidden text-base sm:text-lg font-bold text-slate-800 sm:block">
-            Quản lý tài chính cá nhân
-          </h2>
-
-          <div className="ml-auto flex items-center gap-3 sm:gap-4">
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-100 text-blue-700 font-bold text-sm ring-2 ring-blue-500/20 uppercase">
-                {user?.fullName ? user.fullName.charAt(0) : 'U'}
-              </div>
-              <div className="hidden sm:block text-left">
-                <span className="block text-sm font-semibold text-slate-800 leading-tight">
-                  {user?.fullName || 'Người dùng'}
-                </span>
-                <span className="block text-xs text-slate-400 leading-tight">
-                  {user?.email || 'Tài khoản thành viên'}
-                </span>
-              </div>
+            <div>
+              <h1
+                key={location.pathname}
+                className="text-lg font-bold text-slate-900 dark:text-slate-100"
+              >
+                {currentTitle}
+              </h1>
+              <p className="hidden text-xs text-slate-400 sm:block dark:text-slate-400">
+                SmartExpense – Personal Finance Management
+              </p>
             </div>
+          </div>
 
-            <div className="h-6 w-px bg-slate-200" />
+          <div className="flex items-center gap-2.5">
+            <ThemeToggle />
 
             <button
+              type="button"
+              id="logout-btn"
               onClick={handleLogout}
-              className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50 transition-colors"
-              title="Đăng xuất khỏi hệ thống"
+              className="flex items-center gap-2 rounded-xl
+                border border-slate-200 px-3.5 py-2
+                text-sm text-slate-600 hover:bg-red-50
+                hover:text-red-600 dark:border-slate-800
+                dark:text-slate-300 dark:hover:bg-red-950/40 dark:hover:text-red-400 transition-colors"
             >
               <LogOut size={18} />
               <span className="hidden sm:inline">Đăng xuất</span>
@@ -65,8 +114,8 @@ export default function MainLayout() {
           </div>
         </header>
 
-        {/* Hiển thị trang con tương ứng */}
-        <main className="flex-1 p-4 sm:p-8">
+        {/* Giữ nguyên các trang CRUD qua React Router */}
+        <main className="mx-auto w-full max-w-7xl p-4 sm:p-6 lg:p-8">
           <Outlet />
         </main>
       </div>
