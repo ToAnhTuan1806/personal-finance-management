@@ -10,6 +10,7 @@ on:
         default: true
   push:
     branches:
+      - dev
       - main
 
 permissions:
@@ -102,8 +103,8 @@ jobs:
             
             # Cấu hình sử dụng image từ GHCR
             REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-            sed -i "s|^BACKEND_IMAGE=.*|BACKEND_IMAGE=ghcr.io/${REPO_LOWER}/backend:latest|" .env || echo "BACKEND_IMAGE=ghcr.io/${REPO_LOWER}/backend:latest" >> .env
-            sed -i "s|^FRONTEND_IMAGE=.*|FRONTEND_IMAGE=ghcr.io/${REPO_LOWER}/frontend:latest|" .env || echo "FRONTEND_IMAGE=ghcr.io/${REPO_LOWER}/frontend:latest" >> .env
+            grep -q '^BACKEND_IMAGE=' .env && sed -i "s|^BACKEND_IMAGE=.*|BACKEND_IMAGE=ghcr.io/${REPO_LOWER}/backend:latest|" .env || echo "BACKEND_IMAGE=ghcr.io/${REPO_LOWER}/backend:latest" >> .env
+            grep -q '^FRONTEND_IMAGE=' .env && sed -i "s|^FRONTEND_IMAGE=.*|FRONTEND_IMAGE=ghcr.io/${REPO_LOWER}/frontend:latest|" .env || echo "FRONTEND_IMAGE=ghcr.io/${REPO_LOWER}/frontend:latest" >> .env
             
             # Đăng nhập GHCR nếu cần kéo image private
             if [ -n "${{ secrets.CR_PAT }}" ]; then
