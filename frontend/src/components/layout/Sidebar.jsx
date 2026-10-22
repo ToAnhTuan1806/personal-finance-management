@@ -101,7 +101,11 @@ export default function Sidebar({
           title={!expanded ? 'Mở rộng Sidebar' : undefined}
         >
           <div className="se040-logo" aria-hidden="true">
-            <Wallet size={21} />
+            <img
+              src="/Vi.png"
+              alt="SmartExpense Logo"
+              className="se040-logo-img"
+            />
           </div>
           <span className="se040-name">SmartExpense</span>
 

@@ -74,6 +74,15 @@
   background: var(--se062-gradient);
   color: white;
   box-shadow: 0 10px 20px -10px rgba(91, 72, 255, .6);
+  overflow: hidden;
+  padding: 4px;
+}
+
+.se062-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
 }
 
 .se062-title {
