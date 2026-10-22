@@ -17,10 +17,13 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
-      {/* Các trang yêu cầu JWT */}
-      <Route element={<ProtectedRoute />}>
-        <Route element={<MainLayout />}>
-          <Route path="/" element={<Dashboard />} />
+      {/* Giao diện chính MainLayout */}
+      <Route element={<MainLayout />}>
+        {/* Dashboard công khai cho cả khách và người dùng đã đăng nhập */}
+        <Route path="/" element={<Dashboard />} />
+
+        {/* Các trang quản trị bắt buộc xác thực JWT */}
+        <Route element={<ProtectedRoute />}>
           <Route path="/categories" element={<Categories />} />
           <Route path="/transactions" element={<Transactions />} />
           <Route path="/budgets" element={<Budgets />} />

@@ -4,6 +4,7 @@ import { Link, Navigate, useLocation, useNavigate } from 'react-router'
 import { useAuth } from '../contexts/AuthContext'
 import AuthCard from '../components/auth/AuthCard'
 import FloatingInput from '../components/ui/FloatingInput'
+import '../styles/auth-background.css'
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -22,7 +23,7 @@ export default function Login() {
   const busyRef = useRef(false)
 
   const [form, setForm] = useState({
-    email: '',
+    email: location.state?.email || '',
     password: '',
   })
 
