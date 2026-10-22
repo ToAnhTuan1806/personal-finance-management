@@ -21,3 +21,7 @@
 # Local OS files
 .DS_Store
 Thumbs.db
+
+# Database backups
+database/backups/
+*.dump
