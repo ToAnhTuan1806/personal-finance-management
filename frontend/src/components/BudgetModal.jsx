@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import { X, Loader2, AlertCircle, Coins } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { X, Loader2 } from 'lucide-react'
+import MoneyInput from './ui/MoneyInput'
 
 function BudgetModalContent({
   budget,
@@ -10,6 +11,16 @@ function BudgetModalContent({
 }) {
   const [amount, setAmount] = useState(() => (budget ? String(budget.amountLimit) : ''))
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && !saving) {
+        onClose()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [saving, onClose])
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -57,17 +68,17 @@ function BudgetModalContent({
         role="dialog"
         aria-modal="true"
         aria-labelledby="budget-modal-title"
-        className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-slate-100"
+        className="w-full max-w-md rounded-2xl bg-white dark:bg-[#182234] p-6 shadow-2xl border border-slate-100 dark:border-slate-800 transition-colors"
       >
-        <div className="mb-4 flex items-center justify-between pb-3 border-b border-slate-100">
+        <div className="mb-4 flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
           <div>
             <h2
               id="budget-modal-title"
-              className="text-xl font-black tracking-tight text-slate-900"
+              className="text-xl font-black tracking-tight text-slate-900 dark:text-slate-100"
             >
               {budget ? 'Cập nhật ngân sách' : 'Thiết lập ngân sách'}
             </h2>
-            <p className="mt-0.5 text-xs text-slate-500">
+            <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
               Hạn mức chi tiêu cho {monthLabel}
             </p>
           </div>
@@ -77,68 +88,33 @@ function BudgetModalContent({
             aria-label="Đóng"
             onClick={onClose}
             disabled={saving}
-            className="rounded-lg p-1 text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+            className="rounded-lg p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           >
             <X size={20} />
           </button>
         </div>
 
         <form noValidate onSubmit={handleSubmit}>
-          <div>
-            <label
-              htmlFor="budget-amount"
-              className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-600"
-            >
-              Hạn mức ngân sách (VNĐ) <span className="text-rose-500">*</span>
-            </label>
+          <MoneyInput
+            id="budget-amount"
+            name="amountLimit"
+            label="Hạn mức ngân sách (VNĐ)"
+            value={amount}
+            onChange={(event) => {
+              setAmount(event.target.value)
+              setError('')
+            }}
+            error={error}
+            disabled={saving}
+            quickAmounts={[500000, 1000000, 2000000]}
+          />
 
-            <div className="relative">
-              <input
-                id="budget-amount"
-                type="text"
-                inputMode="decimal"
-                value={amount}
-                onChange={(e) => {
-                  setAmount(e.target.value)
-                  setError('')
-                }}
-                placeholder="Ví dụ: 3000000"
-                aria-invalid={!!error}
-                aria-describedby={error ? 'budget-error' : undefined}
-                className={`w-full rounded-xl border p-3 pl-10 text-sm outline-none transition-all ${
-                  error
-                    ? 'border-rose-400 bg-rose-50/50 text-rose-900 focus:border-rose-500 focus:ring-2 focus:ring-rose-200'
-                    : 'border-slate-300 bg-white text-slate-800 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'
-                }`}
-              />
-              <Coins size={18} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
-                ₫
-              </span>
-            </div>
-
-            {error && (
-              <p
-                id="budget-error"
-                role="alert"
-                className="mt-2 text-xs font-medium text-rose-600 flex items-center gap-1.5"
-              >
-                <AlertCircle size={14} className="shrink-0" />
-                <span>{error}</span>
-              </p>
-            )}
-
-            <p className="mt-2 text-xs text-slate-400">
-              Nhập số tiền không có dấu phân cách hàng nghìn (ví dụ: 3000000).
-            </p>
-          </div>
-
-          <div className="mt-6 flex justify-end gap-3 pt-3 border-t border-slate-100">
+          <div className="mt-6 flex justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
             <button
               type="button"
               onClick={onClose}
               disabled={saving}
-              className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+              className="rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
             >
               Hủy
             </button>

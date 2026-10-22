@@ -20,27 +20,27 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        // Mã hóa mật khẩu bằng BCrypt
+        // MÃ£ hÃ³a máº­t kháº©u báº±ng BCrypt
         return new BCryptPasswordEncoder();
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // API dùng JWT, không dùng session đăng nhập
+                // API dÃ¹ng JWT, khÃ´ng dÃ¹ng session Ä‘Äƒng nháº­p
                 .csrf(csrf -> csrf.disable())
                 .cors(Customizer.withDefaults())
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        // Cho phép đăng ký và đăng nhập không cần JWT
+                        // Cho phÃ©p Ä‘Äƒng kÃ½ vÃ  Ä‘Äƒng nháº­p khÃ´ng cáº§n JWT
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/api/auth/register",
                                 "/api/auth/login"
                         ).permitAll()
-                        // Các API khác bắt buộc có JWT
+                        // CÃ¡c API khÃ¡c báº¯t buá»™c cÃ³ JWT
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 ->
@@ -53,7 +53,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        // Cho phép ReactJS gọi API khi phát triển local
+        // Cho phÃ©p ReactJS gá»i API khi phÃ¡t triá»ƒn local
         config.setAllowedOrigins(List.of("http://localhost:5173"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
@@ -63,3 +63,4 @@ public class SecurityConfig {
         return source;
     }
 }
+

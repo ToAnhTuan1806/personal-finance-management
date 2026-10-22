@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { X, ArrowDownRight, ArrowUpRight, Calendar, FileText, AlertCircle, Loader2 } from 'lucide-react'
+import MoneyInput from './ui/MoneyInput'
 
 function TransactionModalContent({
   transaction,
@@ -28,6 +29,16 @@ function TransactionModalContent({
 
   const [errors, setErrors] = useState({})
   const [serverError, setServerError] = useState('')
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && !saving) {
+        onClose()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [saving, onClose])
 
   const availableCategories = categories.filter(
     (category) => category.type === form.type
@@ -129,13 +140,13 @@ function TransactionModalContent({
   const inputClass = (name) =>
     `w-full rounded-xl border p-3 text-sm outline-none transition-all ${
       errors[name]
-        ? 'border-rose-400 bg-rose-50/50 text-rose-900 focus:border-rose-500 focus:ring-2 focus:ring-rose-200'
-        : 'border-slate-300 bg-white text-slate-800 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'
+        ? 'border-rose-400 bg-rose-50/50 dark:bg-rose-950/30 text-rose-900 dark:text-rose-200 focus:border-rose-500 focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900/40'
+        : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-[#1E293B] text-slate-800 dark:text-slate-100 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900/40'
     }`
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4"
       role="presentation"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget && !saving) onClose()
@@ -145,17 +156,17 @@ function TransactionModalContent({
         role="dialog"
         aria-modal="true"
         aria-labelledby="transaction-modal-title"
-        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl border border-slate-100"
+        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white dark:bg-[#182234] p-6 shadow-2xl border border-slate-100 dark:border-slate-800"
       >
-        <div className="mb-5 flex items-center justify-between pb-3 border-b border-slate-100">
+        <div className="mb-5 flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
           <div>
             <h2
               id="transaction-modal-title"
-              className="text-xl font-black tracking-tight text-slate-900"
+              className="text-xl font-black tracking-tight text-slate-900 dark:text-slate-100"
             >
               {transaction ? 'Chỉnh sửa giao dịch' : 'Thêm giao dịch mới'}
             </h2>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               {transaction ? 'Cập nhật lại thông tin thu/chi của bạn' : 'Ghi chép khoản thu hoặc chi tiêu hàng ngày'}
             </p>
           </div>
@@ -164,7 +175,7 @@ function TransactionModalContent({
             onClick={onClose}
             disabled={saving}
             aria-label="Đóng"
-            className="rounded-lg p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+            className="rounded-lg p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           >
             <X size={20} />
           </button>
@@ -173,7 +184,7 @@ function TransactionModalContent({
         {serverError && (
           <div
             role="alert"
-            className="mb-4 rounded-xl bg-rose-50 border border-rose-200 p-3.5 text-sm text-rose-800 flex items-center gap-2.5"
+            className="mb-4 rounded-xl bg-rose-50 border border-rose-200 dark:bg-rose-950/40 dark:border-rose-900/50 p-3.5 text-sm text-rose-800 dark:text-rose-300 flex items-center gap-2.5"
           >
             <AlertCircle className="h-5 w-5 text-rose-600 shrink-0" />
             <span>{serverError}</span>
@@ -183,20 +194,20 @@ function TransactionModalContent({
         <form noValidate onSubmit={handleSubmit} className="space-y-4">
           {/* Segmented Type Toggle */}
           <div>
-            <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-600">
+            <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
               Loại giao dịch
             </label>
-            <div className="grid grid-cols-2 gap-2 rounded-xl bg-slate-100 p-1">
+            <div className="grid grid-cols-2 gap-2 rounded-xl bg-slate-100 dark:bg-slate-800 p-1">
               <button
                 type="button"
                 onClick={() => handleTypeSelect('EXPENSE')}
                 className={`flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition-all ${
                   form.type === 'EXPENSE'
-                    ? 'bg-white text-rose-600 shadow-sm border border-slate-200/60'
-                    : 'text-slate-600 hover:text-slate-900'
+                    ? 'bg-white dark:bg-[#182234] text-rose-600 dark:text-rose-400 shadow-sm border border-slate-200/60 dark:border-slate-700'
+                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100'
                 }`}
               >
-                <ArrowDownRight size={16} className={form.type === 'EXPENSE' ? 'text-rose-600' : 'text-slate-400'} />
+                <ArrowDownRight size={16} className={form.type === 'EXPENSE' ? 'text-rose-600 dark:text-rose-400' : 'text-slate-400'} />
                 <span>Chi tiêu</span>
               </button>
               <button
@@ -204,11 +215,11 @@ function TransactionModalContent({
                 onClick={() => handleTypeSelect('INCOME')}
                 className={`flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition-all ${
                   form.type === 'INCOME'
-                    ? 'bg-white text-emerald-600 shadow-sm border border-slate-200/60'
-                    : 'text-slate-600 hover:text-slate-900'
+                    ? 'bg-white dark:bg-[#182234] text-emerald-600 dark:text-emerald-400 shadow-sm border border-slate-200/60 dark:border-slate-700'
+                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100'
                 }`}
               >
-                <ArrowUpRight size={16} className={form.type === 'INCOME' ? 'text-emerald-600' : 'text-slate-400'} />
+                <ArrowUpRight size={16} className={form.type === 'INCOME' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'} />
                 <span>Thu nhập</span>
               </button>
             </div>
@@ -228,7 +239,7 @@ function TransactionModalContent({
 
           {/* Danh mục */}
           <div>
-            <label htmlFor="transaction-category" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-600">
+            <label htmlFor="transaction-category" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
               Danh mục <span className="text-rose-500">*</span>
             </label>
             <select
@@ -252,39 +263,23 @@ function TransactionModalContent({
               </p>
             )}
             {availableCategories.length === 0 && (
-              <p className="mt-1.5 text-xs text-amber-600">
+              <p className="mt-1.5 text-xs text-amber-600 dark:text-amber-400">
                 Chưa có danh mục {form.type === 'INCOME' ? 'thu nhập' : 'chi tiêu'}. Vui lòng tạo danh mục trước.
               </p>
             )}
           </div>
 
           {/* Số tiền */}
-          <div>
-            <label htmlFor="transaction-amount" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-600">
-              Số tiền (VNĐ) <span className="text-rose-500">*</span>
-            </label>
-            <div className="relative">
-              <input
-                id="transaction-amount"
-                name="amount"
-                type="text"
-                inputMode="decimal"
-                placeholder="Ví dụ: 50000"
-                value={form.amount}
-                onChange={handleChange}
-                className={inputClass('amount')}
-                aria-invalid={!!errors.amount}
-              />
-              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
-                ₫
-              </span>
-            </div>
-            {errors.amount && (
-              <p className="mt-1.5 text-xs font-medium text-rose-600">
-                {errors.amount}
-              </p>
-            )}
-          </div>
+          <MoneyInput
+            id="transaction-amount"
+            name="amount"
+            label="Số tiền giao dịch (VNĐ)"
+            value={form.amount}
+            onChange={handleChange}
+            error={errors.amount}
+            disabled={saving}
+            quickAmounts={[50000, 100000, 500000]}
+          />
 
           {/* Ngày giao dịch */}
           <div>
@@ -339,12 +334,12 @@ function TransactionModalContent({
             )}
           </div>
 
-          <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
+          <div className="flex justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
             <button
               type="button"
               onClick={onClose}
               disabled={saving}
-              className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+              className="rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
             >
               Hủy
             </button>

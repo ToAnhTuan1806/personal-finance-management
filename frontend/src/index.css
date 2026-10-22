@@ -1,18 +1,77 @@
 @import "tailwindcss";
 
-/* CSS cơ bản cho SmartExpense */
+@custom-variant dark (&:where(.dark, [data-theme="dark"], .dark *, [data-theme="dark"] *));
+
+/* Design Tokens SmartExpense */
 :root {
+  --app-bg: #F5F7FB;
+  --surface: #FFFFFF;
+  --surface-secondary: #F1F5F9;
+  --border-color: #E2E8F0;
+  --text-primary: #0F172A;
+  --text-secondary: #64748B;
+  --color-primary: #2563EB;
+  --color-income: #059669;
+  --color-expense: #E11D48;
+
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   font-synthesis: none;
+}
+
+:root.dark,
+:root[data-theme="dark"],
+.dark {
+  --app-bg: #0B1220;
+  --surface: #182234;
+  --surface-secondary: #1E293B;
+  --border-color: #334155;
+  --text-primary: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --color-primary: #60A5FA;
+  --color-income: #34D399;
+  --color-expense: #FB7185;
 }
 
 body {
   margin: 0;
   min-width: 320px;
-  background-color: #f8fafc;
-  color: #0f172a;
+  background-color: var(--app-bg);
+  color: var(--text-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 button {
   cursor: pointer;
 }
+
+/* Nâng cấp UI/UX SmartExpense */
+
+/* Hiệu ứng cuộn nhẹ */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Focus hiển thị rõ khi dùng bàn phím */
+button:focus-visible,
+a:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Tôn trọng lựa chọn giảm chuyển động */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
