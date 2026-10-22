@@ -96,10 +96,10 @@ jobs:
             echo ">>> Đang cập nhật SmartExpense trên VPS..."
             cd /opt/smartexpense
             
-            # Kéo mã nguồn mới nhất
+            # Kéo mã nguồn mới nhất (đồng bộ sạch với remote, tránh xung đột working tree)
             git fetch origin
             CURRENT_BRANCH=$(git branch --show-current)
-            git pull origin "$CURRENT_BRANCH"
+            git reset --hard "origin/$CURRENT_BRANCH"
             
             # Cấu hình sử dụng image từ GHCR
             REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
