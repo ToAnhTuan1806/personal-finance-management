@@ -5,17 +5,17 @@ import RollingNumber from './RollingNumber'
 import './DashboardWidgets.css'
 
 const COLORS = [
-  '#FF8A3D',
-  '#FF6B8B',
-  '#3D8BFF',
-  '#7B61FF',
-  '#22C3A6',
-  '#E6A23C',
-  '#15AABF',
-  '#A675D7',
+  '#F97316', // Ăn uống (Cam tươi)
+  '#0EA5E9', // Mua sắm (Xanh biển sáng)
+  '#10B981', // Đi lại (Xanh ngọc lục bảo)
+  '#EF4444', // Hóa đơn (Đỏ san hô)
+  '#8B5CF6', // Sức khỏe (Tím violet)
+  '#F59E0B', // Giáo dục / Học tập (Vàng hổ phách)
+  '#EC4899', // Giải trí (Hồng sen)
+  '#6366F1', // Khác (Xanh chàm)
 ]
 
-const RADIUS = 80
+const RADIUS = 88
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS
 const GAP = 3
 const EMPTY_DATA = []
@@ -23,7 +23,7 @@ const EMPTY_DATA = []
 export default function ExpenseDonutChart({
   data = EMPTY_DATA,
   title = 'Chi tiêu theo danh mục',
-  subtitle = 'Phân bổ chi tiêu trong tháng',
+  subtitle,
 }) {
   const [excluded, setExcluded] = useState(() => new Set())
   const [hoveredId, setHoveredId] = useState(null)
@@ -60,11 +60,6 @@ export default function ExpenseDonutChart({
     0
   )
 
-  const originalTotal = categories.reduce(
-    (sum, item) => sum + item.amount,
-    0
-  )
-
   const highlighted = enabledCategories.find(
     (item) => item.id === hoveredId
   )
@@ -75,15 +70,11 @@ export default function ExpenseDonutChart({
 
   const centerTitle = highlighted
     ? highlighted.name
-    : excluded.size > 0
-      ? 'Chi tiêu đang chọn'
-      : 'Tổng chi tiêu'
+    : 'Tổng chi'
 
   const centerSubtitle = highlighted && total > 0
-    ? `${(highlighted.amount / total * 100).toFixed(1)}% tổng đang chọn`
-    : excluded.size > 0
-      ? `Tổng ban đầu: ${new Intl.NumberFormat('vi-VN').format(originalTotal)} ₫`
-      : `${categories.length} danh mục`
+    ? `${(highlighted.amount / total * 100).toFixed(1).replace('.', ',')}%`
+    : ''
 
   // Tính lại góc khi một danh mục bị loại khỏi biểu đồ
   const segments = useMemo(() => {
@@ -133,8 +124,8 @@ export default function ExpenseDonutChart({
   return (
     <section className="se097" aria-label="Biểu đồ chi tiêu">
       <header className="se097-header">
-        <p>{subtitle}</p>
-        <h2>{title}</h2>
+        {subtitle && <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">{subtitle}</p>}
+        <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">{title}</h2>
       </header>
 
       {categories.length === 0 ? (
@@ -146,13 +137,13 @@ export default function ExpenseDonutChart({
           <div className="se097-chart">
             <svg
               className="se097-svg"
-              viewBox="0 0 216 216"
+              viewBox="0 0 220 220"
               aria-hidden="true"
             >
               <circle
                 className="se097-track"
-                cx="108"
-                cy="108"
+                cx="110"
+                cy="110"
                 r={RADIUS}
               />
 
@@ -169,8 +160,8 @@ export default function ExpenseDonutChart({
                     className={`se097-segment ${
                       active ? 'is-active' : ''
                     }`}
-                    cx="108"
-                    cy="108"
+                    cx="110"
+                    cy="110"
                     r={RADIUS}
                     stroke={item.color}
                     strokeWidth={active ? 34 : 26}
@@ -194,12 +185,14 @@ export default function ExpenseDonutChart({
             </svg>
 
             <div className="se097-center" aria-live="polite">
-              <small>{centerTitle}</small>
+              <small className="text-xs font-bold text-slate-500 dark:text-slate-400">{centerTitle}</small>
               <RollingNumber
                 value={centerValue}
-                className="se097-center-number"
+                className="se097-center-number text-lg font-extrabold text-slate-900 dark:text-slate-100"
               />
-              <span>{centerSubtitle}</span>
+              {centerSubtitle && (
+                <span className="text-xs font-semibold text-blue-600 dark:text-blue-400">{centerSubtitle}</span>
+              )}
             </div>
           </div>
 
@@ -211,6 +204,9 @@ export default function ExpenseDonutChart({
             {categories.map((item) => {
               const included = !excluded.has(item.id)
               const active = item.id === hoveredId
+              const percent = total > 0
+                ? (item.amount / total * 100).toFixed(1).replace('.', ',')
+                : '0'
 
               return (
                 <button
@@ -222,7 +218,7 @@ export default function ExpenseDonutChart({
                   aria-pressed={included}
                   aria-label={`${item.name}: ${
                     new Intl.NumberFormat('vi-VN').format(item.amount)
-                  } đồng, ${included ? 'đang hiển thị' : 'đã ẩn'}`}
+                  } đồng, chiếm ${percent}%, ${included ? 'đang hiển thị' : 'đã ẩn'}`}
                   onMouseEnter={() =>
                     included && setHoveredId(item.id)
                   }
@@ -237,12 +233,13 @@ export default function ExpenseDonutChart({
                     aria-hidden="true"
                     style={{ '--se097-color': item.color }}
                   />
-                  <span>{item.name}</span>
-                  <small>
-                    {new Intl.NumberFormat('vi-VN').format(
-                      item.amount
-                    )}
-                  </small>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full min-w-0 gap-1">
+                    <span className="truncate text-xs font-bold text-slate-800 dark:text-slate-100">{item.name}</span>
+                    <div className="flex items-center gap-1.5 shrink-0 text-xs font-semibold text-slate-700 dark:text-slate-200">
+                      <span>{new Intl.NumberFormat('vi-VN').format(item.amount)} ₫</span>
+                      <span className="text-[11px] text-slate-400 dark:text-slate-400 font-medium">({percent}%)</span>
+                    </div>
+                  </div>
                 </button>
               )
             })}

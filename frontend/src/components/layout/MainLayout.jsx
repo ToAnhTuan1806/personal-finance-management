@@ -7,7 +7,7 @@ import ThemeToggle from './ThemeToggle'
 import { useAuth } from '../../contexts/AuthContext'
 
 const pageTitles = {
-  '/': 'Dashboard',
+  '/': 'Tổng quan',
   '/transactions': 'Quản lý giao dịch',
   '/categories': 'Quản lý danh mục',
   '/budgets': 'Ngân sách hàng tháng',
@@ -52,6 +52,7 @@ export default function MainLayout() {
         onToggle={() => setExpanded((value) => !value)}
         onClose={() => setMobileOpen(false)}
         user={user}
+        onLogout={handleLogout}
       />
 
       <div
@@ -89,8 +90,8 @@ export default function MainLayout() {
               >
                 {currentTitle}
               </h1>
-              <p className="hidden text-xs text-slate-400 sm:block dark:text-slate-400">
-                SmartExpense – Personal Finance Management
+              <p className="hidden text-xs text-slate-500 sm:block dark:text-slate-400 font-medium">
+                Quản lý tài chính cá nhân
               </p>
             </div>
           </div>
@@ -105,26 +106,27 @@ export default function MainLayout() {
                 onClick={handleLogout}
                 className="flex items-center gap-2 rounded-xl
                   border border-slate-200 px-3.5 py-2
-                  text-sm text-slate-600 hover:bg-red-50
+                  text-sm font-medium text-slate-600 hover:bg-red-50
                   hover:text-red-600 dark:border-slate-800
                   dark:text-slate-300 dark:hover:bg-red-950/40 dark:hover:text-red-400 transition-colors"
+                title="Đăng xuất khỏi tài khoản"
               >
-                <LogOut size={18} />
+                <LogOut size={17} />
                 <span className="hidden sm:inline">Đăng xuất</span>
               </button>
             ) : (
               <div className="flex items-center gap-2">
                 <Link
                   to="/login"
-                  className="rounded-xl border border-slate-200 px-3 py-1.5 text-xs sm:text-sm font-medium text-slate-700 hover:bg-slate-100 dark:border-slate-800 dark:text-slate-200 dark:hover:bg-slate-800 transition-colors"
+                  className="rounded-xl border border-slate-200 px-3.5 py-2 text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-100 dark:border-slate-800 dark:text-slate-200 dark:hover:bg-slate-800 transition-colors"
                 >
                   Đăng nhập
                 </Link>
                 <Link
                   to="/register"
-                  className="rounded-xl bg-blue-600 px-3 py-1.5 text-xs sm:text-sm font-medium text-white hover:bg-blue-700 shadow-sm transition-colors"
+                  className="rounded-xl bg-blue-600 px-3.5 py-2 text-xs sm:text-sm font-semibold text-white hover:bg-blue-700 shadow-sm transition-colors"
                 >
-                  Đăng ký
+                  Đăng ký miễn phí
                 </Link>
               </div>
             )}

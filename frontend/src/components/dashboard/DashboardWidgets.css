@@ -123,9 +123,9 @@
 
 .se097-chart {
   position: relative;
-  width: 216px;
-  height: 216px;
-  margin: 15px auto 18px;
+  width: 246px;
+  height: 246px;
+  margin: 10px auto 16px;
 }
 
 .se097-svg {
@@ -161,12 +161,12 @@
 
 .se097-center {
   position: absolute;
-  inset: 36px;
+  inset: 40px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 5px;
+  gap: 4px;
   text-align: center;
   pointer-events: none;
 }
@@ -174,18 +174,18 @@
 .se097-center small {
   max-width: 100%;
   color: var(--dash-muted);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 750;
 }
 
 .se097-center-number {
-  font-size: 16px;
+  font-size: 17px;
 }
 
 .se097-center > span:last-child {
   max-width: 100%;
   color: var(--dash-muted);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   overflow-wrap: anywhere;
 }
@@ -201,19 +201,20 @@
   display: flex;
   align-items: center;
   min-width: 0;
-  min-height: 42px;
-  gap: 8px;
-  padding: 9px 10px;
-  border: 0;
-  border-radius: 13px;
+  min-height: 44px;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid var(--dash-line);
+  border-radius: 14px;
   background: var(--dash-bg-2);
   color: var(--dash-text);
-  font-size: 12px;
-  font-weight: 750;
+  font-size: 12.5px;
+  font-weight: 700;
   text-align: left;
   cursor: pointer;
   transition:
     background-color .2s,
+    border-color .2s,
     opacity .25s,
     transform .3s var(--dash-spring);
 }

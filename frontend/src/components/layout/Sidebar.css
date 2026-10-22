@@ -222,6 +222,27 @@
   opacity: 1;
 }
 
+.se040-item.is-locked {
+  opacity: .5;
+}
+
+.se040-item.is-locked:hover {
+  opacity: .8;
+}
+
+.se040-lock-icon {
+  margin-left: auto;
+  margin-right: 14px;
+  color: rgba(255, 255, 255, .5);
+  opacity: 0;
+  flex: none;
+  transition: opacity .2s;
+}
+
+.se040.is-expanded .se040-lock-icon {
+  opacity: 1;
+}
+
 .se040-icon {
   flex: none;
 }
@@ -246,11 +267,14 @@
   transition-delay: calc(.12s + var(--se-index) * 35ms);
 }
 
-.se040-profile {
+.se040-profile-wrap {
   position: absolute;
   bottom: 12px;
   left: 10px;
   right: 10px;
+}
+
+.se040-profile {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -258,6 +282,85 @@
   padding: 0 10px;
   border-radius: 16px;
   background: rgba(255, 255, 255, .08);
+  user-select: none;
+  transition: background .2s, border-color .2s;
+}
+
+.se040-profile.is-clickable {
+  cursor: pointer;
+}
+
+.se040-profile:hover {
+  background: rgba(255, 255, 255, .15);
+}
+
+.se040-user-menu {
+  position: absolute;
+  bottom: 60px;
+  left: 0;
+  right: 0;
+  min-width: 190px;
+  background: #182234;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 16px;
+  padding: 12px;
+  box-shadow: 0 16px 36px -6px rgba(0, 0, 0, 0.6);
+  z-index: 50;
+  animation: se040-pop-up 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes se040-pop-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.se040-user-menu-header {
+  padding-bottom: 8px;
+}
+
+.se040-user-menu-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.se040-user-menu-email {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.se040-user-menu-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 6px 0;
+}
+
+.se040-user-menu-logout {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: none;
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.se040-user-menu-logout:hover {
+  background: rgba(239, 68, 68, 0.22);
+  color: #fca5a5;
 }
 
 .se040-avatar {
@@ -286,12 +389,15 @@
 }
 
 .se040-profile-info strong {
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #f8fafc;
 }
 
 .se040-profile-info small {
-  font-size: 10px;
-  opacity: .65;
+  font-size: 12px;
+  color: #cbd5e1;
+  opacity: .9;
 }
 
 .se040.is-expanded .se040-profile-info {

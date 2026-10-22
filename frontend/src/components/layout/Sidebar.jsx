@@ -1,7 +1,7 @@
 /* Lucian UX/UI Prompt #040 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#040 */
 
-import { useEffect, useRef } from 'react'
-import { NavLink, useLocation } from 'react-router'
+import { useEffect, useRef, useState } from 'react'
+import { NavLink, useLocation, useNavigate } from 'react-router'
 import {
   Wallet,
   LayoutDashboard,
@@ -10,15 +10,18 @@ import {
   PanelLeftClose,
   X,
   UserRound,
+  Lock,
+  LogOut,
 } from 'lucide-react'
+import { useAuth } from '../../contexts/AuthContext'
 
 import './Sidebar.css'
 
 const menus = [
-  { path: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { path: '/transactions', label: 'Giao dịch', icon: ArrowLeftRight },
-  { path: '/categories', label: 'Danh mục', icon: Tags },
-  { path: '/budgets', label: 'Ngân sách', icon: Wallet },
+  { path: '/', label: 'Tổng quan', icon: LayoutDashboard },
+  { path: '/transactions', label: 'Giao dịch', icon: ArrowLeftRight, authRequired: true },
+  { path: '/categories', label: 'Danh mục', icon: Tags, authRequired: true },
+  { path: '/budgets', label: 'Ngân sách', icon: Wallet, authRequired: true },
 ]
 
 export default function Sidebar({
@@ -27,9 +30,14 @@ export default function Sidebar({
   onToggle,
   onClose,
   user,
+  onLogout,
 }) {
   const location = useLocation()
+  const navigate = useNavigate()
+  const { isAuthenticated, logout } = useAuth()
   const linksRef = useRef([])
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false)
+  const profileRef = useRef(null)
 
   const selected = menus.findIndex((item) =>
     item.path === '/'
@@ -38,6 +46,18 @@ export default function Sidebar({
   )
 
   const activeIndex = Math.max(0, selected)
+
+  // Đóng profile popover khi bấm ra ngoài
+  useEffect(() => {
+    if (!profileMenuOpen) return
+    const handleClickOutside = (event) => {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setProfileMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [profileMenuOpen])
 
   // Focus mục đầu tiên khi mở menu trên điện thoại
   useEffect(() => {
@@ -67,6 +87,39 @@ export default function Sidebar({
     event.preventDefault()
     const next = (index + direction + menus.length) % menus.length
     linksRef.current[next]?.focus()
+  }
+
+  const handleItemClick = (event, item) => {
+    if (!isAuthenticated && item.authRequired) {
+      event.preventDefault()
+      onClose?.()
+      navigate('/login', {
+        state: {
+          from: item.path,
+          message: `Vui lòng đăng nhập để sử dụng tính năng "${item.label}".`,
+        },
+      })
+      return
+    }
+    onClose?.()
+  }
+
+  const handleProfileClick = () => {
+    if (isAuthenticated) {
+      setProfileMenuOpen((prev) => !prev)
+    } else {
+      navigate('/login')
+    }
+  }
+
+  const handleDoLogout = () => {
+    setProfileMenuOpen(false)
+    if (onLogout) {
+      onLogout()
+    } else {
+      logout()
+      navigate('/', { replace: true })
+    }
   }
 
   return (
@@ -141,37 +194,83 @@ export default function Sidebar({
         >
           <li className="se040-highlight" aria-hidden="true" />
 
-          {menus.map(({ path, label, icon: Icon }, index) => (
-            <li key={path} className="se040-menu-row">
-              <NavLink
-                ref={(element) => {
-                  linksRef.current[index] = element
-                }}
-                to={path}
-                end={path === '/'}
-                onClick={onClose}
-                onKeyDown={(event) => handleArrowKeys(event, index)}
-                title={label}
-                aria-label={label}
-                style={{ '--se-index': index }}
-                className={({ isActive }) =>
-                  `se040-item ${isActive ? 'is-active' : ''}`
-                }
-              >
-                <Icon size={22} className="se040-icon" />
-                <span className="se040-item-text">{label}</span>
-              </NavLink>
-            </li>
-          ))}
+          {menus.map((item, index) => {
+            const { path, label, icon: Icon, authRequired } = item
+            const isLocked = !isAuthenticated && authRequired
+
+            return (
+              <li key={path} className="se040-menu-row">
+                <NavLink
+                  ref={(element) => {
+                    linksRef.current[index] = element
+                  }}
+                  to={path}
+                  end={path === '/'}
+                  onClick={(event) => handleItemClick(event, item)}
+                  onKeyDown={(event) => handleArrowKeys(event, index)}
+                  title={isLocked ? `${label} (Cần đăng nhập)` : label}
+                  aria-label={isLocked ? `${label} (Cần đăng nhập)` : label}
+                  style={{ '--se-index': index }}
+                  className={({ isActive }) =>
+                    `se040-item ${isActive ? 'is-active' : ''} ${isLocked ? 'is-locked' : ''}`
+                  }
+                >
+                  <Icon size={22} className="se040-icon" />
+                  <span className="se040-item-text">{label}</span>
+                  {isLocked && (
+                    <Lock
+                      size={13}
+                      className="se040-lock-icon"
+                      aria-label="Yêu cầu đăng nhập"
+                    />
+                  )}
+                </NavLink>
+              </li>
+            )
+          })}
         </ul>
 
-        <div className="se040-profile">
-          <div className="se040-avatar">
-            <UserRound size={19} />
-          </div>
-          <div className="se040-profile-info">
-            <strong>{user?.fullName || 'Khách truy cập'}</strong>
-            <small>{user?.email || 'Chưa đăng nhập'}</small>
+        {/* Profile chip & menu */}
+        <div className="se040-profile-wrap" ref={profileRef}>
+          {profileMenuOpen && isAuthenticated && (
+            <div className="se040-user-menu" role="menu">
+              <div className="se040-user-menu-header">
+                <p className="se040-user-menu-name truncate">{user?.fullName || 'Người dùng'}</p>
+                <p className="se040-user-menu-email truncate">{user?.email || ''}</p>
+              </div>
+              <div className="se040-user-menu-divider" />
+              <button
+                type="button"
+                className="se040-user-menu-logout"
+                onClick={handleDoLogout}
+                role="menuitem"
+              >
+                <LogOut size={15} />
+                <span>Đăng xuất</span>
+              </button>
+            </div>
+          )}
+
+          <div
+            className={`se040-profile ${isAuthenticated ? 'is-clickable' : ''}`}
+            onClick={handleProfileClick}
+            title={isAuthenticated ? 'Tài khoản & Đăng xuất' : 'Bấm để đăng nhập'}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault()
+                handleProfileClick()
+              }
+            }}
+          >
+            <div className="se040-avatar">
+              <UserRound size={19} />
+            </div>
+            <div className="se040-profile-info">
+              <strong>{user?.fullName || 'Khách truy cập'}</strong>
+              <small>{user?.email || 'Chưa đăng nhập'}</small>
+            </div>
           </div>
         </div>
       </nav>

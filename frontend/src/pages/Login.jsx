@@ -167,6 +167,15 @@ export default function Login() {
         </p>
       }
     >
+      {location.state?.message && (
+        <p
+          role="status"
+          className="mb-3 rounded-xl border border-blue-400/30 bg-blue-500/10 p-3 text-xs font-semibold text-blue-300"
+        >
+          {location.state.message}
+        </p>
+      )}
+
       {location.state?.registered && (
         <p
           role="status"
