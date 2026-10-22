@@ -3,6 +3,7 @@ services:
     image: mysql:8.0
     container_name: smartexpense-mysql
     restart: unless-stopped
+    command: mysqld --innodb-buffer-pool-size=64M --innodb-log-buffer-size=8M --max-connections=30 --performance-schema=OFF
     environment:
       MYSQL_DATABASE: ${DB_NAME:-personal_finance_db}
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-123456$}
@@ -15,6 +16,10 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 256M
     networks:
       - smartexpense-net
 
@@ -32,9 +37,14 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       JWT_SECRET: ${JWT_SECRET:-j6uECsjbXr08La2gKzpRPUzOmGSUyCS7/kXGeTVxjfs=}
       APP_JWT_EXPIRATION: ${JWT_EXPIRATION:-86400}
+      JAVA_OPTS: "-Xms128m -Xmx320m -XX:+UseSerialGC -Djava.security.egd=file:/dev/./urandom"
     depends_on:
       mysql:
         condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 450M
     networks:
       - smartexpense-net
 
@@ -47,10 +57,14 @@ services:
     container_name: smartexpense-frontend
     restart: unless-stopped
     ports:
-      - "${FRONTEND_PORT:-8088}:80"
+      - "${FRONTEND_BIND:-127.0.0.1}:${FRONTEND_PORT:-8088}:80"
     depends_on:
       backend:
         condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 64M
     networks:
       - smartexpense-net
 
