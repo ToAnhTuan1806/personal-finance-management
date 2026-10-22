@@ -198,7 +198,7 @@ Bộ script PowerShell gồm 27 test cases bao quát toàn bộ chức năng:
 ```powershell
 powershell.exe -ExecutionPolicy Bypass -File scripts\smoke-test.ps1
 ```
-*Kết quả:* **27/27 kịch bản đạt trạng thái PASS (100%)**. Chi tiết xem tại [docs/INTEGRATION_TEST_REPORT.md](docs/INTEGRATION_TEST_REPORT.md).
+*Kết quả:* **27/27 kịch bản đạt trạng thái PASS (100%)** bao quát toàn bộ luồng Hạ tầng, Nginx Gateway, Xác thực JWT, Nghiệp vụ CRUD và Phân quyền đa người dùng.
 
 ### 2. Kiểm thử API bằng Postman Collection
 Bộ sưu tập Postman đầy đủ cho toàn bộ API endpoints (Auth, Categories, Transactions, Monthly Budgets, Dashboard) được đặt tại:
@@ -251,12 +251,7 @@ personal-finance-management/
 │   ├── postman/                 # Postman Collection & Hướng dẫn test API
 │   │   ├── README_POSTMAN.md
 │   │   └── SmartExpense_Postman_Collection.json
-│   ├── DEPLOYMENT_GUIDE.md      # Hướng dẫn chi tiết triển khai Local & VPS
-│   ├── DEVOPS_GUIDE.md          # Hướng dẫn vận hành Docker, Nginx, CI/CD, Monitoring
 │   ├── FINAL_DATABASE_RESET_REPORT.md  # Báo cáo reset CSDL và khởi tạo seed data chuẩn
-│   ├── VPS_PRODUCTION_DEPLOYMENT_REPORT.md # Báo cáo chi tiết triển khai VPS & HTTPS
-│   ├── INTEGRATION_TEST_REPORT.md # Báo cáo kết quả kiểm thử tích hợp 27 kịch bản
-│   ├── QA_REPORT.md             # Báo cáo kiểm thử giao diện & chức năng E2E
 │   └── SmartExpense_SRS.docx    # Tài liệu đặc tả yêu cầu phần mềm (SRS)
 ├── frontend/
 │   ├── Dockerfile               # Multi-stage Dockerfile (Vite Build + Nginx)
@@ -283,13 +278,9 @@ personal-finance-management/
 
 ## 📚 Danh Mục Tài Liệu Kỹ Thuật Chi Tiết
 
-1. [Hướng dẫn Vận hành DevOps](docs/DEVOPS_GUIDE.md) – Kiến trúc containerization, mạng nội bộ, tối ưu tài nguyên VPS 1GB RAM và runbook.
-2. [Hướng dẫn Triển khai VPS & HTTPS](docs/DEPLOYMENT_GUIDE.md) – Quy trình thiết lập VPS Ubuntu, cấu hình Nginx Reverse Proxy, kích hoạt SSL Let's Encrypt và kiểm tra an ninh mạng.
-3. [Báo cáo Reset CSDL & Dữ liệu Mẫu](docs/FINAL_DATABASE_RESET_REPORT.md) – Chi tiết kỹ thuật về việc làm sạch CSDL, cấu trúc bảng và 84 giao dịch thực tế phục vụ nghiệm thu.
-4. [Báo cáo Triển khai VPS Thực tế](docs/VPS_PRODUCTION_DEPLOYMENT_REPORT.md) – Báo cáo nghiệm thu môi trường Production trên hạ tầng WiServices Cloud.
-5. [Báo cáo Kiểm thử Tích hợp](docs/INTEGRATION_TEST_REPORT.md) – Ma trận kết quả chi tiết 27/27 kịch bản kiểm thử tự động.
-6. [Tài liệu API & Postman](docs/postman/README_POSTMAN.md) – Danh sách endpoint và hướng dẫn nhập Postman Collection.
-7. [Đặc tả Yêu cầu Phần mềm (SRS)](docs/SmartExpense_SRS.docx) – Bản đặc tả nghiệp vụ chi tiết của dự án SmartExpense.
+1. [Báo cáo Reset CSDL & Dữ liệu Mẫu](docs/FINAL_DATABASE_RESET_REPORT.md) – Chi tiết kỹ thuật về việc làm sạch CSDL, cấu trúc bảng và 84 giao dịch thực tế phục vụ nghiệm thu.
+2. [Tài liệu API & Postman](docs/postman/README_POSTMAN.md) – Danh sách endpoint và hướng dẫn nhập Postman Collection.
+3. [Đặc tả Yêu cầu Phần mềm (SRS)](docs/SmartExpense_SRS.docx) – Bản đặc tả nghiệp vụ chi tiết của dự án SmartExpense.
 
 ---
 
