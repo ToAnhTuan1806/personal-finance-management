@@ -35,6 +35,7 @@ import ExpenseDonutChart from '../components/dashboard/ExpenseDonutChart'
 import dashboardService from '../services/dashboardService'
 import { getTransactions } from '../services/transactionService'
 import { getBudget } from '../services/budgetService'
+import walletLogo from '../assets/wallet-logo.png'
 
 const formatMoney = (amount) =>
   new Intl.NumberFormat('vi-VN', {
@@ -296,9 +297,11 @@ function AuthenticatedDashboard() {
     }
   }, [categoryExpenses, summary])
 
-  const firstName = user?.fullName
-    ? user.fullName.trim().split(' ').pop()
-    : 'Tuấn'
+  // Hiển thị tên người dùng (ưu tiên họ và tên đầy đủ, ví dụ: "Tô Anh Tuấn")
+  const displayName =
+    user?.fullName && user.fullName !== 'Demo User' && user.fullName !== 'User'
+      ? user.fullName
+      : 'Tô Anh Tuấn'
 
   const totalIncome = Number(summary?.totalIncome || 0)
   const totalExpense = Number(summary?.totalExpense || 0)
@@ -317,7 +320,7 @@ function AuthenticatedDashboard() {
           <div className="space-y-1.5">
             <span className="inline-flex items-center gap-2 rounded-full border border-blue-400/25 bg-blue-500/20 px-3 py-1 text-xs font-semibold text-blue-200 backdrop-blur-md">
               <Sparkles size={14} className="text-amber-300" />
-              <span>Xin chào, {firstName}</span>
+              <span>Xin chào, {displayName}</span>
             </span>
 
             <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
@@ -1011,7 +1014,15 @@ function GuestDashboard() {
               <div className="flex items-center justify-between border-b border-white/10 pb-3">
                 <div className="flex items-center gap-2.5">
                   <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20 overflow-hidden p-1">
-                    <img src="/Vi.png" alt="SmartExpense" className="h-full w-full object-contain" />
+                    <img
+                      src={walletLogo}
+                      alt="SmartExpense"
+                      className="h-full w-full object-contain"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null
+                        e.currentTarget.src = '/Vi.png'
+                      }}
+                    />
                   </div>
                   <div>
                     <p className="text-xs font-bold text-white leading-tight">SmartExpense</p>

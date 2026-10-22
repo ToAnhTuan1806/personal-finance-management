@@ -1,6 +1,7 @@
 /* Lucian UX/UI Prompt #062 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#062 */
 
 import { Check } from 'lucide-react'
+import walletLogo from '../../assets/wallet-logo.png'
 import './AuthCard.css'
 import '../../styles/auth-background.css'
 
@@ -42,7 +43,15 @@ export default function AuthCard({
           className="se062-form-pane"
         >
           <div className="se062-logo" aria-hidden="true">
-            <img src="/Vi.png" alt="SmartExpense Logo" className="se062-logo-img" />
+            <img
+              src={walletLogo}
+              alt="SmartExpense Logo"
+              className="se062-logo-img"
+              onError={(e) => {
+                e.currentTarget.onerror = null
+                e.currentTarget.src = '/Vi.png'
+              }}
+            />
           </div>
 
           <h1 className="se062-title">{title}</h1>

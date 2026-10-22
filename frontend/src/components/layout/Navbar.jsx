@@ -12,6 +12,7 @@ import {
   Bell,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
+import walletLogo from '../../assets/wallet-logo.png'
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -37,7 +38,15 @@ export default function Navbar() {
         <div className="flex items-center gap-8">
           <Link to="/" className="flex items-center gap-2.5 group">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-700 via-blue-600 to-indigo-500 text-white shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform duration-200 overflow-hidden p-1">
-              <img src="/Vi.png" alt="SmartExpense Logo" className="h-full w-full object-contain" />
+              <img
+                src={walletLogo}
+                alt="SmartExpense Logo"
+                className="h-full w-full object-contain"
+                onError={(e) => {
+                  e.currentTarget.onerror = null
+                  e.currentTarget.src = '/Vi.png'
+                }}
+              />
             </div>
             <div>
               <span className="text-xl font-black tracking-tight bg-gradient-to-r from-blue-900 via-blue-800 to-indigo-900 bg-clip-text text-transparent">

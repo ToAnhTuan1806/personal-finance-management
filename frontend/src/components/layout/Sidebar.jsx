@@ -14,6 +14,7 @@ import {
   LogOut,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
+import walletLogo from '../../assets/wallet-logo.png'
 
 import './Sidebar.css'
 
@@ -155,9 +156,13 @@ export default function Sidebar({
         >
           <div className="se040-logo" aria-hidden="true">
             <img
-              src="/Vi.png"
-              alt="SmartExpense Logo"
+              src={walletLogo}
+              alt="SmartExpense"
               className="se040-logo-img"
+              onError={(e) => {
+                e.currentTarget.onerror = null
+                e.currentTarget.src = '/Vi.png'
+              }}
             />
           </div>
           <span className="se040-name">SmartExpense</span>
@@ -235,8 +240,12 @@ export default function Sidebar({
           {profileMenuOpen && isAuthenticated && (
             <div className="se040-user-menu" role="menu">
               <div className="se040-user-menu-header">
-                <p className="se040-user-menu-name truncate">{user?.fullName || 'Người dùng'}</p>
-                <p className="se040-user-menu-email truncate">{user?.email || ''}</p>
+                <p className="se040-user-menu-name truncate">
+                  {user?.fullName && user.fullName !== 'Demo User' ? user.fullName : 'Tô Anh Tuấn'}
+                </p>
+                <p className="se040-user-menu-email truncate">
+                  {user?.email || 'totuan.18dz@gmail.com'}
+                </p>
               </div>
               <div className="se040-user-menu-divider" />
               <button
@@ -268,8 +277,18 @@ export default function Sidebar({
               <UserRound size={19} />
             </div>
             <div className="se040-profile-info">
-              <strong>{user?.fullName || 'Khách truy cập'}</strong>
-              <small>{user?.email || 'Chưa đăng nhập'}</small>
+              <strong>
+                {isAuthenticated
+                  ? user?.fullName && user.fullName !== 'Demo User'
+                    ? user.fullName
+                    : 'Tô Anh Tuấn'
+                  : 'Khách truy cập'}
+              </strong>
+              <small>
+                {isAuthenticated
+                  ? user?.email || 'totuan.18dz@gmail.com'
+                  : 'Chưa đăng nhập'}
+              </small>
             </div>
           </div>
         </div>

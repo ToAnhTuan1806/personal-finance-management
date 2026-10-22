@@ -119,6 +119,15 @@ export default function Register() {
         password: form.password,
       })
 
+      // Lưu lại họ tên đăng ký để hiển thị chính xác khi đăng nhập
+      try {
+        const cachedUsers = JSON.parse(localStorage.getItem('registered_users') || '{}')
+        cachedUsers[form.email.trim().toLowerCase()] = form.fullName.trim()
+        localStorage.setItem('registered_users', JSON.stringify(cachedUsers))
+      } catch {
+        // Bỏ qua lỗi localStorage
+      }
+
       setPhase('success')
 
       timers.current.push(

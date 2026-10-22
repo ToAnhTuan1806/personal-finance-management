@@ -11,8 +11,43 @@ import {
 
 const AuthContext = createContext(null)
 
+function resolveFallbackUser(email) {
+  const cleanEmail = (email || '').trim().toLowerCase()
+  let fullName = 'Tô Anh Tuấn'
+
+  try {
+    const cachedUsers = JSON.parse(localStorage.getItem('registered_users') || '{}')
+    if (cachedUsers[cleanEmail]) {
+      fullName = cachedUsers[cleanEmail]
+    } else if (cleanEmail.includes('totuan') || cleanEmail.includes('toanhtuan')) {
+      fullName = 'Tô Anh Tuấn'
+    } else if (cleanEmail && !cleanEmail.includes('demo')) {
+      const prefix = cleanEmail.split('@')[0].replace(/[._-]/g, ' ')
+      fullName = prefix
+        .split(' ')
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(' ')
+    }
+  } catch {
+    fullName = 'Tô Anh Tuấn'
+  }
+
+  return {
+    id: 1,
+    fullName: fullName || 'Tô Anh Tuấn',
+    email: email || 'totuan.18dz@gmail.com',
+  }
+}
+
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null)
+  const [user, setUser] = useState(() => {
+    try {
+      const raw = sessionStorage.getItem('currentUser')
+      return raw ? JSON.parse(raw) : null
+    } catch {
+      return null
+    }
+  })
   const [loading, setLoading] = useState(true)
 
   // Khôi phục đăng nhập khi tải lại trang
@@ -27,18 +62,39 @@ export function AuthProvider({ children }) {
         return
       }
 
+      // Khôi phục ngay từ sessionStorage để UI không bị giật
+      let savedUser = null
+      try {
+        const raw = sessionStorage.getItem('currentUser')
+        if (raw) {
+          savedUser = JSON.parse(raw)
+          if (active && savedUser) setUser(savedUser)
+        }
+      } catch {
+        // Bỏ qua lỗi parse
+      }
+
       try {
         const userData = await getCurrentUser()
-        if (active) setUser(userData)
+        if (active && userData) {
+          setUser(userData)
+          sessionStorage.setItem('currentUser', JSON.stringify(userData))
+        }
       } catch (err) {
         if (err.response?.status === 401) {
           sessionStorage.removeItem('accessToken')
+          sessionStorage.removeItem('currentUser')
           if (active) setUser(null)
-        } else if (!err.response && token === 'demo_jwt_token') {
+        } else if (!err.response) {
           // Khi Backend offline và đang dùng token thử nghiệm
-          if (active) setUser({ id: 1, fullName: 'Demo User', email: 'demo@example.com' })
+          if (active) {
+            const fallback = savedUser || resolveFallbackUser()
+            setUser(fallback)
+            sessionStorage.setItem('currentUser', JSON.stringify(fallback))
+          }
         } else {
           sessionStorage.removeItem('accessToken')
+          sessionStorage.removeItem('currentUser')
           if (active) setUser(null)
         }
       } finally {
@@ -58,21 +114,22 @@ export function AuthProvider({ children }) {
     try {
       const data = await loginApi({ email, password })
       sessionStorage.setItem('accessToken', data.accessToken)
-      setUser(data.user)
+      if (data.user) {
+        sessionStorage.setItem('currentUser', JSON.stringify(data.user))
+        setUser(data.user)
+      }
       return data
     } catch (err) {
       // Nếu Backend chưa chạy (Network Error), cho phép đăng nhập thử nghiệm để kiểm tra giao diện
       if (!err.response) {
+        const fallbackUser = resolveFallbackUser(email)
         const mockData = {
           accessToken: 'demo_jwt_token',
           tokenType: 'Bearer',
-          user: {
-            id: 1,
-            fullName: 'Demo User',
-            email: email || 'demo@example.com',
-          },
+          user: fallbackUser,
         }
         sessionStorage.setItem('accessToken', mockData.accessToken)
+        sessionStorage.setItem('currentUser', JSON.stringify(mockData.user))
         setUser(mockData.user)
         return mockData
       }
@@ -83,6 +140,7 @@ export function AuthProvider({ children }) {
   // Đăng xuất ở Frontend
   const logout = () => {
     sessionStorage.removeItem('accessToken')
+    sessionStorage.removeItem('currentUser')
     setUser(null)
   }
 
