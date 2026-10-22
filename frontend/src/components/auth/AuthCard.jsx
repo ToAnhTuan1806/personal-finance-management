@@ -2,6 +2,7 @@
 
 import { Check, Wallet } from 'lucide-react'
 import './AuthCard.css'
+import '../../styles/auth-background.css'
 
 export default function AuthCard({
   mode = 'login',
@@ -22,9 +23,9 @@ export default function AuthCard({
   const welcome = phase === 'welcome'
 
   return (
-    <main className="se062-page">
+    <main className="se062-page auth-page">
       <section
-        className={`se062-card ${mode === 'register' ? 'is-register' : ''}
+        className={`se062-card auth-card ${mode === 'register' ? 'is-register' : ''}
           ${shake ? 'is-shaking' : ''}
           ${welcome ? 'is-welcome' : ''}`}
         onAnimationEnd={(event) => {
@@ -36,7 +37,7 @@ export default function AuthCard({
         <form
           noValidate
           onSubmit={onSubmit}
-          inert={welcome ? '' : undefined}
+          inert={welcome ? true : undefined}
           aria-hidden={welcome}
           className="se062-form-pane"
         >

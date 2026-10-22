@@ -166,8 +166,8 @@ export default function Sidebar({
             <UserRound size={19} />
           </div>
           <div className="se040-profile-info">
-            <strong>{user?.fullName || 'Người dùng'}</strong>
-            <small>{user?.email || 'Tài khoản SmartExpense'}</small>
+            <strong>{user?.fullName || 'Khách truy cập'}</strong>
+            <small>{user?.email || 'Chưa đăng nhập'}</small>
           </div>
         </div>
       </nav>

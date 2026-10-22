@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { register } from '../services/authService'
 import AuthCard from '../components/auth/AuthCard'
 import FloatingInput from '../components/ui/FloatingInput'
+import '../styles/auth-background.css'
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -128,7 +129,7 @@ export default function Register() {
         setTimeout(() => {
           navigate('/login', {
             replace: true,
-            state: { registered: true },
+            state: { registered: true, email: form.email.trim() },
           })
         }, 1350)
       )
@@ -136,17 +137,35 @@ export default function Register() {
       setPhase('idle')
       busyRef.current = false
 
-      if (error.response?.status === 409) {
+      const status = error.response?.status
+      const data = error.response?.data
+      const message = data?.message || ''
+
+      if (status === 409 || message.toLowerCase().includes('đã được đăng ký')) {
         setErrors((prev) => ({
           ...prev,
-          email: 'Email này đã được đăng ký.',
+          email: 'Email này đã được đăng ký. Vui lòng chọn email khác hoặc đăng nhập.',
         }))
-      } else if (error.response?.status === 400) {
-        setServerError('Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.')
-      } else if (!error.response) {
-        setServerError('Không thể kết nối máy chủ.')
+        setServerError('Email này đã được sử dụng. Vui lòng chọn email khác.')
+      } else if (status === 400) {
+        if (data?.errors && typeof data.errors === 'object') {
+          setErrors((prev) => ({
+            ...prev,
+            ...data.errors,
+          }))
+          const firstError = Object.values(data.errors)[0]
+          setServerError(firstError || 'Thông tin đăng ký không hợp lệ.')
+        } else {
+          setServerError(message || 'Dữ liệu không hợp lệ. Vui lòng kiểm tra lại.')
+        }
+      } else if (status === 401 || status === 403) {
+        setServerError('Không có quyền thực hiện đăng ký. Vui lòng thử lại.')
+      } else if (status >= 500) {
+        setServerError('Máy chủ đang gặp sự cố. Vui lòng thử lại sau.')
+      } else if (!error.response || error.code === 'ERR_NETWORK') {
+        setServerError('Không thể kết nối đến máy chủ. Vui lòng kiểm tra mạng.')
       } else {
-        setServerError('Đăng ký thất bại. Vui lòng thử lại.')
+        setServerError(message || 'Đăng ký thất bại. Vui lòng thử lại.')
       }
 
       setShake(true)

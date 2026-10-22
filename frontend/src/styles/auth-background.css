@@ -1,0 +1,79 @@
+/* SmartExpense - Auth Background & Glassmorphism Styling */
+
+.auth-page,
+.se062-page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+
+  background-image:
+    linear-gradient(
+      rgba(245, 247, 251, 0.45),
+      rgba(245, 247, 251, 0.65)
+    ),
+    url('/images/auth-bg.webp');
+
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+/* Giữ form nổi bật trên nền ảnh với hiệu ứng Glassmorphism */
+.auth-card,
+.se062-card {
+  width: 100%;
+  max-width: 420px;
+  background: color-mix(
+    in srgb,
+    var(--se062-surface, #ffffff) 94%,
+    transparent
+  );
+  border-radius: 28px;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.4),
+    0 24px 65px rgba(30, 41, 59, 0.16);
+}
+
+/* Đồng bộ Dark Mode */
+:root[data-theme="dark"] .auth-page,
+:root[data-theme="dark"] .se062-page,
+html.dark .auth-page,
+html.dark .se062-page,
+.dark .auth-page,
+.dark .se062-page {
+  background-image:
+    linear-gradient(
+      rgba(7, 12, 26, 0.75),
+      rgba(7, 12, 26, 0.88)
+    ),
+    url('/images/auth-bg.webp');
+}
+
+:root[data-theme="dark"] .auth-card,
+:root[data-theme="dark"] .se062-card,
+html.dark .auth-card,
+html.dark .se062-card,
+.dark .auth-card,
+.dark .se062-card {
+  background: color-mix(
+    in srgb,
+    var(--se062-surface, #182234) 92%,
+    transparent
+  );
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 24px 65px rgba(0, 0, 0, 0.55);
+}
+
+@media (max-width: 480px) {
+  .auth-page,
+  .se062-page {
+    padding: 16px 12px;
+  }
+}
