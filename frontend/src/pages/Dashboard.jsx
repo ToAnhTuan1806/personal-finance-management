@@ -33,8 +33,9 @@ import { useAuth } from '../contexts/AuthContext'
 import RollingNumber from '../components/dashboard/RollingNumber'
 import ExpenseDonutChart from '../components/dashboard/ExpenseDonutChart'
 import dashboardService from '../services/dashboardService'
-import { getTransactions } from '../services/transactionService'
+import { getMonthlyTransactions, getTransactions } from '../services/transactionService'
 import { getBudget } from '../services/budgetService'
+import { buildDailyCashFlow, formatCashFlowTick } from '../utils/cashFlow'
 import walletLogo from '../assets/wallet-logo.png'
 
 const formatMoney = (amount) =>
@@ -100,6 +101,7 @@ function AuthenticatedDashboard() {
   const [summary, setSummary] = useState(null)
   const [categoryExpenses, setCategoryExpenses] = useState(null)
   const [recentTransactions, setRecentTransactions] = useState(null)
+  const [monthlyTransactions, setMonthlyTransactions] = useState(null)
   const [budget, setBudget] = useState(null)
 
   const [loading, setLoading] = useState(true)
@@ -162,8 +164,9 @@ function AuthenticatedDashboard() {
         size: 8,
       }),
       getBudget(year, month),
+      getMonthlyTransactions(selectedMonth),
     ])
-      .then(([summaryResult, categoryResult, transactionResult, budgetResult]) => {
+      .then(([summaryResult, categoryResult, transactionResult, budgetResult, monthlyResult]) => {
         if (ignore) return
 
         const failedSections = []
@@ -202,6 +205,14 @@ function AuthenticatedDashboard() {
           setBudget(null)
         }
 
+        // 5. Dòng tiền dùng toàn bộ giao dịch tháng, độc lập danh sách gần đây.
+        if (monthlyResult.status === 'fulfilled') {
+          setMonthlyTransactions(monthlyResult.value)
+        } else {
+          setMonthlyTransactions(null)
+          failedSections.push('biểu đồ dòng tiền')
+        }
+
         if (failedSections.length > 0) {
           setError(
             `Không thể tải: ${failedSections.join(', ')}. Vui lòng thử làm mới Dashboard.`
@@ -235,27 +246,10 @@ function AuthenticatedDashboard() {
   }
 
   // Dữ liệu dòng tiền theo ngày để vẽ biểu đồ
-  const dailyTrend = useMemo(() => {
-    if (!recentTransactions || recentTransactions.length === 0) return []
-    const map = {}
-
-    recentTransactions.forEach((tx) => {
-      const day = tx.transactionDate ? tx.transactionDate.split('-')[2] : '01'
-      const key = `${day}/${selectedMonth.split('-')[1]}`
-      if (!map[key]) {
-        map[key] = { date: key, income: 0, expense: 0, rawDate: tx.transactionDate }
-      }
-      if (tx.type === 'INCOME') {
-        map[key].income += Number(tx.amount || 0)
-      } else {
-        map[key].expense += Number(tx.amount || 0)
-      }
-    })
-
-    return Object.values(map).sort((a, b) =>
-      String(a.rawDate || '').localeCompare(String(b.rawDate || ''))
-    )
-  }, [recentTransactions, selectedMonth])
+  const dailyTrend = useMemo(
+    () => buildDailyCashFlow(selectedMonth, monthlyTransactions ?? []),
+    [monthlyTransactions, selectedMonth]
+  )
 
   // Thông tin tài chính
   const financialInsights = useMemo(() => {
@@ -559,7 +553,9 @@ function AuthenticatedDashboard() {
               </div>
             </div>
 
-            {dailyTrend.length >= 2 ? (
+            {monthlyTransactions === null ? (
+              <ErrorSection message="Không thể tải đủ dữ liệu dòng tiền. Vui lòng làm mới Dashboard." />
+            ) : dailyTrend.length > 0 ? (
               <div className="w-full h-64 mt-2">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={dailyTrend} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
@@ -585,7 +581,7 @@ function AuthenticatedDashboard() {
                       fontSize={11}
                       tickLine={false}
                       axisLine={{ stroke: '#cbd5e1', strokeWidth: 0.5 }}
-                      tickFormatter={(val) => `${Math.round(val / 1000000)}tr`}
+                      tickFormatter={formatCashFlowTick}
                     />
                     <Tooltip
                       formatter={(val, name) => [formatMoney(val), name]}
@@ -622,7 +618,7 @@ function AuthenticatedDashboard() {
               <div className="flex flex-1 flex-col items-center justify-center p-8 text-center bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 my-4">
                 <Wallet size={28} className="text-slate-400 mb-2" />
                 <p className="text-xs font-semibold text-slate-600 dark:text-slate-300">
-                  Chưa đủ dữ liệu để so sánh với tháng trước
+                  Chưa có giao dịch trong {formatMonth(selectedMonth)}
                 </p>
                 <p className="text-[11px] text-slate-400 mt-1 max-w-xs">
                   Ghi chép thêm giao dịch để hiển thị biểu đồ dòng tiền chi tiết theo từng ngày.

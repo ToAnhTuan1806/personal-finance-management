@@ -1,4 +1,5 @@
 import axiosClient from '../api/axiosClient'
+import { loadMonthlyTransactions } from '../utils/cashFlow'
 
 // Mock transactions dùng khi Backend offline
 let mockTransactions = [
@@ -110,6 +111,13 @@ export const getTransactions = async (params = {}) => {
   }
 }
 
+// Dữ liệu biểu đồ phải lấy đủ từ API thật, không dùng dữ liệu giả khi lỗi mạng.
+export const getMonthlyTransactions = (month) =>
+  loadMonthlyTransactions(month, async (params) => {
+    const response = await axiosClient.get('/transactions', { params })
+    return response.data
+  })
+
 // Xem chi tiết một giao dịch
 export const getTransactionById = async (id) => {
   try {
@@ -174,6 +182,7 @@ export const deleteTransaction = async (id) => {
 
 export const transactionService = {
   getTransactions,
+  getMonthlyTransactions,
   getTransactionById,
   createTransaction,
   updateTransaction,

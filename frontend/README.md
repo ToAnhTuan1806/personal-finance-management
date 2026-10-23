@@ -62,6 +62,7 @@ Chạy trong thư mục `frontend`:
 | `npm ci` | Cài dependency theo lockfile |
 | `npm run dev` | Chạy Vite với hot reload |
 | `npm run lint` | Kiểm tra JavaScript/JSX bằng ESLint |
+| `npm test` | Kiểm tra phân trang giao dịch, tổng hợp dòng tiền và định dạng trục tiền |
 | `npm run build` | Tạo bản build production trong `dist/` |
 | `npm run preview` | Xem bản build local, mặc định tại cổng 4173 |
 
@@ -109,9 +110,10 @@ Theo cấu hình mặc định, ứng dụng có thể truy cập tại `http://
 
 ```bash
 npm run lint
+npm test
 npm run build
 ```
 
-Frontend hiện chưa có script unit test hoặc E2E test riêng trong `package.json`. Kiểm thử API toàn hệ thống có tại [scripts/smoke-test.ps1](../scripts/smoke-test.ps1); xem thêm [báo cáo CRUD production ngày 23/10/2026](../docs/PRODUCTION_CRUD_TEST_2026-10-23.md).
+Các unit test dòng tiền nằm trong `tests/cashFlow.test.js` và chạy bằng Node.js test runner; CI chạy chúng trước bước build. Frontend hiện chưa có E2E test tự động. Kiểm thử API toàn hệ thống có tại [scripts/smoke-test.ps1](../scripts/smoke-test.ps1); xem thêm [báo cáo CRUD production ngày 23/10/2026](../docs/PRODUCTION_CRUD_TEST_2026-10-23.md).
 
 Các thư mục `node_modules/`, `dist/` và file `.env` đã được Git ignore. Giữ `.env.example` và `package-lock.json` trong repository để tái tạo cấu hình và dependency.
