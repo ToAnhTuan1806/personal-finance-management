@@ -114,6 +114,6 @@ npm test
 npm run build
 ```
 
-Các unit test dòng tiền nằm trong `tests/cashFlow.test.js` và chạy bằng Node.js test runner; CI chạy chúng trước bước build. Frontend hiện chưa có E2E test tự động. Kiểm thử API toàn hệ thống có tại [scripts/smoke-test.ps1](../scripts/smoke-test.ps1); xem thêm [báo cáo CRUD production ngày 23/10/2026](../docs/PRODUCTION_CRUD_TEST_2026-10-23.md).
+Các unit test dòng tiền nằm trong `tests/cashFlow.test.js` và chạy bằng Node.js test runner; CI chạy chúng trước bước build. Frontend hiện chưa có E2E test tự động. Kiểm thử API toàn hệ thống có tại [scripts/smoke-test.ps1](../scripts/smoke-test.ps1).
 
 Các thư mục `node_modules/`, `dist/` và file `.env` đã được Git ignore. Giữ `.env.example` và `package-lock.json` trong repository để tái tạo cấu hình và dependency.

@@ -242,6 +242,14 @@ powershell.exe -ExecutionPolicy Bypass -File scripts\backup-db.ps1
 powershell.exe -ExecutionPolicy Bypass -File scripts\restore-db.ps1 -BackupFile "database\backups\backup_personal_finance_db_xxxx.sql"
 ```
 
+Hai script trả mã thoát `1` khi Docker/MySQL thất bại; chỉ báo thành công sau mã thoát `0`. Backup lỗi không được công bố thành file `.sql` hợp lệ.
+
+Kiểm thử hồi quy trên một container MySQL local dùng riêng, đã sẵn sàng (không dùng container production):
+
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File scripts\test-db-scripts.ps1 -ContainerName "smartexpense-backup-qa-local" -RootPassword "local_qa_password"
+```
+
 ---
 
 ## 📂 Cấu Trúc Thư Mục Dự Án (Project Structure)
@@ -272,8 +280,6 @@ personal-finance-management/
 │   ├── postman/                 # Postman Collection & Hướng dẫn test API
 │   │   ├── README_POSTMAN.md
 │   │   └── SmartExpense_Postman_Collection.json
-│   ├── FINAL_DATABASE_RESET_REPORT.md  # Báo cáo reset CSDL và khởi tạo seed data chuẩn
-│   ├── PRODUCTION_CRUD_TEST_2026-10-23.md # Báo cáo kiểm thử CRUD production
 │   ├── SmartExpense_SRS.docx    # Tài liệu đặc tả yêu cầu phần mềm (SRS Word)
 │   └── BaoCao_SmartExpense_Project_Proposal.docx # Báo cáo đề xuất dự án
 ├── frontend/
@@ -290,6 +296,7 @@ personal-finance-management/
 ├── scripts/
 │   ├── backup-db.ps1            # Script PowerShell sao lưu CSDL
 │   ├── restore-db.ps1           # Script PowerShell phục hồi CSDL
+│   ├── test-db-scripts.ps1      # Kiểm thử hồi quy backup/restore trên MySQL local riêng
 │   └── smoke-test.ps1           # Bộ kịch bản kiểm thử tự động 27 test cases
 ├── compose.yaml                 # Docker Compose đa dịch vụ (Frontend, Backend, MySQL)
 ├── .env.example                 # File mẫu biến môi trường
@@ -301,11 +308,9 @@ personal-finance-management/
 
 ## 📚 Danh Mục Tài Liệu Kỹ Thuật Chi Tiết
 
-1. [Báo cáo Reset CSDL & Dữ liệu Mẫu](docs/FINAL_DATABASE_RESET_REPORT.md) – Chi tiết kỹ thuật về việc làm sạch CSDL, cấu trúc bảng và 84 giao dịch thực tế phục vụ nghiệm thu.
-2. [Tài liệu API & Postman](docs/postman/README_POSTMAN.md) – Danh sách endpoint và hướng dẫn nhập Postman Collection.
-3. [Đặc tả Yêu cầu Phần mềm (SRS)](docs/SmartExpense_SRS.docx) – Bản đặc tả nghiệp vụ chi tiết của dự án SmartExpense.
-4. [Báo cáo Đề xuất Dự án (Project Proposal)](docs/BaoCao_SmartExpense_Project_Proposal.docx) – Phạm vi và kế hoạch thực hiện dự án.
-5. [Báo cáo kiểm thử CRUD Production](docs/PRODUCTION_CRUD_TEST_2026-10-23.md) – Kết quả 55/55 kiểm tra API ngày 23/10/2026 và xác nhận dọn dữ liệu thử nghiệm.
+1. [Tài liệu API & Postman](docs/postman/README_POSTMAN.md) – Danh sách endpoint và hướng dẫn nhập Postman Collection.
+2. [Đặc tả Yêu cầu Phần mềm (SRS)](docs/SmartExpense_SRS.docx) – Bản đặc tả nghiệp vụ chi tiết của dự án SmartExpense.
+3. [Báo cáo Đề xuất Dự án (Project Proposal)](docs/BaoCao_SmartExpense_Project_Proposal.docx) – Phạm vi và kế hoạch thực hiện dự án.
 
 ---
 
