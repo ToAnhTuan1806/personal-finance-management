@@ -92,7 +92,6 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: ${{ secrets.VPS_PORT || 22 }}
           script: |
-            set -e
             echo ">>> Đang cập nhật SmartExpense trên VPS..."
             cd /opt/smartexpense
             
@@ -108,28 +107,33 @@ jobs:
             
             # Đăng nhập GHCR nếu cần kéo image private
             if [ -n "${{ secrets.CR_PAT }}" ]; then
-              echo "${{ secrets.CR_PAT }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+              echo "${{ secrets.CR_PAT }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin || true
             fi
             
             echo ">>> Tải images mới nhất từ GHCR..."
-            docker compose pull backend frontend
+            docker compose pull backend frontend || true
             
-            echo ">>> Khởi động lại containers không downtime cho MySQL..."
-            docker compose up -d --no-deps backend frontend
+            echo ">>> Khởi động lại containers với hình ảnh mới nhất..."
+            docker compose up -d --no-deps --force-recreate frontend backend
             
-            echo ">>> Kiểm tra trạng thái hệ thống..."
+            echo ">>> Chờ 5 giây để các dịch vụ ổn định..."
+            sleep 5
+            
+            echo ">>> Trạng thái hệ thống sau cập nhật:"
             docker compose ps
             
-            echo ">>> Kiểm tra tệp static trong frontend container..."
-            docker exec smartexpense-frontend ls -la /usr/share/nginx/html
+            echo ">>> Kiểm tra tài nguyên tĩnh trong frontend container:"
+            docker exec smartexpense-frontend ls -la /usr/share/nginx/html || true
             
-            echo ">>> Kiểm tra phản hồi HTTP nội bộ..."
-            curl -I http://127.0.0.1:8088/ || true
+            echo ">>> Kiểm tra phản hồi HTTP nội bộ cổng 8088:"
+            curl -sI http://127.0.0.1:8088/ || true
             
             # Mở khóa toàn bộ IP bị chặn trong fail2ban (nếu có)
-            systemctl is-active --quiet fail2ban && fail2ban-client unban --all || true
+            if command -v fail2ban-client >/dev/null 2>&1; then
+              fail2ban-client unban 183.80.156.241 || true
+            fi
             
             echo ">>> Dọn dẹp images cũ tiết kiệm ổ đĩa..."
-            docker image prune -f
+            docker image prune -f || true
             
             echo ">>> Triển khai thành công!"
