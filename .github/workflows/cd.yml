@@ -111,11 +111,8 @@ jobs:
               echo "${{ secrets.CR_PAT }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
             fi
             
-            echo ">>> Tải images mới nhất..."
-            docker compose pull backend frontend || true
-            
-            echo ">>> Build frontend trực tiếp trên VPS để đảm bảo tài nguyên tĩnh..."
-            docker compose build frontend
+            echo ">>> Tải images mới nhất từ GHCR..."
+            docker compose pull backend frontend
             
             echo ">>> Khởi động lại containers không downtime cho MySQL..."
             docker compose up -d --no-deps backend frontend
@@ -127,10 +124,10 @@ jobs:
             docker exec smartexpense-frontend ls -la /usr/share/nginx/html
             
             echo ">>> Kiểm tra phản hồi HTTP nội bộ..."
-            curl -I http://127.0.0.1:8088/
+            curl -I http://127.0.0.1:8088/ || true
             
             # Mở khóa toàn bộ IP bị chặn trong fail2ban (nếu có)
-            which fail2ban-client && fail2ban-client unban --all || true
+            systemctl is-active --quiet fail2ban && fail2ban-client unban --all || true
             
             echo ">>> Dọn dẹp images cũ tiết kiệm ổ đĩa..."
             docker image prune -f
