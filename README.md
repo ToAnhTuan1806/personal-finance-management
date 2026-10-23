@@ -252,8 +252,8 @@ personal-finance-management/
 │   │   ├── README_POSTMAN.md
 │   │   └── SmartExpense_Postman_Collection.json
 │   ├── FINAL_DATABASE_RESET_REPORT.md  # Báo cáo reset CSDL và khởi tạo seed data chuẩn
-│   ├── SmartExpense_SRS_Final.md # Bản đặc tả yêu cầu phần mềm hoàn chỉnh (Markdown)
-│   └── SmartExpense_SRS.docx    # Tài liệu đặc tả yêu cầu phần mềm (Word)
+│   ├── SmartExpense_SRS.docx    # Tài liệu đặc tả yêu cầu phần mềm (SRS Word)
+│   └── BaoCao_SmartExpense_Project_Proposal.docx # Báo cáo đề xuất dự án (Project Proposal)
 ├── frontend/
 │   ├── Dockerfile               # Multi-stage Dockerfile (Vite Build + Nginx)
 │   ├── nginx.conf               # Cấu hình Nginx container & Reverse Proxy /api
@@ -281,7 +281,8 @@ personal-finance-management/
 
 1. [Báo cáo Reset CSDL & Dữ liệu Mẫu](docs/FINAL_DATABASE_RESET_REPORT.md) – Chi tiết kỹ thuật về việc làm sạch CSDL, cấu trúc bảng và 84 giao dịch thực tế phục vụ nghiệm thu.
 2. [Tài liệu API & Postman](docs/postman/README_POSTMAN.md) – Danh sách endpoint và hướng dẫn nhập Postman Collection.
-3. [Đặc tả Yêu cầu Phần mềm (SRS Markdown)](docs/SmartExpense_SRS_Final.md) – Bản đặc tả nghiệp vụ chi tiết hoàn chỉnh v2.0 của dự án SmartExpense ([Bản Word gốc](docs/SmartExpense_SRS.docx)).
+3. [Đặc tả Yêu cầu Phần mềm (SRS)](docs/SmartExpense_SRS.docx) – Bản đặc tả nghiệp vụ chi tiết của dự án SmartExpense.
+4. [Báo cáo Đề xuất Dự án (Project Proposal)](docs/BaoCao_SmartExpense_Project_Proposal.docx) – Báo cáo đề xuất dự án chính thức.
 
 ---
 

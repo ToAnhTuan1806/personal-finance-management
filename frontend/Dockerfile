@@ -20,16 +20,18 @@ RUN npm run build
 
 # Stage 2: Production Nginx Server
 FROM nginx:alpine
-WORKDIR /usr/share/nginx/html
 
 # Remove default nginx static assets
-RUN rm -rf ./*
+RUN rm -rf /usr/share/nginx/html/*
 
 # Copy built assets from builder stage
-COPY --from=builder /app/dist .
+COPY --from=builder /app/dist/ /usr/share/nginx/html/
 
 # Copy custom Nginx configuration
 COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Ensure proper read permissions for nginx worker
+RUN chmod -R 755 /usr/share/nginx/html
 
 # Expose HTTP port
 EXPOSE 80

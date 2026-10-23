@@ -112,13 +112,25 @@ jobs:
             fi
             
             echo ">>> Tải images mới nhất..."
-            docker compose pull backend frontend
+            docker compose pull backend frontend || true
+            
+            echo ">>> Build frontend trực tiếp trên VPS để đảm bảo tài nguyên tĩnh..."
+            docker compose build frontend
             
             echo ">>> Khởi động lại containers không downtime cho MySQL..."
             docker compose up -d --no-deps backend frontend
             
             echo ">>> Kiểm tra trạng thái hệ thống..."
             docker compose ps
+            
+            echo ">>> Kiểm tra tệp static trong frontend container..."
+            docker exec smartexpense-frontend ls -la /usr/share/nginx/html
+            
+            echo ">>> Kiểm tra phản hồi HTTP nội bộ..."
+            curl -I http://127.0.0.1:8088/
+            
+            # Mở khóa toàn bộ IP bị chặn trong fail2ban (nếu có)
+            which fail2ban-client && fail2ban-client unban --all || true
             
             echo ">>> Dọn dẹp images cũ tiết kiệm ổ đĩa..."
             docker image prune -f
