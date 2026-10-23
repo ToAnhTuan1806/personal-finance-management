@@ -37,22 +37,26 @@
 ## 🌟 Tính Năng Nổi Bật
 
 ### 1. 📊 Bảng điều khiển Tài chính Thông minh (Dashboard)
+
 - **Tổng quan thu chi:** Hiển thị tức thời Tổng thu nhập, Tổng chi tiêu và Số dư khả dụng trong tháng được chọn.
 - **Biểu đồ phân bổ chi tiêu (Donut Chart):** Trực quan hóa tỷ trọng chi tiêu theo từng danh mục với màu sắc phân biệt rõ ràng.
 - **Biểu đồ xu hướng thu chi (Bar Chart):** So sánh dòng tiền thu nhập vs chi tiêu qua các tháng.
 - **Danh sách giao dịch gần đây:** Truy xuất nhanh các giao dịch phát sinh mới nhất.
 
 ### 2. 📂 Quản lý Danh mục Thu - Chi (Category Management)
+
 - Phân chia rõ ràng giữa 2 loại: **Thu nhập (INCOME)** và **Chi tiêu (EXPENSE)**.
 - Bộ lọc chuyển tab nhanh (PillTabs), hỗ trợ Thêm, Sửa, Xóa danh mục linh hoạt.
 - Ràng buộc an toàn: Không cho phép xóa danh mục khi đang có giao dịch phát sinh liên kết.
 
 ### 3. 💳 Quản lý Giao dịch Toàn diện (Transaction Management)
+
 - Ghi nhận giao dịch với đầy đủ thông tin: Số tiền, Danh mục, Ngày giao dịch, Ghi chú.
 - Bộ lọc nâng cao: Lọc theo khoảng ngày (Date Range), lọc theo loại Thu/Chi, lọc theo Danh mục.
 - Phân trang dữ liệu (Pagination), định dạng tiền tệ VND (`₫`) trực quan, tự động định dạng số tiền nhập liệu.
 
 ### 4. 🎯 Quản lý & Cảnh báo Ngân sách (Monthly Budget)
+
 - Thiết lập hạn mức chi tiêu cho từng tháng trong năm.
 - Tự động đối soát chi tiêu thực tế với ngân sách đã đặt.
 - **Thanh tiến độ & cảnh báo thông minh:**
@@ -61,6 +65,7 @@
   - 🔴 **Vượt ngân sách (Over Budget):** Sử dụng từ 100% trở lên.
 
 ### 5. 🔐 Bảo mật & Cô lập Dữ liệu (Security & Multi-Tenancy)
+
 - Xác thực người dùng bằng **JSON Web Token (JWT)** chuẩn HMAC-SHA256.
 - Mật khẩu người dùng được băm an toàn bằng thuật toán **BCrypt**.
 - Cơ chế cô lập đa người dùng: Mỗi người dùng chỉ xem, sửa và xóa được dữ liệu thuộc quyền sở hữu của chính mình.
@@ -131,16 +136,19 @@
 ## 🚀 Hướng Dẫn Khởi Chạy Nhanh (Local Quick Start)
 
 ### Yêu cầu tiên quyết
+
 - **Docker Desktop** (bản 24.0+) hoặc Docker Engine kèm Docker Compose v2.20+.
 - Cổng **8088** còn trống trên máy.
 
 ### 1. Clone mã nguồn
+
 ```bash
 git clone https://github.com/ToAnhTuan1806/personal-finance-management.git
 cd personal-finance-management
 ```
 
 ### 2. Thiết lập Biến môi trường (`.env`)
+
 ```bash
 # Trên Windows PowerShell:
 Copy-Item .env.example .env
@@ -150,6 +158,7 @@ cp .env.example .env
 ```
 
 Các biến môi trường mặc định an toàn cho môi trường Local:
+
 ```ini
 DB_NAME=personal_finance_db
 DB_USERNAME=root
@@ -160,23 +169,29 @@ FRONTEND_PORT=8088
 ```
 
 ### 3. Khởi chạy toàn bộ hệ thống bằng Docker Compose
+
 ```bash
 docker compose up -d
 ```
 
 Hệ thống sẽ tự động tải hoặc build các container:
+
 - `smartexpense-mysql`: Khởi động và cấu hình database `personal_finance_db`.
 - `smartexpense-backend`: Chờ MySQL sẵn sàng, tự động khởi tạo bảng qua Hibernate.
 - `smartexpense-frontend`: Chờ Backend sẵn sàng, phục vụ ứng dụng tại cổng `8088`.
 
 Kiểm tra trạng thái containers:
+
 ```bash
 docker compose ps
 ```
+
 *(Cả 3 container đều hiển thị `Up ... (healthy)` là thành công)*.
 
 ### 4. Nạp dữ liệu mẫu chuẩn (Seed Data)
+
 Để nạp sẵn 11 danh mục, 84 giao dịch mẫu và 3 ngân sách tháng:
+
 ```powershell
 # Trên Windows:
 cmd.exe /c "docker exec -i smartexpense-mysql mysql -u root -p123456$ personal_finance_db < database/seed.sql"
@@ -194,18 +209,24 @@ Truy cập ứng dụng tại: [http://localhost:8088](http://localhost:8088)
 Dự án được kiểm thử toàn diện ở nhiều cấp độ:
 
 ### 1. Bộ kiểm thử tích hợp tự động (Smoke Test Suite)
+
 Bộ script PowerShell gồm 27 test cases bao quát toàn bộ chức năng:
+
 ```powershell
 powershell.exe -ExecutionPolicy Bypass -File scripts\smoke-test.ps1
 ```
+
 *Kết quả:* **27/27 kịch bản đạt trạng thái PASS (100%)** bao quát toàn bộ luồng Hạ tầng, Nginx Gateway, Xác thực JWT, Nghiệp vụ CRUD và Phân quyền đa người dùng.
 
 ### 2. Kiểm thử API bằng Postman Collection
+
 Bộ sưu tập Postman đầy đủ cho toàn bộ API endpoints (Auth, Categories, Transactions, Monthly Budgets, Dashboard) được đặt tại:
+
 - [docs/postman/SmartExpense_Postman_Collection.json](docs/postman/SmartExpense_Postman_Collection.json)
 - [docs/postman/README_POSTMAN.md](docs/postman/README_POSTMAN.md)
 
 ### 3. Tự động hóa CI/CD Pipeline
+
 - **CI Pipeline (`.github/workflows/ci.yml`):** Tự động kích hoạt khi push/PR vào `dev`, `main` để kiểm tra lint, unit test Gradle và build kiểm thử.
 - **CD Pipeline (`.github/workflows/cd.yml`):** Tự động đóng gói Docker images lên GitHub Container Registry (GHCR), kết nối SSH an toàn vào VPS, kéo image mới và cập nhật zero-downtime.
 
@@ -252,8 +273,9 @@ personal-finance-management/
 │   │   ├── README_POSTMAN.md
 │   │   └── SmartExpense_Postman_Collection.json
 │   ├── FINAL_DATABASE_RESET_REPORT.md  # Báo cáo reset CSDL và khởi tạo seed data chuẩn
+│   ├── PRODUCTION_CRUD_TEST_2026-10-23.md # Báo cáo kiểm thử CRUD production
 │   ├── SmartExpense_SRS.docx    # Tài liệu đặc tả yêu cầu phần mềm (SRS Word)
-│   └── BaoCao_SmartExpense_Project_Proposal.docx # Báo cáo đề xuất dự án (Project Proposal)
+│   └── BaoCao_SmartExpense_Project_Proposal.docx # Báo cáo đề xuất dự án
 ├── frontend/
 │   ├── Dockerfile               # Multi-stage Dockerfile (Vite Build + Nginx)
 │   ├── nginx.conf               # Cấu hình Nginx container & Reverse Proxy /api
@@ -262,7 +284,7 @@ personal-finance-management/
 │   └── src/
 │       ├── assets/              # Logo và hình ảnh giao diện
 │       ├── components/          # Reusable UI components (Layout, Auth, Dashboard, etc.)
-│       ├── context/             # React Context (AuthContext)
+│       ├── contexts/            # AuthContext, ThemeContext và ToastContext
 │       ├── pages/               # Các trang giao diện (Dashboard, Login, Register, v.v.)
 │       └── services/            # Axios API client services
 ├── scripts/
@@ -282,7 +304,8 @@ personal-finance-management/
 1. [Báo cáo Reset CSDL & Dữ liệu Mẫu](docs/FINAL_DATABASE_RESET_REPORT.md) – Chi tiết kỹ thuật về việc làm sạch CSDL, cấu trúc bảng và 84 giao dịch thực tế phục vụ nghiệm thu.
 2. [Tài liệu API & Postman](docs/postman/README_POSTMAN.md) – Danh sách endpoint và hướng dẫn nhập Postman Collection.
 3. [Đặc tả Yêu cầu Phần mềm (SRS)](docs/SmartExpense_SRS.docx) – Bản đặc tả nghiệp vụ chi tiết của dự án SmartExpense.
-4. [Báo cáo Đề xuất Dự án (Project Proposal)](docs/BaoCao_SmartExpense_Project_Proposal.docx) – Báo cáo đề xuất dự án chính thức.
+4. [Báo cáo Đề xuất Dự án (Project Proposal)](docs/BaoCao_SmartExpense_Project_Proposal.docx) – Phạm vi và kế hoạch thực hiện dự án.
+5. [Báo cáo kiểm thử CRUD Production](docs/PRODUCTION_CRUD_TEST_2026-10-23.md) – Kết quả 55/55 kiểm tra API ngày 23/10/2026 và xác nhận dọn dữ liệu thử nghiệm.
 
 ---
 

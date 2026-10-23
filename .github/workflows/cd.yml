@@ -111,11 +111,11 @@ jobs:
               echo "${{ secrets.CR_PAT }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
             fi
             
-            echo ">>> Tải images mới nhất từ GHCR..."
+            echo ">>> Tải images mới nhất..."
             docker compose pull backend frontend
             
             echo ">>> Khởi động lại containers không downtime cho MySQL..."
-            docker compose up -d --no-deps --force-recreate backend frontend
+            docker compose up -d --no-deps backend frontend
             
             echo ">>> Kiểm tra trạng thái hệ thống..."
             docker compose ps

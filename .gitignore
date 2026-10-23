@@ -22,6 +22,10 @@
 .DS_Store
 Thumbs.db
 
+# Microsoft Office temporary files
+~$*
+~WRL*.tmp
+
 # Database backups
 database/backups/
 backups/
