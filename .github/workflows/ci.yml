@@ -83,13 +83,21 @@ jobs:
       - name: Make Gradle Wrapper Executable
         run: chmod +x gradlew
 
+      - name: Require Docker for MySQL integration tests
+        run: docker info > /dev/null
+
       - name: Run Backend Tests
         env:
           DB_URL: jdbc:mysql://127.0.0.1:3306/personal_finance_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
           DB_USERNAME: root
           DB_PASSWORD: ci_test_password
           JWT_SECRET: j6uECsjbXr08La2gKzpRPUzOmGSUyCS7/kXGeTVxjfs=
-        run: ./gradlew test
+        # Xóa kết quả cũ và tắt build cache để bằng chứng thuộc lần chạy CI hiện tại.
+        run: ./gradlew cleanTest test --no-build-cache --console=plain
+
+      - name: Verify D03 MySQL JUnit report (55 PASS, 0 skipped)
+        if: ${{ !cancelled() }}
+        run: ./gradlew verifyD03IntegrationTests --console=plain
 
       - name: Build Spring Boot Executable JAR
         run: ./gradlew bootJar -x test
