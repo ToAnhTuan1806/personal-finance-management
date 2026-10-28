@@ -22,15 +22,31 @@
 
 ---
 
+## SmartExpense 2.0 — Tài liệu và kế hoạch hiện hành
+
+SmartExpense 2.0 phát triển tiếp MVP hiện có. Hai tài liệu nguồn đã được người dùng xác thực: [SRS 2.2 ngày 27/10/2026](docs/SmartExpense_SRS_v2.docx) và [Master Plan 15 ngày](docs/SmartExpense_QuanTriDuAn.xlsx). Việc xác thực nguồn không thay cho review API/schema hoặc chữ ký của thành viên.
+
+- Phạm vi: 12 nhóm FR-01–FR-12, 45 task; mỗi thành viên 15 task trong 15 ngày làm việc T2–T6.
+- D01: **27/10/2026**, vừa chuẩn bị tài liệu vừa thực hiện nhiệm vụ nền tảng; D15: **16/11/2026**. Tuần dự phòng: 23–27/11/2026, không mở rộng tính năng.
+- Đợt 1: 27/10–01/11 (4 ngày làm việc); Đợt 2: 02–06/11 (5 ngày); Đợt 3: 09–13/11 (5 ngày); 16/11 là ngày nghiệm thu bổ sung thứ 15. Không xếp task cuối tuần.
+
+| Thành viên | Vai trò | Nhánh | Số task |
+| --- | --- | --- | --- |
+| Tô Anh Tuấn | Backend + Documentation | feature/tuan | 15 |
+| Trần Thị Thu Trang | Frontend | feature/trang | 15 |
+| Phạm Hương Quỳnh | Database + QA + DevOps | feature/quynh | 15 |
+
+FE/BE dùng [API Contract](docs/smartexpense-2.0/API_CONTRACT.md): phân biệt API hiện có và API dự kiến, kèm DTO/validation và các điểm cần chốt. Các đề xuất kỹ thuật vẫn chờ review; lưu ý thay đổi dữ liệu nằm ở mục [Migration, backup và rollback](#migration-backup-và-rollback).
+
+Ghi nhận [Trello](https://trello.com/b/RAHIOc4b/smartexpense-personal-finance-management) ngày 28/10/2026: đủ 45 mã SE2, nhưng due date 3 thẻ D01 là 28/10 thay vì 27/10 và 45 thẻ chưa gán member chính thức. Nhóm cần đối chiếu lại; dấu hoàn thành của D01-BE không thay cho bằng chứng duyệt contract. Lượt rút gọn tài liệu không thay đổi Trello.
+
+Các chức năng bên dưới mô tả nền tảng MVP đang có trong mã. Quick Add hoàn chỉnh, lịch thu chi, icon/màu danh mục, ngân sách danh mục, mẫu định kỳ, báo cáo nhiều tháng và CSV là phạm vi nâng cấp, chưa được coi là đã hoàn thành. Tài liệu MVP giai đoạn 19–23/10/2026 được giữ làm lịch sử ở cuối trang.
+
 ## 🌐 Trải nghiệm Trực tuyến (Live Demo)
 
 - **Domain chính thức (HTTPS):** [https://smartexpense-team3.duckdns.org](https://smartexpense-team3.duckdns.org)
 - **Hạ tầng VPS:** Ubuntu 24.04 LTS, Nginx Reverse Proxy & SSL Let's Encrypt tự động gia hạn.
-- **Tài khoản Demo chuẩn sẵn có:**
-  - **Email:** `totuan.18dz@gmail.com`
-  - **Mật khẩu:** `ToAnhTuan18@`
-  - **Người dùng:** `Tô Anh Tuấn` (User ID: `1`)
-  - **Dữ liệu minh họa:** 11 danh mục phân loại, 84 giao dịch tự nhiên qua 3 tháng (08, 09, 10/2026), 3 ngân sách tháng với các trạng thái cảnh báo thực tế.
+- **Tài khoản demo:** nhận thông tin truy cập qua kênh riêng của nhóm; không công bố email đăng nhập hoặc mật khẩu trong repository.
 
 ---
 
@@ -40,7 +56,7 @@
 
 - **Tổng quan thu chi:** Hiển thị tức thời Tổng thu nhập, Tổng chi tiêu và Số dư khả dụng trong tháng được chọn.
 - **Biểu đồ phân bổ chi tiêu (Donut Chart):** Trực quan hóa tỷ trọng chi tiêu theo từng danh mục với màu sắc phân biệt rõ ràng.
-- **Biểu đồ xu hướng thu chi (Bar Chart):** So sánh dòng tiền thu nhập vs chi tiêu qua các tháng.
+- **Biểu đồ dòng tiền (Area Chart):** Hiển thị thu nhập và chi tiêu theo ngày trong tháng được chọn; báo cáo so sánh nhiều tháng thuộc FR-09 của kế hoạch 2.0.
 - **Danh sách giao dịch gần đây:** Truy xuất nhanh các giao dịch phát sinh mới nhất.
 
 ### 2. 📂 Quản lý Danh mục Thu - Chi (Category Management)
@@ -124,10 +140,10 @@
 | **Frontend** | React 19, Vite 8, Tailwind CSS v4 | Giao diện người dùng SPA hiện đại, responsive |
 | **UI Icons & Charts** | Lucide React, Recharts | Biểu đồ tài chính và bộ icon trực quan |
 | **Backend** | Spring Boot 4.1.1, Java 21 LTS | RESTful API, Service Layer & Business Logic |
-| **Bảo mật** | Spring Security 6, JWT, BCrypt | Xác thực Stateless, phân quyền theo token |
+| **Bảo mật** | Spring Security do Spring Boot quản lý, JWT, BCrypt | Xác thực Stateless, phân quyền theo token |
 | **Truy cập dữ liệu** | Spring Data JPA, Hibernate, MySQL Driver | Quản lý Entity, quan hệ bảng và truy vấn CSDL |
 | **Cơ sở dữ liệu** | MySQL 8.0 (utf8mb4_unicode_ci) | Lưu trữ dữ liệu quan hệ, named volume an toàn |
-| **Web Server** | Nginx 1.24 (Host & Container) | Reverse Proxy, SSL Termination, SPA routing |
+| **Web Server** | Container nginx:alpine; Nginx host theo hồ sơ MVP | Reverse Proxy, SSL Termination, SPA routing |
 | **Đóng gói** | Docker, Multi-stage Dockerfile, Compose | Tiêu chuẩn hóa môi trường, tối ưu kích thước image |
 | **Tự động hóa** | GitHub Actions (CI & CD) | Tự động test, build GHCR và deploy lên VPS qua SSH |
 
@@ -157,14 +173,14 @@ Copy-Item .env.example .env
 cp .env.example .env
 ```
 
-Các biến môi trường mặc định an toàn cho môi trường Local:
+Ví dụ cấu hình local dưới đây chỉ dùng placeholder. Thay các giá trị trong dấu <> bằng credential tự tạo trong .env local; không commit .env, password hoặc JWT key. DB_USERNAME=root yêu cầu DB_PASSWORD và DB_ROOT_PASSWORD dùng cùng mật khẩu local. JWT_SECRET cần chuỗi Base64 biểu diễn ít nhất 32 byte ngẫu nhiên.
 
 ```ini
 DB_NAME=personal_finance_db
 DB_USERNAME=root
-DB_PASSWORD=123456$
-DB_ROOT_PASSWORD=123456$
-JWT_SECRET=j6uECsjbXr08La2gKzpRPUzOmGSUyCS7/kXGeTVxjfs=
+DB_PASSWORD=<LOCAL_DB_ROOT_PASSWORD>
+DB_ROOT_PASSWORD=<LOCAL_DB_ROOT_PASSWORD>
+JWT_SECRET=<LOCAL_BASE64_JWT_KEY>
 FRONTEND_PORT=8088
 ```
 
@@ -190,14 +206,11 @@ docker compose ps
 
 ### 4. Nạp dữ liệu mẫu chuẩn (Seed Data)
 
-Để nạp sẵn 11 danh mục, 84 giao dịch mẫu và 3 ngân sách tháng:
+Seed MVP mô tả 11 danh mục, 84 giao dịch và 3 ngân sách. Kiểm tra user/ID giả định trong database/seed.sql trước khi nạp trên local; không dùng lệnh này để thử nghiệm production:
 
-```powershell
-# Trên Windows:
-cmd.exe /c "docker exec -i smartexpense-mysql mysql -u root -p123456$ personal_finance_db < database/seed.sql"
-
-# Trên Linux/macOS:
-docker exec -i smartexpense-mysql mysql -u root -p123456$ personal_finance_db < database/seed.sql
+```bash
+# Chỉ chạy trên stack local dùng dữ liệu tổng hợp; nhập mật khẩu khi MySQL hỏi.
+docker exec -it smartexpense-mysql mysql -u root -p personal_finance_db -e "SOURCE /database/seed.sql"
 ```
 
 Truy cập ứng dụng tại: [http://localhost:8088](http://localhost:8088)
@@ -216,7 +229,7 @@ Bộ script PowerShell gồm 27 test cases bao quát toàn bộ chức năng:
 powershell.exe -ExecutionPolicy Bypass -File scripts\smoke-test.ps1
 ```
 
-*Kết quả:* **27/27 kịch bản đạt trạng thái PASS (100%)** bao quát toàn bộ luồng Hạ tầng, Nginx Gateway, Xác thực JWT, Nghiệp vụ CRUD và Phân quyền đa người dùng.
+*Kết quả được README MVP báo cáo trước đây:* **27/27 kịch bản PASS**; chưa chạy lại trong lượt đồng bộ tài liệu D01. Báo cáo lịch sử bao quát toàn bộ luồng Hạ tầng, Nginx Gateway, Xác thực JWT, Nghiệp vụ CRUD và Phân quyền đa người dùng.
 
 ### 2. Kiểm thử API bằng Postman Collection
 
@@ -228,27 +241,21 @@ Bộ sưu tập Postman đầy đủ cho toàn bộ API endpoints (Auth, Categor
 ### 3. Tự động hóa CI/CD Pipeline
 
 - **CI Pipeline (`.github/workflows/ci.yml`):** Tự động kích hoạt khi push/PR vào `dev`, `main` để kiểm tra lint, unit test Gradle và build kiểm thử.
-- **CD Pipeline (`.github/workflows/cd.yml`):** Tự động đóng gói Docker images lên GitHub Container Registry (GHCR), kết nối SSH an toàn vào VPS, kéo image mới và cập nhật zero-downtime.
+- **CD Pipeline (`.github/workflows/cd.yml`):** Build/push image lên GHCR và triển khai qua SSH khi push dev/main hoặc chạy thủ công. CI và CD hiện độc lập; chờ CI đúng SHA, review release và pin image là công việc FR-12 còn cần thực hiện. Chưa có bằng chứng để cam kết zero-downtime.
 
 ---
 
-## 💾 Sao Lưu & Phục Hồi Dữ Liệu (Backup & Restore)
+## Migration, backup và rollback
 
-```powershell
-# 1. Tạo bản sao lưu Database tức thời vào database/backups/
-powershell.exe -ExecutionPolicy Bypass -File scripts\backup-db.ps1
+**Chưa có migration 2.0 được duyệt hoặc chạy.** Quỳnh phụ trách DB/QA/DevOps, phối hợp Tuấn review trước khi đổi schema/cấu hình.
 
-# 2. Phục hồi dữ liệu từ một bản sao lưu cụ thể
-powershell.exe -ExecutionPolicy Bypass -File scripts\restore-db.ps1 -BackupFile "database\backups\backup_personal_finance_db_xxxx.sql"
-```
-
-Hai script trả mã thoát `1` khi Docker/MySQL thất bại; chỉ báo thành công sau mã thoát `0`. Backup lỗi không được công bố thành file `.sql` hợp lệ.
-
-Kiểm thử hồi quy trên một container MySQL local dùng riêng, đã sẵn sàng (không dùng container production):
-
-```powershell
-powershell.exe -ExecutionPolicy Bypass -File scripts\test-db-scripts.ps1 -ContainerName "smartexpense-backup-qa-local" -RootPassword "local_qa_password"
-```
+- Hiện Hibernate dùng `ddl-auto=update`. Đề xuất version: V001 baseline MVP, V002 icon/color, V003 category_budgets, V004 recurring_templates, V005 recurring_applications. Runner, SQL/FK và việc chuyển sang `validate` còn chờ duyệt (Q10); không để Hibernate và migration cùng đổi schema. Seed không phải migration; DB đã có phải kiểm tra baseline, không chạy CREATE chồng hoặc reset volume.
+- Mỗi version cần pre/post-check, checksum và lịch sử chạy; version đã áp dụng không sửa nội dung. Khi lỗi dừng kiểm tra trạng thái thực, không giả định ROLLBACK hoàn tác được mọi DDL.
+- Giữ FK/owner và unique ngân sách user/category/kỳ, recurring template/kỳ. FK tồn tại riêng lẻ không chứng minh cùng owner; cần kiểm tra ở service hoặc composite FK được duyệt. Apply định kỳ lưu giao dịch+marker trong một transaction; chống trùng cả request đồng thời. Rule xóa/giữ marker xem API Contract, chưa duyệt (Q06/Q07).
+- Trước migration: backup có checksum, exit code 0 và file không rỗng; restore thử vào container riêng rồi đối chiếu số bản ghi/FK/tổng tiền. Dùng dữ liệu tổng hợp, không copy production vào test. Các script mặc định trỏ stack chính: phải truyền rõ container test, không dùng volume chính.
+- Công cụ có sẵn: [backup-db.ps1](scripts/backup-db.ps1), [restore-db.ps1](scripts/restore-db.ps1), [test-db-scripts.ps1](scripts/test-db-scripts.ps1). Dump dùng `--databases`, có thể chứa CREATE/USE tên nguồn; chỉ đổi tham số DbName không bảo đảm đổi đích restore. Kiểm tra dump và dùng container cô lập. Cách tạo snapshot nhất quán, quyền/credential và thời gian lưu backup cần DB review; không đưa dump/secret vào Git.
+- Rollback ưu tiên dừng phần tính năng lỗi/đổi lại phiên bản ứng dụng và giữ schema bổ sung; không drop bảng có dữ liệu hoặc xóa marker kỳ. Inverse SQL cần kiểm thử/phê duyệt. Nếu phải restore: dừng ghi, xác minh đúng đích/backup; dữ liệu sau mốc backup có thể mất. Không cam kết zero-downtime/RPO/RTO khi chưa đo; không tự restore production.
+- CI phải đạt cho đúng commit, release cần review và pin image SHA (Q14). CI/CD hiện chưa có gate này. Phần này là hướng dẫn ngắn, không cấp quyền migration, deploy hoặc xác nhận kết quả kiểm thử.
 
 ---
 
@@ -280,8 +287,12 @@ personal-finance-management/
 │   ├── postman/                 # Postman Collection & Hướng dẫn test API
 │   │   ├── README_POSTMAN.md
 │   │   └── SmartExpense_Postman_Collection.json
-│   ├── SmartExpense_SRS.docx    # Tài liệu đặc tả yêu cầu phần mềm (SRS Word)
-│   └── BaoCao_SmartExpense_Project_Proposal.docx # Báo cáo đề xuất dự án
+│   ├── SmartExpense_SRS_v2.docx # SRS 2.2, nguồn hiện hành SmartExpense 2.0
+│   ├── SmartExpense_QuanTriDuAn.xlsx # Master Plan 45 task / 15 ngày
+│   ├── smartexpense-2.0/
+│   │   └── API_CONTRACT.md      # API hiện có/dự kiến cho FE/BE
+│   ├── SmartExpense_SRS.docx    # SRS MVP lịch sử, giữ nguyên
+│   └── BaoCao_SmartExpense_Project_Proposal.docx # Proposal MVP lịch sử, giữ nguyên
 ├── frontend/
 │   ├── Dockerfile               # Multi-stage Dockerfile (Vite Build + Nginx)
 │   ├── nginx.conf               # Cấu hình Nginx container & Reverse Proxy /api
@@ -308,13 +319,16 @@ personal-finance-management/
 
 ## 📚 Danh Mục Tài Liệu Kỹ Thuật Chi Tiết
 
-1. [Tài liệu API & Postman](docs/postman/README_POSTMAN.md) – Danh sách endpoint và hướng dẫn nhập Postman Collection.
-2. [Đặc tả Yêu cầu Phần mềm (SRS)](docs/SmartExpense_SRS.docx) – Bản đặc tả nghiệp vụ chi tiết của dự án SmartExpense.
-3. [Báo cáo Đề xuất Dự án (Project Proposal)](docs/BaoCao_SmartExpense_Project_Proposal.docx) – Phạm vi và kế hoạch thực hiện dự án.
+1. [SRS SmartExpense 2.0 — nội dung phiên bản 2.2](docs/SmartExpense_SRS_v2.docx) — nguồn phạm vi hiện hành, ngày 27/10/2026.
+2. [Master Plan](docs/SmartExpense_QuanTriDuAn.xlsx) — 45 task, 3 thành viên, 27/10–16/11/2026.
+3. [API Contract](docs/smartexpense-2.0/API_CONTRACT.md) — endpoint/DTO hiện có và dự kiến; các điểm chưa duyệt ghi ngay trong tài liệu.
+4. [Migration, backup và rollback](#migration-backup-và-rollback) — lưu ý dữ liệu và vận hành trước triển khai.
+5. [API & Postman MVP](docs/postman/README_POSTMAN.md) — bộ hướng dẫn hiện có, chưa phải collection nghiệm thu đủ FR 2.0.
+6. [SRS MVP lịch sử](docs/SmartExpense_SRS.docx) và [Project Proposal MVP lịch sử](docs/BaoCao_SmartExpense_Project_Proposal.docx) — giữ nguyên giai đoạn 19–23/10/2026.
 
 ---
 
 <p align="center">
   <strong>SmartExpense Team – Personal Finance Management</strong><br>
-  Dự án hoàn thành phục vụ đánh giá, nghiệm thu và triển khai thực tế.
+  MVP là nền tảng hiện có; SmartExpense 2.0 đang được phát triển và cần nghiệm thu theo SRS 2.2.
 </p>
