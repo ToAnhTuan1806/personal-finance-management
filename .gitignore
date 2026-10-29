@@ -17,6 +17,7 @@
 .env
 .env.*
 !.env.example
+/compose.local.yaml
 
 # Local OS files
 .DS_Store

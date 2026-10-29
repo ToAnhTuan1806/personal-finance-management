@@ -27,20 +27,15 @@ if ((Get-Item -LiteralPath $BackupFile).Length -eq 0) {
 
 Write-Host "Restoring database '$DbName' from '$BackupFile'..." -ForegroundColor Cyan
 
-# Read root password from .env if present
-$dbRootPass = "123456$"
-if (Test-Path ".env") {
-    $envContent = Get-Content ".env"
-    foreach ($line in $envContent) {
-        if ($line -match "^DB_ROOT_PASSWORD=(.*)$") {
-            $dbRootPass = $matches[1].Trim()
-        }
-    }
-}
+# Read the private credential without a hardcoded fallback or shell interpolation.
+. (Join-Path $PSScriptRoot 'Read-LocalEnvironment.ps1')
+$dbRootPass = Get-SmartExpenseRootPassword
+$previousMysqlPwd = [Environment]::GetEnvironmentVariable('MYSQL_PWD', 'Process')
+[Environment]::SetEnvironmentVariable('MYSQL_PWD', $dbRootPass, 'Process')
 
 try {
     # Execute restore via mysql client inside container
-    $cmd = "docker exec -i $ContainerName mysql -u root -p$dbRootPass $DbName"
+    $cmd = "docker exec -i -e MYSQL_PWD $ContainerName mysql -u root $DbName"
     cmd /c "$cmd < `"$BackupFile`""
     $restoreExitCode = $LASTEXITCODE
     if ($restoreExitCode -ne 0) {
@@ -50,4 +45,6 @@ try {
 } catch {
     Write-Host " Restore failed: $_" -ForegroundColor Red
     exit 1
+} finally {
+    [Environment]::SetEnvironmentVariable('MYSQL_PWD', $previousMysqlPwd, 'Process')
 }

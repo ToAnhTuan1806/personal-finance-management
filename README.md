@@ -64,6 +64,7 @@ Các chức năng bên dưới mô tả nền tảng MVP đang có trong mã. Qu
 - Phân chia rõ ràng giữa 2 loại: **Thu nhập (INCOME)** và **Chi tiêu (EXPENSE)**.
 - Bộ lọc chuyển tab nhanh (PillTabs), hỗ trợ Thêm, Sửa, Xóa danh mục linh hoạt.
 - Ràng buộc an toàn: Không cho phép xóa danh mục khi đang có giao dịch phát sinh liên kết.
+- Đăng ký tài khoản mới tự tạo **17 danh mục riêng**: 11 EXPENSE và 6 INCOME. User và danh mục cùng transaction; lỗi tạo danh mục sẽ rollback đăng ký. Login không tạo thêm, tài khoản cũ giữ nguyên dữ liệu.
 
 ### 3. 💳 Quản lý Giao dịch Toàn diện (Transaction Management)
 
@@ -153,8 +154,8 @@ Các chức năng bên dưới mô tả nền tảng MVP đang có trong mã. Qu
 
 ### Yêu cầu tiên quyết
 
-- **Docker Desktop** (bản 24.0+) hoặc Docker Engine kèm Docker Compose v2.20+.
-- Cổng **8088** còn trống trên máy.
+- Backend trực tiếp: **JDK 21** và MySQL 8 local có database/user riêng; cổng **8080** còn trống.
+- Chạy cả hệ thống hoặc test MySQL: **Docker Desktop/Linux engine** hoặc Docker Engine kèm Compose v2.20+; cổng Frontend **8088** còn trống.
 
 ### 1. Clone mã nguồn
 
@@ -173,10 +174,13 @@ Copy-Item .env.example .env
 cp .env.example .env
 ```
 
-Ví dụ cấu hình local dưới đây chỉ dùng placeholder. Thay các giá trị trong dấu <> bằng credential tự tạo trong .env local; không commit .env, password hoặc JWT key. DB_USERNAME=root yêu cầu DB_PASSWORD và DB_ROOT_PASSWORD dùng cùng mật khẩu local. JWT_SECRET cần chuỗi Base64 biểu diễn ít nhất 32 byte ngẫu nhiên.
+Các ô mật khẩu/JWT trống trong `.env.example` là placeholder. Mỗi thành viên điền `.env` riêng, không sửa `application.properties` và không commit `.env` hoặc cấu hình IDE chứa credential. Các biến Backend thống nhất là `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET`; `JWT_EXPIRATION` mặc định 86400 giây. Giữ `DB_USERNAME`, không thêm alias `DB_USER`.
+
+`DB_URL` dùng khi chạy Backend trực tiếp, trỏ đúng MySQL trên máy bạn. Compose tự dựng URL `mysql:3306` theo `DB_NAME`, không dùng URL localhost này. Khi chạy Compose với `DB_USERNAME=root`, đặt `DB_PASSWORD` bằng `DB_ROOT_PASSWORD`; user khác phải có sẵn quyền truy cập database. Compose từ chối mật khẩu/JWT thiếu hoặc trống. Mật khẩu chứa `$` phải đặt trong nháy đơn trong `.env`; không dùng tham chiếu `${BIEN_KHAC}`.
 
 ```ini
 DB_NAME=personal_finance_db
+DB_URL=jdbc:mysql://localhost:3306/personal_finance_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
 DB_USERNAME=root
 DB_PASSWORD=<LOCAL_DB_ROOT_PASSWORD>
 DB_ROOT_PASSWORD=<LOCAL_DB_ROOT_PASSWORD>
@@ -184,10 +188,44 @@ JWT_SECRET=<LOCAL_BASE64_JWT_KEY>
 FRONTEND_PORT=8088
 ```
 
-### 3. Khởi chạy toàn bộ hệ thống bằng Docker Compose
+`JWT_SECRET` phải là Base64 của ít nhất 32 byte ngẫu nhiên. Có thể tạo bằng `openssl rand -base64 32`, hoặc PowerShell:
+
+```powershell
+$jwtBytes = New-Object byte[] 32
+$jwtRng = [Security.Cryptography.RandomNumberGenerator]::Create()
+$jwtRng.GetBytes($jwtBytes)
+[Convert]::ToBase64String($jwtBytes)
+$jwtRng.Dispose()
+```
+
+Các giá trị mật khẩu/JWT mẫu cũ từng nằm trong Git phải được xem là công khai. Nếu từng dùng chúng trong môi trường thật, người quản lý môi trường cần thay khóa/mật khẩu theo quy trình riêng; việc bỏ fallback không xóa chúng khỏi lịch sử Git.
+
+### 3. Chạy Backend trực tiếp trên Windows (VS Code/IntelliJ)
+
+Tạo database local tương ứng với `DB_URL`, dùng tài khoản MySQL và mật khẩu riêng. Từ terminal PowerShell ở thư mục repository:
+
+```powershell
+.\scripts\start-backend.ps1 -CheckOnly
+.\scripts\start-backend.ps1
+```
+
+Nếu PowerShell chặn script theo Execution Policy, dùng `powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\start-backend.ps1` (thêm `-CheckOnly` khi cần). Tùy chọn chỉ áp dụng cho tiến trình này, không đổi policy của máy.
+
+Script đọc `.env` như dữ liệu, không thực thi hoặc nội suy; chỉ truyền các biến Backend vào `gradlew bootRun`. Nó ưu tiên file này, tạm bỏ alias `SPRING_DATASOURCE_*`/`APP_JWT_*` cũ rồi khôi phục biến tiến trình khi dừng; không dùng `setx` và không in secret. `-CheckOnly` chỉ kiểm tra định dạng, không xác minh đăng nhập MySQL. Có thể chọn file riêng bằng `-EnvFile <duong-dan>`.
+
+Nếu dùng nút Run/Debug thay vì terminal, đặt bốn biến Backend trong Run Configuration riêng của IDE; VS Code Java hỗ trợ `envFile` trỏ tới `${workspaceFolder}/.env`. `.vscode/` và `.idea/` đã được Git bỏ qua. Không thêm credential vào source hoặc launch configuration được commit.
+
+**Lỗi `Access denied for user`:** kiểm tra host/cổng/schema trong `DB_URL`, `DB_USERNAME` và mật khẩu thực của đúng MySQL instance. Có thể kiểm tra thủ công bằng `mysql -h 127.0.0.1 -P <cong-trong-URL> -u <DB_USERNAME> -p` để nhập mật khẩu qua prompt; không ghi password vào lệnh. Kiểm tra quyền user trên schema và các biến IDE cũ đang ghi đè cấu hình.
+
+**MySQL Docker đã có volume:** sửa `.env` không tự đổi mật khẩu/user bên trong DB. Dùng credential hiện có hoặc quy trình đổi mật khẩu riêng; không xóa volume để xử lý lỗi đăng nhập. Tên volume và credential production đang dùng không được thay tự động.
+
+Trước lần triển khai sau, người quản lý cần kiểm tra `.env` production đã có đủ `DB_PASSWORD`, `DB_ROOT_PASSWORD`, `JWT_SECRET` đúng với giá trị đang dùng; không lấy giá trị local để thay vào VPS. `DB_URL` production trong Compose vẫn được dựng nội bộ như trước.
+
+### 4. Khởi chạy toàn bộ hệ thống bằng Docker Compose
 
 ```bash
-docker compose up -d
+docker compose --env-file .env config --quiet
+docker compose --env-file .env up -d --build
 ```
 
 Hệ thống sẽ tự động tải hoặc build các container:
@@ -204,9 +242,26 @@ docker compose ps
 
 *(Cả 3 container đều hiển thị `Up ... (healthy)` là thành công)*.
 
-### 4. Nạp dữ liệu mẫu chuẩn (Seed Data)
+MySQL mặc định chỉ dùng mạng Docker nội bộ (`mysql:3306`), không publish cổng host nên không chiếm `127.0.0.1:3306`. Nếu IDE cần kết nối **DB local**, tự tạo file `compose.local.yaml`:
 
-Seed MVP mô tả 11 danh mục, 84 giao dịch và 3 ngân sách. Kiểm tra user/ID giả định trong database/seed.sql trước khi nạp trên local; không dùng lệnh này để thử nghiệm production:
+```yaml
+services:
+  mysql:
+    ports:
+      - "${DB_BIND:-127.0.0.1}:${DB_PORT:-3307}:3306"
+```
+
+Giữ `DB_BIND=127.0.0.1`, không đổi thành `0.0.0.0`. Nếu cổng 3307 đang bận, chọn cổng trống khác bằng `DB_PORT`. Chạy local bằng `docker compose --env-file .env -f compose.yaml -f compose.local.yaml up -d --build`; không dùng override này trên VPS. Cấu hình mặc định và tên volume được giữ nguyên.
+
+Backend chạy trực tiếp kết nối MySQL Docker này phải dùng cổng đã publish trong `DB_URL` (mặc định `localhost:3307`), không dùng `localhost:3306` của MySQL cài trên máy.
+
+### 5. Tạo tài khoản và nhận danh mục mặc định
+
+Mở [http://localhost:8088](http://localhost:8088), đăng ký tài khoản mới (API `POST /api/auth/register`), sau đó đăng nhập. Mỗi tài khoản có ngay 11 danh mục Chi và 6 danh mục Thu để tạo giao dịch; vẫn có thể thêm/sửa/xóa theo quy tắc hiện tại. Không cần chạy seed MVP để có danh mục; không tự backfill tài khoản cũ.
+
+### 6. Nạp dữ liệu mẫu MVP (tùy chọn, chỉ local)
+
+Seed MVP lịch sử mô tả 11 danh mục, 84 giao dịch và 3 ngân sách, độc lập với 17 danh mục tạo khi đăng ký. Kiểm tra user/ID giả định trong database/seed.sql trước khi nạp trên local; không dùng lệnh này để thử nghiệm production:
 
 ```bash
 # Chỉ chạy trên stack local dùng dữ liệu tổng hợp; nhập mật khẩu khi MySQL hỏi.

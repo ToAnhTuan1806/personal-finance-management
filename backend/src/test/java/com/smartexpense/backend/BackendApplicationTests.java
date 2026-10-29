@@ -183,6 +183,13 @@ class BackendApplicationTests {
                 .andExpect(jsonPath("$.accessToken").doesNotExist());
         verify(users).save(argThat(user -> passwords.matches(password, user.getPasswordHash())
                 && !password.equals(user.getPasswordHash())));
+        verify(categories).saveAll(argThat(items -> {
+            List<Category> defaults = new java.util.ArrayList<>();
+            items.forEach(defaults::add);
+            return defaults.size() == 17 && defaults.stream().allMatch(category -> category.getUser().getId() == 3L)
+                    && defaults.stream().filter(category -> category.getType() == TransactionType.EXPENSE).count() == 11
+                    && defaults.stream().filter(category -> category.getType() == TransactionType.INCOME).count() == 6;
+        }));
     }
 
     @Test
