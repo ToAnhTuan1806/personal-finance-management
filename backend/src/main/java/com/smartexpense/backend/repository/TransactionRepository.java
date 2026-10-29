@@ -117,6 +117,28 @@ public interface TransactionRepository
             @Param("endDate") LocalDate endDate
     );
 
+    // Nhóm một lần tại DB theo owner/ngày/loại; không tải từng giao dịch để cộng trong Java.
+    @Query("""
+        SELECT t.transactionDate AS transactionDate, t.type AS type, SUM(t.amount) AS totalAmount
+        FROM Transaction t
+        WHERE t.user.id = :userId
+          AND t.transactionDate >= :startDate
+          AND t.transactionDate < :endDate
+        GROUP BY t.transactionDate, t.type
+        ORDER BY t.transactionDate ASC
+    """)
+    List<DailyAmountTotal> sumDailyAmountsByUserAndDateRange(
+            @Param("userId") Long userId,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
+
+    interface DailyAmountTotal {
+        LocalDate getTransactionDate();
+        TransactionType getType();
+        BigDecimal getTotalAmount();
+    }
+
     // Kiểm tra danh mục đã có giao dịch hay chưa
     boolean existsByCategoryId(Long categoryId);
 }
