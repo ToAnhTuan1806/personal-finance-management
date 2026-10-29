@@ -55,15 +55,6 @@ jobs:
   backend:
     name: Backend Test & Build
     runs-on: ubuntu-latest
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: ci_test_password
-          MYSQL_DATABASE: personal_finance_db
-        ports:
-          - 3306:3306
-        options: --health-cmd="mysqladmin ping -h localhost -u root -pci_test_password" --health-interval=10s --health-timeout=5s --health-retries=5
     defaults:
       run:
         working-directory: backend
@@ -87,11 +78,6 @@ jobs:
         run: docker info > /dev/null
 
       - name: Run Backend Tests
-        env:
-          DB_URL: jdbc:mysql://127.0.0.1:3306/personal_finance_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-          DB_USERNAME: root
-          DB_PASSWORD: ci_test_password
-          JWT_SECRET: j6uECsjbXr08La2gKzpRPUzOmGSUyCS7/kXGeTVxjfs=
         # Xóa kết quả cũ và tắt build cache để bằng chứng thuộc lần chạy CI hiện tại.
         run: ./gradlew cleanTest test --no-build-cache --console=plain
 
@@ -118,13 +104,17 @@ jobs:
 
       - name: Validate Docker Compose Configuration
         env:
-          DB_NAME: personal_finance_db
+          DB_NAME: smartexpense_ci
           DB_USERNAME: root
-          DB_PASSWORD: test_password_123
-          DB_ROOT_PASSWORD: test_password_123
-          JWT_SECRET: j6uECsjbXr08La2gKzpRPUzOmGSUyCS7/kXGeTVxjfs=
           FRONTEND_PORT: 8088
-        run: docker compose config
+        shell: bash
+        run: |
+          ci_password="$(openssl rand -hex 32)"
+          ci_jwt_secret="$(openssl rand -base64 32)"
+          printf '::add-mask::%s\n' "$ci_password"
+          printf '::add-mask::%s\n' "$ci_jwt_secret"
+          export DB_PASSWORD="$ci_password" DB_ROOT_PASSWORD="$ci_password" JWT_SECRET="$ci_jwt_secret"
+          docker compose --env-file /dev/null config --quiet
 
       - name: Build Backend Docker Image
         uses: docker/build-push-action@v6

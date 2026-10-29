@@ -26,20 +26,15 @@ $partialDump = Join-Path $BackupDir ([IO.Path]::GetRandomFileName() + '.partial'
 
 Write-Host "Creating database backup for '$DbName' from container '$ContainerName'..." -ForegroundColor Cyan
 
-# Read root password from .env if present
-$dbRootPass = "123456$"
-if (Test-Path ".env") {
-    $envContent = Get-Content ".env"
-    foreach ($line in $envContent) {
-        if ($line -match "^DB_ROOT_PASSWORD=(.*)$") {
-            $dbRootPass = $matches[1].Trim()
-        }
-    }
-}
+# Read the private credential without a hardcoded fallback or shell interpolation.
+. (Join-Path $PSScriptRoot 'Read-LocalEnvironment.ps1')
+$dbRootPass = Get-SmartExpenseRootPassword
+$previousMysqlPwd = [Environment]::GetEnvironmentVariable('MYSQL_PWD', 'Process')
+[Environment]::SetEnvironmentVariable('MYSQL_PWD', $dbRootPass, 'Process')
 
 try {
     # Execute mysqldump inside container
-    $cmd = "docker exec -i $ContainerName mysqldump -u root -p$dbRootPass --databases $DbName --routines --triggers"
+    $cmd = "docker exec -i -e MYSQL_PWD $ContainerName mysqldump -u root --databases $DbName --routines --triggers"
     cmd /c "$cmd > `"$partialDump`""
     $dumpExitCode = $LASTEXITCODE
     if ($dumpExitCode -ne 0) {
@@ -64,4 +59,6 @@ try {
     }
     Write-Host " Backup failed: $backupError" -ForegroundColor Red
     exit 1
+} finally {
+    [Environment]::SetEnvironmentVariable('MYSQL_PWD', $previousMysqlPwd, 'Process')
 }

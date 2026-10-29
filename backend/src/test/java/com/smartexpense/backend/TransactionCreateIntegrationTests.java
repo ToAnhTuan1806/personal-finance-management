@@ -1,9 +1,5 @@
 package com.smartexpense.backend;
 
-import com.github.dockerjava.api.model.ExposedPort;
-import com.github.dockerjava.api.model.PortBinding;
-import com.github.dockerjava.api.model.Ports;
-import com.zaxxer.hikari.HikariDataSource;
 import com.smartexpense.backend.dto.transaction.TransactionResponse;
 import com.smartexpense.backend.entity.Category;
 import com.smartexpense.backend.entity.Transaction;
@@ -21,11 +17,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.MockMvcPrint;
-import org.springframework.core.env.Environment;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -35,26 +28,16 @@ import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.*;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.transaction.annotation.Transactional;
-import org.testcontainers.DockerClientFactory;
-import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.mysql.MySQLContainer;
 import tools.jackson.databind.json.JsonMapper;
 
-import javax.sql.DataSource;
 import java.math.BigDecimal;
-import java.net.URI;
-import java.security.SecureRandom;
-import java.sql.Connection;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -65,38 +48,15 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 // Dùng MySQL thật và JWT thật; rollback từng test, xóa container sau khi kết thúc lớp.
-@SpringBootTest(properties = "spring.config.location=classpath:/application-d03-test.properties")
+@SpringBootTest(classes = BackendApplication.class,
+        properties = "spring.config.location=classpath:/application-d03-test.properties")
 @ActiveProfiles("d03-test")
 @AutoConfigureMockMvc(print = MockMvcPrint.NONE)
 @Testcontainers(disabledWithoutDocker = true)
 @Transactional
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-@Import(TransactionCreateIntegrationTests.IsolatedDataSource.class)
-class TransactionCreateIntegrationTests {
-
-    private static final String DATABASE = "se_d03_test_" + UUID.randomUUID().toString().replace("-", "");
-    private static final String PASSWORD = UUID.randomUUID().toString();
-    private static final String JWT_KEY = randomJwtKey();
-
-    @Container
-    static final MySQLContainer MYSQL = new MySQLContainer("mysql:8.0") {
-        @Override
-        public void start() {
-            // Chỉ cho phép socket Docker local, không tạo tài nguyên trên Docker host từ xa.
-            URI endpoint = DockerClientFactory.instance().getTransportConfig().getDockerHost();
-            boolean localUnix = "unix".equals(endpoint.getScheme()) && endpoint.getHost() == null;
-            boolean localPipe = "npipe".equals(endpoint.getScheme())
-                    && endpoint.getPath().startsWith("//./pipe/");
-            if (!localUnix && !localPipe) {
-                throw new IllegalStateException("D03 chỉ chạy trên Docker socket local đã xác nhận");
-            }
-            super.start();
-        }
-    }.withDatabaseName(DATABASE).withUsername("d03_test").withPassword(PASSWORD)
-            .withReuse(false).withLabel("com.smartexpense.test", "d03")
-            .withUrlParam("useSSL", "false").withUrlParam("allowPublicKeyRetrieval", "true")
-            .withCreateContainerCmdModifier(command -> command.getHostConfig().withPortBindings(
-                    new PortBinding(Ports.Binding.bindIp("127.0.0.1"), new ExposedPort(3306))));
+@Import(MySqlIntegrationTestSupport.IsolatedDataSource.class)
+class TransactionCreateIntegrationTests extends MySqlIntegrationTestSupport {
 
     @Autowired MockMvc mvc;
     @Autowired JsonMapper json;
@@ -106,8 +66,6 @@ class TransactionCreateIntegrationTests {
     @Autowired CategoryRepository categories;
     @Autowired TransactionRepository transactions;
     @Autowired EntityManager entityManager;
-    @Autowired DataSource dataSource;
-    @Autowired Environment environment;
 
     private User userA;
     private User userB;
@@ -115,60 +73,9 @@ class TransactionCreateIntegrationTests {
     private Category incomeA;
     private Category expenseB;
 
-    @DynamicPropertySource
-    static void isolatedProperties(DynamicPropertyRegistry registry) {
-        verifyIsolatedContainer();
-        registry.add("spring.datasource.url", MYSQL::getJdbcUrl);
-        registry.add("spring.datasource.username", MYSQL::getUsername);
-        registry.add("spring.datasource.password", MYSQL::getPassword);
-        registry.add("app.jwt.secret", () -> JWT_KEY);
-        registry.add("spring.sql.init.mode", () -> "never");
-        registry.add("spring.jpa.hibernate.ddl-auto", () -> "none");
-        registry.add("spring.jpa.properties.jakarta.persistence.schema-generation.database.action", () -> "create");
-    }
-
-    private static void verifyIsolatedContainer() {
-        // Kiểm tra đích kết nối trước khi Spring/Hibernate có thể khởi tạo DataSource hoặc DDL.
-        URI target = URI.create(MYSQL.getJdbcUrl().substring("jdbc:".length()));
-        if (!MYSQL.isRunning() || !"mysql".equals(target.getScheme())
-                || (!"localhost".equals(target.getHost()) && !"127.0.0.1".equals(target.getHost()))
-                || target.getPort() != MYSQL.getMappedPort(3306)
-                || target.getPort() == 3306 || !target.getPath().equals("/" + DATABASE)
-                || !DATABASE.matches("se_d03_test_[a-f0-9]{32}")
-                || !"d03_test".equals(MYSQL.getUsername()) || !PASSWORD.equals(MYSQL.getPassword())) {
-            throw new IllegalStateException("Không xác nhận được MySQL test cô lập; dừng trước kết nối");
-        }
-    }
-
-    @TestConfiguration(proxyBeanMethods = false)
-    static class IsolatedDataSource {
-        @Bean(destroyMethod = "close")
-        HikariDataSource dataSource() {
-            // Không bind thuộc tính Hikari từ môi trường; pool chỉ được dùng container đã kiểm tra.
-            verifyIsolatedContainer();
-            HikariDataSource pool = new HikariDataSource();
-            pool.setJdbcUrl(MYSQL.getJdbcUrl());
-            pool.setUsername(MYSQL.getUsername());
-            pool.setPassword(MYSQL.getPassword());
-            pool.setDriverClassName("com.mysql.cj.jdbc.Driver");
-            pool.setMaximumPoolSize(2);
-            return pool;
-        }
-    }
-
     @BeforeEach
     void fixtures() throws Exception {
-        // Đối chiếu thêm metadata kết nối thật trước khi tạo bất kỳ dữ liệu test nào.
-        try (Connection connection = dataSource.getConnection()) {
-            assertThat(connection.getCatalog()).isEqualTo(DATABASE);
-            assertThat(connection.getMetaData().getURL()).isEqualTo(MYSQL.getJdbcUrl());
-            assertThat(connection.getMetaData().getDatabaseProductName()).isEqualTo("MySQL");
-            assertThat(connection.getMetaData().getDatabaseMajorVersion()).isEqualTo(8);
-            assertThat(connection.getMetaData().getUserName()).startsWith("d03_test@");
-        }
-        assertThat(environment.getProperty("spring.jpa.hibernate.ddl-auto")).isEqualTo("none");
-        assertThat(environment.getProperty("spring.jpa.properties.jakarta.persistence.schema-generation.database.action"))
-                .isEqualTo("create");
+        verifyMySqlConnection();
         assertThat(transactions.count()).isZero();
         assertThat(categories.count()).isZero();
         assertThat(users.count()).isZero();
@@ -387,9 +294,4 @@ class TransactionCreateIntegrationTests {
                         .build())).getTokenValue();
     }
 
-    private static String randomJwtKey() {
-        byte[] key = new byte[32];
-        new SecureRandom().nextBytes(key);
-        return Base64.getEncoder().encodeToString(key);
-    }
 }

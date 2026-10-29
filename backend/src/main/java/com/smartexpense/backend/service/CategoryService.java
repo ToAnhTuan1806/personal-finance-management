@@ -11,18 +11,44 @@ import com.smartexpense.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
 public class CategoryService {
 
+    private static final List<String> DEFAULT_EXPENSE_NAMES = List.of(
+            "Ăn uống", "Chi tiêu hằng ngày", "Quần áo", "Mỹ phẩm", "Phí giao lưu", "Y tế",
+            "Giáo dục", "Tiền điện", "Đi lại", "Phí liên lạc", "Tiền nhà");
+    private static final List<String> DEFAULT_INCOME_NAMES = List.of(
+            "Tiền lương", "Tiền phụ cấp", "Tiền thưởng", "Thu nhập phụ", "Đầu tư", "Thu nhập tạm thời");
+
     private final CategoryRepository categoryRepository;
     private final TransactionRepository transactionRepository;
     private final UserRepository userRepository;
+
+    // Chỉ gọi một lần khi đăng ký user mới; bắt buộc tham gia transaction của luồng đăng ký.
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void createDefaultCategories(User newUser) {
+        List<Category> defaults = Stream.concat(
+                DEFAULT_EXPENSE_NAMES.stream().map(name -> defaultCategory(newUser, name, TransactionType.EXPENSE)),
+                DEFAULT_INCOME_NAMES.stream().map(name -> defaultCategory(newUser, name, TransactionType.INCOME))
+        ).toList();
+        categoryRepository.saveAll(defaults);
+    }
+
+    private Category defaultCategory(User owner, String name, TransactionType type) {
+        Category category = new Category();
+        category.setUser(owner);
+        category.setName(name);
+        category.setType(type);
+        return category;
+    }
 
     // Lấy danh sách danh mục, có thể lọc theo loại
     @Transactional(readOnly = true)
