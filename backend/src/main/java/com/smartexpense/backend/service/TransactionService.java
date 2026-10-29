@@ -44,6 +44,14 @@ public class TransactionService {
             );
         }
 
+        // JPA chỉ nhận offset kiểu int; nhân bằng long để phát hiện vượt giới hạn mà không tràn số.
+        if ((long) page * size > Integer.MAX_VALUE) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "page và size tạo offset vượt giới hạn hỗ trợ"
+            );
+        }
+
         boolean hasMonth = month != null && !month.isBlank();
         boolean hasStartDate = startDate != null;
         boolean hasEndDate = endDate != null;
