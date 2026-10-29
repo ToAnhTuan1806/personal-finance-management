@@ -47,8 +47,8 @@ Mọi đường dẫn trong bảng đều nằm dưới `/api`; Input là body, 
 
 ```text
 User = { id, fullName, email }
-CategoryInput = { name, type }
-Category = { id, name, type }
+CategoryInput = { name, type, icon?, color? }
+Category = { id, name, type, icon, color }
 TransactionInput = { categoryId, type, amount, transactionDate, note? }
 Transaction = { id, categoryId, categoryName, type, amount, transactionDate, note }
 Budget = { id, year, month, amountLimit, spentAmount, remainingAmount, exceeded }
@@ -59,12 +59,47 @@ CalendarMonth = { year, month, incomeTotal, expenseTotal,
 ```
 
 - Register: fullName không blank/≤100, email hợp lệ, password≥8; email trim/lowercase, tên trim. Register trả User, **không cấp JWT**. Login chỉ yêu cầu password không blank. Không có refresh/revoke/logout server; logout xóa phiên client.
-- Category: name không blank/≤100, type bắt buộc; chưa có unique tên, icon/color. Không cam kết 409 cho tên trùng.
+- Category: name không blank/≤100, type bắt buộc; icon/color theo mục D06 bên dưới. Chưa có unique tên, không cam kết 409 cho tên trùng.
 - Transaction: mọi field bắt buộc trừ note (null hoặc ≤500); category cùng owner/type, tiền theo mục 1. FE mặc định ngày hôm nay.
 - Filter: month **hoặc** đủ startDate/endDate, không gửi cả hai; start≤end, inclusive hai đầu. keyword trim, tìm note không phân biệt hoa/thường; `%`/`_` hiện là wildcard LIKE. categoryId khác owner trong filter trả danh sách rỗng.
 - page≥0, size 1–100, offset = page × size phải ≤2147483647 (giới hạn JPA); vượt offset trả 400 VALIDATION_ERROR, không tự clamp page. Page hợp lệ vượt phạm vi dữ liệu vẫn trả content rỗng. Sort ngày DESC/id DESC, không nhận sort tùy ý. FE mặc định 10 dòng, giữ field number. Danh mục không có sort cố định.
 - Budget/Dashboard: năm 1900–2100, tháng 1–12; amountLimit theo giới hạn tiền chung. spentAmount chỉ EXPENSE đúng kỳ; remainingAmount có thể âm, exceeded chỉ khi spent>limit. UI: <80% safe, 80–<100% warning, ≥100% đỏ. Unique ngân sách user/năm/tháng đã có; race upsert cần kiểm thử.
 - Dashboard tháng rỗng trả tổng 0, danh mục `[]`, balance=totalIncome-totalExpense; danh mục sort totalAmount DESC. Giữ tên totalAmount/spentAmount/remainingAmount.
+
+### Category icon/color (D06-BE, chờ FE và DB/QA xác nhận)
+
+- Giữ endpoint/status CRUD. `name/type` vẫn bắt buộc trên POST/PUT. `icon` là string ≤40, phân biệt hoa/thường, chỉ nhận key Lucide trong allowlist: `tag, utensils, shopping-bag, car, home, heart, graduation-cap, gamepad-2, briefcase, gift, wallet, circle, shirt, sparkles, users, zap, phone, hand-coins, trending-up, clock`. Các key đã đối chiếu với thư viện FE hiện có, chưa phải FE duyệt registry/UI.
+- `color` khớp chính xác `#RRGGBB` (nhận hex hoa/thường, trả uppercase). Icon/color blank, HTML, URL hoặc sai định dạng trả 400 `VALIDATION_ERROR`, lỗi field trong `errors.icon/color`. Không trim để hợp thức hóa metadata sai.
+- POST thiếu/null dùng default trung lập `tag/#64748B`. PUT thiếu từng field giữ giá trị DB, kể cả NULL; null gửi rõ ràng reset riêng field đó về default. Client không điều khiển được cờ presence nội bộ. Request cũ chỉ có name/type vẫn hợp lệ; response thêm hai field, không đổi id/name/type.
+- Đọc Category cũ có NULL/metadata không hợp lệ trả fallback an toàn, không ghi ngược DB. Metadata mới lưu riêng trên Category; đổi tên không làm suy lại icon/màu. User/17 danh mục mới vẫn cùng transaction; login không tạo thêm, user cũ không tự nhận 17 danh mục hoặc được backfill.
+
+Ví dụ POST `/api/categories`: `{"name":"Quà tặng","type":"INCOME","icon":"gift","color":"#a1b2c3"}` → 201 `{"id":123,"name":"Quà tặng","type":"INCOME","icon":"gift","color":"#A1B2C3"}`. PUT cùng name/type, bỏ icon/color sẽ giữ metadata; `"color":null` reset màu về `#64748B` và giữ icon nếu thiếu.
+
+Mapping lúc đăng ký (dữ liệu lưu cố định, không lookup theo tên khi đọc):
+
+| Loại | Tên ban đầu | Icon | Color |
+| --- | --- | --- | --- |
+| EXPENSE | Ăn uống | utensils | #F59E0B |
+| EXPENSE | Chi tiêu hằng ngày | shopping-bag | #3B82F6 |
+| EXPENSE | Quần áo | shirt | #8B5CF6 |
+| EXPENSE | Mỹ phẩm | sparkles | #EC4899 |
+| EXPENSE | Phí giao lưu | users | #F97316 |
+| EXPENSE | Y tế | heart | #EF4444 |
+| EXPENSE | Giáo dục | graduation-cap | #6366F1 |
+| EXPENSE | Tiền điện | zap | #EAB308 |
+| EXPENSE | Đi lại | car | #06B6D4 |
+| EXPENSE | Phí liên lạc | phone | #14B8A6 |
+| EXPENSE | Tiền nhà | home | #A855F7 |
+| INCOME | Tiền lương | wallet | #22C55E |
+| INCOME | Tiền phụ cấp | hand-coins | #10B981 |
+| INCOME | Tiền thưởng | gift | #84CC16 |
+| INCOME | Thu nhập phụ | briefcase | #0EA5E9 |
+| INCOME | Đầu tư | trending-up | #059669 |
+| INCOME | Thu nhập tạm thời | clock | #64748B |
+
+**Điều kiện DB trước triển khai:** D06-DB của Quỳnh cần chốt version, backup/restore test và áp dụng migration bổ sung `categories.icon VARCHAR(40) NULL`, `categories.color VARCHAR(7) NULL` trước khi chạy Backend D06. Giữ nguyên dữ liệu/name/type/FK; backfill là công việc DB riêng, Backend không tự làm. Fallback DTO chỉ xử lý giá trị NULL/sai sau khi cột tồn tại, **không xử lý schema thiếu cột**.
+
+Giữ nguyên cấu hình `ddl-auto` hiện tại; không khởi động D06 trên VPS để thử thêm cột vì `update` có thể tự ALTER. Chưa xác nhận migration thì chặn commit/release D06 để deploy; không coi schema tạo mới trong Testcontainers là bằng chứng migration production. Rollback ứng dụng cũ có thể giữ hai cột nullable; không tự drop/backfill/restore production. **FE và DB/QA vẫn chờ xác nhận allowlist, mapping và migration.**
 
 ### Calendar và chi tiết ngày (FR-04/FR-05)
 
@@ -80,7 +115,7 @@ Quick Add (FR-03) dùng POST `/transactions`, không thêm `/quick-add`. Khóa s
 
 API mới yêu cầu JWT, ID dương, input hợp lệ; lỗi chung theo mục 1. Category/template khác owner trả 404; category thuộc owner nhưng sai type trả 400.
 
-**Danh mục icon/màu (FR-02):** mở rộng CategoryInput/Category thêm icon/color, giữ endpoint cũ. Đề xuất icon≤40 trong allowlist `tag, utensils, shopping-bag, car, home, heart, graduation-cap, gamepad-2, briefcase, gift, wallet, circle`; color khớp #RRGGBB, trả uppercase. Default tag/#64748B. POST thiếu/null dùng default; PUT thiếu giữ cũ, null reset default, blank/sai trả 400. Category có transaction/budget/template (kể cả inactive) không xóa/đổi type →409 CATEGORY_IN_USE; không cascade tài chính. Rule mới chưa duyệt.
+**Liên kết danh mục với ngân sách/mẫu (FR-02/07/08), chưa duyệt:** mở rộng rule không xóa/đổi type khi có transaction/budget/template (kể cả inactive) →409 CATEGORY_IN_USE; không cascade tài chính. D06 giữ rule transaction 409 CONFLICT hiện có; chưa thêm bảng hoặc rule của D07/D08.
 
 | Method | Đường dẫn | Request | Thành công / lỗi nghiệp vụ |
 | --- | --- | --- | --- |
