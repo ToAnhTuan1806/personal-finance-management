@@ -302,7 +302,7 @@ Bộ sưu tập Postman đầy đủ cho toàn bộ API endpoints (Auth, Categor
 
 ## Migration, backup và rollback
 
-**Chưa có migration 2.0 được duyệt hoặc chạy.** Quỳnh phụ trách DB/QA/DevOps, phối hợp Tuấn review trước khi đổi schema/cấu hình.
+**Chưa xác nhận migration 2.0 được duyệt hoặc áp dụng trên VPS.** Quỳnh phụ trách DB/QA/DevOps, phối hợp Tuấn review trước khi đổi schema/cấu hình. D06 có [SQL V002 đề xuất và hướng dẫn pre/post-check, backup/restore, rollback](database/migrations/README.md), đã kiểm thử trên MySQL cô lập; không có runner tự áp dụng vào VPS.
 
 - Hiện Hibernate dùng `ddl-auto=update`. Đề xuất version: V001 baseline MVP, V002 icon/color, V003 category_budgets, V004 recurring_templates, V005 recurring_applications. Runner, SQL/FK và việc chuyển sang `validate` còn chờ duyệt (Q10); không để Hibernate và migration cùng đổi schema. Seed không phải migration; DB đã có phải kiểm tra baseline, không chạy CREATE chồng hoặc reset volume.
 - Mỗi version cần pre/post-check, checksum và lịch sử chạy; version đã áp dụng không sửa nội dung. Khi lỗi dừng kiểm tra trạng thái thực, không giả định ROLLBACK hoàn tác được mọi DDL.

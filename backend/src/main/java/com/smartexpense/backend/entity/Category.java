@@ -30,6 +30,13 @@ public class Category {
     @Column(nullable = false, length = 20)
     private TransactionType type;
 
+    // Nullable để tương thích migration bổ sung và dữ liệu cũ chưa backfill; fallback nằm ở DTO.
+    @Column(length = 40)
+    private String icon;
+
+    @Column(length = 7)
+    private String color;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
