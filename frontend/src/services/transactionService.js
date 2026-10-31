@@ -2,7 +2,7 @@ import axiosClient from '../api/axiosClient.js'
 import { loadMonthlyTransactions } from '../utils/cashFlow.js'
 
 // Chỉ trả kết quả từ Backend; lỗi mạng/timeout được chuyển về giao diện.
-export const getTransactions = async (params = {}) => (await axiosClient.get('/transactions', { params })).data
+export const getTransactions = async (params = {}, options = {}) => (await axiosClient.get('/transactions', { ...options, params })).data
 export const getMonthlyTransactions = (month) => loadMonthlyTransactions(month, getTransactions)
 export const getTransactionById = async (id) => (await axiosClient.get('/transactions/' + id)).data
 export const createTransaction = async (data) => (await axiosClient.post('/transactions', data)).data

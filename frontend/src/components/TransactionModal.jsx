@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { X, ArrowDownRight, ArrowUpRight, Calendar, FileText, AlertCircle, Loader2 } from 'lucide-react'
 import MoneyInput from './ui/MoneyInput'
+import CategoryBadge from './category/CategoryBadge'
 import useModalFocus from '../hooks/useModalFocus'
 import { createSubmitGuard, localToday, transactionPayload, validateTransactionForm } from '../utils/transactionForm'
 import { getApiErrorMessage, getApiFieldErrors, isRequestCancelled } from '../api/errors'
@@ -44,6 +45,7 @@ function TransactionModalContent({
   const availableCategories = categories.filter(
     (category) => category.type === form.type
   )
+  const selectedCategory = availableCategories.find((category) => String(category.id) === String(form.categoryId))
 
   const handleChange = (event) => {
     const { name, value } = event.target
@@ -227,6 +229,12 @@ function TransactionModalContent({
               <p id="transaction-category-error" className="mt-1.5 text-xs font-medium text-rose-600 flex items-center gap-1">
                 <span>{errors.categoryId}</span>
               </p>
+            )}
+            {selectedCategory && (
+              <div className="mt-2 flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
+                <CategoryBadge category={selectedCategory} />
+                <span className="min-w-0 flex-1 break-words">{selectedCategory.name}</span>
+              </div>
             )}
             {categoriesLoading && <p role="status" className="mt-2 text-sm text-slate-500 dark:text-slate-300">Đang tải danh mục...</p>}
             {categoriesError && (
