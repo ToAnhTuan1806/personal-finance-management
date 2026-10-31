@@ -37,6 +37,8 @@ import { getMonthlyTransactions, getTransactions } from '../services/transaction
 import { getBudget } from '../services/budgetService'
 import { buildDailyCashFlow, formatCashFlowTick } from '../utils/cashFlow'
 import walletLogo from '../assets/wallet-logo.png'
+import { useQuickAdd } from '../contexts/QuickAddContext'
+import { getApiErrorMessage } from '../api/errors'
 
 const formatMoney = (amount) =>
   new Intl.NumberFormat('vi-VN', {
@@ -85,8 +87,8 @@ function ErrorSection({ message }) {
     <div
       className="flex min-h-72 flex-col items-center justify-center
         gap-3 rounded-2xl border border-rose-200 bg-rose-50
-        p-6 text-center text-sm text-rose-700"
-      role="status"
+        p-6 text-center text-sm text-rose-700 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-300"
+      role="alert"
     >
       <AlertCircle size={28} />
       <p>{message}</p>
@@ -96,6 +98,7 @@ function ErrorSection({ message }) {
 
 function AuthenticatedDashboard() {
   const { user } = useAuth()
+  const { openQuickAdd, mutationVersion } = useQuickAdd()
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth)
 
   const [summary, setSummary] = useState(null)
@@ -103,6 +106,7 @@ function AuthenticatedDashboard() {
   const [recentTransactions, setRecentTransactions] = useState(null)
   const [monthlyTransactions, setMonthlyTransactions] = useState(null)
   const [budget, setBudget] = useState(null)
+  const [budgetError, setBudgetError] = useState('')
 
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -201,8 +205,11 @@ function AuthenticatedDashboard() {
         // 4. Ngân sách tháng
         if (budgetResult.status === 'fulfilled') {
           setBudget(budgetResult.value)
+          setBudgetError('')
         } else {
           setBudget(null)
+          setBudgetError(budgetResult.reason?.response?.status === 404 ? '' : getApiErrorMessage(budgetResult.reason))
+          if (budgetResult.reason?.response?.status !== 404) failedSections.push('ngân sách tháng')
         }
 
         // 5. Dòng tiền dùng toàn bộ giao dịch tháng, độc lập danh sách gần đây.
@@ -214,8 +221,11 @@ function AuthenticatedDashboard() {
         }
 
         if (failedSections.length > 0) {
+          const failure = [summaryResult, categoryResult, transactionResult, monthlyResult]
+            .find((result) => result.status === 'rejected') ||
+            (budgetResult.status === 'rejected' && budgetResult.reason?.response?.status !== 404 ? budgetResult : null)
           setError(
-            `Không thể tải: ${failedSections.join(', ')}. Vui lòng thử làm mới Dashboard.`
+            `${getApiErrorMessage(failure?.reason || { code: 'INVALID_API_RESPONSE' })} (${failedSections.join(', ')}).`
           )
         } else {
           setError('')
@@ -223,8 +233,7 @@ function AuthenticatedDashboard() {
       })
       .catch((err) => {
         if (ignore) return
-        console.error('Dashboard:', err)
-        setError('Không thể tải dữ liệu Dashboard.')
+        setError(getApiErrorMessage(err))
       })
       .finally(() => {
         if (!ignore) {
@@ -236,7 +245,7 @@ function AuthenticatedDashboard() {
     return () => {
       ignore = true
     }
-  }, [selectedMonth, reloadKey])
+  }, [selectedMonth, reloadKey, mutationVersion])
 
   const handleRefresh = () => {
     if (loading || refreshing) return
@@ -291,11 +300,9 @@ function AuthenticatedDashboard() {
     }
   }, [categoryExpenses, summary])
 
-  // Hiển thị tên người dùng (ưu tiên họ và tên đầy đủ, ví dụ: "Tô Anh Tuấn")
+  // Chỉ hiển thị tên từ tài khoản đã được Backend xác thực.
   const displayName =
-    user?.fullName && user.fullName !== 'Demo User' && user.fullName !== 'User'
-      ? user.fullName
-      : 'Tô Anh Tuấn'
+    user?.fullName || 'Bạn'
 
   const totalIncome = Number(summary?.totalIncome || 0)
   const totalExpense = Number(summary?.totalExpense || 0)
@@ -394,21 +401,23 @@ function AuthenticatedDashboard() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <Link
-            to="/transactions"
+          <button
+            type="button"
+            onClick={() => openQuickAdd('EXPENSE')}
             className="inline-flex items-center gap-1.5 rounded-xl bg-rose-50 px-3.5 py-2 text-xs font-bold text-rose-600 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-400 dark:hover:bg-rose-900/40 transition-colors"
           >
             <ArrowUpRight size={15} />
             <span>+ Thêm chi tiêu</span>
-          </Link>
+          </button>
 
-          <Link
-            to="/transactions"
+          <button
+            type="button"
+            onClick={() => openQuickAdd('INCOME')}
             className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-50 px-3.5 py-2 text-xs font-bold text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-400 dark:hover:bg-emerald-900/40 transition-colors"
           >
             <ArrowDownRight size={15} />
             <span>+ Thêm thu nhập</span>
-          </Link>
+          </button>
 
           <Link
             to="/budgets"
@@ -464,10 +473,10 @@ function AuthenticatedDashboard() {
             </span>
           </div>
           <div className="mt-3">
-            <RollingNumber
+            {summary ? <RollingNumber
               value={totalIncome}
               className="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400"
-            />
+            /> : <span aria-label="Chưa tải được tổng thu">—</span>}
           </div>
           <p className="mt-2 text-xs font-medium text-slate-600 dark:text-slate-300">
             Tổng các khoản thu trong tháng
@@ -485,10 +494,10 @@ function AuthenticatedDashboard() {
             </span>
           </div>
           <div className="mt-3">
-            <RollingNumber
+            {summary ? <RollingNumber
               value={totalExpense}
               className="text-2xl sm:text-3xl font-black text-rose-600 dark:text-rose-400"
-            />
+            /> : <span aria-label="Chưa tải được tổng chi">—</span>}
           </div>
           <p className="mt-2 text-xs font-medium text-slate-600 dark:text-slate-300">
             {totalIncome > 0 ? `Chiếm ${expenseRate}% thu nhập` : 'Tổng các khoản chi trong tháng'}
@@ -506,10 +515,10 @@ function AuthenticatedDashboard() {
             </span>
           </div>
           <div className="mt-3">
-            <RollingNumber
+            {summary ? <RollingNumber
               value={balance}
               className="text-2xl sm:text-3xl font-black text-blue-700 dark:text-blue-300"
-            />
+            /> : <span aria-label="Chưa tải được số dư">—</span>}
           </div>
           <p className="mt-2 text-xs font-semibold text-blue-700 dark:text-blue-300">
             {savingRate > 0
@@ -665,7 +674,7 @@ function AuthenticatedDashboard() {
                 Ngân sách tháng này
               </h2>
               <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                {budget ? `Hạn mức chi tiêu ${formatMonth(selectedMonth)}` : 'Chưa thiết lập hạn mức'}
+                {budgetError ? 'Không tải được hạn mức' : budget ? `Hạn mức chi tiêu ${formatMonth(selectedMonth)}` : 'Chưa thiết lập hạn mức'}
               </p>
             </div>
           </div>
@@ -678,7 +687,7 @@ function AuthenticatedDashboard() {
           </Link>
         </div>
 
-        {budget ? (
+        {budgetError ? <ErrorSection message={budgetError} /> : budget ? (
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-[#1E293B] border border-slate-100 dark:border-slate-800">
               <div>

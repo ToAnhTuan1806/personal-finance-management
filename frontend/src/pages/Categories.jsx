@@ -3,7 +3,9 @@ import { Plus, Pencil, Trash2, Tags, CheckCircle2, AlertCircle, Loader2 } from '
 
 import CategoryModal from '../components/CategoryModal'
 import PillTabs from '../components/ui/PillTabs'
+import AsyncState from '../components/ui/AsyncState'
 import { useToast } from '../contexts/ToastContext'
+import { getApiErrorMessage, isRequestCancelled } from '../api/errors'
 import {
   getCategories,
   createCategory,
@@ -35,8 +37,8 @@ export default function Categories() {
         filter === 'ALL' ? null : filter
       )
       setCategories(Array.isArray(data) ? data : [])
-    } catch {
-      setError('Không thể tải danh mục. Vui lòng thử lại.')
+    } catch (error) {
+      setError(getApiErrorMessage(error))
     } finally {
       setLoading(false)
     }
@@ -48,13 +50,14 @@ export default function Categories() {
     getCategories(filter === 'ALL' ? null : filter)
       .then((data) => {
         if (!ignore) {
+          setError('')
           setCategories(Array.isArray(data) ? data : [])
           setLoading(false)
         }
       })
-      .catch(() => {
+      .catch((error) => {
         if (!ignore) {
-          setError('Không thể tải danh mục. Vui lòng thử lại.')
+          setError(getApiErrorMessage(error))
           setLoading(false)
         }
       })
@@ -99,7 +102,7 @@ export default function Categories() {
       setEditingCategory(null)
       await loadCategories()
     } catch (err) {
-      toast.error('Không thể lưu danh mục. Vui lòng thử lại.')
+      if (!isRequestCancelled(err)) toast.error(getApiErrorMessage(err))
       throw err
     } finally {
       setSaving(false)
@@ -133,9 +136,9 @@ export default function Categories() {
         setError(msg)
         toast.error(msg)
       } else {
-        const msg = 'Xóa danh mục thất bại. Vui lòng thử lại.'
+        const msg = getApiErrorMessage(err)
         setError(msg)
-        toast.error(msg)
+        if (msg) toast.error(msg)
       }
       setConfirmDelete(null)
     } finally {
@@ -197,6 +200,9 @@ export default function Categories() {
             options={filters}
             value={filter}
             onChange={(value) => {
+              if (value === filter) return
+              setLoading(true)
+              setError('')
               setFilter(value)
               setSuccess('')
             }}
@@ -208,6 +214,8 @@ export default function Categories() {
             <Loader2 className="h-7 w-7 animate-spin text-blue-600 dark:text-blue-400" />
             <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Đang tải danh mục...</p>
           </div>
+        ) : error ? (
+          <AsyncState message={error} onRetry={loadCategories} />
         ) : categories.length === 0 ? (
           <div className="py-16 text-center">
             <div className="h-14 w-14 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 flex items-center justify-center mx-auto mb-3">

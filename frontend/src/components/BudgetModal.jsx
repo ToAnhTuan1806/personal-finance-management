@@ -1,6 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { X, Loader2 } from 'lucide-react'
 import MoneyInput from './ui/MoneyInput'
+import { getApiErrorMessage } from '../api/errors'
+import useModalFocus from '../hooks/useModalFocus'
 
 function BudgetModalContent({
   budget,
@@ -11,16 +13,7 @@ function BudgetModalContent({
 }) {
   const [amount, setAmount] = useState(() => (budget ? String(budget.amountLimit) : ''))
   const [error, setError] = useState('')
-
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape' && !saving) {
-        onClose()
-      }
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [saving, onClose])
+  const dialogRef = useModalFocus(onClose, saving)
 
   const handleSubmit = async (event) => {
     event.preventDefault()
@@ -48,11 +41,7 @@ function BudgetModalContent({
     try {
       await onSave(Number(value))
     } catch (err) {
-      if (err.response?.status === 400) {
-        setError('Hạn mức không hợp lệ. Vui lòng kiểm tra lại.')
-      } else {
-        setError('Không thể lưu ngân sách. Vui lòng thử lại.')
-      }
+      setError(getApiErrorMessage(err))
     }
   }
 
@@ -65,6 +54,8 @@ function BudgetModalContent({
       }}
     >
       <div
+        ref={dialogRef}
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-labelledby="budget-modal-title"

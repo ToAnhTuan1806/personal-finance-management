@@ -14,7 +14,10 @@ import {
 } from 'lucide-react'
 
 import BudgetModal from '../components/BudgetModal'
+import AsyncState from '../components/ui/AsyncState'
 import { useToast } from '../contexts/ToastContext'
+import { useQuickAdd } from '../contexts/QuickAddContext'
+import { getApiErrorMessage, isRequestCancelled } from '../api/errors'
 import {
   getBudget,
   saveBudget,
@@ -38,8 +41,10 @@ const formatMoney = (value) =>
 
 export default function Budgets() {
   const toast = useToast()
+  const { mutationVersion } = useQuickAdd()
   const [selectedMonth, setSelectedMonth] = useState(currentMonth)
   const [budget, setBudget] = useState(null)
+  const [reloadKey, setReloadKey] = useState(0)
 
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -78,16 +83,19 @@ export default function Budgets() {
       .then((result) => {
         if (!ignore) {
           setBudget(result)
+          setError('')
           setLoading(false)
         }
       })
       .catch((err) => {
         if (!ignore) {
+          setBudget(null)
           if (err.response?.status === 404) {
             // Chưa đặt ngân sách là trạng thái bình thường
             setBudget(null)
+            setError('')
           } else {
-            setError('Không thể tải ngân sách. Vui lòng thử lại.')
+            setError(getApiErrorMessage(err))
           }
           setLoading(false)
         }
@@ -96,7 +104,7 @@ export default function Budgets() {
     return () => {
       ignore = true
     }
-  }, [year, month, validMonth])
+  }, [year, month, validMonth, mutationVersion, reloadKey])
 
   // Thiết lập hoặc cập nhật ngân sách
   const handleSave = async (amountLimit) => {
@@ -115,7 +123,7 @@ export default function Budgets() {
       setSuccess('Lưu ngân sách thành công.')
       toast.success('Lưu ngân sách thành công.')
     } catch (err) {
-      toast.error('Không thể lưu ngân sách. Vui lòng thử lại.')
+      if (!isRequestCancelled(err)) toast.error(getApiErrorMessage(err))
       throw err
     } finally {
       setSaving(false)
@@ -134,9 +142,10 @@ export default function Budgets() {
       setConfirmDelete(false)
       setSuccess('Đã xóa ngân sách của tháng này.')
       toast.success('Đã xóa ngân sách của tháng này.')
-    } catch {
-      setError('Không thể xóa ngân sách. Vui lòng thử lại.')
-      toast.error('Không thể xóa ngân sách. Vui lòng thử lại.')
+    } catch (error) {
+      const message = getApiErrorMessage(error)
+      setError(message)
+      if (message) toast.error(message)
     } finally {
       setDeleting(false)
     }
@@ -241,6 +250,8 @@ export default function Budgets() {
             Đang tải dữ liệu ngân sách...
           </p>
         </div>
+      ) : error ? (
+        <AsyncState message={error} onRetry={() => { setLoading(true); setReloadKey((previous) => previous + 1) }} />
       ) : !budget ? (
         // Chưa thiết lập ngân sách
         <div className="rounded-2xl bg-white dark:bg-[#182234] p-12 text-center shadow-sm border border-slate-200/80 dark:border-slate-800">

@@ -1,6 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useRef, useState } from 'react'
 import { X, ArrowDownRight, ArrowUpRight, Calendar, FileText, AlertCircle, Loader2 } from 'lucide-react'
 import MoneyInput from './ui/MoneyInput'
+import useModalFocus from '../hooks/useModalFocus'
+import { createSubmitGuard, localToday, transactionPayload, validateTransactionForm } from '../utils/transactionForm'
+import { getApiErrorMessage, getApiFieldErrors, isRequestCancelled } from '../api/errors'
 
 function TransactionModalContent({
   transaction,
@@ -8,6 +11,11 @@ function TransactionModalContent({
   saving,
   onClose,
   onSave,
+  initialType = 'EXPENSE',
+  initialDate,
+  categoriesLoading = false,
+  categoriesError = '',
+  onRetryCategories,
 }) {
   const [form, setForm] = useState(() => (
     transaction
@@ -19,26 +27,19 @@ function TransactionModalContent({
           note: transaction.note ?? '',
         }
       : {
-          type: 'EXPENSE',
+          type: initialType,
           categoryId: '',
           amount: '',
-          transactionDate: new Date().toLocaleDateString('en-CA'),
+          transactionDate: initialDate || localToday(),
           note: '',
         }
   ))
 
   const [errors, setErrors] = useState({})
   const [serverError, setServerError] = useState('')
-
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape' && !saving) {
-        onClose()
-      }
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [saving, onClose])
+  const guard = useRef(createSubmitGuard())
+  const close = () => { if (!saving && !guard.current.isPending()) onClose() }
+  const dialogRef = useModalFocus(close, saving)
 
   const availableCategories = categories.filter(
     (category) => category.type === form.type
@@ -76,64 +77,25 @@ function TransactionModalContent({
     setServerError('')
   }
 
-  // Kiểm tra dữ liệu trước khi gọi API
-  const validate = () => {
-    const result = {}
-    const amountNum = Number(form.amount)
-
-    if (!form.categoryId) {
-      result.categoryId = 'Vui lòng chọn danh mục.'
-    } else if (
-      !availableCategories.some((c) => String(c.id) === String(form.categoryId))
-    ) {
-      result.categoryId = 'Danh mục không phù hợp.'
-    }
-
-    if (!form.amount || form.amount.trim() === '') {
-      result.amount = 'Vui lòng nhập số tiền.'
-    } else if (!Number.isFinite(amountNum) || amountNum <= 0) {
-      result.amount = 'Số tiền phải lớn hơn 0.'
-    } else if (!/^\d{1,13}(\.\d{1,2})?$/.test(form.amount.trim())) {
-      result.amount = 'Số tiền tối đa 13 chữ số và 2 số thập phân.'
-    }
-
-    if (!form.transactionDate) {
-      result.transactionDate = 'Vui lòng chọn ngày giao dịch.'
-    }
-
-    if (form.note && form.note.length > 500) {
-      result.note = 'Ghi chú không được vượt quá 500 ký tự.'
-    }
-
-    return result
-  }
-
   const handleSubmit = async (event) => {
     event.preventDefault()
-
-    const validationErrors = validate()
+    if (guard.current.isPending() || saving || categoriesLoading || categoriesError) return
+    const validationErrors = validateTransactionForm(form, categories)
     setErrors(validationErrors)
 
-    if (Object.keys(validationErrors).length > 0) return
+    if (Object.keys(validationErrors).length > 0) {
+      dialogRef.current?.querySelector(`[name="${Object.keys(validationErrors)[0]}"]`)?.focus()
+      return
+    }
 
     try {
       setServerError('')
 
-      await onSave({
-        categoryId: Number(form.categoryId),
-        type: form.type,
-        amount: Number(form.amount),
-        transactionDate: form.transactionDate,
-        note: form.note.trim(),
-      })
+      await guard.current.run(() => onSave(transactionPayload(form)))
     } catch (error) {
-      if (error.response?.status === 400) {
-        setServerError(
-          'Dữ liệu không hợp lệ hoặc danh mục không đúng loại.'
-        )
-      } else {
-        setServerError('Không thể lưu giao dịch. Vui lòng thử lại.')
-      }
+      if (isRequestCancelled(error)) return
+      setErrors(getApiFieldErrors(error, ['amount', 'categoryId', 'transactionDate', 'note', 'type']))
+      setServerError(getApiErrorMessage(error))
     }
   }
 
@@ -149,14 +111,16 @@ function TransactionModalContent({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4"
       role="presentation"
       onMouseDown={(e) => {
-        if (e.target === e.currentTarget && !saving) onClose()
+        if (e.target === e.currentTarget) close()
       }}
     >
       <div
+        ref={dialogRef}
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-labelledby="transaction-modal-title"
-        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white dark:bg-[#182234] p-6 shadow-2xl border border-slate-100 dark:border-slate-800"
+        className="max-h-[90dvh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white dark:bg-[#182234] p-6 shadow-2xl border border-slate-100 dark:border-slate-800"
       >
         <div className="mb-5 flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
           <div>
@@ -172,7 +136,7 @@ function TransactionModalContent({
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={close}
             disabled={saving}
             aria-label="Đóng"
             className="rounded-lg p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
@@ -191,7 +155,8 @@ function TransactionModalContent({
           </div>
         )}
 
-        <form noValidate onSubmit={handleSubmit} className="space-y-4">
+        <form noValidate onSubmit={handleSubmit} aria-busy={saving || categoriesLoading}>
+          <fieldset disabled={saving} className="min-w-0 space-y-4">
           {/* Segmented Type Toggle */}
           <div>
             <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
@@ -249,6 +214,7 @@ function TransactionModalContent({
               onChange={handleChange}
               className={inputClass('categoryId')}
               aria-invalid={!!errors.categoryId}
+              aria-describedby={errors.categoryId ? 'transaction-category-error' : undefined}
             >
               <option value="">-- Chọn danh mục --</option>
               {availableCategories.map((c) => (
@@ -258,11 +224,18 @@ function TransactionModalContent({
               ))}
             </select>
             {errors.categoryId && (
-              <p className="mt-1.5 text-xs font-medium text-rose-600 flex items-center gap-1">
+              <p id="transaction-category-error" className="mt-1.5 text-xs font-medium text-rose-600 flex items-center gap-1">
                 <span>{errors.categoryId}</span>
               </p>
             )}
-            {availableCategories.length === 0 && (
+            {categoriesLoading && <p role="status" className="mt-2 text-sm text-slate-500 dark:text-slate-300">Đang tải danh mục...</p>}
+            {categoriesError && (
+              <div role="alert" className="mt-2 text-sm text-rose-600 dark:text-rose-300">
+                <p>{categoriesError}</p>
+                <button type="button" onClick={onRetryCategories} className="mt-2 rounded-lg border px-3 py-2">Thử tải lại danh mục</button>
+              </div>
+            )}
+            {!categoriesLoading && !categoriesError && availableCategories.length === 0 && (
               <p className="mt-1.5 text-xs text-amber-600 dark:text-amber-400">
                 Chưa có danh mục {form.type === 'INCOME' ? 'thu nhập' : 'chi tiêu'}. Vui lòng tạo danh mục trước.
               </p>
@@ -283,7 +256,7 @@ function TransactionModalContent({
 
           {/* Ngày giao dịch */}
           <div>
-            <label htmlFor="transaction-date" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-600">
+            <label htmlFor="transaction-date" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
               Ngày giao dịch <span className="text-rose-500">*</span>
             </label>
             <div className="relative">
@@ -291,6 +264,8 @@ function TransactionModalContent({
                 id="transaction-date"
                 name="transactionDate"
                 type="date"
+                aria-invalid={!!errors.transactionDate}
+                aria-describedby={errors.transactionDate ? 'transaction-date-error' : undefined}
                 value={form.transactionDate}
                 onChange={handleChange}
                 className={inputClass('transactionDate')}
@@ -298,7 +273,7 @@ function TransactionModalContent({
               <Calendar size={16} className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             </div>
             {errors.transactionDate && (
-              <p className="mt-1.5 text-xs font-medium text-rose-600">
+              <p id="transaction-date-error" className="mt-1.5 text-xs font-medium text-rose-600 dark:text-rose-300">
                 {errors.transactionDate}
               </p>
             )}
@@ -307,7 +282,7 @@ function TransactionModalContent({
           {/* Ghi chú */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label htmlFor="transaction-note" className="block text-xs font-bold uppercase tracking-wider text-slate-600">
+              <label htmlFor="transaction-note" className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
                 Ghi chú
               </label>
               <span className="text-[11px] text-slate-400">
@@ -320,6 +295,8 @@ function TransactionModalContent({
                 name="note"
                 rows={3}
                 maxLength={500}
+                aria-invalid={!!errors.note}
+                aria-describedby={errors.note ? 'transaction-note-error' : undefined}
                 value={form.note}
                 onChange={handleChange}
                 placeholder="Ví dụ: Ăn trưa với đồng nghiệp..."
@@ -328,7 +305,7 @@ function TransactionModalContent({
               <FileText size={16} className="pointer-events-none absolute right-3.5 top-3.5 text-slate-300" />
             </div>
             {errors.note && (
-              <p className="mt-1.5 text-xs font-medium text-rose-600">
+              <p id="transaction-note-error" className="mt-1.5 text-xs font-medium text-rose-600 dark:text-rose-300">
                 {errors.note}
               </p>
             )}
@@ -337,7 +314,7 @@ function TransactionModalContent({
           <div className="flex justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
             <button
               type="button"
-              onClick={onClose}
+              onClick={close}
               disabled={saving}
               className="rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
             >
@@ -345,7 +322,7 @@ function TransactionModalContent({
             </button>
             <button
               type="submit"
-              disabled={saving || availableCategories.length === 0}
+              disabled={saving || categoriesLoading || Boolean(categoriesError) || availableCategories.length === 0}
               className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 shadow-md shadow-blue-500/20 active:scale-95 transition-all disabled:opacity-50"
             >
               {saving ? (
@@ -358,6 +335,7 @@ function TransactionModalContent({
               )}
             </button>
           </div>
+          </fieldset>
         </form>
       </div>
     </div>
@@ -371,6 +349,11 @@ export default function TransactionModal({
   saving,
   onClose,
   onSave,
+  initialType,
+  initialDate,
+  categoriesLoading,
+  categoriesError,
+  onRetryCategories,
 }) {
   if (!open) return null
 
@@ -382,6 +365,11 @@ export default function TransactionModal({
       saving={saving}
       onClose={onClose}
       onSave={onSave}
+      initialType={initialType}
+      initialDate={initialDate}
+      categoriesLoading={categoriesLoading}
+      categoriesError={categoriesError}
+      onRetryCategories={onRetryCategories}
     />
   )
 }

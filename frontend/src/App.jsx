@@ -9,8 +9,11 @@ import Dashboard from './pages/Dashboard'
 import Categories from './pages/Categories'
 import Transactions from './pages/Transactions'
 import Budgets from './pages/Budgets'
+import QuickAdd from './pages/QuickAdd'
+import { useAuth } from './contexts/AuthContext'
 
 export default function App() {
+  const { user, revision } = useAuth()
   return (
     <Routes>
       {/* Trang công khai */}
@@ -18,12 +21,14 @@ export default function App() {
       <Route path="/register" element={<Register />} />
 
       {/* Giao diện chính MainLayout */}
-      <Route element={<MainLayout />}>
+      {/* Đổi phiên sẽ bỏ toàn bộ dữ liệu/form của tài khoản trước. */}
+      <Route element={<MainLayout key={`${user?.id ?? 'guest'}-${revision}`} />}>
         {/* Dashboard công khai cho cả khách và người dùng đã đăng nhập */}
         <Route path="/" element={<Dashboard />} />
 
         {/* Các trang quản trị bắt buộc xác thực JWT */}
         <Route element={<ProtectedRoute />}>
+          <Route path="/quick-add" element={<QuickAdd />} />
           <Route path="/categories" element={<Categories />} />
           <Route path="/transactions" element={<Transactions />} />
           <Route path="/budgets" element={<Budgets />} />

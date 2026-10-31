@@ -1,5 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { X, Loader2 } from 'lucide-react'
+import { getApiErrorMessage } from '../api/errors'
+import useModalFocus from '../hooks/useModalFocus'
 
 function CategoryModalContent({
   category,
@@ -12,16 +14,7 @@ function CategoryModalContent({
     type: category?.type ?? 'EXPENSE',
   })
   const [error, setError] = useState('')
-
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape' && !saving) {
-        onClose()
-      }
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [saving, onClose])
+  const dialogRef = useModalFocus(onClose, saving)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -46,18 +39,14 @@ function CategoryModalContent({
         type: form.type,
       })
     } catch (err) {
-      if (err.response?.status === 409) {
-        setError('Danh mục bị trùng hoặc không thể đổi loại.')
-      } else if (err.response?.status === 400) {
-        setError(err.response?.data?.message || 'Thông tin danh mục không hợp lệ.')
-      } else {
-        setError('Không thể lưu danh mục. Vui lòng thử lại.')
-      }
+      setError(getApiErrorMessage(err))
     }
   }
 
   return (
     <div
+      ref={dialogRef}
+      tabIndex={-1}
       role="dialog"
       aria-modal="true"
       aria-labelledby="category-modal-title"

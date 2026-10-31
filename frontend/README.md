@@ -4,6 +4,24 @@ Giao diện quản lý tài chính cá nhân của SmartExpense, xây dựng b�
 
 ## Chức năng
 
+### D01–D02: sitemap và Quick Add
+
+| Màn hình | Route | Điểm mở nhập liệu |
+| --- | --- | --- |
+| Tổng quan / landing khi chưa đăng nhập | `/` | Hai nút Thêm Thu/Chi mở trực tiếp modal |
+| Thu chi nhanh | `/quick-add` | Chọn INCOME/EXPENSE rồi dùng modal chung |
+| Lịch sử giao dịch | `/transactions` | Giữ CRUD, bộ lọc và phân trang MVP |
+| Danh mục | `/categories` | Giữ CRUD name/type MVP |
+| Ngân sách tháng | `/budgets` | Giữ CRUD hạn mức MVP |
+
+Sidebar và bottom navigation dùng chung sitemap. Login/Register là route công khai; bốn route nghiệp vụ còn lại cần phiên đã xác minh. Calendar trong sitemap tổng thể SRS được bổ sung riêng ở D04–D05, icon/color ở D06; đợt này không dựng màn lịch hoặc picker.
+
+Quick Add dùng lại TransactionModal/MoneyInput; `categoryId/type/amount/transactionDate/note` gửi đúng API hiện có, owner lấy từ JWT phía Backend. Chỉ toast thành công sau response server; không có chế độ đăng nhập/dữ liệu giả khi mất mạng. Timeout không tự retry: cần kiểm tra lịch sử trước khi gửi lại vì server có thể đã nhận request.
+
+JWT và user được quản lý chung; 401 API bảo vệ xóa phiên và chuyển Login. Sai mật khẩu ở Login không làm hết phiên khác; 403 không logout. Response của phiên cũ bị bỏ qua khi logout/đổi tài khoản. Khi không xác minh được phiên do lỗi mạng, không dùng user cache để cấp quyền.
+
+Kiểm tra developer: `npm run lint`, `npm test`, `npm run build`. Test dùng adapter/dữ liệu tổng hợp và render component trong bộ nhớ, không kết nối database. Cần kiểm tra tương tác browser ở 375/768/1024/1440px, light/dark, focus/Tab/Escape và refresh sau lưu trên stack test riêng trước nghiệm thu UI; không dùng dữ liệu production hoặc cài Playwright.
+
 - Đăng ký, đăng nhập và quản lý phiên bằng JWT.
 - Dashboard tổng thu, tổng chi, số dư, biểu đồ và giao dịch gần đây.
 - Thêm, sửa, xóa danh mục và giao dịch; lọc theo tháng, khoảng ngày, loại, danh mục và ghi chú.
