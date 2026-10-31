@@ -3,10 +3,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router'
 import {
-  Wallet,
-  LayoutDashboard,
-  ArrowLeftRight,
-  Tags,
   PanelLeftClose,
   X,
   UserRound,
@@ -17,13 +13,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import walletLogo from '../../assets/wallet-logo.png'
 
 import './Sidebar.css'
-
-const menus = [
-  { path: '/', label: 'Tổng quan', icon: LayoutDashboard },
-  { path: '/transactions', label: 'Giao dịch', icon: ArrowLeftRight, authRequired: true },
-  { path: '/categories', label: 'Danh mục', icon: Tags, authRequired: true },
-  { path: '/budgets', label: 'Ngân sách', icon: Wallet, authRequired: true },
-]
+import { navigation as menus } from './navigation'
 
 export default function Sidebar({
   expanded,
@@ -241,10 +231,10 @@ export default function Sidebar({
             <div className="se040-user-menu" role="menu">
               <div className="se040-user-menu-header">
                 <p className="se040-user-menu-name truncate">
-                  {user?.fullName && user.fullName !== 'Demo User' ? user.fullName : 'Tô Anh Tuấn'}
+                  {user?.fullName || 'Tài khoản'}
                 </p>
                 <p className="se040-user-menu-email truncate">
-                  {user?.email || 'totuan.18dz@gmail.com'}
+                  {user?.email || ''}
                 </p>
               </div>
               <div className="se040-user-menu-divider" />
@@ -279,14 +269,12 @@ export default function Sidebar({
             <div className="se040-profile-info">
               <strong>
                 {isAuthenticated
-                  ? user?.fullName && user.fullName !== 'Demo User'
-                    ? user.fullName
-                    : 'Tô Anh Tuấn'
+                  ? user?.fullName || 'Tài khoản'
                   : 'Khách truy cập'}
               </strong>
               <small>
                 {isAuthenticated
-                  ? user?.email || 'totuan.18dz@gmail.com'
+                  ? user?.email || ''
                   : 'Chưa đăng nhập'}
               </small>
             </div>

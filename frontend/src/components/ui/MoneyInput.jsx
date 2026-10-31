@@ -5,13 +5,13 @@ import './LucianUI.css'
 
 // Chỉ nhận tối đa 13 chữ số nguyên và 2 chữ số thập phân
 function normalizeAmount(input) {
-  const value = String(input)
+  const value = String(input).replace(',', '.')
 
   if (!/^\d{0,13}(\.\d{0,2})?$/.test(value)) {
     return null
   }
 
-  return value.replace(/^0+(?=\d)/, '')
+  return value.replace(/^0+(?=\d)/, '').replace(/^\./, '0.')
 }
 
 function formatAmount(raw) {

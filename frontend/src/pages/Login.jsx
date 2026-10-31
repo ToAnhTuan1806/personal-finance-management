@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 import AuthCard from '../components/auth/AuthCard'
 import FloatingInput from '../components/ui/FloatingInput'
 import '../styles/auth-background.css'
+import { getApiErrorMessage, isRequestCancelled } from '../api/errors'
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -122,13 +123,12 @@ export default function Login() {
     } catch (error) {
       setPhase('idle')
       busyRef.current = false
+      if (isRequestCancelled(error)) return
 
       if (error.response?.status === 401) {
         setServerError('Email hoặc mật khẩu không chính xác.')
-      } else if (!error.response) {
-        setServerError('Không thể kết nối máy chủ. Vui lòng thử lại.')
       } else {
-        setServerError('Đăng nhập thất bại. Vui lòng thử lại sau.')
+        setServerError(getApiErrorMessage(error, 'Đăng nhập thất bại. Vui lòng thử lại sau.'))
       }
 
       setShake(true)

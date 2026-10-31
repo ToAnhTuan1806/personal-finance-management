@@ -21,7 +21,10 @@ import {
 import TransactionModal from '../components/TransactionModal'
 import PillTabs from '../components/ui/PillTabs'
 import DateRangePicker from '../components/ui/DateRangePicker'
+import AsyncState from '../components/ui/AsyncState'
 import { useToast } from '../contexts/ToastContext'
+import { useQuickAdd } from '../contexts/QuickAddContext'
+import { getApiErrorMessage, isRequestCancelled } from '../api/errors'
 import { getCategories } from '../services/categoryService'
 import {
   getTransactions,
@@ -76,11 +79,14 @@ const formatDisplayDate = (value) => {
 
 export default function Transactions() {
   const toast = useToast()
+  const { mutationVersion } = useQuickAdd()
   const [transactions, setTransactions] = useState([])
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [categoryError, setCategoryError] = useState('')
+  const [categoryAttempt, setCategoryAttempt] = useState(0)
+  const [categoryLoading, setCategoryLoading] = useState(true)
 
   const [datePickerOpen, setDatePickerOpen] = useState(false)
   const [dateRange, setDateRange] = useState({
@@ -115,18 +121,21 @@ export default function Transactions() {
       .then((data) => {
         if (!ignore) {
           setCategories(Array.isArray(data) ? data : [])
+          setCategoryError('')
+          setCategoryLoading(false)
         }
       })
-      .catch(() => {
+      .catch((error) => {
         if (!ignore) {
-          setCategoryError('Không thể tải danh mục.')
+          setCategoryError(getApiErrorMessage(error))
+          setCategoryLoading(false)
         }
       })
 
     return () => {
       ignore = true
     }
-  }, [])
+  }, [categoryAttempt])
 
   // Chỉ dùng một luồng tải dữ liệu
   useEffect(() => {
@@ -143,13 +152,13 @@ export default function Transactions() {
         setTotalElements(data.totalElements ?? 0)
         setError('')
       })
-      .catch(() => {
+      .catch((error) => {
         if (ignore) return
 
         setTransactions([])
         setTotalPages(0)
         setTotalElements(0)
-        setError('Không thể tải giao dịch. Vui lòng thử lại.')
+        setError(getApiErrorMessage(error))
       })
       .finally(() => {
         if (!ignore) setLoading(false)
@@ -158,9 +167,10 @@ export default function Transactions() {
     return () => {
       ignore = true
     }
-  }, [filters, searchKeyword, page, dateRange, reloadKey])
+  }, [filters, searchKeyword, page, dateRange, reloadKey, mutationVersion])
 
   const changeFilter = (name, value) => {
+    setLoading(true)
     setFilters((prev) => ({
       ...prev,
       [name]: value,
@@ -174,6 +184,7 @@ export default function Transactions() {
   }
 
   const handleResetFilters = () => {
+    setLoading(true)
     setFilters({
       month: currentMonth(),
       type: '',
@@ -189,6 +200,8 @@ export default function Transactions() {
 
   const handleSearch = (event) => {
     event.preventDefault()
+    if (page === 0 && keyword.trim() === searchKeyword) return
+    setLoading(true)
     setPage(0)
     setSearchKeyword(keyword.trim())
   }
@@ -224,7 +237,7 @@ export default function Transactions() {
       setPage(0)
       setReloadKey((prev) => prev + 1)
     } catch (err) {
-      toast.error('Không thể lưu giao dịch. Vui lòng thử lại.')
+      if (!isRequestCancelled(err)) toast.error(getApiErrorMessage(err))
       throw err
     } finally {
       setSaving(false)
@@ -251,10 +264,10 @@ export default function Transactions() {
         setPage((prev) => Math.max(0, prev - 1))
       }
       setReloadKey((prev) => prev + 1)
-    } catch {
-      const msg = 'Không thể xóa giao dịch. Vui lòng thử lại.'
+    } catch (error) {
+      const msg = getApiErrorMessage(error)
       setError(msg)
-      toast.error(msg)
+      if (msg) toast.error(msg)
       setConfirmDelete(null)
     } finally {
       setDeletingId(null)
@@ -531,6 +544,8 @@ export default function Transactions() {
             <Loader2 className="h-8 w-8 animate-spin text-blue-600 dark:text-blue-400" />
             <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Đang tải danh sách giao dịch...</p>
           </div>
+        ) : error ? (
+          <AsyncState message={error} onRetry={() => { setLoading(true); setReloadKey((previous) => previous + 1) }} />
         ) : transactions.length === 0 ? (
           <div className="py-16 text-center">
             <div className="h-14 w-14 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 flex items-center justify-center mx-auto mb-3">
@@ -703,7 +718,7 @@ export default function Transactions() {
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              onClick={() => { setLoading(true); setPage((p) => Math.max(0, p - 1)) }}
               disabled={page === 0 || loading}
               className="flex items-center gap-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1E293B] px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-2xs"
               aria-label="Trang trước"
@@ -712,7 +727,7 @@ export default function Transactions() {
               <span>Trước</span>
             </button>
             <button
-              onClick={() => setPage((p) => p + 1)}
+              onClick={() => { setLoading(true); setPage((p) => p + 1) }}
               disabled={loading || page + 1 >= totalPages}
               className="flex items-center gap-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1E293B] px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-2xs"
               aria-label="Trang tiếp theo"
@@ -729,6 +744,9 @@ export default function Transactions() {
         open={modalOpen}
         transaction={editing}
         categories={categories}
+        categoriesLoading={categoryLoading}
+        categoriesError={categoryError}
+        onRetryCategories={() => { setCategoryLoading(true); setCategoryError(''); setCategoryAttempt((previous) => previous + 1) }}
         saving={saving}
         onSave={handleSave}
         onClose={() => {
