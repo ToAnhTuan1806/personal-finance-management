@@ -4,19 +4,22 @@ Giao diện quản lý tài chính cá nhân của SmartExpense, xây dựng b�
 
 ## Chức năng
 
-### D01–D02: sitemap và Quick Add
+### D01–D04: sitemap, Quick Add và lịch tháng
 
 | Màn hình | Route | Điểm mở nhập liệu |
 | --- | --- | --- |
 | Tổng quan / landing khi chưa đăng nhập | `/` | Hai nút Thêm Thu/Chi mở trực tiếp modal |
 | Thu chi nhanh | `/quick-add` | Chọn INCOME/EXPENSE rồi dùng modal chung |
+| Lịch thu chi | `/calendar` | Tổng tháng/ngày từ Calendar API; chọn ngày xem tổng đầy đủ |
 | Lịch sử giao dịch | `/transactions` | Giữ CRUD, bộ lọc và phân trang MVP |
 | Danh mục | `/categories` | Giữ CRUD name/type MVP |
 | Ngân sách tháng | `/budgets` | Giữ CRUD hạn mức MVP |
 
-Sidebar và bottom navigation dùng chung sitemap. Login/Register là route công khai; bốn route nghiệp vụ còn lại cần phiên đã xác minh. Calendar trong sitemap tổng thể SRS được bổ sung riêng ở D04–D05, icon/color ở D06; đợt này không dựng màn lịch hoặc picker.
+Sidebar và bottom navigation dùng chung sitemap. Login/Register là route công khai; các route nghiệp vụ cần phiên đã xác minh. D04 có lịch tháng 7 cột T2–CN, chuyển tháng, tháng hiện tại, chọn ngày, loading/error/retry và tháng trống. Chi tiết giao dịch/thêm từ ngày thuộc D05; icon/color thuộc D06.
 
 Quick Add dùng lại TransactionModal/MoneyInput; `categoryId/type/amount/transactionDate/note` gửi đúng API hiện có, owner lấy từ JWT phía Backend. Chỉ toast thành công sau response server; không có chế độ đăng nhập/dữ liệu giả khi mất mạng. Timeout không tự retry: cần kiểm tra lịch sử trước khi gửi lại vì server có thể đã nhận request.
+
+Calendar gọi `GET /api/calendar/month?year=2026&month=10` qua Axios/JWT theo [API Contract](../docs/smartexpense-2.0/API_CONTRACT.md). Hiển thị nguyên tổng `incomeTotal/expenseTotal` do Backend trả, giữ ngày DATE dạng YYYY-MM-DD; không cộng danh sách giao dịch phân trang. Đổi tháng bỏ request cũ; lưu Quick Add thành công làm mới Dashboard, Transactions, ngân sách và lịch đang mở. Chỉ chọn năm 1900–2100, tháng 1–12; response thiếu ngày/sai DTO được hiển thị là lỗi.
 
 JWT và user được quản lý chung; 401 API bảo vệ xóa phiên và chuyển Login. Sai mật khẩu ở Login không làm hết phiên khác; 403 không logout. Response của phiên cũ bị bỏ qua khi logout/đổi tài khoản. Khi không xác minh được phiên do lỗi mạng, không dùng user cache để cấp quyền.
 
