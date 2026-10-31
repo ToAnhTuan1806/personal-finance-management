@@ -5,7 +5,7 @@ import { navigation } from './navigation'
 export default function MobileNavigation() {
   const { isAuthenticated } = useAuth()
   return (
-    <nav aria-label="Điều hướng mobile" className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-slate-200 bg-white px-1 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] dark:border-slate-700 dark:bg-[#182234] lg:hidden">
+    <nav aria-label="Điều hướng mobile" className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-6 border-t border-slate-200 bg-white px-1 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] dark:border-slate-700 dark:bg-[#182234] lg:hidden">
       {navigation.map(({ path, label, icon: Icon, authRequired }) => (
         <NavLink key={path} to={!isAuthenticated && authRequired ? '/login' : path}
           state={!isAuthenticated && authRequired ? { from: path } : undefined} end={path === '/'}

@@ -10,6 +10,7 @@ import Categories from './pages/Categories'
 import Transactions from './pages/Transactions'
 import Budgets from './pages/Budgets'
 import QuickAdd from './pages/QuickAdd'
+import Calendar from './pages/Calendar'
 import { useAuth } from './contexts/AuthContext'
 
 export default function App() {
@@ -29,6 +30,7 @@ export default function App() {
         {/* Các trang quản trị bắt buộc xác thực JWT */}
         <Route element={<ProtectedRoute />}>
           <Route path="/quick-add" element={<QuickAdd />} />
+          <Route path="/calendar" element={<Calendar />} />
           <Route path="/categories" element={<Categories />} />
           <Route path="/transactions" element={<Transactions />} />
           <Route path="/budgets" element={<Budgets />} />

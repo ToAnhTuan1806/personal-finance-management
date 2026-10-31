@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { X, Loader2 } from 'lucide-react'
 import { getApiErrorMessage } from '../api/errors'
 import useModalFocus from '../hooks/useModalFocus'
+import { createSubmitGuard } from '../utils/transactionForm'
 
 function CategoryModalContent({
   category,
@@ -14,10 +15,13 @@ function CategoryModalContent({
     type: category?.type ?? 'EXPENSE',
   })
   const [error, setError] = useState('')
+  const guard = useRef(createSubmitGuard())
   const dialogRef = useModalFocus(onClose, saving)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    // Chặn gửi lặp ngay cả trước khi React render trạng thái đang lưu.
+    if (saving || guard.current.isPending()) return
 
     const name = form.name.trim()
 
@@ -34,10 +38,10 @@ function CategoryModalContent({
     setError('')
 
     try {
-      await onSave({
+      await guard.current.run(() => onSave({
         name,
         type: form.type,
-      })
+      }))
     } catch (err) {
       setError(getApiErrorMessage(err))
     }
@@ -70,7 +74,7 @@ function CategoryModalContent({
         </button>
       </div>
 
-      <form noValidate onSubmit={handleSubmit}>
+      <form noValidate onSubmit={handleSubmit} aria-busy={saving}>
         <div className="mb-4">
           <label htmlFor="category-name" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
             Tên danh mục
@@ -79,6 +83,7 @@ function CategoryModalContent({
           <input
             id="category-name"
             value={form.name}
+            disabled={saving}
             maxLength={101}
             onChange={(e) => {
               setForm((prev) => ({ ...prev, name: e.target.value }))
@@ -101,6 +106,7 @@ function CategoryModalContent({
           <select
             id="category-type"
             value={form.type}
+            disabled={saving}
             onChange={(e) =>
               setForm((prev) => ({ ...prev, type: e.target.value }))
             }

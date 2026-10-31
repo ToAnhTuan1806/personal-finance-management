@@ -4,6 +4,7 @@ import { getCategories } from '../services/categoryService'
 import { createTransaction } from '../services/transactionService'
 import { getApiErrorMessage, isRequestCancelled } from '../api/errors'
 import { localToday } from '../utils/transactionForm'
+import { createQuickAddSubmission } from '../utils/quickAddSubmission'
 import { useToast } from './ToastContext'
 
 const QuickAddContext = createContext(null)
@@ -38,19 +39,17 @@ export function QuickAddProvider({ children }) {
     return () => controller.abort()
   }, [request, attempt])
 
-  const save = async (payload) => {
-    setSaving(true)
-    try {
-      await createTransaction(payload)
+  const save = useMemo(() => createQuickAddSubmission({
+    create: createTransaction,
+    onSaving: setSaving,
+    onSaved: () => {
       // Chỉ xác nhận sau response thật; lỗi phải giữ nguyên form để người dùng kiểm tra.
       setRequest(null)
       setVersion((previous) => previous + 1)
       toast.success('Đã lưu giao dịch.')
-    } catch (error) {
-      if (!isRequestCancelled(error)) toast.error(getApiErrorMessage(error))
-      throw error
-    } finally { setSaving(false) }
-  }
+    },
+    onError: (error) => toast.error(getApiErrorMessage(error)),
+  }), [toast])
 
   const value = useMemo(() => ({ openQuickAdd, mutationVersion: version }), [openQuickAdd, version])
   return (
