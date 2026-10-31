@@ -4,22 +4,26 @@ Giao diện quản lý tài chính cá nhân của SmartExpense, xây dựng b�
 
 ## Chức năng
 
-### D01–D04: sitemap, Quick Add và lịch tháng
+### D01–D06: Quick Add, lịch và danh mục
 
 | Màn hình | Route | Điểm mở nhập liệu |
 | --- | --- | --- |
 | Tổng quan / landing khi chưa đăng nhập | `/` | Hai nút Thêm Thu/Chi mở trực tiếp modal |
 | Thu chi nhanh | `/quick-add` | Chọn INCOME/EXPENSE rồi dùng modal chung |
-| Lịch thu chi | `/calendar` | Tổng tháng/ngày từ Calendar API; chọn ngày xem tổng đầy đủ |
+| Lịch thu chi | `/calendar` | Tổng tháng/ngày, giao dịch theo ngày có phân trang, thêm Thu/Chi với ngày đã chọn |
 | Lịch sử giao dịch | `/transactions` | Giữ CRUD, bộ lọc và phân trang MVP |
-| Danh mục | `/categories` | Giữ CRUD name/type MVP |
+| Danh mục | `/categories` | CRUD tên/loại, chọn 20 icon hợp lệ và màu #RRGGBB |
 | Ngân sách tháng | `/budgets` | Giữ CRUD hạn mức MVP |
 
-Sidebar và bottom navigation dùng chung sitemap. Login/Register là route công khai; các route nghiệp vụ cần phiên đã xác minh. D04 có lịch tháng 7 cột T2–CN, chuyển tháng, tháng hiện tại, chọn ngày, loading/error/retry và tháng trống. Chi tiết giao dịch/thêm từ ngày thuộc D05; icon/color thuộc D06.
+Sidebar và bottom navigation dùng chung sitemap. Login/Register là route công khai; các route nghiệp vụ cần phiên đã xác minh. Lịch tháng có 7 cột T2–CN, chuyển tháng/năm, tháng hiện tại và loading/error/retry/empty. Tháng/ngày/trang lưu trên URL để Back/Forward khôi phục; chuyển tháng ngắn hơn giữ ngày cuối phù hợp.
 
 Quick Add dùng lại TransactionModal/MoneyInput; `categoryId/type/amount/transactionDate/note` gửi đúng API hiện có, owner lấy từ JWT phía Backend. Chỉ toast thành công sau response server; không có chế độ đăng nhập/dữ liệu giả khi mất mạng. Timeout không tự retry: cần kiểm tra lịch sử trước khi gửi lại vì server có thể đã nhận request.
 
 Calendar gọi `GET /api/calendar/month?year=2026&month=10` qua Axios/JWT theo [API Contract](../docs/smartexpense-2.0/API_CONTRACT.md). Hiển thị nguyên tổng `incomeTotal/expenseTotal` do Backend trả, giữ ngày DATE dạng YYYY-MM-DD; không cộng danh sách giao dịch phân trang. Đổi tháng bỏ request cũ; lưu Quick Add thành công làm mới Dashboard, Transactions, ngân sách và lịch đang mở. Chỉ chọn năm 1900–2100, tháng 1–12; response thiếu ngày/sai DTO được hiển thị là lỗi.
+
+Chi tiết ngày gọi `GET /api/transactions?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD&page=0&size=10`, không gửi `month/sort/userId`. Backend sort ngày DESC/id DESC. Nút thêm Thu/Chi mở Quick Add đúng ngày; lưu thành công tải lại lịch và trang chi tiết đang xem. Loading/error không dùng dữ liệu trang cũ làm kết quả mới.
+
+Icon/màu lấy từ Category API, dùng chung tại Categories, Quick Add và danh sách giao dịch. Danh mục cũ thiếu metadata hiển thị `tag/#64748B`. Khi PUT, metadata chưa chỉnh sửa bị bỏ khỏi request để giữ nguyên DB; nút đặt lại gửi `null` riêng field đó. FE kiểm tra 20 icon của Backend, hex đủ 6 ký tự và dùng nét trắng/đen tương phản trên màu đã chọn; không chạy migration hay backfill.
 
 JWT và user được quản lý chung; 401 API bảo vệ xóa phiên và chuyển Login. Sai mật khẩu ở Login không làm hết phiên khác; 403 không logout. Response của phiên cũ bị bỏ qua khi logout/đổi tài khoản. Khi không xác minh được phiên do lỗi mạng, không dùng user cache để cấp quyền.
 

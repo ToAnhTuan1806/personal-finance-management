@@ -24,6 +24,7 @@ import DateRangePicker from '../components/ui/DateRangePicker'
 import AsyncState from '../components/ui/AsyncState'
 import { useToast } from '../contexts/ToastContext'
 import { useQuickAdd } from '../contexts/QuickAddContext'
+import CategoryBadge from '../components/category/CategoryBadge'
 import { getApiErrorMessage, isRequestCancelled } from '../api/errors'
 import { getCategories } from '../services/categoryService'
 import {
@@ -567,7 +568,7 @@ export default function Transactions() {
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <span className="font-bold text-slate-900 dark:text-slate-100 text-sm">
-                          {t.categoryName}
+                          <span className="inline-flex max-w-full items-center gap-2"><CategoryBadge category={categories.find((category) => category.id === t.categoryId)} /><span className="break-all">{t.categoryName}</span></span>
                         </span>
                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                           {formatDisplayDate(t.transactionDate)}
@@ -654,7 +655,7 @@ export default function Transactions() {
                         </td>
                         <td className="py-4 px-6">
                           <span className="font-bold text-slate-800 dark:text-slate-100">
-                            {t.categoryName}
+                            <span className="inline-flex max-w-full items-center gap-2"><CategoryBadge category={categories.find((category) => category.id === t.categoryId)} /><span className="break-all">{t.categoryName}</span></span>
                           </span>
                         </td>
                         <td className="py-4 px-6 max-w-xs truncate text-slate-600 dark:text-slate-300" title={t.note}>

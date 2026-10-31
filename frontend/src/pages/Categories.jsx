@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Plus, Pencil, Trash2, Tags, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react'
 
 import CategoryModal from '../components/CategoryModal'
+import CategoryBadge from '../components/category/CategoryBadge'
 import PillTabs from '../components/ui/PillTabs'
 import AsyncState from '../components/ui/AsyncState'
 import { useToast } from '../contexts/ToastContext'
@@ -233,6 +234,7 @@ export default function Categories() {
                   key={category.id}
                   className="flex min-w-0 items-center justify-between gap-3 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-3 sm:p-4 bg-white dark:bg-[#1E293B]/70 hover:shadow-md hover:border-blue-200 dark:hover:border-blue-700/60 transition-all group min-h-[80px] sm:min-h-[88px]"
                 >
+                  <CategoryBadge category={category} />
                   <div className="min-w-0 flex-1">
                     <h3
                       className="truncate font-bold text-slate-800 dark:text-slate-100 text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"

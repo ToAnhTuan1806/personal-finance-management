@@ -20,7 +20,7 @@ export function CalendarMonthContent({ result, year, month, selectedDate, today,
       </div>
       {data.days.every((day) => day.incomeTotal === 0 && day.expenseTotal === 0) &&
         <p role="status" className="text-sm text-slate-600 dark:text-slate-300">Tháng này chưa có giao dịch. Các ngày có tổng bằng 0.</p>}
-      <p className="text-xs text-slate-600 dark:text-slate-300">Dấu + là thu, dấu − là chi. Số lớn trong ô được viết gọn; chọn ngày để xem tổng đầy đủ.</p>
+      <p className="text-xs text-slate-600 dark:text-slate-300">Dấu + là thu, dấu − là chi. Số lớn trong ô được viết gọn; chọn ngày để xem tổng đầy đủ và giao dịch bên dưới.</p>
       <MonthCalendar data={data} selectedDate={selectedDate} today={today} onSelect={onSelect} />
       <div role="status" aria-live="polite" aria-atomic="true" className="rounded-xl border border-slate-200 p-4 text-sm text-slate-700 dark:border-slate-700 dark:text-slate-200">
         {selected ? <><strong>Ngày {selected.date.split('-').reverse().join('/')}</strong><p className="mt-2 break-words">Thu: {formatCalendarMoney(selected.incomeTotal)} · Chi: {formatCalendarMoney(selected.expenseTotal)}</p></> : 'Chọn một ngày để xem tổng thu và chi.'}
@@ -48,7 +48,7 @@ export default function MonthCalendar({ data, selectedDate, today, onSelect }) {
             const summary = `${date}: Thu ${formatCalendarMoney(day.incomeTotal)}, Chi ${formatCalendarMoney(day.expenseTotal)}`
             return (
               <td key={date} className="border border-slate-100 p-0.5 align-top dark:border-slate-800 sm:p-1">
-                <button type="button" onClick={() => onSelect(date)} aria-label={summary} title={summary}
+                <button type="button" onClick={() => onSelect(date)} aria-label={summary} title={summary} aria-controls="calendar-day-details"
                   aria-pressed={selectedDate === date} aria-current={today === date ? 'date' : undefined}
                   className={'flex min-h-24 w-full min-w-0 flex-col items-center gap-1 rounded-lg px-0.5 py-2 outline-offset-2 hover:bg-blue-50 focus-visible:outline-2 focus-visible:outline-blue-600 dark:hover:bg-blue-950/40 sm:min-h-28 sm:gap-2 ' +
                     (selectedDate === date ? 'bg-blue-50 ring-2 ring-inset ring-blue-600 dark:bg-blue-950/40 dark:ring-blue-400' : '')}>
