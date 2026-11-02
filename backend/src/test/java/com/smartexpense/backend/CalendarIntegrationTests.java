@@ -265,6 +265,58 @@ class CalendarIntegrationTests extends MySqlIntegrationTestSupport {
         assertThat(afterDelete.expenseTotal()).isZero();
     }
 
+    // Sửa ngày qua năm phải làm rỗng tháng nguồn và cộng vào dữ liệu sẵn có của tháng đích.
+    @Test
+    void movingOnlyTransactionAcrossYearKeepsBothMonthsConsistent() throws Exception {
+        save(incomeA, "2027-01-01", "100.10");
+        save(expenseA, "2027-01-01", "20.20");
+        String payload = json.writeValueAsString(Map.of("categoryId", expenseA.getId(), "type", "EXPENSE",
+                "amount", new BigDecimal("0.30"), "transactionDate", "2026-12-31"));
+        String created = mvc.perform(auth(post("/api/transactions").contentType(MediaType.APPLICATION_JSON)
+                        .content(payload), userA)).andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        long id = json.readTree(created).get("id").asLong();
+
+        CalendarMonthResponse decemberBefore = calendar(userA, 2026, 12);
+        CalendarMonthResponse januaryBefore = calendar(userA, 2027, 1);
+        assertDay(decemberBefore, 31, "0", "0.30");
+        assertDay(januaryBefore, 1, "100.10", "20.20");
+        assertMatchesSqlAndDashboard(userA, decemberBefore);
+        assertMatchesSqlAndDashboard(userA, januaryBefore);
+
+        String moved = json.writeValueAsString(Map.of("categoryId", expenseA.getId(), "type", "EXPENSE",
+                "amount", new BigDecimal("0.30"), "transactionDate", "2027-01-01"));
+        mvc.perform(auth(put("/api/transactions/" + id).contentType(MediaType.APPLICATION_JSON)
+                        .content(moved), userA)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(id))
+                .andExpect(jsonPath("$.transactionDate").value("2027-01-01"));
+        entityManager.flush();
+        entityManager.clear();
+
+        CalendarMonthResponse decemberAfter = calendar(userA, 2026, 12);
+        CalendarMonthResponse januaryAfter = calendar(userA, 2027, 1);
+        assertThat(decemberAfter.days()).hasSize(31).allSatisfy(day -> {
+            assertThat(day.incomeTotal()).isZero();
+            assertThat(day.expenseTotal()).isZero();
+        });
+        assertThat(decemberAfter.incomeTotal()).isZero();
+        assertThat(decemberAfter.expenseTotal()).isZero();
+        assertDay(januaryAfter, 1, "100.10", "20.50");
+        assertThat(januaryAfter.incomeTotal()).isEqualByComparingTo("100.10");
+        assertThat(januaryAfter.expenseTotal()).isEqualByComparingTo("20.50");
+        assertMatchesSqlAndDashboard(userA, decemberAfter);
+        assertMatchesSqlAndDashboard(userA, januaryAfter);
+
+        // Danh sách giao dịch cũng phải chuyển kỳ, không tạo thêm bản ghi khi PUT.
+        mvc.perform(auth(get("/api/transactions").param("month", "2026-12"), userA))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(0))
+                .andExpect(jsonPath("$.content").isEmpty());
+        mvc.perform(auth(get("/api/transactions").param("month", "2027-01"), userA))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(3))
+                .andExpect(jsonPath("$.content.length()").value(3));
+        assertThat(transactions.count()).isEqualTo(3);
+    }
+
     private CalendarMonthResponse calendar(User owner, int year, int month) throws Exception {
         entityManager.flush();
         String body = mvc.perform(auth(get("/api/calendar/month").param("year", String.valueOf(year))

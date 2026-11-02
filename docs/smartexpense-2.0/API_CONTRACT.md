@@ -109,6 +109,139 @@ Giữ nguyên cấu hình `ddl-auto` hiện tại; không khởi động D06 tr�
 - Xem ngày: `GET /api/transactions?startDate=2026-10-31&endDate=2026-10-31&page=0&size=10`. Hai đầu inclusive; không gửi thêm `month`. Response `Page<Transaction>` giữ `number`, `size`, `totalElements`, `totalPages`; sort ngày DESC rồi id DESC. Đọc hết các trang mới có danh sách đầy đủ; dùng Calendar để lấy tổng, không cộng riêng trang đầu.
 - Thêm từ lịch dùng POST `/api/transactions` với `transactionDate` là ngày đã chọn. Sau tạo/sửa/xóa thành công, FE refetch lịch tháng và trang chi tiết ngày hiện hành; nếu xóa hết trang cuối thì tải lại trang còn hợp lệ. Đây là hướng dẫn tích hợp, chưa xác nhận FE đã thực hiện.
 
+#### Mô tả Calendar API cho tích hợp — D05-BE, 02/11/2026
+
+Phần này làm rõ API hiện có theo Controller/Service/DTO, không đổi endpoint, schema hoặc quy tắc xác thực. Hồ sơ rà soát và kết quả chạy lại: [D05-BE](../qa/D05_BE.md). Các ghi chú trạng thái FE ở trên là thông tin lịch sử của lần đối chiếu trước, không phải kết quả nghiệm thu mới.
+
+```http
+GET /api/calendar/month?year=2026&month=2
+Authorization: Bearer <ACCESS_TOKEN>
+```
+
+Không có request body. Token lấy từ `POST /api/auth/login`; không truyền token trong URL.
+
+| Query parameter | Kiểu | Bắt buộc | Giá trị hợp lệ |
+| --- | --- | --- | --- |
+| `year` | integer | Có | 1900–2100, gồm hai đầu |
+| `month` | integer | Có | 1–12, gồm hai đầu |
+
+API không khai báo bộ lọc `type/categoryId/keyword` hoặc tham số phân trang `page/size`. Muốn xem danh sách có lọc, gọi Transaction API riêng. `userId` gửi từ client không thay thế subject trong JWT.
+
+Quy tắc tổng hợp:
+
+- Chỉ lấy giao dịch của owner trong khoảng `[ngày đầu tháng, ngày đầu tháng kế tiếp)`, theo `transactionDate` kiểu DATE/LocalDate; không dùng `createdAt` hoặc chuyển ngày qua UTC.
+- Mỗi ngày: `incomeTotal = SUM(amount WHERE type = INCOME)`, `expenseTotal = SUM(amount WHERE type = EXPENSE)`. Hai tổng tách biệt, không lấy thu trừ chi để tạo tổng ngày. Không có giao dịch của loại tương ứng thì trả 0.
+- Cấp tháng: cộng các tổng ngày của từng loại. Tổng bao gồm mọi giao dịch đúng kỳ/owner, không bị giới hạn bởi trang hoặc bộ lọc của Transaction API. Khi đối chiếu với danh sách, phải lấy hết trang và cùng kỳ/owner, không thêm bộ lọc khác.
+- DB lưu tiền DECIMAL(15,2), DB SUM và Backend BigDecimal giữ phần thập phân; Calendar không làm tròn trung gian hoặc ép tổng về giới hạn của một giao dịch. Tổng nhiều giao dịch có thể lớn hơn 9999999999999.99.
+- Tiền trong JSON là number, không có dấu phân cách hàng nghìn; `0`, `0.0`, `0.00` tương đương về giá trị. Client không dựa vào số chữ số thập phân trong biểu diễn JSON; lưu ý giới hạn độ chính xác của JavaScript Number khi xử lý tổng rất lớn.
+- `days` có đầy đủ các ngày thực của tháng, tăng dần; tháng 2 phụ thuộc năm nhuận (1900/2100 có 28 ngày, 2000 có 29 ngày). Response không có thông tin phân trang.
+
+Ví dụ **200 OK**, tháng 02/2026 có Thu 100.10 ngày 01, Chi 20.05 ngày 01 và Chi 0.25 ngày 28:
+
+```json
+{
+  "year": 2026,
+  "month": 2,
+  "incomeTotal": 100.10,
+  "expenseTotal": 20.30,
+  "days": [
+    {"date":"2026-02-01","incomeTotal":100.10,"expenseTotal":20.05},
+    {"date":"2026-02-02","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-03","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-04","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-05","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-06","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-07","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-08","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-09","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-10","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-11","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-12","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-13","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-14","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-15","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-16","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-17","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-18","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-19","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-20","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-21","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-22","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-23","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-24","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-25","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-26","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-27","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-28","incomeTotal":0,"expenseTotal":0.25}
+  ]
+}
+```
+
+Ví dụ **200 OK** khi owner không có giao dịch trong tháng 02/2026 (kể cả khi tài khoản khác có giao dịch):
+
+```json
+{
+  "year": 2026,
+  "month": 2,
+  "incomeTotal": 0,
+  "expenseTotal": 0,
+  "days": [
+    {"date":"2026-02-01","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-02","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-03","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-04","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-05","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-06","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-07","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-08","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-09","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-10","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-11","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-12","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-13","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-14","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-15","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-16","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-17","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-18","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-19","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-20","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-21","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-22","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-23","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-24","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-25","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-26","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-27","incomeTotal":0,"expenseTotal":0},
+    {"date":"2026-02-28","incomeTotal":0,"expenseTotal":0}
+  ]
+}
+```
+
+Validation và HTTP error (ApiError D02, không trả stack trace/SQL/token):
+
+| HTTP | `code` | Trường hợp |
+| --- | --- | --- |
+| 400 | `VALIDATION_ERROR` | Thiếu/rỗng year hoặc month, sai kiểu số nguyên, tràn int, hoặc ngoài miền giá trị |
+| 401 | `UNAUTHORIZED` | Thiếu JWT, token sai chữ ký/định dạng, hết hạn hoặc claims không hợp lệ theo bộ xác thực hiện có |
+| 500 | `INTERNAL_ERROR` | Lỗi máy chủ ngoài dự kiến; thông báo trung lập |
+
+Không có dữ liệu là **200**, không phải 404. Spring Security xác thực trước Controller, vì vậy request vừa thiếu JWT vừa sai tham số sẽ nhận 401 trước bước validation kỳ. Không có `errors` theo field cho các lỗi query nêu trên; client xử lý theo HTTP status và `code`, không phụ thuộc chuỗi `message`.
+
+Ví dụ `month=13` với JWT hợp lệ:
+
+```json
+{"status":400,"code":"VALIDATION_ERROR","message":"Tháng phải nằm trong khoảng 1-12"}
+```
+
+Ví dụ thiếu JWT (kèm response header `WWW-Authenticate: Bearer`):
+
+```json
+{"status":401,"code":"UNAUTHORIZED","message":"Vui lòng đăng nhập lại"}
+```
+
+Khi sửa `transactionDate` sang tháng/năm khác, cần refetch **cả tháng nguồn và tháng đích** nếu đang giữ dữ liệu hai kỳ ở client. Với cùng owner và kỳ, `Calendar.incomeTotal/expenseTotal` khớp `Dashboard.totalIncome/totalExpense` khi đối chiếu cùng trạng thái dữ liệu; hai HTTP request riêng có thể thấy dữ liệu khác nhau nếu có ghi xen giữa.
+
 Quick Add (FR-03) dùng POST `/transactions`, không thêm `/quick-add`. Khóa submit đồng bộ; chỉ báo thành công sau response rồi refetch giao dịch/Dashboard/ngân sách/lịch. Timeout không tự POST lại vì server có thể đã lưu: giữ form, kiểm tra lại danh sách. Bỏ fallback thành công giả và đồng bộ xóa token/user/context khi 401 là việc còn cần triển khai (FR-01/11).
 
 ## 3. API dự kiến — cần review trước triển khai
