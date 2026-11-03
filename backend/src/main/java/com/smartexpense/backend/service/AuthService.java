@@ -10,6 +10,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
@@ -20,13 +21,15 @@ import java.util.Locale;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final CategoryService categoryService;
     private final PasswordEncoder passwordEncoder;
     private final JwtEncoder jwtEncoder;
 
     @Value("${app.jwt.expiration}")
     private long jwtExpiration;
 
-    // Đăng ký tài khoản mới
+    // User và danh mục mặc định phải cùng thành công; lỗi ở bước nào cũng rollback toàn bộ.
+    @Transactional
     public UserResponse register(RegisterRequest request) {
         String email = request.getEmail()
                 .trim()
@@ -49,6 +52,7 @@ public class AuthService {
         );
 
         User savedUser = userRepository.save(user);
+        categoryService.createDefaultCategories(savedUser);
 
         return toUserResponse(savedUser);
     }

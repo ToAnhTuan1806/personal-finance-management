@@ -1,4 +1,6 @@
-import axiosClient from '../api/axiosClient'
+import axiosClient from '../api/axiosClient.js'
+
+const invalidResponse = (message) => Object.assign(new Error(message), { code: 'INVALID_API_RESPONSE' })
 
 // Giữ tương thích với cách gọi bằng chuỗi hoặc object
 const buildParams = (month) => {
@@ -10,10 +12,10 @@ const buildParams = (month) => {
 }
 
 const toMoneyNumber = (value, fieldName) => {
-  const result = Number(value ?? 0)
+  const result = value == null || value === '' ? NaN : Number(value)
 
   if (!Number.isFinite(result)) {
-    throw new Error(`Giá trị ${fieldName} từ Backend không hợp lệ`)
+    throw invalidResponse(`Giá trị ${fieldName} từ Backend không hợp lệ`)
   }
 
   return result
@@ -22,7 +24,7 @@ const toMoneyNumber = (value, fieldName) => {
 // Chuẩn hóa riêng dữ liệu biểu đồ; không thay đổi dữ liệu API gốc
 export const normalizeCategoryExpenses = (response) => {
   if (!Array.isArray(response)) {
-    throw new Error('API chi tiêu theo danh mục phải trả về một mảng')
+    throw invalidResponse('API chi tiêu theo danh mục phải trả về một mảng')
   }
 
   return response.map((item, index) => {
@@ -36,7 +38,7 @@ export const normalizeCategoryExpenses = (response) => {
       item?.expenseAmount
 
     if (!name || rawAmount === undefined || rawAmount === null) {
-      throw new Error(
+      throw invalidResponse(
         'Không nhận diện được trường của CategoryExpenseResponse. ' +
         'Hãy kiểm tra categoryName và totalAmount trong DTO Backend.'
       )
@@ -53,67 +55,41 @@ export const normalizeCategoryExpenses = (response) => {
 export const dashboardService = {
   // Tổng thu, tổng chi, số dư theo tháng
   getSummary: async (month) => {
-    try {
-      const response = await axiosClient.get('/dashboard/summary', {
-        params: buildParams(month),
-      })
+    const response = await axiosClient.get('/dashboard/summary', {
+      params: buildParams(month),
+    })
 
-      const data = response.data
+    const data = response.data
 
-      if (
-        !data ||
-        typeof data !== 'object' ||
-        !('totalIncome' in data) ||
-        !('totalExpense' in data) ||
-        !('balance' in data)
-      ) {
-        throw new Error('DashboardSummaryResponse không đúng cấu trúc')
-      }
+    if (
+      !data ||
+      typeof data !== 'object' ||
+      !('totalIncome' in data) ||
+      !('totalExpense' in data) ||
+      !('balance' in data)
+    ) {
+      throw invalidResponse('DashboardSummaryResponse không đúng cấu trúc')
+    }
 
-      const totalIncome = toMoneyNumber(data.totalIncome, 'totalIncome')
-      const totalExpense = toMoneyNumber(data.totalExpense, 'totalExpense')
+    const totalIncome = toMoneyNumber(data.totalIncome, 'totalIncome')
+    const totalExpense = toMoneyNumber(data.totalExpense, 'totalExpense')
 
-      return {
-        ...data,
-        totalIncome,
-        totalExpense,
-        balance: data.balance == null
-          ? totalIncome - totalExpense
-          : toMoneyNumber(data.balance, 'balance'),
-      }
-    } catch (err) {
-      if (!err.response) {
-        return {
-          totalIncome: 13500000,
-          totalExpense: 1755000,
-          balance: 11745000,
-        }
-      }
-      throw err
+    return {
+      ...data,
+      totalIncome,
+      totalExpense,
+      balance: toMoneyNumber(data.balance, 'balance'),
     }
   },
 
   // Giữ nguyên phản hồi gốc từ Backend
   getExpensesByCategory: async (month) => {
-    try {
-      const response = await axiosClient.get(
-        '/dashboard/expenses-by-category',
-        { params: buildParams(month) }
-      )
+    const response = await axiosClient.get(
+      '/dashboard/expenses-by-category',
+      { params: buildParams(month) }
+    )
 
-      return response.data
-    } catch (err) {
-      if (!err.response) {
-        return [
-          { categoryId: 3, categoryName: 'Ăn uống', totalAmount: 210000 },
-          { categoryId: 5, categoryName: 'Mua sắm', totalAmount: 850000 },
-          { categoryId: 6, categoryName: 'Hóa đơn', totalAmount: 420000 },
-          { categoryId: 4, categoryName: 'Đi lại', totalAmount: 60000 },
-          { categoryId: 8, categoryName: 'Giải trí', totalAmount: 215000 },
-        ]
-      }
-      throw err
-    }
+    return response.data
   },
 
   // Bí danh tương thích code cũ

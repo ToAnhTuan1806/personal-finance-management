@@ -1,5 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useRef, useState } from 'react'
 import { X, Loader2 } from 'lucide-react'
+import { getApiErrorMessage, getApiFieldErrors } from '../api/errors'
+import useModalFocus from '../hooks/useModalFocus'
+import { createSubmitGuard } from '../utils/transactionForm'
+import { categoryForm, categoryPayload, validateCategoryForm } from '../utils/categoryAppearance'
+import CategoryAppearancePicker from './category/CategoryAppearancePicker'
 
 function CategoryModalContent({
   category,
@@ -7,61 +12,43 @@ function CategoryModalContent({
   onSave,
   saving,
 }) {
-  const [form, setForm] = useState({
-    name: category?.name ?? '',
-    type: category?.type ?? 'EXPENSE',
-  })
+  const [form, setForm] = useState(() => categoryForm(category))
+  const [changed, setChanged] = useState({})
+  const [fieldErrors, setFieldErrors] = useState({})
   const [error, setError] = useState('')
-
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape' && !saving) {
-        onClose()
-      }
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [saving, onClose])
+  const guard = useRef(createSubmitGuard())
+  const dialogRef = useModalFocus(onClose, saving)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    // Chặn gửi lặp ngay cả trước khi React render trạng thái đang lưu.
+    if (saving || guard.current.isPending()) return
 
-    const name = form.name.trim()
-
-    if (!name) {
-      setError('Vui lòng nhập tên danh mục.')
-      return
-    }
-
-    if (name.length > 100) {
-      setError('Tên danh mục tối đa 100 ký tự.')
+    const validation = validateCategoryForm(form)
+    setFieldErrors(validation)
+    if (Object.keys(validation).length) {
+      setError(Object.values(validation)[0])
       return
     }
 
     setError('')
 
     try {
-      await onSave({
-        name,
-        type: form.type,
-      })
+      await guard.current.run(() => onSave(categoryPayload(form, Boolean(category), changed)))
     } catch (err) {
-      if (err.response?.status === 409) {
-        setError('Danh mục bị trùng hoặc không thể đổi loại.')
-      } else if (err.response?.status === 400) {
-        setError(err.response?.data?.message || 'Thông tin danh mục không hợp lệ.')
-      } else {
-        setError('Không thể lưu danh mục. Vui lòng thử lại.')
-      }
+      setFieldErrors(getApiFieldErrors(err, ['name', 'type', 'icon', 'color']))
+      setError(getApiErrorMessage(err))
     }
   }
 
   return (
     <div
+      ref={dialogRef}
+      tabIndex={-1}
       role="dialog"
       aria-modal="true"
       aria-labelledby="category-modal-title"
-      className="w-full max-w-md rounded-2xl bg-white dark:bg-[#182234] p-6 shadow-2xl border border-slate-100 dark:border-slate-800"
+      className="max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-2xl bg-white dark:bg-[#182234] p-4 sm:p-6 shadow-2xl border border-slate-100 dark:border-slate-800"
     >
       <div className="mb-6 flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
         <h2
@@ -81,7 +68,7 @@ function CategoryModalContent({
         </button>
       </div>
 
-      <form noValidate onSubmit={handleSubmit}>
+      <form noValidate onSubmit={handleSubmit} aria-busy={saving}>
         <div className="mb-4">
           <label htmlFor="category-name" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
             Tên danh mục
@@ -90,15 +77,18 @@ function CategoryModalContent({
           <input
             id="category-name"
             value={form.name}
+            disabled={saving}
             maxLength={101}
             onChange={(e) => {
               setForm((prev) => ({ ...prev, name: e.target.value }))
+              setFieldErrors((previous) => ({ ...previous, name: '' }))
               setError('')
             }}
             placeholder="Ví dụ: Ăn uống, Tiền lương..."
-            aria-invalid={!!error}
+            aria-invalid={Boolean(fieldErrors.name)}
+            aria-describedby={fieldErrors.name ? 'category-form-error' : undefined}
             className={`w-full rounded-xl border p-3 text-sm outline-none transition
-              ${error
+              ${fieldErrors.name
                 ? 'border-red-500 bg-red-50 dark:bg-rose-950/30 text-rose-900 dark:text-rose-200 focus:border-red-600'
                 : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-[#1E293B] text-slate-800 dark:text-slate-100 focus:border-blue-600 focus:ring-2 focus:ring-blue-500/20'}`}
           />
@@ -112,9 +102,14 @@ function CategoryModalContent({
           <select
             id="category-type"
             value={form.type}
-            onChange={(e) =>
+            disabled={saving}
+            aria-invalid={Boolean(fieldErrors.type)}
+            aria-describedby={fieldErrors.type ? 'category-form-error' : undefined}
+            onChange={(e) => {
               setForm((prev) => ({ ...prev, type: e.target.value }))
-            }
+              setFieldErrors((previous) => ({ ...previous, type: '' }))
+              setError('')
+            }}
             className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#1E293B] text-slate-800 dark:text-slate-100 p-3 text-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
           >
             <option value="EXPENSE">Chi tiêu (EXPENSE)</option>
@@ -122,8 +117,15 @@ function CategoryModalContent({
           </select>
         </div>
 
+        <CategoryAppearancePicker form={form} errors={fieldErrors} disabled={saving} onChange={(field, value) => {
+          setForm((previous) => ({ ...previous, [field]: value }))
+          setChanged((previous) => ({ ...previous, [field]: true }))
+          setFieldErrors({})
+          setError('')
+        }} />
+
         {error && (
-          <p role="alert" className="mb-4 text-xs font-medium text-red-600 dark:text-rose-400 bg-red-50 dark:bg-rose-950/40 p-2.5 rounded-lg border border-red-200 dark:border-rose-900/50">
+          <p id="category-form-error" role="alert" className="mb-4 text-xs font-medium text-red-600 dark:text-rose-400 bg-red-50 dark:bg-rose-950/40 p-2.5 rounded-lg border border-red-200 dark:border-rose-900/50">
             {error}
           </p>
         )}

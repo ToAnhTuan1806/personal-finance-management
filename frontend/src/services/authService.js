@@ -1,4 +1,4 @@
-import axiosClient from '../api/axiosClient'
+import axiosClient from '../api/axiosClient.js'
 
 // Đăng ký tài khoản
 export const register = async (data) => {
@@ -13,8 +13,8 @@ export const login = async (data) => {
 }
 
 // Lấy thông tin tài khoản đã đăng nhập
-export const getCurrentUser = async () => {
-  const response = await axiosClient.get('/users/me')
+export const getCurrentUser = async (options = {}) => {
+  const response = await axiosClient.get('/users/me', options)
   return response.data
 }
 

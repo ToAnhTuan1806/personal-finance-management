@@ -168,6 +168,7 @@ export function ToastProvider({ children }) {
         <div
           className={`se070-host ${expanded ? 'is-expanded' : ''}`}
           style={{
+            bottom: 'calc(var(--mobile-nav-height, 0px) + 20px + env(safe-area-inset-bottom))',
             height: expanded
               ? `${Math.min(items.length * 82 + 8, 420)}px`
               : '90px',

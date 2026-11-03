@@ -1,38 +1,32 @@
 import axios from 'axios'
+import { session } from '../auth/session.js'
 
-// Axios dùng chung cho toàn bộ API SmartExpense
-const axiosClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080/api',
-  timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-})
+const publicAuth = (config) => /\/auth\/(login|register)(?:\?|$)/.test(config?.url || '')
 
-// Tự động gắn JWT vào request nếu đã đăng nhập
-axiosClient.interceptors.request.use(
-  (config) => {
-    const token = sessionStorage.getItem('accessToken')
-
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
-    }
-
+export function createApiClient(store, baseURL = import.meta.env?.VITE_API_URL || 'http://localhost:8080/api') {
+  const client = axios.create({ baseURL, timeout: 10000, headers: { 'Content-Type': 'application/json' } })
+  client.interceptors.request.use((config) => {
+    config.sessionRevision = store.getSnapshot().revision
+    const token = store.getToken()
+    if (token && !publicAuth(config)) config.headers.Authorization = 'Bearer ' + token
     return config
-  },
-  (error) => Promise.reject(error)
-)
+  })
 
-// Xử lý trường hợp JWT hết hạn hoặc không hợp lệ
-axiosClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      sessionStorage.removeItem('accessToken')
+  // Response của phiên A không được cập nhật UI hoặc xóa phiên B.
+  const checkRevision = (config) => {
+    if (config?.sessionRevision !== store.getSnapshot().revision) {
+      throw new axios.CanceledError('Phiên đăng nhập đã thay đổi.')
     }
-
-    return Promise.reject(error)
   }
-)
+  client.interceptors.response.use(
+    (response) => { checkRevision(response.config); return response },
+    (error) => {
+      if (error.config) checkRevision(error.config)
+      if (error.response?.status === 401 && !publicAuth(error.config)) store.clear('expired')
+      return Promise.reject(error)
+    },
+  )
+  return client
+}
 
-export default axiosClient
+export default createApiClient(session)

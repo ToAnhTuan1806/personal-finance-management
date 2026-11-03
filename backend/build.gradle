@@ -32,6 +32,9 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'
     testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+    // Chỉ dùng để chạy MySQL thật trong container tạm, không phụ thuộc DB ứng dụng.
+    testImplementation 'org.testcontainers:testcontainers-junit-jupiter'
+    testImplementation 'org.testcontainers:testcontainers-mysql'
     testCompileOnly 'org.projectlombok:lombok'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testAnnotationProcessor 'org.projectlombok:lombok'
@@ -39,4 +42,59 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+// CI gọi riêng bước này sau test để không coi lớp MySQL bị bỏ qua là kiểm thử thành công.
+tasks.register('verifyD03IntegrationTests') {
+    group = 'verification'
+    description = 'Yêu cầu đủ 55 MySQL integration test D03 thành công, không có test bị bỏ qua.'
+
+    doLast {
+        String suiteName = 'com.smartexpense.backend.TransactionCreateIntegrationTests'
+        File report = layout.buildDirectory.file("test-results/test/TEST-${suiteName}.xml").get().asFile
+        if (!report.isFile()) {
+            throw new GradleException('Thiếu báo cáo JUnit XML của MySQL integration test D03.')
+        }
+
+        // Không cho XML đọc DTD hoặc tài nguyên bên ngoài khi phân tích báo cáo.
+        def factory = javax.xml.parsers.DocumentBuilderFactory.newInstance()
+        factory.setFeature(javax.xml.XMLConstants.FEATURE_SECURE_PROCESSING, true)
+        factory.setFeature('http://apache.org/xml/features/disallow-doctype-decl', true)
+        factory.setAttribute(javax.xml.XMLConstants.ACCESS_EXTERNAL_DTD, '')
+        factory.setAttribute(javax.xml.XMLConstants.ACCESS_EXTERNAL_SCHEMA, '')
+        factory.setXIncludeAware(false)
+        factory.setExpandEntityReferences(false)
+        def suite
+        try {
+            suite = factory.newDocumentBuilder().parse(report).documentElement
+        } catch (Exception ignored) {
+            throw new GradleException('Báo cáo JUnit XML D03 không hợp lệ hoặc không đọc được.')
+        }
+        if (suite.nodeName != 'testsuite' || suite.getAttribute('name') != suiteName) {
+            throw new GradleException('Báo cáo JUnit XML không thuộc lớp MySQL integration test D03.')
+        }
+
+        def counts = [:]
+        ['tests', 'skipped', 'failures', 'errors'].each { attribute ->
+            String value = suite.getAttribute(attribute)
+            if (!(value ==~ /\d+/)) {
+                throw new GradleException("Báo cáo D03 thiếu hoặc sai bộ đếm ${attribute}.")
+            }
+            counts[attribute] = Integer.parseInt(value)
+        }
+
+        // Đối chiếu từng testcase thay vì chỉ tin bộ đếm tổng trên testsuite.
+        def cases = suite.childNodes.findAll { it.nodeName == 'testcase' }
+        boolean invalidCase = cases.any { testCase ->
+            testCase.getAttribute('classname') != suiteName || testCase.getAttribute('name').isBlank() ||
+                    ['skipped', 'failure', 'error'].any { testCase.getElementsByTagName(it).length > 0 }
+        }
+        if (counts.tests != 55 || counts.skipped != 0 || counts.failures != 0 || counts.errors != 0 ||
+                cases.size() != 55 || invalidCase) {
+            throw new GradleException("D03 MySQL FAIL: tests=${counts.tests}, testcase=${cases.size()}, " +
+                    "skipped=${counts.skipped}, failures=${counts.failures}, errors=${counts.errors}; " +
+                    'yêu cầu đủ 55 testcase và tất cả thành công.')
+        }
+        logger.lifecycle('D03 MySQL PASS: executed=55, skipped=0, failures=0, errors=0 (JUnit XML verified).')
+    }
 }

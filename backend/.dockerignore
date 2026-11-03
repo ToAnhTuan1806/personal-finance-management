@@ -6,6 +6,7 @@ bin
 .git
 .gitignore
 .env
+.env.*
 *.log
 HELP.md
 Dockerfile

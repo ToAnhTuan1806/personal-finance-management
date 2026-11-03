@@ -1,22 +1,30 @@
 import { useEffect, useState } from 'react'
 import { Link, Outlet, useLocation, useNavigate } from 'react-router'
-import { LogOut, Menu } from 'lucide-react'
+import { LogOut, Menu, Plus } from 'lucide-react'
 
 import Sidebar from './Sidebar'
 import ThemeToggle from './ThemeToggle'
 import { useAuth } from '../../contexts/AuthContext'
+import { QuickAddProvider, useQuickAdd } from '../../contexts/QuickAddContext'
+import MobileNavigation from './MobileNavigation'
 
 const pageTitles = {
   '/': 'Tổng quan',
   '/transactions': 'Quản lý giao dịch',
   '/categories': 'Quản lý danh mục',
   '/budgets': 'Ngân sách hàng tháng',
+  '/quick-add': 'Ghi thu chi nhanh',
 }
 
 export default function MainLayout() {
+  return <QuickAddProvider><LayoutContent /></QuickAddProvider>
+}
+
+function LayoutContent() {
   const { user, isAuthenticated, logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  const { openQuickAdd } = useQuickAdd()
 
   const [mobileOpen, setMobileOpen] = useState(false)
 
@@ -46,6 +54,7 @@ export default function MainLayout() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#0B1220] transition-colors duration-200">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-2 focus:z-[80] focus:rounded-xl focus:bg-blue-600 focus:p-3 focus:text-white">Bỏ qua điều hướng</a>
       <Sidebar
         expanded={expanded}
         mobileOpen={mobileOpen}
@@ -98,6 +107,10 @@ export default function MainLayout() {
 
           <div className="flex items-center gap-2.5">
             <ThemeToggle />
+            {isAuthenticated && <button type="button" onClick={() => openQuickAdd()}
+              aria-label="Mở Quick Add" className="flex min-h-10 items-center gap-1 rounded-xl bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700">
+              <Plus size={18} aria-hidden="true" /><span className="hidden sm:inline">Ghi nhanh</span>
+            </button>}
 
             {isAuthenticated ? (
               <button
@@ -134,9 +147,10 @@ export default function MainLayout() {
         </header>
 
         {/* Giữ nguyên các trang CRUD qua React Router */}
-        <main className="mx-auto w-full max-w-7xl p-4 sm:p-6 lg:p-8">
+        <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-7xl p-4 pb-28 sm:p-6 sm:pb-28 lg:p-8">
           <Outlet />
         </main>
+        <MobileNavigation />
       </div>
     </div>
   )
