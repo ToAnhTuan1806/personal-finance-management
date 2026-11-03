@@ -7,8 +7,9 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { createMemoryRouter } from 'react-router'
 import { createServer } from 'vite'
 import { calendarSelection, calendarParams } from '../src/utils/calendarSelection.js'
-import { categoryForm, categoryPayload, validateCategoryForm } from '../src/utils/categoryAppearance.js'
+import { categoryForm, categoryPayload, validateCategoryForm, COLOR_PALETTE } from '../src/utils/categoryAppearance.js'
 import { createSubmitGuard } from '../src/utils/transactionForm.js'
+import { getApiErrorMessage, getApiFieldErrors } from '../src/api/errors.js'
 
 const storage = new Map()
 globalThis.sessionStorage = { getItem: (key) => storage.get(key) ?? null,
@@ -16,7 +17,7 @@ globalThis.sessionStorage = { getItem: (key) => storage.get(key) ?? null,
 const { default: client } = await import('../src/api/axiosClient.js')
 const { session } = await import('../src/auth/session.js')
 const { getDayTransactions } = await import('../src/services/dayTransactionService.js')
-const { updateCategory } = await import('../src/services/categoryService.js')
+const { createCategory, updateCategory } = await import('../src/services/categoryService.js')
 const original = { baseURL: client.defaults.baseURL, timeout: client.defaults.timeout, proxy: client.defaults.proxy }
 const identity = (id) => session.authenticate({ accessToken: 'qa-only-' + randomUUID(), user: { id, fullName: 'QA', email: id + '@example.test' } }, session.getSnapshot().revision)
 const reply = (response, status, data) => { response.writeHead(status, { 'Content-Type': 'application/json' }); response.end(JSON.stringify(data)) }
@@ -125,6 +126,46 @@ test('QA Category guard: nhiều lời gọi đồng thời chỉ gửi một PU
   assert.deepEqual(sent, { name: 'QA_EDIT', type: 'EXPENSE' })
 })
 
+for (const method of ['POST', 'PUT']) {
+  test(`QA Category ${method} 409: giữ đúng thông báo, không retry tự động và cho phép gửi lại có chủ đích`, async (t) => {
+    const message = 'Tên danh mục đã tồn tại với loại này'
+    const requests = []
+    await fixture(t, (request, response) => {
+      let raw = ''
+      request.on('data', (chunk) => { raw += chunk })
+      request.on('end', () => {
+        requests.push({ method: request.method, path: request.url, body: JSON.parse(raw) })
+        if (requests.length === 1) reply(response, 409, { status: 409, code: 'CONFLICT', message })
+        else reply(response, 200 + (method === 'POST' ? 1 : 0), {
+          id: 1, ...requests.at(-1).body, icon: 'gift', color: '#ABCDEF',
+        })
+      })
+    })
+    const guard = createSubmitGuard()
+    const save = method === 'POST' ? createCategory : (body) => updateCategory(1, body)
+    const form = { ...categoryForm({ icon: 'gift', color: '#ABCDEF' }), name: '  Ăn uống  ' }
+    const payload = (name) => categoryPayload({ ...form, name }, method === 'PUT')
+    await assert.rejects(guard.run(() => save(payload(form.name))), (error) => {
+      assert.equal(error.response.status, 409)
+      assert.equal(error.response.data.code, 'CONFLICT')
+      assert.equal(getApiErrorMessage(error), message)
+      assert.deepEqual(getApiFieldErrors(error, ['name', 'type', 'icon', 'color']), {})
+      return true
+    })
+    assert.equal(requests.length, 1)
+    assert.equal(guard.isPending(), false)
+    assert.equal(session.getSnapshot().user.id, 'A')
+    const saved = await guard.run(() => save(payload('Tên QA mới')))
+    assert.equal(saved.name, 'Tên QA mới')
+    assert.equal(requests.length, 2)
+    assert.equal(requests[0].method, method)
+    assert.equal(requests[0].path, method === 'POST' ? '/api/categories' : '/api/categories/1')
+    assert.equal(requests[0].body.name, 'Ăn uống')
+    assert.equal(requests[1].body.name, 'Tên QA mới')
+    assert.equal(guard.isPending(), false)
+  })
+}
+
 test('QA thêm từ ngày chọn nối handler tới TransactionModal với DATE đúng và loại Thu/Chi', () => {
   for (const type of ['INCOME', 'EXPENSE']) {
     let selected
@@ -138,16 +179,18 @@ test('QA thêm từ ngày chọn nối handler tới TransactionModal với DATE
   }
 })
 
-test('QA picker: input màu tùy chỉnh đúng/sai được validate và lỗi liên kết accessible', () => {
+test('QA picker: chọn màu preset đúng và lỗi màu liên kết accessible', () => {
   let form = { ...categoryForm(), name: 'QA' }
   const change = (field, value) => { form = { ...form, [field]: value } }
   const tree = Picker({ form, errors: {}, disabled: false, onChange: change })
-  const input = nodes(tree).find((node) => node.props?.id === 'category-color')
-  input.props.onChange({ target: { value: '#a1b2c3' } })
+  // UI mới chỉ có preset; không giả lập nhập vào hidden input như kiểm thử UI.
+  const color = COLOR_PALETTE.at(-1)
+  const swatch = nodes(tree).find((node) => node.type === 'button' && node.props?.['aria-label'] === `Màu ${color}`)
+  assert.ok(swatch)
+  swatch.props.onClick()
+  assert.equal(form.color, color)
   assert.deepEqual(validateCategoryForm(form), {})
-  input.props.onChange({ target: { value: '#GGGGGG' } })
-  const errors = validateCategoryForm(form)
-  assert.ok(errors.color)
+  const errors = { color: 'QA_COLOR_ERROR' }
   const html = render(Picker, { form, errors, disabled: false, onChange: change })
   assert.ok(html.includes('aria-describedby="category-color-error"') && html.includes('role="alert"'))
 })

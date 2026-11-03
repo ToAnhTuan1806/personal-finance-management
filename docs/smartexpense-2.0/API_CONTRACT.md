@@ -89,7 +89,7 @@ Response **409** dùng nguyên ApiError D02, không tạo `errors.name` hoặc c
 {"status":409,"code":"CONFLICT","message":"Tên danh mục đã tồn tại với loại này"}
 ```
 
-**Giới hạn đồng thời:** đây là Service precheck, không phải cam kết UNIQUE ở database. Hai POST hoặc PUT đồng thời có thể cùng đọc “chưa trùng” trước khi một request commit và vẫn tạo tên trùng. Không thêm index/migration hoặc thay transaction isolation trong lượt này. Xem [hồ sơ kiểm chứng D06-BE](../qa/D06_BE.md); bảo đảm uniqueness khi ghi đồng thời cần phương án riêng được DB/nhóm duyệt, bao gồm kiểm tra dữ liệu cũ và quy tắc so sánh tên.
+**Giới hạn đồng thời:** đây là Service precheck, không phải cam kết UNIQUE ở database. Hai POST hoặc PUT đồng thời có thể cùng đọc “chưa trùng” trước khi một request commit và vẫn tạo tên trùng. Không thêm index/migration hoặc thay transaction isolation trong lượt này. Xem [hồ sơ kiểm chứng D06](../qa/D06.md); bảo đảm uniqueness khi ghi đồng thời cần phương án riêng được DB/nhóm duyệt, bao gồm kiểm tra dữ liệu cũ và quy tắc so sánh tên.
 
 Endpoint, DTO thành công, JSON number/field hiện có và ApiError được giữ nguyên. Trả 409 cho tên trùng là **thay đổi validation có chủ đích theo yêu cầu bổ sung**, thay cho hành vi cho phép trùng trước đây; không coi là hành vi đã có trong contract ngày 30/10.
 
@@ -138,7 +138,7 @@ Giữ nguyên cấu hình `ddl-auto` hiện tại; không khởi động D06 tr�
 
 #### Mô tả Calendar API cho tích hợp — D05-BE, 02/11/2026
 
-Phần này làm rõ API hiện có theo Controller/Service/DTO, không đổi endpoint, schema hoặc quy tắc xác thực. Hồ sơ rà soát và kết quả chạy lại: [D05-BE](../qa/D05_BE.md). Các ghi chú trạng thái FE ở trên là thông tin lịch sử của lần đối chiếu trước, không phải kết quả nghiệm thu mới.
+Phần này làm rõ API hiện có theo Controller/Service/DTO, không đổi endpoint, schema hoặc quy tắc xác thực. Hồ sơ rà soát và kết quả chạy lại: [QA D05](../qa/D05.md). Các ghi chú trạng thái FE ở trên là thông tin lịch sử của lần đối chiếu trước, không phải kết quả nghiệm thu mới.
 
 ```http
 GET /api/calendar/month?year=2026&month=2
