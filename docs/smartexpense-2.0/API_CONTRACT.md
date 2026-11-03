@@ -26,8 +26,8 @@ Mọi đường dẫn trong bảng đều nằm dưới `/api`; Input là body, 
 | GET | `/users/me` | Không body | 200 User | 401 user không tồn tại |
 | GET | `/categories` | Query type? | 200 Category[] | 400 enum sai |
 | GET | `/categories/{id}` | Path id | 200 Category | 404 owner |
-| POST | `/categories` | CategoryInput | 201 Category | 400 validation |
-| PUT | `/categories/{id}` | CategoryInput | 200 Category | 404 owner; 409 đổi type đã có giao dịch |
+| POST | `/categories` | CategoryInput | 201 Category | 400 validation; 409 tên trùng cùng owner/type |
+| PUT | `/categories/{id}` | CategoryInput | 200 Category | 404 owner; 409 tên trùng cùng owner/type hoặc đổi type đã có giao dịch |
 | DELETE | `/categories/{id}` | Path id | 204 | 404 owner; 409 có giao dịch |
 | GET | `/transactions` | Query Filter, page=0,size=10 | 200 Page<Transaction> | 400 filter/phân trang sai |
 | GET | `/transactions/{id}` | Path id | 200 Transaction | 404 owner |
@@ -59,12 +59,39 @@ CalendarMonth = { year, month, incomeTotal, expenseTotal,
 ```
 
 - Register: fullName không blank/≤100, email hợp lệ, password≥8; email trim/lowercase, tên trim. Register trả User, **không cấp JWT**. Login chỉ yêu cầu password không blank. Không có refresh/revoke/logout server; logout xóa phiên client.
-- Category: name không blank/≤100, type bắt buộc; icon/color theo mục D06 bên dưới. Chưa có unique tên, không cam kết 409 cho tên trùng.
+- Category: name không blank/≤100, type bắt buộc; icon/color theo mục D06 bên dưới. Từ bổ sung D06-BE ngày 03/11/2026, precheck tên trùng cùng owner/type trả 409 theo quy tắc bên dưới; chưa có UNIQUE constraint bảo đảm ghi đồng thời.
 - Transaction: mọi field bắt buộc trừ note (null hoặc ≤500); category cùng owner/type, tiền theo mục 1. FE mặc định ngày hôm nay.
 - Filter: month **hoặc** đủ startDate/endDate, không gửi cả hai; start≤end, inclusive hai đầu. keyword trim, tìm note không phân biệt hoa/thường; `%`/`_` hiện là wildcard LIKE. categoryId khác owner trong filter trả danh sách rỗng.
 - page≥0, size 1–100, offset = page × size phải ≤2147483647 (giới hạn JPA); vượt offset trả 400 VALIDATION_ERROR, không tự clamp page. Page hợp lệ vượt phạm vi dữ liệu vẫn trả content rỗng. Sort ngày DESC/id DESC, không nhận sort tùy ý. FE mặc định 10 dòng, giữ field number. Danh mục không có sort cố định.
 - Budget/Dashboard: năm 1900–2100, tháng 1–12; amountLimit theo giới hạn tiền chung. spentAmount chỉ EXPENSE đúng kỳ; remainingAmount có thể âm, exceeded chỉ khi spent>limit. UI: <80% safe, 80–<100% warning, ≥100% đỏ. Unique ngân sách user/năm/tháng đã có; race upsert cần kiểm thử.
 - Dashboard tháng rỗng trả tổng 0, danh mục `[]`, balance=totalIncome-totalExpense; danh mục sort totalAmount DESC. Giữ tên totalAmount/spentAmount/remainingAmount.
+
+### Tên danh mục trùng (bổ sung D06-BE, 03/11/2026)
+
+Theo yêu cầu bổ sung ngày 03/11/2026, áp dụng cho POST/PUT `/api/categories`:
+
+- Giữ validation request hiện có: `name` không blank, tối đa 100 ký tự; `type` bắt buộc. Tên được `trim()` khoảng trắng đầu/cuối trước khi kiểm tra trùng và lưu; không gộp khoảng trắng ở giữa tên, không tự đổi cách viết hoa/thường của tên lưu.
+- Nếu đã có **danh mục khác** cùng JWT owner, cùng `type` và tên không phân biệt hoa/thường (`IgnoreCase` tại DB), trả **409 CONFLICT**. Ví dụ `Ăn uống`, `ĂN UỐNG`, `  ăn uống  ` bị coi là trùng trong cùng tài khoản/loại. Hai tên chỉ khác khoảng trắng ở giữa không bị gộp thành một tên.
+- Khác owner hoặc khác INCOME/EXPENSE được phép cùng tên. `userId` do client gửi không quyết định chủ sở hữu.
+- UPDATE loại trừ đúng ID đang sửa và kiểm tra theo **type đích**. Giữ tên hiện tại/đổi hoa thường hợp lệ nếu không có bản ghi khác trùng. Quy tắc 404 khi khác owner và 409 khi đổi type của danh mục đã có giao dịch giữ nguyên.
+- Precheck chạy trước khi thay tên/type/icon/color; request bị từ chối không ghi thay đổi một phần. Khi update thành công, icon/color thiếu được giữ nguyên, null tường minh vẫn reset theo quy tắc D06 hiện có. ID, owner và createdAt không đổi.
+- Không tự sửa/xóa/gộp danh mục trùng đã có từ trước. Nếu còn danh mục khác trùng cùng owner/type, update vẫn trả 409 dù tên của bản ghi đang sửa không đổi; cần đổi sang tên hợp lệ hoặc xử lý dữ liệu qua quy trình riêng.
+
+Ví dụ tài khoản đã có `Ăn uống` loại EXPENSE, gửi POST `/api/categories` (hoặc PUT một danh mục EXPENSE khác) với JWT hợp lệ:
+
+```json
+{"name":"  ĂN UỐNG  ","type":"EXPENSE"}
+```
+
+Response **409** dùng nguyên ApiError D02, không tạo `errors.name` hoặc code lỗi mới:
+
+```json
+{"status":409,"code":"CONFLICT","message":"Tên danh mục đã tồn tại với loại này"}
+```
+
+**Giới hạn đồng thời:** đây là Service precheck, không phải cam kết UNIQUE ở database. Hai POST hoặc PUT đồng thời có thể cùng đọc “chưa trùng” trước khi một request commit và vẫn tạo tên trùng. Không thêm index/migration hoặc thay transaction isolation trong lượt này. Xem [hồ sơ kiểm chứng D06-BE](../qa/D06_BE.md); bảo đảm uniqueness khi ghi đồng thời cần phương án riêng được DB/nhóm duyệt, bao gồm kiểm tra dữ liệu cũ và quy tắc so sánh tên.
+
+Endpoint, DTO thành công, JSON number/field hiện có và ApiError được giữ nguyên. Trả 409 cho tên trùng là **thay đổi validation có chủ đích theo yêu cầu bổ sung**, thay cho hành vi cho phép trùng trước đây; không coi là hành vi đã có trong contract ngày 30/10.
 
 ### Category icon/color (D06-BE, chờ FE và DB/QA xác nhận)
 
