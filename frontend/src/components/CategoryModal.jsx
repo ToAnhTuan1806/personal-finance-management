@@ -11,6 +11,7 @@ function CategoryModalContent({
   onClose,
   onSave,
   saving,
+  categories = [],
 }) {
   const [form, setForm] = useState(() => categoryForm(category))
   const [changed, setChanged] = useState({})
@@ -24,7 +25,7 @@ function CategoryModalContent({
     // Chặn gửi lặp ngay cả trước khi React render trạng thái đang lưu.
     if (saving || guard.current.isPending()) return
 
-    const validation = validateCategoryForm(form)
+    const validation = validateCategoryForm(form, categories, category)
     setFieldErrors(validation)
     if (Object.keys(validation).length) {
       setError(Object.values(validation)[0])
@@ -36,8 +37,15 @@ function CategoryModalContent({
     try {
       await guard.current.run(() => onSave(categoryPayload(form, Boolean(category), changed)))
     } catch (err) {
-      setFieldErrors(getApiFieldErrors(err, ['name', 'type', 'icon', 'color']))
-      setError(getApiErrorMessage(err))
+      // Khi Backend trả HTTP 409, hiển thị lỗi ngay tại trường tên
+      if (err?.response?.status === 409) {
+        const message = err.response?.data?.message || 'Tên danh mục đã tồn tại trong loại này.'
+        setFieldErrors((prev) => ({ ...prev, name: message }))
+        setError(message)
+      } else {
+        setFieldErrors(getApiFieldErrors(err, ['name', 'type', 'icon', 'color']))
+        setError(getApiErrorMessage(err))
+      }
     }
   }
 
@@ -86,12 +94,17 @@ function CategoryModalContent({
             }}
             placeholder="Ví dụ: Ăn uống, Tiền lương..."
             aria-invalid={Boolean(fieldErrors.name)}
-            aria-describedby={fieldErrors.name ? 'category-form-error' : undefined}
+            aria-describedby={fieldErrors.name ? 'category-name-error' : undefined}
             className={`w-full rounded-xl border p-3 text-sm outline-none transition
               ${fieldErrors.name
                 ? 'border-red-500 bg-red-50 dark:bg-rose-950/30 text-rose-900 dark:text-rose-200 focus:border-red-600'
                 : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-[#1E293B] text-slate-800 dark:text-slate-100 focus:border-blue-600 focus:ring-2 focus:ring-blue-500/20'}`}
           />
+          {fieldErrors.name && (
+            <p id="category-name-error" role="alert" className="mt-1.5 text-xs font-medium text-red-600 dark:text-rose-400">
+              {fieldErrors.name}
+            </p>
+          )}
         </div>
 
         <div className="mb-5">
@@ -104,16 +117,16 @@ function CategoryModalContent({
             value={form.type}
             disabled={saving}
             aria-invalid={Boolean(fieldErrors.type)}
-            aria-describedby={fieldErrors.type ? 'category-form-error' : undefined}
+            aria-describedby={fieldErrors.type ? 'category-type-error' : undefined}
             onChange={(e) => {
               setForm((prev) => ({ ...prev, type: e.target.value }))
-              setFieldErrors((previous) => ({ ...previous, type: '' }))
+              setFieldErrors((previous) => ({ ...previous, type: '', name: '' }))
               setError('')
             }}
             className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#1E293B] text-slate-800 dark:text-slate-100 p-3 text-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
           >
-            <option value="EXPENSE">Chi tiêu (EXPENSE)</option>
-            <option value="INCOME">Thu nhập (INCOME)</option>
+            <option value="EXPENSE">Chi tiêu</option>
+            <option value="INCOME">Thu nhập</option>
           </select>
         </div>
 
@@ -124,7 +137,7 @@ function CategoryModalContent({
           setError('')
         }} />
 
-        {error && (
+        {error && !fieldErrors.name && (
           <p id="category-form-error" role="alert" className="mb-4 text-xs font-medium text-red-600 dark:text-rose-400 bg-red-50 dark:bg-rose-950/40 p-2.5 rounded-lg border border-red-200 dark:border-rose-900/50">
             {error}
           </p>
@@ -160,6 +173,7 @@ export default function CategoryModal({
   onClose,
   onSave,
   saving,
+  categories = [],
 }) {
   if (!open) return null
 
@@ -177,6 +191,7 @@ export default function CategoryModal({
         onClose={onClose}
         onSave={onSave}
         saving={saving}
+        categories={categories}
       />
     </div>
   )

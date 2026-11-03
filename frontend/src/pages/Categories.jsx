@@ -17,6 +17,7 @@ import {
 export default function Categories() {
   const toast = useToast()
   const [categories, setCategories] = useState([])
+  const [allCategories, setAllCategories] = useState([])
   const [filter, setFilter] = useState('ALL')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -37,7 +38,11 @@ export default function Categories() {
       const data = await getCategories(
         filter === 'ALL' ? null : filter
       )
-      setCategories(Array.isArray(data) ? data : [])
+      const list = Array.isArray(data) ? data : []
+      setCategories(list)
+      if (filter === 'ALL') {
+        setAllCategories(list)
+      }
     } catch (error) {
       setError(getApiErrorMessage(error))
     } finally {
@@ -52,7 +57,11 @@ export default function Categories() {
       .then((data) => {
         if (!ignore) {
           setError('')
-          setCategories(Array.isArray(data) ? data : [])
+          const list = Array.isArray(data) ? data : []
+          setCategories(list)
+          if (filter === 'ALL') {
+            setAllCategories(list)
+          }
           setLoading(false)
         }
       })
@@ -68,12 +77,31 @@ export default function Categories() {
     }
   }, [filter])
 
+  useEffect(() => {
+    let ignore = false
+    getCategories()
+      .then((data) => {
+        if (!ignore && Array.isArray(data)) {
+          setAllCategories(data)
+        }
+      })
+      .catch(() => {})
+    return () => {
+      ignore = true
+    }
+  }, [])
+
   // Mở form thêm mới
   const handleAdd = () => {
     setEditingCategory(null)
     setModalOpen(true)
     setSuccess('')
     setError('')
+    getCategories()
+      .then((data) => {
+        if (Array.isArray(data)) setAllCategories(data)
+      })
+      .catch(() => {})
   }
 
   // Mở form sửa danh mục
@@ -82,6 +110,11 @@ export default function Categories() {
     setModalOpen(true)
     setSuccess('')
     setError('')
+    getCategories()
+      .then((data) => {
+        if (Array.isArray(data)) setAllCategories(data)
+      })
+      .catch(() => {})
   }
 
   // Lưu danh mục vào Backend
@@ -102,6 +135,11 @@ export default function Categories() {
       setModalOpen(false)
       setEditingCategory(null)
       await loadCategories()
+      getCategories()
+        .then((data) => {
+          if (Array.isArray(data)) setAllCategories(data)
+        })
+        .catch(() => {})
     } catch (err) {
       if (!isRequestCancelled(err)) toast.error(getApiErrorMessage(err))
       throw err
@@ -131,6 +169,11 @@ export default function Categories() {
       toast.success('Xóa danh mục thành công.')
       setConfirmDelete(null)
       await loadCategories()
+      getCategories()
+        .then((data) => {
+          if (Array.isArray(data)) setAllCategories(data)
+        })
+        .catch(() => {})
     } catch (err) {
       if (err.response?.status === 409) {
         const msg = 'Không thể xóa danh mục vì đã có giao dịch sử dụng.'
@@ -292,6 +335,7 @@ export default function Categories() {
         }}
         onSave={handleSave}
         saving={saving}
+        categories={allCategories.length > 0 ? allCategories : categories}
       />
 
       {/* Modal xác nhận xóa danh mục */}
