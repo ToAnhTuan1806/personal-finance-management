@@ -38,12 +38,28 @@ export function categoryForeground(color) {
 }
 
 export const categoryForm = (category) => ({ name: category?.name ?? '', type: category?.type ?? 'EXPENSE', ...categoryAppearance(category) })
-export function validateCategoryForm(form) {
+export function validateCategoryForm(form, categories = [], currentCategory = null) {
   const errors = {}
-  if (!form.name.trim() || form.name.trim().length > 100) errors.name = 'Tên danh mục từ 1 đến 100 ký tự.'
-  if (!['INCOME', 'EXPENSE'].includes(form.type)) errors.type = 'Vui lòng chọn loại danh mục hợp lệ.'
-  if (form.icon !== null && !isCategoryIcon(form.icon)) errors.icon = 'Biểu tượng không nằm trong danh sách hỗ trợ.'
-  if (form.color !== null && !isCategoryColor(form.color)) errors.color = 'Màu phải có định dạng #RRGGBB, không có khoảng trắng.'
+  if (!form?.name || !form.name.trim() || form.name.trim().length > 100) errors.name = 'Tên danh mục từ 1 đến 100 ký tự.'
+  if (!['INCOME', 'EXPENSE'].includes(form?.type)) errors.type = 'Vui lòng chọn loại danh mục hợp lệ.'
+  if (form?.icon !== null && !isCategoryIcon(form?.icon)) errors.icon = 'Biểu tượng không nằm trong danh sách hỗ trợ.'
+  if (form?.color !== null && !isCategoryColor(form?.color)) errors.color = 'Màu phải có định dạng #RRGGBB, không có khoảng trắng.'
+
+  // Kiểm tra trùng tên trong cùng loại trước khi submit, không phân biệt chữ hoa/thường và khoảng trắng đầu/cuối
+  if (!errors.name && form?.name) {
+    const trimmed = form.name.trim().toLowerCase()
+    const isDuplicate = Array.isArray(categories) && categories.some((c) => {
+      // UPDATE phải loại trừ Category đang sửa khỏi kiểm tra trùng
+      if (currentCategory && (c.id === currentCategory.id || String(c.id) === String(currentCategory.id))) {
+        return false
+      }
+      return c.type === form.type && (c.name || '').trim().toLowerCase() === trimmed
+    })
+    if (isDuplicate) {
+      errors.name = 'Tên danh mục đã tồn tại trong loại này.'
+    }
+  }
+
   return errors
 }
 
