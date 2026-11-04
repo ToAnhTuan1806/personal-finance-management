@@ -3,6 +3,7 @@ import test, { before, after } from 'node:test'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { createServer } from 'vite'
+import { localToday, OLD_DATE_WARNING, FUTURE_DATE_ERROR } from '../src/utils/transactionForm.js'
 
 let server, Modal
 const categories = [{ id: 1, name: 'TEST_EXPENSE', type: 'EXPENSE' }, { id: 2, name: 'TEST_INCOME', type: 'INCOME' }]
@@ -54,3 +55,43 @@ test('form sửa MVP vẫn giữ category, ngày, tiền và ghi chú', () => {
   assert.ok(html.includes('TEST_NOTE') && html.includes('Lưu thay đổi'))
 })
 test('modal đóng không render trường hoặc dữ liệu cũ', () => assert.equal(render({ open: false }), ''))
+
+test('date picker giới hạn hôm nay theo Việt Nam, không thêm min năm', () => {
+  const html = render()
+  const input = html.match(/<input[^>]*id="transaction-date"[^>]*>/)[0]
+  assert.ok(input.includes(`max="${localToday()}"`))
+  assert.doesNotMatch(input, /\smin=/)
+})
+
+test('ngày 1970 có cảnh báo amber accessible và vẫn cho lưu', () => {
+  const html = render({ transaction: { id: 12, categoryId: 1, type: 'EXPENSE', amount: 12.34, transactionDate: '1970-01-01', note: 'Giữ nguyên' } })
+  assert.ok(html.includes(OLD_DATE_WARNING) && html.includes('value="1970-01-01"'))
+  assert.match(html, /aria-describedby="transaction-date-warning"/)
+  assert.match(html, /id="transaction-date-warning"[^>]*role="status"[^>]*text-amber-900[^>]*dark:text-amber-200/)
+  assert.match(html, /<svg[^>]*aria-hidden="true"/)
+  assert.doesNotMatch(html, /<button[^>]*type="submit"[^>]*disabled=""/)
+})
+
+test('ngày tương lai từ Calendar giữ ngày đã chọn và báo lỗi ngay tại trường', () => {
+  const html = render({ initialDate: '9999-12-31' })
+  assert.ok(html.includes('value="9999-12-31"') && html.includes(FUTURE_DATE_ERROR))
+  const input = html.match(/<input[^>]*id="transaction-date"[^>]*>/)[0]
+  assert.ok(input.includes('aria-invalid="true"') && input.includes('aria-describedby="transaction-date-error"'))
+  assert.match(html, /id="transaction-date-error"[^>]*role="alert"/)
+})
+
+test('ngày gần đây không còn cảnh báo ngày cũ', () => {
+  assert.ok(!render({ initialDate: localToday() }).includes(OLD_DATE_WARNING))
+})
+
+test('markup Light/Dark giữ nguyên ngày, tiền, ghi chú và cảnh báo của giao dịch lịch sử', () => {
+  const props = { open: true, categories, onSave() {}, onClose() {}, transaction: {
+    id: 15, categoryId: 1, type: 'EXPENSE', amount: 123.45, transactionDate: '1970-01-01', note: 'Giữ dữ liệu khi đổi theme',
+  } }
+  for (const theme of ['', 'dark']) {
+    const html = renderToStaticMarkup(createElement('div', { className: theme }, createElement(Modal, props)))
+    assert.ok(html.includes('value="1970-01-01"') && html.includes('value="123.45"'))
+    assert.ok(html.includes(props.transaction.note) && html.includes(OLD_DATE_WARNING))
+    assert.ok(html.includes('bg-amber-50') && html.includes('dark:bg-amber-950/40'))
+  }
+})
