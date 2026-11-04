@@ -44,7 +44,7 @@ import static org.mockito.Mockito.*;
 @ActiveProfiles("d03-test")
 @Testcontainers
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-@Import(MySqlIntegrationTestSupport.IsolatedDataSource.class)
+@Import({MySqlIntegrationTestSupport.IsolatedDataSource.class, FixedTransactionClockConfiguration.class})
 class QaTransactionCalendarIntegrationTests extends MySqlIntegrationTestSupport {
     @Autowired Environment environment;
     @Autowired JsonMapper json;

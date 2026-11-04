@@ -53,7 +53,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc(print = MockMvcPrint.NONE)
 @Testcontainers
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-@Import(MySqlIntegrationTestSupport.IsolatedDataSource.class)
+@Import({MySqlIntegrationTestSupport.IsolatedDataSource.class, FixedTransactionClockConfiguration.class})
 class CategoryBudgetIntegrationTests extends MySqlIntegrationTestSupport {
 
     @Autowired MockMvc mvc;

@@ -14,7 +14,7 @@ const { session } = await import('../src/auth/session.js')
 const { createTransaction } = await import('../src/services/transactionService.js')
 const { getCalendarMonth } = await import('../src/services/calendarService.js')
 const original = { baseURL: client.defaults.baseURL, timeout: client.defaults.timeout, proxy: client.defaults.proxy }
-const payload = () => ({ type: 'EXPENSE', categoryId: 1, amount: 0.01, transactionDate: '2028-02-29', note: 'D03_QA_ONLY' })
+const payload = () => ({ type: 'EXPENSE', categoryId: 1, amount: 0.01, transactionDate: '2024-02-29', note: 'D03_QA_ONLY' })
 const respond = (response, status, data) => { response.writeHead(status, { 'Content-Type': 'application/json' }); response.end(JSON.stringify(data)) }
 async function fixture(t, handler, timeout = 5000) {
   const server = createServer(handler)

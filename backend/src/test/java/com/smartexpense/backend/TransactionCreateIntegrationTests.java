@@ -55,7 +55,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Testcontainers(disabledWithoutDocker = true)
 @Transactional
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-@Import(MySqlIntegrationTestSupport.IsolatedDataSource.class)
+@Import({MySqlIntegrationTestSupport.IsolatedDataSource.class, FixedTransactionClockConfiguration.class})
 class TransactionCreateIntegrationTests extends MySqlIntegrationTestSupport {
 
     @Autowired MockMvc mvc;
@@ -132,7 +132,7 @@ class TransactionCreateIntegrationTests extends MySqlIntegrationTestSupport {
                 Arguments.of(method, "123.45", "2024-02-29", "Ăn trưa tại Đà Nẵng – cà phê"),
                 Arguments.of(method, "123.45", "2026-10-29", "a".repeat(500)),
                 Arguments.of(method, "123.45", "2026-10-29", "ệ".repeat(500)),
-                Arguments.of(method, "123.45", "2099-12-31", "Không tự cấm ngày tương lai")));
+                Arguments.of(method, "123.45", "1970-01-01", "Cho phép ngày rất xa trong quá khứ")));
     }
 
     // Flush và clear persistence context để kiểm tra giá trị đọc lại từ MySQL, không từ cache JPA.
