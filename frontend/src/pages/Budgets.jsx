@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 
 import BudgetModal from '../components/BudgetModal'
+import { CategoryBudgetSection, CategoryBudgetModal } from '../components/budget'
 import AsyncState from '../components/ui/AsyncState'
 import { useToast } from '../contexts/ToastContext'
 import { useQuickAdd } from '../contexts/QuickAddContext'
@@ -23,6 +24,13 @@ import {
   saveBudget,
   deleteBudget,
 } from '../services/budgetService'
+import {
+  getCategoryBudgets,
+  createCategoryBudget,
+  updateCategoryBudget,
+  deleteCategoryBudget,
+} from '../services/categoryBudgetService'
+import { getCategories } from '../services/categoryService'
 
 // Lấy tháng hiện tại theo giờ địa phương YYYY-MM
 const currentMonth = () => {
@@ -55,6 +63,25 @@ export default function Budgets() {
 
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+
+  // Danh mục chi tiêu
+  const [categories, setCategories] = useState([])
+
+  // Ngân sách theo danh mục
+  const [categoryBudgets, setCategoryBudgets] = useState([])
+  const [categoryBudgetsLoading, setCategoryBudgetsLoading] = useState(true)
+  const [categoryBudgetsError, setCategoryBudgetsError] = useState('')
+  const [categoryReloadKey, setCategoryReloadKey] = useState(0)
+
+  // Modal ngân sách danh mục
+  const [categoryModalOpen, setCategoryModalOpen] = useState(false)
+  const [editingCategoryBudget, setEditingCategoryBudget] = useState(null)
+  const [categorySaving, setCategorySaving] = useState(false)
+  const [categoryModalError, setCategoryModalError] = useState('')
+
+  // Xác nhận xóa ngân sách danh mục
+  const [categoryToDelete, setCategoryToDelete] = useState(null)
+  const [deletingCategoryBudget, setDeletingCategoryBudget] = useState(false)
 
   // YYYY-MM -> năm và tháng cho Budget API
   const [yearText, monthText] = (selectedMonth || '').split('-')
@@ -151,6 +178,128 @@ export default function Budgets() {
     }
   }
 
+  // Lấy danh mục của người dùng (tự động cập nhật khi có mutation)
+  useEffect(() => {
+    let ignore = false
+
+    getCategories()
+      .then((data) => {
+        if (!ignore && Array.isArray(data)) {
+          setCategories(data)
+        }
+      })
+      .catch((err) => {
+        if (!ignore && !isRequestCancelled(err)) {
+          console.error('Không thể tải danh mục:', err)
+        }
+      })
+
+    return () => {
+      ignore = true
+    }
+  }, [mutationVersion])
+
+  // Lấy danh sách ngân sách theo danh mục độc lập với ngân sách tổng
+  useEffect(() => {
+    let ignore = false
+
+    if (!validMonth) {
+      return
+    }
+
+    getCategoryBudgets(year, month)
+      .then((data) => {
+        if (!ignore) {
+          setCategoryBudgets(Array.isArray(data) ? data : [])
+          setCategoryBudgetsError('')
+          setCategoryBudgetsLoading(false)
+        }
+      })
+      .catch((err) => {
+        if (!ignore) {
+          if (isRequestCancelled(err)) return
+          setCategoryBudgets([])
+          setCategoryBudgetsError(getApiErrorMessage(err, 'Không thể tải ngân sách theo danh mục.'))
+          setCategoryBudgetsLoading(false)
+        }
+      })
+
+    return () => {
+      ignore = true
+    }
+  }, [year, month, validMonth, mutationVersion, categoryReloadKey])
+
+  // Thao tác ngân sách danh mục
+  const handleOpenAddCategoryBudget = () => {
+    setEditingCategoryBudget(null)
+    setCategoryModalError('')
+    setCategoryModalOpen(true)
+  }
+
+  const handleOpenEditCategoryBudget = (catBudget) => {
+    setEditingCategoryBudget(catBudget)
+    setCategoryModalError('')
+    setCategoryModalOpen(true)
+  }
+
+  const handleSaveCategoryBudget = async ({ categoryId, amountLimit }) => {
+    setCategorySaving(true)
+    setCategoryModalError('')
+
+    try {
+      if (editingCategoryBudget) {
+        await updateCategoryBudget(editingCategoryBudget.id, amountLimit)
+        toast.success('Cập nhật ngân sách danh mục thành công.')
+      } else {
+        await createCategoryBudget({
+          categoryId,
+          year,
+          month,
+          amountLimit,
+        })
+        toast.success('Thiết lập ngân sách danh mục thành công.')
+      }
+
+      setCategoryModalOpen(false)
+      setEditingCategoryBudget(null)
+      const updatedList = await getCategoryBudgets(year, month)
+      setCategoryBudgets(Array.isArray(updatedList) ? updatedList : [])
+    } catch (err) {
+      const msg = getApiErrorMessage(err, 'Không thể lưu ngân sách danh mục.')
+      setCategoryModalError(msg)
+      if (!isRequestCancelled(err)) {
+        toast.error(msg)
+      }
+      throw err
+    } finally {
+      setCategorySaving(false)
+    }
+  }
+
+  const handleRequestDeleteCategoryBudget = (catBudget) => {
+    setCategoryToDelete(catBudget)
+  }
+
+  const handleConfirmDeleteCategoryBudget = async () => {
+    if (!categoryToDelete?.id) return
+    setDeletingCategoryBudget(true)
+
+    try {
+      await deleteCategoryBudget(categoryToDelete.id)
+      setCategoryToDelete(null)
+      toast.success('Đã xóa ngân sách danh mục.')
+      const updatedList = await getCategoryBudgets(year, month)
+      setCategoryBudgets(Array.isArray(updatedList) ? updatedList : [])
+    } catch (err) {
+      const msg = getApiErrorMessage(err, 'Không thể xóa ngân sách danh mục.')
+      if (!isRequestCancelled(err)) {
+        toast.error(msg)
+      }
+    } finally {
+      setDeletingCategoryBudget(false)
+    }
+  }
+
   // Dữ liệu để hiển thị tiến độ
   const limit = Number(budget?.amountLimit ?? 0)
   const spent = Number(budget?.spentAmount ?? 0)
@@ -205,9 +354,13 @@ export default function Budgets() {
                 onChange={(e) => {
                   setSelectedMonth(e.target.value)
                   setConfirmDelete(false)
+                  setCategoryToDelete(null)
                   setSuccess('')
                   setError('')
                   setLoading(true)
+                  setCategoryBudgets([])
+                  setCategoryBudgetsLoading(true)
+                  setCategoryBudgetsError('')
                 }}
                 className="rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#1E293B] py-2.5 pl-4 pr-10 text-sm font-semibold text-slate-800 dark:text-slate-100 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900/40 transition-all shadow-2xs"
               />
@@ -469,6 +622,24 @@ export default function Budgets() {
         </>
       )}
 
+      {/* Ngân sách theo danh mục */}
+      {validMonth && (
+        <CategoryBudgetSection
+          budgets={categoryBudgets}
+          categories={categories}
+          loading={categoryBudgetsLoading}
+          error={categoryBudgetsError}
+          onRetry={() => {
+            setCategoryBudgetsLoading(true)
+            setCategoryReloadKey((k) => k + 1)
+          }}
+          onAdd={handleOpenAddCategoryBudget}
+          onEdit={handleOpenEditCategoryBudget}
+          onDelete={handleRequestDeleteCategoryBudget}
+          disabled={categorySaving || deletingCategoryBudget}
+        />
+      )}
+
       {/* Modal thiết lập và sửa */}
       <BudgetModal
         open={modalOpen}
@@ -479,6 +650,26 @@ export default function Budgets() {
           if (!saving) setModalOpen(false)
         }}
         onSave={handleSave}
+      />
+
+      {/* Modal thiết lập và sửa ngân sách danh mục */}
+      <CategoryBudgetModal
+        open={categoryModalOpen}
+        budget={editingCategoryBudget}
+        categories={categories}
+        month={month}
+        year={year}
+        monthLabel={monthLabel}
+        saving={categorySaving}
+        error={categoryModalError}
+        onClose={() => {
+          if (!categorySaving) {
+            setCategoryModalOpen(false)
+            setEditingCategoryBudget(null)
+            setCategoryModalError('')
+          }
+        }}
+        onSave={handleSaveCategoryBudget}
       />
 
       {/* Xác nhận xóa tùy chỉnh */}
@@ -536,6 +727,83 @@ export default function Budgets() {
                 className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-700 shadow-sm shadow-rose-500/20 disabled:opacity-50 flex items-center gap-2 transition-all"
               >
                 {deleting ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    <span>Đang xóa...</span>
+                  </>
+                ) : (
+                  <span>Xác nhận xóa</span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Xác nhận xóa ngân sách danh mục */}
+      {categoryToDelete && (
+        <div
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-4"
+          role="presentation"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget && !deletingCategoryBudget) {
+              setCategoryToDelete(null)
+            }
+          }}
+        >
+          <div
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="delete-category-budget-title"
+            className="w-full max-w-md rounded-2xl bg-white dark:bg-[#182234] p-6 shadow-2xl border border-slate-100 dark:border-slate-800"
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 shrink-0">
+                <AlertCircle size={24} />
+              </div>
+              <div>
+                <h3
+                  id="delete-category-budget-title"
+                  className="text-base font-bold text-slate-800 dark:text-slate-100"
+                >
+                  Xác nhận xóa ngân sách danh mục
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {categoryToDelete.categoryName || 'Danh mục'} - {monthLabel}
+                </p>
+              </div>
+            </div>
+
+            <p className="text-sm text-slate-600 dark:text-slate-300 mb-2">
+              Bạn có chắc chắn muốn xóa ngân sách của danh mục{' '}
+              <strong className="text-slate-800 dark:text-slate-100 font-semibold">
+                {categoryToDelete.categoryName || 'này'}
+              </strong>{' '}
+              trong <strong className="text-slate-800 dark:text-slate-100 font-semibold">{monthLabel}</strong>?
+            </p>
+
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-6 bg-slate-50 dark:bg-slate-800/60 p-3 rounded-xl border border-slate-100 dark:border-slate-700/60">
+              💡 Thao tác này chỉ xóa hạn mức ngân sách của danh mục, hoàn toàn không xóa danh mục hoặc các giao dịch của bạn.
+            </p>
+
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setCategoryToDelete(null)}
+                disabled={deletingCategoryBudget}
+                className="rounded-xl border border-slate-200 dark:border-slate-700 px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
+              >
+                Hủy
+              </button>
+
+              <button
+                type="button"
+                id="btn-confirm-delete-category-budget"
+                onClick={handleConfirmDeleteCategoryBudget}
+                disabled={deletingCategoryBudget}
+                className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-700 shadow-sm shadow-rose-500/20 disabled:opacity-50 flex items-center gap-2 transition-all"
+              >
+                {deletingCategoryBudget ? (
                   <>
                     <Loader2 size={16} className="animate-spin" />
                     <span>Đang xóa...</span>

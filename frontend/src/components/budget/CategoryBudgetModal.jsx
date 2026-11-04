@@ -4,6 +4,7 @@ import MoneyInput from '../ui/MoneyInput'
 import CategoryBadge from '../category/CategoryBadge'
 import useModalFocus from '../../hooks/useModalFocus'
 import { validateCategoryBudgetForm } from './categoryBudgetUtils'
+import { getApiErrorMessage, getApiFieldErrors } from '../../api/errors'
 
 function CategoryBudgetModalContent({
   budget,
@@ -56,8 +57,14 @@ function CategoryBudgetModalContent({
         amountLimit: Number(amount),
       })
     } catch (err) {
-      // Nhận lỗi từ props/reject nếu caller ném
-      const msg = err?.response?.data?.message || err?.message || 'Không thể lưu ngân sách danh mục.'
+      const fieldErrs = getApiFieldErrors(err, ['categoryId', 'amountLimit', 'amount'])
+      if (fieldErrs.amount && !fieldErrs.amountLimit) {
+        fieldErrs.amountLimit = fieldErrs.amount
+      }
+      if (Object.keys(fieldErrs).length > 0) {
+        setFieldErrors((prev) => ({ ...prev, ...fieldErrs }))
+      }
+      const msg = getApiErrorMessage(err, 'Không thể lưu ngân sách danh mục.')
       setFormError(msg)
     }
   }
@@ -161,6 +168,12 @@ function CategoryBudgetModalContent({
                 {fieldErrors.categoryId && (
                   <p id="category-budget-select-error" role="alert" className="mt-1.5 text-xs font-medium text-red-600 dark:text-rose-400">
                     {fieldErrors.categoryId}
+                  </p>
+                )}
+
+                {expenseCategories.length === 0 && !fieldErrors.categoryId && (
+                  <p className="mt-1.5 text-xs text-amber-600 dark:text-amber-400">
+                    Chưa có danh mục chi tiêu nào. Vui lòng tạo danh mục chi tiêu trước khi thiết lập ngân sách.
                   </p>
                 )}
               </div>
