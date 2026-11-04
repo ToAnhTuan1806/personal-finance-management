@@ -12,6 +12,7 @@ Mỗi ngày có một báo cáo chung cho **Backend (BE), Frontend (FE) và dữ
 | D04 | 30/10/2026 | Calendar tháng, tổng ngày/tháng và biên ngày | [D04](D04.md) |
 | D05 | 02/11/2026 | Chi tiết ngày, phân trang và rà soát Calendar API | [D05](D05.md) |
 | D06 | 03/11/2026 | Icon/màu, tên danh mục trùng và migration tương thích | [D06](D06.md) |
+| D07 | 04/11/2026 | Ngân sách danh mục, API/MySQL và gate migration còn chờ D07-DB | [D07](D07.md) |
 
 Nguồn kế hoạch: [SRS 2.2](../SmartExpense_SRS_v2.docx), [Master Plan](../SmartExpense_QuanTriDuAn.xlsx). Quy tắc API hiện có nằm trong [API Contract](../smartexpense-2.0/API_CONTRACT.md).
 
@@ -42,7 +43,9 @@ Mã R01–R06 dưới đây chỉ giúp tra cứu hồ sơ. **Số test là tổ
 | R05 | 03/11/2026 | `c7637ab` | Bổ sung Backend D06 | 334 PASS | Không chạy riêng | Không ghép với lượt khác |
 | R06 | 04/11/2026 | `568391d` | QA D06 tích hợp BE/FE | 336 PASS | 276 PASS | 612 PASS |
 
-Các lượt xác nhận thành công trên đều ghi 0 failure/error/skipped cho phần đã chạy. Gate D03 đạt 55/55 trong các lượt xác nhận; đây là tập con Backend. Lượt đầy đủ mới nhất được ghi tại [D06](D06.md). Không có lượt kiểm thử mới được thực hiện chỉ để tổ chức lại tài liệu.
+Các lượt xác nhận thành công trên đều ghi 0 failure/error/skipped cho phần đã chạy. Gate D03 đạt 55/55 trong các lượt xác nhận; đây là tập con Backend. Lượt đầy đủ thành công gần nhất trong bảng lịch sử được ghi tại [D06](D06.md). Không có lượt kiểm thử mới được thực hiện chỉ để tổ chức lại tài liệu.
+
+Lượt Backend D07-BE Commit 3 ngày 04/11/2026, baseline `09d5b1c`: **409 test — 401 PASS, 8 FAIL, 0 ERROR, 0 SKIPPED**, Gate D03 55/55 PASS. D07 API/MySQL mới 42/42 PASS; migration và một số kỳ vọng schema cũ còn bị chặn/lỗi. Chi tiết tại [D07](D07.md); không cộng lượt này vào các tổng lịch sử hoặc coi là regression thành công.
 
 ## Môi trường và cách chạy lại
 

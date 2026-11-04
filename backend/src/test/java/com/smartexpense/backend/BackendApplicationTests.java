@@ -11,6 +11,7 @@ import com.smartexpense.backend.entity.Transaction;
 import com.smartexpense.backend.entity.User;
 import com.smartexpense.backend.enums.TransactionType;
 import com.smartexpense.backend.repository.CategoryRepository;
+import com.smartexpense.backend.repository.CategoryBudgetRepository;
 import com.smartexpense.backend.repository.MonthlyBudgetRepository;
 import com.smartexpense.backend.repository.TransactionRepository;
 import com.smartexpense.backend.repository.UserRepository;
@@ -88,6 +89,7 @@ class BackendApplicationTests {
     @MockitoBean CategoryRepository categories;
     @MockitoBean TransactionRepository transactions;
     @MockitoBean MonthlyBudgetRepository budgets;
+    @MockitoBean CategoryBudgetRepository categoryBudgets;
 
     private String password;
     private User userA;
@@ -488,6 +490,62 @@ class BackendApplicationTests {
         when(users.findById(1L)).thenThrow(new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                 PRIVATE_DETAIL));
         expectError(performAs(get("/api/users/me"), 1), 500, "INTERNAL_ERROR");
+    }
+
+    @Test
+    void categoryBudgetEndpointsRequireJwt() throws Exception {
+        expectError(mvc.perform(get("/api/category-budgets?year=2026&month=10")), 401, "UNAUTHORIZED");
+        expectError(mvc.perform(post("/api/category-budgets").contentType(MediaType.APPLICATION_JSON)
+                .content(categoryBudgetBody())), 401, "UNAUTHORIZED");
+    }
+
+    @Test
+    void categoryBudgetUpsertUsesJwtOwnerAndReturnsOnlyDto() throws Exception {
+        when(categoryBudgets.saveAndFlush(any())).thenAnswer(call -> {
+            com.smartexpense.backend.entity.CategoryBudget budget = call.getArgument(0);
+            budget.setId(41L);
+            return budget;
+        });
+        performAs(post("/api/category-budgets").contentType(MediaType.APPLICATION_JSON)
+                .content(categoryBudgetBody()), 1)
+                .andExpect(status().isOk()).andExpect(jsonPath("$.id").value(41))
+                .andExpect(jsonPath("$.categoryId").value(101))
+                .andExpect(jsonPath("$.spentAmount").value(0))
+                .andExpect(jsonPath("$.usagePercentage").value(0))
+                .andExpect(jsonPath("$.status").value("SAFE"))
+                .andExpect(jsonPath("$.user").doesNotExist())
+                .andExpect(jsonPath("$.category").doesNotExist());
+        verify(categoryBudgets).saveAndFlush(argThat(budget -> budget.getUser().getId().equals(1L)));
+    }
+
+    @Test
+    void categoryBudgetValidationAndForeignOwnerUseApiError() throws Exception {
+        expectError(performAs(post("/api/category-budgets").contentType(MediaType.APPLICATION_JSON)
+                .content("{}"), 1), 400, "VALIDATION_ERROR")
+                .andExpect(jsonPath("$.errors.categoryId").exists())
+                .andExpect(jsonPath("$.errors.amountLimit").exists());
+        expectError(performAs(get("/api/category-budgets?year=2026"), 1), 400, "VALIDATION_ERROR");
+        expectError(performAs(get("/api/category-budgets/41"), 2), 404, "RESOURCE_NOT_FOUND");
+        expectError(performAs(put("/api/category-budgets/41").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"amountLimit\":100}"), 2), 404, "RESOURCE_NOT_FOUND");
+        expectError(performAs(delete("/api/category-budgets/41"), 2), 404, "RESOURCE_NOT_FOUND");
+        performAs(get("/api/category-budgets?year=2026&month=10"), 2)
+                .andExpect(status().isOk()).andExpect(content().json("[]"));
+    }
+
+    @ParameterizedTest
+    @org.junit.jupiter.params.provider.CsvSource({"1062,23000,409,CONFLICT", "1452,23000,500,INTERNAL_ERROR",
+            "1048,23000,500,INTERNAL_ERROR", "1264,22003,500,INTERNAL_ERROR"})
+    void categoryBudgetOnlyDuplicateKeyBecomesConflict(int vendorCode, String sqlState, int status, String code)
+            throws Exception {
+        when(categoryBudgets.saveAndFlush(any())).thenThrow(new DataIntegrityViolationException(
+                PRIVATE_DETAIL, new java.sql.SQLException(PRIVATE_DETAIL, sqlState, vendorCode)));
+        expectError(performAs(post("/api/category-budgets").contentType(MediaType.APPLICATION_JSON)
+                .content(categoryBudgetBody()), 1), status, code);
+    }
+
+    private String categoryBudgetBody() {
+        return "{\"categoryId\":101,\"year\":2026,\"month\":10,\"amountLimit\":100,\"userId\":2}";
     }
 
     private ResultActions performAs(MockHttpServletRequestBuilder request, long userId) throws Exception {

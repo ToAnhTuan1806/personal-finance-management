@@ -37,6 +37,11 @@ Mọi đường dẫn trong bảng đều nằm dưới `/api`; Input là body, 
 | GET | `/budgets/{year}/{month}` | Path kỳ | 200 Budget | 400 kỳ sai; 404 chưa đặt |
 | PUT | `/budgets/{year}/{month}` | `{amountLimit}` | 200 Budget cho cả tạo/cập nhật | 400 kỳ/tiền sai |
 | DELETE | `/budgets/{year}/{month}` | Path kỳ | 204 | 400 kỳ sai; 404 chưa đặt |
+| POST | `/category-budgets` | CategoryBudgetInput | 200 CategoryBudget, tạo hoặc cập nhật theo kỳ | 400 validation/type; 404 category owner; 409 duplicate key |
+| GET | `/category-budgets` | Query year,month bắt buộc | 200 CategoryBudget[], categoryId ASC | 400 kỳ sai |
+| GET | `/category-budgets/{id}` | Path id | 200 CategoryBudget | 400 ID sai; 404 budget owner |
+| PUT | `/category-budgets/{id}` | `{amountLimit}` | 200 CategoryBudget, chỉ sửa hạn mức | 400 tiền/type/ID sai; 404 budget/category owner |
+| DELETE | `/category-budgets/{id}` | Path id | 204 | 400 ID sai; 404 budget owner |
 | GET | `/dashboard/summary` | Query month bắt buộc | 200 `{year,month,totalIncome,totalExpense,balance}` | 400 tháng sai |
 | GET | `/dashboard/expenses-by-category` | Query month bắt buộc | 200 `[{categoryId,categoryName,totalAmount}]` | 400 tháng sai |
 | GET | `/calendar/month` | Query year,month bắt buộc | 200 CalendarMonth; Backend D04, chờ FE xác nhận | 400 kỳ sai; 401 JWT thiếu/sai/hết hạn |
@@ -271,6 +276,57 @@ Khi sửa `transactionDate` sang tháng/năm khác, cần refetch **cả tháng 
 
 Quick Add (FR-03) dùng POST `/transactions`, không thêm `/quick-add`. Khóa submit đồng bộ; chỉ báo thành công sau response rồi refetch giao dịch/Dashboard/ngân sách/lịch. Timeout không tự POST lại vì server có thể đã lưu: giữ form, kiểm tra lại danh sách. Bỏ fallback thành công giả và đồng bộ xóa token/user/context khi 401 là việc còn cần triển khai (FR-01/11).
 
+### Ngân sách danh mục — D07-BE Commit 2 (04/11/2026, chờ review/tích hợp FE và D07-DB)
+
+Phần này mô tả mã Backend tại local, chưa xác nhận triển khai hoặc migration trên DB thật. **Bộ endpoint D07 đã được chốt theo Phương án 1 — CRUD theo ID:** POST upsert, GET danh sách theo query year/month, GET/PUT/DELETE theo `/{id}` như bảng ở mục 2. Không triển khai thêm route `/{year}/{month}/{categoryId}`. Quyết định này giữ nguyên UNIQUE `(user_id, category_id, year, month)` và owner từ JWT; không đổi endpoint ngân sách tổng. API định kỳ/báo cáo/CSV bên dưới vẫn là đề xuất riêng.
+
+- Mọi endpoint `/api/category-budgets` yêu cầu JWT. Owner chỉ lấy từ subject JWT; `userId` client không quyết định quyền sở hữu. Không trả Entity JPA, thông tin user hoặc mật khẩu trong response.
+- Ngân sách danh mục độc lập với ngân sách tổng tháng; không cấm tổng hạn mức danh mục vượt hạn mức tháng và không sửa dữ liệu MonthlyBudget.
+- POST là upsert theo `(JWT user, categoryId, year, month)`: chưa có thì tạo, đã có thì giữ ID và thay hạn mức; cả hai trả **200**. Category phải tồn tại, cùng owner và loại EXPENSE. Category không tồn tại/khác owner trả **404 RESOURCE_NOT_FOUND**, cùng owner nhưng INCOME trả **400 VALIDATION_ERROR**.
+- GET danh sách yêu cầu cả `year` và `month`, trả mảng theo `categoryId ASC`; chưa đặt ngân sách tháng đó trả `[]`. GET/PUT/DELETE theo `id` không tồn tại/khác owner trả **404 RESOURCE_NOT_FOUND**.
+- PUT chỉ có field `amountLimit` được dùng; không chuyển owner/category/year/month. Muốn đặt ngân sách cho danh mục/kỳ khác dùng POST. Field JSON ngoài DTO không được dùng để thay các trường này; không coi PUT là thao tác chuyển kỳ.
+- Validation: `categoryId`/path `id` là Long dương; `categoryId`, `year`, `month`, `amountLimit` trong POST bắt buộc; PUT bắt buộc `amountLimit`. Năm **1900–2100**, tháng **1–12**, tiền **0.01–9999999999999.99**, tối đa **2 số thập phân**, cùng chuẩn `DECIMAL(15,2)` của MonthlyBudget. Lỗi body Bean Validation có `errors` theo field; lỗi path/query/nghiệp vụ có thể không có `errors`. JSON sai kiểu hoặc thiếu query bắt buộc trả 400.
+- Thiếu/sai/hết hạn JWT trả **401 UNAUTHORIZED** theo Security hiện tại; DELETE thành công **204**, không body. Không thêm cơ chế xác thực hoặc mã lỗi mới.
+
+Request POST `/api/category-budgets`:
+
+```json
+{"categoryId":11,"year":2026,"month":11,"amountLimit":1000000.00}
+```
+
+Request PUT `/api/category-budgets/41`:
+
+```json
+{"amountLimit":1500000.00}
+```
+
+Response 200 minh họa khi hạn mức 1.000.000, đã chi 1.200.000:
+
+```json
+{
+  "id":41,"categoryId":11,"categoryName":"Ăn uống","year":2026,"month":11,
+  "amountLimit":1000000.00,"spentAmount":1200000.00,"remainingAmount":-200000.00,
+  "usagePercentage":120.00,"exceeded":true,"status":"OVER_BUDGET"
+}
+```
+
+ID/year/month/tiền/tỷ lệ là JSON number, `exceeded` boolean, `status` string enum. Giữ tên `spentAmount`, `remainingAmount`, `usagePercentage`, `OVER_BUDGET` từ contract dự kiến; không dùng alias `spent/remaining/percentage/DANGER`. Không yêu cầu JSON giữ số 0 cuối phần thập phân.
+
+- `spentAmount`: SUM `Transaction.amount` của đúng user/category, type EXPENSE, `startDate <= transactionDate < nextMonthStart`; DATE không chuyển múi giờ, xử lý cả tháng 12 sang năm sau. Không phụ thuộc pagination. Chưa có giao dịch tương ứng thì bằng 0.
+- `remainingAmount = amountLimit - spentAmount`, cho phép âm. `usagePercentage = spentAmount * 100 / amountLimit`, BigDecimal, **HALF_UP 2 số thập phân**, không cap ở 100%.
+- `status`: **SAFE** khi spent < limit × 0.80; **WARNING** khi limit × 0.80 ≤ spent < limit; **OVER_BUDGET** khi spent ≥ limit. So sánh tiền chính xác trước làm tròn phần trăm; `exceeded` chỉ true khi spent > limit. Đúng 100%: OVER_BUDGET và exceeded=false. Một tỷ lệ được làm tròn thành 80.00/100.00 có thể vẫn ở trạng thái ngưỡng dưới.
+- Mỗi lần GET/upsert/update đều tính lại từ transactions hiện tại; sửa/xóa/chuyển kỳ giao dịch được phản ánh khi đọc lại, không lưu các số liệu này thành cột. List dùng một truy vấn ngân sách kèm category và một truy vấn SUM nhóm theo category; tháng không có ngân sách không chạy SUM. FE cần refetch sau sửa/xóa giao dịch; chuyển kỳ thì refetch cả kỳ nguồn và đích nếu đang hiển thị.
+
+**Concurrent upsert và lỗi DB:** thao tác ghi nằm trong transaction, `saveAndFlush` để phát hiện lỗi ghi. Precheck không thay thế UNIQUE `(user_id, category_id, year, month)` tại MySQL. Khi hai POST cùng tạo một kỳ, UNIQUE phải ngăn bản ghi thứ hai; request thua race trả **409 CONFLICT**, không retry trong transaction đã lỗi. Client nhận 409 cần GET lại trước quyết định gửi lại. Không cam kết thứ tự request thắng hoặc ghi đè cuối cùng khi cập nhật đồng thời.
+
+Chỉ duplicate key MySQL **1062 / SQLSTATE 23000** mới được chuyển sang 409 ở API D07. Lỗi toàn vẹn dữ liệu khác không bị coi là trùng kỳ: trả **500 INTERNAL_ERROR** trung lập, không lộ SQL/constraint/stack trace. Handler này chỉ áp dụng `CategoryBudgetController`; API khác giữ behavior hiện tại. Ví dụ 409:
+
+```json
+{"status":409,"code":"CONFLICT","message":"Thao tác xung đột với dữ liệu hiện có"}
+```
+
+**Phụ thuộc D07-DB/Commit 3:** migration chưa có trong nhánh tại thời điểm triển khai; chưa xác nhận concurrency, FK và kết quả MySQL thực. DB cần khớp bảng/cột/nullable/DECIMAL của Entity, FK users/categories và UNIQUE bốn cột. Không dùng khởi động ứng dụng với `ddl-auto=update` thay migration được duyệt. D07 không đổi CategoryService hoặc tự thêm cascade; chính sách chặn xóa/đổi loại category đang có budget phải phối hợp DB/FE, chưa coi FK riêng lẻ là bằng chứng category cùng owner. Không đổi schema, runner hoặc cấu hình trong Commit 2.
+
 ## 3. API dự kiến — cần review trước triển khai
 
 API mới yêu cầu JWT, ID dương, input hợp lệ; lỗi chung theo mục 1. Category/template khác owner trả 404; category thuộc owner nhưng sai type trả 400.
@@ -279,10 +335,6 @@ API mới yêu cầu JWT, ID dương, input hợp lệ; lỗi chung theo mục 1
 
 | Method | Đường dẫn | Request | Thành công / lỗi nghiệp vụ |
 | --- | --- | --- | --- |
-| GET | `/category-budgets` | Query year,month bắt buộc | 200 CategoryBudget[], sort categoryId ASC |
-| GET | `/category-budgets/{year}/{month}/{categoryId}` | Path kỳ/category | 200 CategoryBudget; 404 chưa đặt |
-| PUT | `/category-budgets/{year}/{month}/{categoryId}` | `{amountLimit}` | 200 upsert; 409 nếu còn xung đột đồng thời |
-| DELETE | `/category-budgets/{year}/{month}/{categoryId}` | Path kỳ/category | 204; 404 chưa đặt |
 | GET | `/recurring-templates` | Query active?,page=0,size=10 | 200 Page<Template>, sort id DESC |
 | GET | `/recurring-templates/{id}` | Path id | 200 Template |
 | POST | `/recurring-templates` | TemplateInput | 201 Template |
@@ -299,8 +351,6 @@ API mới yêu cầu JWT, ID dương, input hợp lệ; lỗi chung theo mục 1
 Ký hiệu `...Input` giữ các field của Input tương ứng. ID/tiền/tỷ lệ/year/month của kỳ là số; fromMonth/toMonth và month trong báo cáo là string YYYY-MM. active/canApply/alreadyApplied là boolean; reasonCode/status là string. Input bắt buộc, trừ note (null hoặc ≤500), metadata Category và query có dấu ?. Response trả note=null khi trống. Phân trang mẫu dùng cùng giới hạn page/size hiện có.
 
 ```text
-CategoryBudget = { id, categoryId, categoryName, year, month, amountLimit,
-  spentAmount, remainingAmount, usagePercentage, exceeded, status }
 TemplateInput = { categoryId, type, amount, dayOfMonth, note?, active }
 Template = { id, categoryName, ...TemplateInput }
 Preview = { templateId, year, month, transactionDate, categoryId, categoryName,
@@ -312,7 +362,6 @@ CategoryReport = { fromMonth, toMonth, totalExpense,
   categories:[{categoryId,categoryName,totalAmount,categoryShare}] }
 ```
 
-- **Ngân sách danh mục (FR-07):** chỉ EXPENSE, unique user/category/year/month. Độc lập ngân sách tổng, không cấm tổng limit danh mục vượt tổng tháng. usagePercentage không cap, round HALF_UP 2 số; status SAFE/WARNING/OVER_BUDGET dựa trên tỷ lệ chưa làm tròn với ngưỡng 80/100; exceeded vẫn chỉ khi spent>limit.
 - **Định kỳ (FR-08):** dayOfMonth 1–31, category cùng owner/type, active bắt buộc; ngày vượt tháng lấy ngày cuối. Preview inactive/đã áp dụng vẫn 200, canApply=false, reasonCode ưu tiên ALREADY_APPLIED rồi TEMPLATE_INACTIVE; hợp lệ trả null. Apply kiểm tra lại, lưu transaction+marker nguyên tử. Cùng mẫu/năm/tháng: một request 201, lần sau/đồng thời 409. Không scheduler; sửa mẫu không sửa giao dịch cũ. Đề xuất xóa giao dịch giữ marker (transaction_id=null), không apply lại; mẫu đã áp dụng chỉ được tắt.
 - **Báo cáo (FR-09):** from/to inclusive, đề xuất tối đa 12 tháng; months ASC, tháng trống 0; tổng/balance khớp Dashboard/SQL. Category chỉ EXPENSE, sort totalAmount DESC/categoryId ASC, categoryShare là % round HALF_UP 2 số (tổng làm tròn có thể khác 100); rỗng trả categories=[]. Drilldown dùng filter giao dịch.
 - **CSV (FR-10):** xuất toàn bộ filter/owner, sort ngày DESC/id DESC; đề xuất tối đa 10.000 dòng, vượt trả 422 trước khi gửi file, không cắt cụt; count/export nhất quán. UTF-8 BOM, comma/CRLF, quote cell và nhân đôi nháy kép. Header `ID,Ngày giao dịch,Loại,Danh mục,Số tiền (VND),Ghi chú`; tiền dot/2 số, không phân cách nghìn. Rỗng chỉ BOM+header. Với category/note, nếu ký tự đầu sau khoảng trắng/tab/CR/LF là `=,+,-,@`, thêm nháy đơn trước cell rồi escape để chặn formula injection. Không xuất userId/email/password/token.
