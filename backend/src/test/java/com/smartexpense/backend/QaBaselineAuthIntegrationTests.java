@@ -6,6 +6,7 @@ import com.smartexpense.backend.dto.transaction.TransactionResponse;
 import com.smartexpense.backend.entity.Category;
 import com.smartexpense.backend.enums.TransactionType;
 import com.smartexpense.backend.repository.*;
+import jakarta.persistence.EntityManagerFactory;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -63,6 +64,7 @@ class QaBaselineAuthIntegrationTests extends MySqlIntegrationTestSupport {
     @Autowired MonthlyBudgetRepository budgets;
     @Autowired PasswordEncoder passwords;
     @Autowired JwtEncoder encoder;
+    @Autowired EntityManagerFactory entityManagerFactory;
 
     private String password, tokenA, tokenB;
     private UserResponse a, b;
@@ -100,9 +102,8 @@ class QaBaselineAuthIntegrationTests extends MySqlIntegrationTestSupport {
     }
 
     @Test
-    void schemaHasFourInnoDbTablesFourForeignKeysAndD06Columns() {
-        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND engine='InnoDB'", Integer.class)).isEqualTo(4);
-        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.referential_constraints WHERE constraint_schema=DATABASE()", Integer.class)).isEqualTo(4);
+    void schemaHasMappedTablesLegacyKeysAndD06Columns() {
+        ApplicationSchemaAssertions.assertMappedSchema(jdbc, entityManagerFactory);
         assertThat(jdbc.queryForList("SELECT column_type FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='categories' AND column_name IN ('icon','color') ORDER BY column_name", String.class))
                 .containsExactly("varchar(7)", "varchar(40)");
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='categories' AND column_name IN ('icon','color') AND is_nullable='YES'", Integer.class)).isEqualTo(2);
