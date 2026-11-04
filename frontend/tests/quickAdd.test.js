@@ -3,7 +3,7 @@ import test from 'node:test'
 import { createSubmitGuard, isValidDate, localToday, transactionPayload, validateTransactionForm } from '../src/utils/transactionForm.js'
 
 const categories = [{ id: 1, type: 'EXPENSE' }, { id: 2, type: 'INCOME' }]
-const valid = { type: 'EXPENSE', categoryId: '1', amount: '0.01', transactionDate: '2026-10-31', note: 'Cà phê' }
+const valid = { type: 'EXPENSE', categoryId: '1', amount: '0.01', transactionDate: '2024-02-29', note: 'Cà phê' }
 const errors = (change) => validateTransactionForm({ ...valid, ...change }, categories)
 
 for (const amount of ['', null, '0', '-1', '1.001', '10000000000000', 'NaN', 'Infinity']) {
@@ -15,11 +15,12 @@ for (const amount of ['0.01', '1', '9999999999999.99']) {
 for (const date of ['', '2026-02-29', '2026-04-31', '2026-13-01', '31/10/2026']) {
   test('Quick Add từ chối ngày sai: ' + date, () => assert.ok(errors({ transactionDate: date }).transactionDate))
 }
-test('năm nhuận, ngày tương lai và hôm nay hợp lệ không phụ thuộc UTC của giao dịch', () => {
+test('ngày tồn tại khác với ngày được phép lưu; payload giữ nguyên chuỗi DATE', () => {
   assert.ok(isValidDate('2028-02-29'))
   assert.ok(isValidDate('2099-12-31'))
+  assert.ok(validateTransactionForm({ ...valid, transactionDate: '2099-12-31' }, categories, '2030-06-15').transactionDate)
   assert.ok(isValidDate(localToday()))
-  assert.equal(transactionPayload({ ...valid, transactionDate: '2028-02-29' }).transactionDate, '2028-02-29')
+  assert.equal(transactionPayload({ ...valid, transactionDate: '2024-02-29' }).transactionDate, '2024-02-29')
 })
 test('category phải nằm trong danh sách đã tải và cùng loại thu/chi', () => {
   assert.ok(errors({ categoryId: '' }).categoryId)
