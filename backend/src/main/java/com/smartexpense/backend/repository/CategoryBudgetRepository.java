@@ -1,6 +1,7 @@
 package com.smartexpense.backend.repository;
 
 import com.smartexpense.backend.entity.CategoryBudget;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -18,6 +19,7 @@ public interface CategoryBudgetRepository
     );
 
     // Lấy ngân sách danh mục của user trong một tháng.
+    @EntityGraph(attributePaths = "category")
     List<CategoryBudget> findAllByUserIdAndYearAndMonth(
             Long userId,
             Integer year,
