@@ -1,6 +1,7 @@
 package com.smartexpense.backend.dto.transaction;
 
 import com.smartexpense.backend.enums.TransactionType;
+import com.smartexpense.backend.validation.NotFutureTransactionDate;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotNull;
@@ -25,6 +26,7 @@ public class TransactionRequest {
     private BigDecimal amount;
 
     @NotNull(message = "Ngày giao dịch không được để trống")
+    @NotFutureTransactionDate
     private LocalDate transactionDate;
 
     @Size(max = 500)
