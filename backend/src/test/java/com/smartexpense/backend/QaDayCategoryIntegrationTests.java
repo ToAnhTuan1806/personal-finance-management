@@ -8,6 +8,7 @@ import com.smartexpense.backend.entity.Category;
 import com.smartexpense.backend.enums.TransactionType;
 import com.smartexpense.backend.repository.*;
 import com.smartexpense.backend.service.CategoryService;
+import jakarta.persistence.EntityManagerFactory;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -52,6 +53,7 @@ class QaDayCategoryIntegrationTests extends MySqlIntegrationTestSupport {
     @Autowired CategoryRepository categories;
     @Autowired TransactionRepository transactions;
     @Autowired MonthlyBudgetRepository budgets;
+    @Autowired EntityManagerFactory entityManagerFactory;
     @MockitoSpyBean CategoryService categoryService;
     private HttpClient http;
     private String base, password, tokenA, tokenB;
@@ -303,7 +305,7 @@ class QaDayCategoryIntegrationTests extends MySqlIntegrationTestSupport {
     void schemaAndConstraintsRemainCompatible() {
         assertThat(jdbc.queryForList("SELECT CONCAT(column_name,':',column_type,':',is_nullable) FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='categories' AND column_name IN ('icon','color') ORDER BY column_name", String.class))
                 .containsExactly("color:varchar(7):YES", "icon:varchar(40):YES");
-        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.referential_constraints WHERE constraint_schema=DATABASE()", Integer.class)).isEqualTo(4);
+        ApplicationSchemaAssertions.assertMappedSchema(jdbc, entityManagerFactory);
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema=DATABASE() AND index_name='uk_budget_user_year_month' AND non_unique=0", Integer.class)).isEqualTo(3);
         assertNoOrphans();
     }
