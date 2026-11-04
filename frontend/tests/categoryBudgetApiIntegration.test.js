@@ -7,8 +7,13 @@ import { createServer } from 'vite'
 import axios from 'axios'
 import client from '../src/api/axiosClient.js'
 import * as categoryBudgetService from '../src/services/categoryBudgetService.js'
+import {
+  formatMoney,
+  getBudgetStatus,
+  getBudgetUsagePercentage,
+} from '../src/components/budget/categoryBudgetUtils.js'
 
-let server, CategoryBudgetModal, CategoryBudgetSection, BudgetsPage
+let server, CategoryBudgetCard, CategoryBudgetModal, CategoryBudgetSection, BudgetsPage
 
 const response = (config, data, status = 200) => ({
   config,
@@ -25,6 +30,7 @@ before(async () => {
     server: { middlewareMode: true, hmr: false, ws: false },
     appType: 'custom',
   })
+  CategoryBudgetCard = (await server.ssrLoadModule('/src/components/budget/CategoryBudgetCard.jsx')).default
   CategoryBudgetModal = (await server.ssrLoadModule('/src/components/budget/CategoryBudgetModal.jsx')).default
   CategoryBudgetSection = (await server.ssrLoadModule('/src/components/budget/CategoryBudgetSection.jsx')).default
   BudgetsPage = (await server.ssrLoadModule('/src/pages/Budgets.jsx')).default
@@ -267,3 +273,247 @@ test('BudgetsPage: render khu vực Ngân sách theo danh mục bên dưới ng�
   assert.ok(html.includes('Kiểm soát chi tiêu chi tiết cho từng hạng mục trong tháng.'))
 })
 
+/* ========================================================================== */
+/* 3. Ngưỡng ngân sách & Phân biệt chính xác theo D07 Specification           */
+/* ========================================================================== */
+
+test('Ngưỡng ngân sách: 0%, 79.99% (SAFE), 80%, 99.99% (WARNING), 100%, 120% (OVER_BUDGET)', () => {
+  // 0% -> SAFE
+  assert.equal(getBudgetStatus({ amountLimit: 1000000, spentAmount: 0 }), 'SAFE')
+  // 79.99% -> SAFE
+  assert.equal(getBudgetStatus({ amountLimit: 1000000, spentAmount: 799900 }), 'SAFE')
+  // 80% -> WARNING
+  assert.equal(getBudgetStatus({ amountLimit: 1000000, spentAmount: 800000 }), 'WARNING')
+  // 99.99% -> WARNING
+  assert.equal(getBudgetStatus({ amountLimit: 1000000, spentAmount: 999900 }), 'WARNING')
+  // 100% -> OVER_BUDGET
+  assert.equal(getBudgetStatus({ amountLimit: 1000000, spentAmount: 1000000 }), 'OVER_BUDGET')
+  // 120% -> OVER_BUDGET
+  assert.equal(getBudgetStatus({ amountLimit: 1000000, spentAmount: 1200000 }), 'OVER_BUDGET')
+
+  // getBudgetUsagePercentage không ép về 100% khi vượt
+  assert.equal(getBudgetUsagePercentage({ amountLimit: 1000000, spentAmount: 1200000 }), 120)
+  assert.equal(getBudgetUsagePercentage({ usagePercentage: 120 }), 120)
+})
+
+test('CategoryBudgetCard tại đúng 100%: hiển thị nhãn "Còn lại", số tiền "0 ₫" (không hiển thị "Chi vượt" hay "-0 ₫")', () => {
+  const budgetAt100 = {
+    id: 10,
+    categoryId: 1,
+    categoryName: 'Ăn uống',
+    amountLimit: 1000000,
+    spentAmount: 1000000,
+    remainingAmount: 0,
+    usagePercentage: 100,
+    exceeded: false,
+    status: 'OVER_BUDGET',
+  }
+
+  const html = renderToStaticMarkup(
+    createElement(CategoryBudgetCard, {
+      budget: budgetAt100,
+      onEdit: () => {},
+      onDelete: () => {},
+    })
+  )
+
+  // Đúng 100% không được hiển thị "Chi vượt" hoặc "-0 ₫"
+  assert.ok(!html.includes('Chi vượt'), 'Tại 100% không được hiển thị Chi vượt')
+  assert.ok(!html.includes('-0 ₫'), 'Tại 100% không được hiển thị -0 ₫')
+  assert.ok(!html.includes('>-0'), 'Tại 100% không có tiền âm')
+  // Phải hiển thị "Còn lại" và "0 ₫"
+  assert.ok(html.includes('Còn lại'), 'Tại 100% hiển thị nhãn Còn lại')
+  assert.ok(html.includes(formatMoney(0)), 'Hiển thị đúng 0 ₫')
+  // ARIA chuẩn
+  assert.ok(html.includes('aria-valuenow="100"'))
+  assert.ok(html.includes('aria-valuetext="100%"'))
+  assert.ok(html.includes('100%'))
+})
+
+test('CategoryBudgetCard tại 120%: hiển thị nhãn "Chi vượt", số tiền thực chi vượt, ARIA không vượt quá aria-valuemax', () => {
+  const budgetAt120 = {
+    id: 11,
+    categoryId: 2,
+    categoryName: 'Mua sắm',
+    amountLimit: 1000000,
+    spentAmount: 1200000,
+    remainingAmount: -200000,
+    usagePercentage: 120,
+    exceeded: true,
+    status: 'OVER_BUDGET',
+  }
+
+  const html = renderToStaticMarkup(
+    createElement(CategoryBudgetCard, {
+      budget: budgetAt120,
+      onEdit: () => {},
+      onDelete: () => {},
+    })
+  )
+
+  // Trên 100% mới hiển thị "Chi vượt"
+  assert.ok(html.includes('Chi vượt'), 'Vượt 100% phải hiển thị nhãn Chi vượt')
+  assert.ok(html.includes(`-${formatMoney(200000)}`), 'Hiển thị chính xác số tiền thực tế chi vượt -200.000 ₫')
+  // ARIA valuenow không được vượt quá valuemax (100)
+  assert.ok(html.includes('aria-valuenow="100"'), 'aria-valuenow được giới hạn ở 100')
+  assert.ok(html.includes('aria-valuemax="100"'))
+  assert.ok(html.includes('aria-valuetext="120%"'), 'aria-valuetext công bố tỷ lệ thực tế 120% cho screen reader')
+  // Visual percentage hiển thị đúng 120%
+  assert.ok(html.includes('120%'), 'Hiển thị đúng 120% cho người dùng xem')
+})
+
+test('CategoryBudgetCard: giữ nguyên precision tiền lẻ trong định dạng tiền tệ', () => {
+  const budgetWithDecimals = {
+    id: 12,
+    categoryId: 3,
+    categoryName: 'Dịch vụ',
+    amountLimit: 1000000.5,
+    spentAmount: 500000.25,
+    remainingAmount: 500000.25,
+    usagePercentage: 50,
+    exceeded: false,
+    status: 'SAFE',
+  }
+
+  const html = renderToStaticMarkup(
+    createElement(CategoryBudgetCard, {
+      budget: budgetWithDecimals,
+      onEdit: () => {},
+      onDelete: () => {},
+    })
+  )
+
+  assert.ok(html.includes(formatMoney(1000000.5)))
+  assert.ok(html.includes(formatMoney(500000.25)))
+})
+
+test('CategoryBudgetCard: ưu tiên status từ Backend response, không tự tính lại nếu Backend đã trả', () => {
+  // Backend có logic so sánh BigDecimal riêng
+  const budgetFromBackend = {
+    id: 13,
+    categoryId: 4,
+    categoryName: 'Giáo dục',
+    amountLimit: 1000000,
+    spentAmount: 799999,
+    status: 'WARNING', // Backend gắn WARNING
+  }
+
+  const html = renderToStaticMarkup(
+    createElement(CategoryBudgetCard, {
+      budget: budgetFromBackend,
+      onEdit: () => {},
+      onDelete: () => {},
+    })
+  )
+
+  // Hiển thị nhãn Cảnh báo theo status của backend
+  assert.ok(html.includes('Cảnh báo'))
+})
+
+/* ========================================================================== */
+/* 4. Kiểm thử Đồng bộ Dữ liệu, Upsert và Độc lập giữa các khu vực           */
+/* ========================================================================== */
+
+test('CategoryBudgetSection: hiển thị đầy đủ danh sách card ngân sách danh mục độc lập', () => {
+  const categories = [{ id: 1, name: 'Ăn uống', type: 'EXPENSE', icon: 'utensils', color: '#F59E0B' }]
+  const budgets = [
+    {
+      id: 1,
+      categoryId: 1,
+      categoryName: 'Ăn uống',
+      amountLimit: 2000000,
+      spentAmount: 500000,
+      remainingAmount: 1500000,
+      usagePercentage: 25,
+      exceeded: false,
+      status: 'SAFE',
+    },
+  ]
+
+  const html = renderToStaticMarkup(
+    createElement(CategoryBudgetSection, {
+      budgets,
+      categories,
+      loading: false,
+      error: '',
+    })
+  )
+
+  assert.ok(html.includes('Ăn uống'))
+  assert.ok(html.includes(formatMoney(2000000)))
+  assert.ok(html.includes(formatMoney(500000)))
+  assert.ok(html.includes(formatMoney(1500000)))
+  assert.ok(html.includes('An toàn'))
+})
+
+test('CategoryBudgetModal: giữ nguyên dữ liệu đã nhập và hiển thị lỗi cụ thể khi API thất bại', () => {
+  const categories = [{ id: 1, name: 'Ăn uống', type: 'EXPENSE' }]
+  const html = renderToStaticMarkup(
+    createElement(CategoryBudgetModal, {
+      open: true,
+      budget: null,
+      categories,
+      month: 11,
+      year: 2026,
+      error: 'Hạn mức ngân sách phải lớn hơn 0.',
+      onClose: () => {},
+      onSave: () => {},
+    })
+  )
+
+  assert.ok(html.includes('Hạn mức ngân sách phải lớn hơn 0.'))
+  assert.ok(html.includes('role="alert"'))
+  assert.ok(html.includes('Ăn uống'))
+})
+
+test('createCategoryBudget: gọi POST /category-budgets thực hiện upsert cho cùng danh mục và kỳ', async () => {
+  let callCount = 0
+  client.defaults.adapter = async (config) => {
+    callCount++
+    return response(config, {
+      id: 10,
+      categoryId: 1,
+      year: 2026,
+      month: 11,
+      amountLimit: callCount === 1 ? 2000000 : 3000000,
+    })
+  }
+
+  const first = await categoryBudgetService.createCategoryBudget({
+    categoryId: 1,
+    year: 2026,
+    month: 11,
+    amountLimit: 2000000,
+  })
+  const second = await categoryBudgetService.createCategoryBudget({
+    categoryId: 1,
+    year: 2026,
+    month: 11,
+    amountLimit: 3000000,
+  })
+
+  assert.equal(callCount, 2)
+  assert.equal(first.id, 10)
+  assert.equal(second.id, 10)
+  assert.equal(second.amountLimit, 3000000)
+})
+
+test('BudgetsPage: bộ chọn tháng có id="budget-month" và type="month"', async () => {
+  const { ToastProvider } = await server.ssrLoadModule('/src/contexts/ToastContext.jsx')
+  const { QuickAddProvider } = await server.ssrLoadModule('/src/contexts/QuickAddContext.jsx')
+
+  const html = renderToStaticMarkup(
+    createElement(
+      ToastProvider,
+      null,
+      createElement(
+        QuickAddProvider,
+        null,
+        createElement(BudgetsPage)
+      )
+    )
+  )
+
+  assert.ok(html.includes('id="budget-month"'))
+  assert.ok(html.includes('type="month"'))
+})

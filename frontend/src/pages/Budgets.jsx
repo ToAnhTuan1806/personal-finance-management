@@ -243,8 +243,11 @@ export default function Budgets() {
   }
 
   const handleSaveCategoryBudget = async ({ categoryId, amountLimit }) => {
+    if (categorySaving) return
     setCategorySaving(true)
     setCategoryModalError('')
+    const targetYear = year
+    const targetMonth = month
 
     try {
       if (editingCategoryBudget) {
@@ -253,8 +256,8 @@ export default function Budgets() {
       } else {
         await createCategoryBudget({
           categoryId,
-          year,
-          month,
+          year: targetYear,
+          month: targetMonth,
           amountLimit,
         })
         toast.success('Thiết lập ngân sách danh mục thành công.')
@@ -262,8 +265,14 @@ export default function Budgets() {
 
       setCategoryModalOpen(false)
       setEditingCategoryBudget(null)
-      const updatedList = await getCategoryBudgets(year, month)
-      setCategoryBudgets(Array.isArray(updatedList) ? updatedList : [])
+      const updatedList = await getCategoryBudgets(targetYear, targetMonth)
+      setCategoryBudgets((current) => {
+        const [currY, currM] = (selectedMonth || '').split('-').map(Number)
+        if (currY === targetYear && currM === targetMonth) {
+          return Array.isArray(updatedList) ? updatedList : []
+        }
+        return current
+      })
     } catch (err) {
       const msg = getApiErrorMessage(err, 'Không thể lưu ngân sách danh mục.')
       setCategoryModalError(msg)
@@ -281,15 +290,23 @@ export default function Budgets() {
   }
 
   const handleConfirmDeleteCategoryBudget = async () => {
-    if (!categoryToDelete?.id) return
+    if (!categoryToDelete?.id || deletingCategoryBudget) return
     setDeletingCategoryBudget(true)
+    const targetYear = year
+    const targetMonth = month
 
     try {
       await deleteCategoryBudget(categoryToDelete.id)
       setCategoryToDelete(null)
       toast.success('Đã xóa ngân sách danh mục.')
-      const updatedList = await getCategoryBudgets(year, month)
-      setCategoryBudgets(Array.isArray(updatedList) ? updatedList : [])
+      const updatedList = await getCategoryBudgets(targetYear, targetMonth)
+      setCategoryBudgets((current) => {
+        const [currY, currM] = (selectedMonth || '').split('-').map(Number)
+        if (currY === targetYear && currM === targetMonth) {
+          return Array.isArray(updatedList) ? updatedList : []
+        }
+        return current
+      })
     } catch (err) {
       const msg = getApiErrorMessage(err, 'Không thể xóa ngân sách danh mục.')
       if (!isRequestCancelled(err)) {
@@ -351,10 +368,19 @@ export default function Budgets() {
                 min="1900-01"
                 max="2100-12"
                 value={selectedMonth}
+                disabled={saving || deleting || categorySaving || deletingCategoryBudget}
                 onChange={(e) => {
                   setSelectedMonth(e.target.value)
                   setConfirmDelete(false)
                   setCategoryToDelete(null)
+                  if (!categorySaving) {
+                    setCategoryModalOpen(false)
+                    setEditingCategoryBudget(null)
+                    setCategoryModalError('')
+                  }
+                  if (!saving) {
+                    setModalOpen(false)
+                  }
                   setSuccess('')
                   setError('')
                   setLoading(true)
@@ -755,6 +781,12 @@ export default function Budgets() {
             role="alertdialog"
             aria-modal="true"
             aria-labelledby="delete-category-budget-title"
+            tabIndex={-1}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape' && !deletingCategoryBudget) {
+                setCategoryToDelete(null)
+              }
+            }}
             className="w-full max-w-md rounded-2xl bg-white dark:bg-[#182234] p-6 shadow-2xl border border-slate-100 dark:border-slate-800"
           >
             <div className="flex items-center gap-3 mb-4">

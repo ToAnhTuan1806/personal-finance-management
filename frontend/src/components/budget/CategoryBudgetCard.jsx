@@ -32,7 +32,9 @@ export default function CategoryBudgetCard({
   const limit = Number(budget.amountLimit || 0)
   const spent = Number(budget.spentAmount || 0)
   const remaining = Number(budget.remainingAmount != null ? budget.remainingAmount : limit - spent)
-  const isOverBudget = remaining < 0 || status === 'OVER_BUDGET'
+  const isExceeded = Boolean(
+    budget.exceeded === true || remaining < 0 || (limit > 0 && spent > limit)
+  )
 
   return (
     <div
@@ -96,9 +98,10 @@ export default function CategoryBudgetCard({
 
           <div
             role="progressbar"
-            aria-valuenow={Math.round(percentage)}
+            aria-valuenow={Math.round(progressWidth)}
             aria-valuemin={0}
             aria-valuemax={100}
+            aria-valuetext={`${percentage.toLocaleString('vi-VN', { maximumFractionDigits: 1 })}%`}
             aria-label={`Tiến độ ngân sách danh mục ${categoryName}`}
             className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700/60"
           >
@@ -128,17 +131,19 @@ export default function CategoryBudgetCard({
 
         <div>
           <span className="block text-[11px] font-medium text-slate-500 dark:text-slate-400">
-            {isOverBudget ? 'Chi vượt' : 'Còn lại'}
+            {isExceeded ? 'Chi vượt' : 'Còn lại'}
           </span>
           <span
             className={`mt-0.5 block truncate font-bold ${
-              isOverBudget
+              isExceeded
                 ? 'text-rose-600 dark:text-rose-400'
-                : 'text-emerald-600 dark:text-emerald-400'
+                : remaining === 0 && status === 'OVER_BUDGET'
+                  ? 'text-rose-600 dark:text-rose-400'
+                  : 'text-emerald-600 dark:text-emerald-400'
             }`}
-            title={formatMoney(Math.abs(remaining))}
+            title={isExceeded ? `-${formatMoney(Math.abs(remaining))}` : formatMoney(remaining)}
           >
-            {isOverBudget ? `-${formatMoney(Math.abs(remaining))}` : formatMoney(remaining)}
+            {isExceeded ? `-${formatMoney(Math.abs(remaining))}` : formatMoney(remaining)}
           </span>
         </div>
       </div>
