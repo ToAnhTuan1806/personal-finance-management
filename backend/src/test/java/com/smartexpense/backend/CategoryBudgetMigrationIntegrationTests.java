@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.support.EncodedResource;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -28,7 +29,7 @@ import java.util.regex.Pattern;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-// Gate riêng: không dùng fixture D06 hoặc Hibernate create/update để thay migration còn thiếu.
+// Fixture chỉ dựng schema MVP; V002/V003 phải chạy từ SQL thật trước Hibernate validate, không create/update ngầm.
 class CategoryBudgetMigrationIntegrationTests {
 
     private static final String DATABASE = "se_d07_migration_" + UUID.randomUUID().toString().replace("-", "");
@@ -37,9 +38,9 @@ class CategoryBudgetMigrationIntegrationTests {
     private static MySQLContainer mysql;
 
     @Test
-    void approvedMigrationsCreateFreshSchemaValidateHibernateAndPreserveMonthlyBudget() throws Exception {
+    void mvpUpgradeThroughV002AndV003ValidatesHibernateAndPreservesMonthlyBudget() throws Exception {
         // Kiểm tra dependency trước khi tạo container hay kết nối DB; thiếu migration phải FAIL rõ BLOCKED.
-        List<Path> migrations = approvedMigrationSequence();
+        List<Path> migrations = approvedUpgradeMigrations();
         try (MySQLContainer container = localContainer()) {
             mysql = container;
             container.start();
@@ -47,8 +48,9 @@ class CategoryBudgetMigrationIntegrationTests {
             Map<String, Object> legacyBudget;
             try (Connection connection = connect()) {
                 assertThat(connection.getMetaData().getTables(DATABASE, null, "%", new String[]{"TABLE"}).next()).isFalse();
+                ScriptUtils.executeSqlScript(connection, new EncodedResource(
+                        new ClassPathResource("d06-legacy-schema.sql"), StandardCharsets.UTF_8));
                 apply(connection, migrations.get(0));
-                apply(connection, migrations.get(1));
                 JdbcTemplate jdbc = new JdbcTemplate(dataSource());
                 try {
                     jdbc.update("INSERT INTO users (full_name,email,password_hash,created_at) VALUES (?,?,?,CURRENT_TIMESTAMP)",
@@ -59,7 +61,7 @@ class CategoryBudgetMigrationIntegrationTests {
                 } finally {
                     ((HikariDataSource) jdbc.getDataSource()).close();
                 }
-                apply(connection, migrations.get(2));
+                apply(connection, migrations.get(1));
             }
             byte[] key = new byte[32];
             new SecureRandom().nextBytes(key);
@@ -89,7 +91,7 @@ class CategoryBudgetMigrationIntegrationTests {
         }
     }
 
-    private static List<Path> approvedMigrationSequence() throws Exception {
+    private static List<Path> approvedUpgradeMigrations() throws Exception {
         Path directory = Path.of("../database/migrations").toAbsolutePath().normalize();
         Pattern name = Pattern.compile("V(\\d+)__.+\\.sql");
         Map<Integer, Path> versions = new TreeMap<>();
@@ -102,9 +104,9 @@ class CategoryBudgetMigrationIntegrationTests {
                 }
             }
         }
-        assertThat(versions.keySet()).as("BLOCKED D07-DB: require approved V001 baseline, V002 metadata and V003 category_budgets; no substitute DDL")
-                .contains(1, 2, 3);
-        return List.of(versions.get(1), versions.get(2), versions.get(3));
+        assertThat(versions.keySet()).as("BLOCKED D07-DB: require approved V002 metadata and V003 category_budgets after the MVP fixture; no substitute DDL")
+                .contains(2, 3);
+        return List.of(versions.get(2), versions.get(3));
     }
 
     private static MySQLContainer localContainer() {
