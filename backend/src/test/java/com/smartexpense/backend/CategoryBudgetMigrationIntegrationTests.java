@@ -29,7 +29,7 @@ import java.util.regex.Pattern;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-// Fixture chỉ dựng schema MVP; V002/V003 phải chạy từ SQL thật trước Hibernate validate, không create/update ngầm.
+// Fixture MVP -> V002/V003/V004 thật trước Hibernate validate toàn bộ Entity; không create/update ngầm.
 class CategoryBudgetMigrationIntegrationTests {
 
     private static final String DATABASE = "se_d07_migration_" + UUID.randomUUID().toString().replace("-", "");
@@ -38,7 +38,7 @@ class CategoryBudgetMigrationIntegrationTests {
     private static MySQLContainer mysql;
 
     @Test
-    void mvpUpgradeThroughV002AndV003ValidatesHibernateAndPreservesMonthlyBudget() throws Exception {
+    void mvpUpgradeThroughApprovedMigrationsValidatesHibernateAndPreservesMonthlyBudget() throws Exception {
         // Kiểm tra dependency trước khi tạo container hay kết nối DB; thiếu migration phải FAIL rõ BLOCKED.
         List<Path> migrations = approvedUpgradeMigrations();
         try (MySQLContainer container = localContainer()) {
@@ -62,6 +62,7 @@ class CategoryBudgetMigrationIntegrationTests {
                     ((HikariDataSource) jdbc.getDataSource()).close();
                 }
                 apply(connection, migrations.get(1));
+                apply(connection, migrations.get(2));
             }
             byte[] key = new byte[32];
             new SecureRandom().nextBytes(key);
@@ -104,9 +105,9 @@ class CategoryBudgetMigrationIntegrationTests {
                 }
             }
         }
-        assertThat(versions.keySet()).as("BLOCKED D07-DB: require approved V002 metadata and V003 category_budgets after the MVP fixture; no substitute DDL")
-                .contains(2, 3);
-        return List.of(versions.get(2), versions.get(3));
+        assertThat(versions.keySet()).as("BLOCKED D08-DB: require approved V002/V003/V004 after the MVP fixture before validating all mapped entities; no substitute DDL")
+                .contains(2, 3, 4);
+        return List.of(versions.get(2), versions.get(3), versions.get(4));
     }
 
     private static MySQLContainer localContainer() {
