@@ -261,6 +261,11 @@ function RecurringTemplateModalContent({
                   ))}
                 </select>
               </div>
+              {availableCategories.length === 0 && (
+                <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
+                  Chưa có danh mục nào thuộc loại này. Vui lòng tạo danh mục trước.
+                </p>
+              )}
               {errors.categoryId && (
                 <p role="alert" className="mt-1 text-xs text-rose-600 dark:text-rose-400">
                   {errors.categoryId}
@@ -337,7 +342,9 @@ function RecurringTemplateModalContent({
             <div>
               <div className="mb-1.5 flex items-center justify-between text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
                 <label htmlFor="template-note">Ghi chú (tùy chọn)</label>
-                <span className="font-normal text-slate-400">{form.note.length}/500</span>
+                <span className={`font-normal ${form.note.length > 500 ? 'font-bold text-rose-600 dark:text-rose-400' : 'text-slate-400'}`}>
+                  {form.note.length}/500
+                </span>
               </div>
               <div className="relative">
                 <textarea

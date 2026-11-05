@@ -152,6 +152,18 @@ export default function RecurringTemplates({
     }
   }, [filter, currentPage, reloadKey, initialTemplates])
 
+  // 3. Đóng dialog xác nhận xóa khi nhấn Escape
+  useEffect(() => {
+    if (!confirmDelete) return
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape' && !deleting) {
+        setConfirmDelete(null)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [confirmDelete, deleting])
+
   // Lọc client-side dự phòng khi dữ liệu là danh sách tĩnh hoặc mock
   const displayTemplates = useMemo(() => {
     if (initialTemplates.length > 0 && reloadKey === 0) {
@@ -455,6 +467,9 @@ export default function RecurringTemplates({
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4"
           role="presentation"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget && !deleting) setConfirmDelete(null)
+          }}
         >
           <div
             role="alertdialog"
