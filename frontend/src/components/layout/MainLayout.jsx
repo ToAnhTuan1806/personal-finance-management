@@ -14,6 +14,7 @@ const pageTitles = {
   '/categories': 'Quản lý danh mục',
   '/budgets': 'Ngân sách hàng tháng',
   '/quick-add': 'Ghi thu chi nhanh',
+  '/recurring-templates': 'Giao dịch định kỳ',
 }
 
 export default function MainLayout() {
