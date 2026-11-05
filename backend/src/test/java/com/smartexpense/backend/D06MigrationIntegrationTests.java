@@ -73,6 +73,8 @@ class D06MigrationIntegrationTests {
             .toAbsolutePath().normalize();
     private static final Path D07_MIGRATION = Path.of("../database/migrations/V003__create_category_budgets.sql")
             .toAbsolutePath().normalize();
+    private static final Path D08_MIGRATION = Path.of("../database/migrations/V004__create_recurring_templates.sql")
+            .toAbsolutePath().normalize();
     private static final Path BACKUP = Path.of("build/d06-migration-backup/pre-migration.sql").toAbsolutePath();
     private static final String JWT_KEY = randomJwtKey();
     private static String beforeData;
@@ -178,11 +180,15 @@ class D06MigrationIntegrationTests {
             assertAppearanceColumns(connection);
             assertThat(dataHash(connection)).isEqualTo(beforeData);
             assertThat(keysHash(connection)).isEqualTo(beforeKeys);
-            ApplicationSchemaAssertions.assertSchema(connection, false);
+            ApplicationSchemaAssertions.assertSchema(connection, false, false);
             applyD07Migration(connection);
             assertThat(dataHash(connection)).isEqualTo(beforeData);
             assertThat(keysHash(connection)).isEqualTo(beforeKeys);
-            ApplicationSchemaAssertions.assertSchema(connection, true);
+            ApplicationSchemaAssertions.assertSchema(connection, true, false);
+            applyD08Migration(connection);
+            assertThat(dataHash(connection)).isEqualTo(beforeData);
+            assertThat(keysHash(connection)).isEqualTo(beforeKeys);
+            ApplicationSchemaAssertions.assertSchema(connection, true, true);
         }
         initialized = true;
     }
@@ -226,6 +232,11 @@ class D06MigrationIntegrationTests {
                 new EncodedResource(new FileSystemResource(D07_MIGRATION), StandardCharsets.UTF_8));
     }
 
+    private static void applyD08Migration(Connection connection) {
+        ScriptUtils.executeSqlScript(connection,
+                new EncodedResource(new FileSystemResource(D08_MIGRATION), StandardCharsets.UTF_8));
+    }
+
     @Test
     void migrationPreservesAllLegacyValuesKeysAndNullMetadata() throws Exception {
         assertThat(environment.getProperty("spring.jpa.hibernate.ddl-auto")).isEqualTo("validate");
@@ -234,7 +245,7 @@ class D06MigrationIntegrationTests {
             assertAppearanceColumns(connection);
             assertThat(dataHash(connection)).isEqualTo(beforeData);
             assertThat(keysHash(connection)).isEqualTo(beforeKeys);
-            ApplicationSchemaAssertions.assertSchema(connection, true);
+            ApplicationSchemaAssertions.assertSchema(connection, true, true);
             assertThat(rows(connection, "SELECT COUNT(*) FROM categories WHERE icon IS NULL AND color IS NULL"))
                     .containsExactly(List.of("4"));
         }
@@ -287,7 +298,7 @@ class D06MigrationIntegrationTests {
             assertAppearanceColumns(connection);
             assertThat(dataHash(connection)).isEqualTo(beforeData);
             assertThat(keysHash(connection)).isEqualTo(beforeKeys);
-            ApplicationSchemaAssertions.assertSchema(connection, true);
+            ApplicationSchemaAssertions.assertSchema(connection, true, true);
         }
     }
 
@@ -300,7 +311,7 @@ class D06MigrationIntegrationTests {
             assertThat(appearanceColumns(connection)).isEmpty();
             assertThat(dataHash(connection)).isEqualTo(beforeData);
             assertThat(keysHash(connection)).isEqualTo(beforeKeys);
-            ApplicationSchemaAssertions.assertSchema(connection, false);
+            ApplicationSchemaAssertions.assertSchema(connection, false, false);
             // Mô phỏng drift trên server restore riêng: một ALTER lỗi không được để lại nửa migration.
             try (var statement = connection.createStatement()) {
                 statement.execute("ALTER TABLE categories ADD COLUMN color VARCHAR(7) NULL");
@@ -318,11 +329,24 @@ class D06MigrationIntegrationTests {
             assertAppearanceColumns(connection);
             assertThat(dataHash(connection)).isEqualTo(beforeData);
             assertThat(keysHash(connection)).isEqualTo(beforeKeys);
-            ApplicationSchemaAssertions.assertSchema(connection, false);
+            ApplicationSchemaAssertions.assertSchema(connection, false, false);
             applyD07Migration(connection);
             assertThat(dataHash(connection)).isEqualTo(beforeData);
             assertThat(keysHash(connection)).isEqualTo(beforeKeys);
-            ApplicationSchemaAssertions.assertSchema(connection, true);
+            ApplicationSchemaAssertions.assertSchema(connection, true, false);
+            applyD08Migration(connection);
+            assertThat(dataHash(connection)).isEqualTo(beforeData);
+            assertThat(keysHash(connection)).isEqualTo(beforeKeys);
+            ApplicationSchemaAssertions.assertSchema(connection, true, true);
+            // Negative test: thiếu CHECK trên schema V004 bắt buộc làm assertSchema thất bại.
+            try (var statement = connection.createStatement()) {
+                statement.execute("ALTER TABLE recurring_templates DROP CHECK chk_recurring_templates_type");
+                assertThatThrownBy(() -> ApplicationSchemaAssertions.assertSchema(connection, true, true))
+                        .isInstanceOf(AssertionError.class)
+                        .hasMessageContaining("chk_recurring_templates_type");
+                statement.execute("ALTER TABLE recurring_templates ADD CONSTRAINT chk_recurring_templates_type CHECK (type IN ('INCOME', 'EXPENSE'))");
+                ApplicationSchemaAssertions.assertSchema(connection, true, true);
+            }
         }
         try (HikariDataSource pool = pool(RESTORE)) {
             var registry = new StandardServiceRegistryBuilder()
@@ -336,9 +360,10 @@ class D06MigrationIntegrationTests {
                 factory.getSchemaManager().validateMappedObjects();
                 assertThat(factory.getMetamodel().getEntities()).hasSameSizeAs(entityManager.getMetamodel().getEntities());
                 assertThat(session.find(Category.class, 2L).getName()).isEqualTo("Ăn uống cũ");
-                System.out.printf("MIGRATION VALIDATE mappedEntities=%d categoryBudgetMapped=%s%n",
-                        factory.getMetamodel().getEntities().size(), factory.getMetamodel().getEntities().stream()
-                                .anyMatch(type -> type.getName().equals("CategoryBudget")));
+                System.out.printf("MIGRATION VALIDATE mappedEntities=%d categoryBudgetMapped=%s recurringTemplateMapped=%s%n",
+                        factory.getMetamodel().getEntities().size(),
+                        factory.getMetamodel().getEntities().stream().anyMatch(type -> type.getName().equals("CategoryBudget")),
+                        factory.getMetamodel().getEntities().stream().anyMatch(type -> type.getName().equals("RecurringTemplate")));
             } finally {
                 StandardServiceRegistryBuilder.destroy(registry);
             }
@@ -353,7 +378,7 @@ class D06MigrationIntegrationTests {
         try (Connection connection = connect(SOURCE)) {
             connection.setAutoCommit(false);
             try {
-                ApplicationSchemaAssertions.assertSchema(connection, true);
+                ApplicationSchemaAssertions.assertSchema(connection, true, true);
                 try (var statement = connection.createStatement()) {
                     statement.executeUpdate("INSERT INTO category_budgets (user_id,category_id,year,month,amount_limit) VALUES (1,2,2026,10,100.00)");
                     assertSqlViolation(() -> statement.executeUpdate(
