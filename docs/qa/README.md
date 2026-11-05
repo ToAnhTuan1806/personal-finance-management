@@ -13,6 +13,7 @@ Mỗi ngày có một báo cáo chung cho **Backend (BE), Frontend (FE) và dữ
 | D05 | 02/11/2026 | Chi tiết ngày, phân trang và rà soát Calendar API | [D05](D05.md) |
 | D06 | 03/11/2026 | Icon/màu, tên danh mục trùng và migration tương thích | [D06](D06.md) |
 | D07 | 04/11/2026 | Ngân sách danh mục, API/MySQL và gate migration còn chờ D07-DB | [D07](D07.md) |
+| D08 | 05/11/2026 | Mẫu định kỳ, migration V004, ràng buộc DB và backup/restore | [D08](D08.md) |
 
 Nguồn kế hoạch: [SRS 2.2](../SmartExpense_SRS_v2.docx), [Master Plan](../SmartExpense_QuanTriDuAn.xlsx). Quy tắc API hiện có nằm trong [API Contract](../smartexpense-2.0/API_CONTRACT.md).
 
