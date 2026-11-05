@@ -12,6 +12,7 @@ import {
 import CategoryBadge from '../category/CategoryBadge'
 import MoneyInput from '../ui/MoneyInput'
 import useModalFocus from '../../hooks/useModalFocus'
+import { getApiErrorMessage, getApiFieldErrors } from '../../api/errors'
 import {
   DAY_31_NOTICE,
   validateRecurringTemplateForm,
@@ -124,9 +125,11 @@ function RecurringTemplateModalContent({
     try {
       await onSave?.(payload)
     } catch (err) {
-      setServerError(
-        err?.response?.data?.message || err?.message || 'Không thể lưu mẫu giao dịch định kỳ.'
-      )
+      const fieldErrs = getApiFieldErrors(err, ['type', 'categoryId', 'amount', 'dayOfMonth', 'note'])
+      if (Object.keys(fieldErrs).length > 0) {
+        setErrors((prev) => ({ ...prev, ...fieldErrs }))
+      }
+      setServerError(getApiErrorMessage(err, 'Không thể lưu mẫu giao dịch định kỳ.'))
     }
   }
 

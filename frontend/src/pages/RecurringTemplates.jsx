@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   AlertCircle,
   ChevronLeft,
@@ -15,6 +15,15 @@ import {
   RecurringTemplateCard,
   RecurringTemplateModal,
 } from '../components/recurring'
+import { useToast } from '../contexts/ToastContext'
+import { getCategories } from '../services/categoryService'
+import {
+  createRecurringTemplate,
+  deleteRecurringTemplate,
+  getRecurringTemplates,
+  updateRecurringTemplate,
+} from '../services/recurringTemplateService'
+import { getApiErrorMessage } from '../api/errors'
 
 const filterOptions = [
   { value: 'ALL', label: 'Tất cả' },
@@ -27,17 +36,37 @@ const ITEMS_PER_PAGE = 6
 export default function RecurringTemplates({
   initialTemplates = [],
   initialCategories = [],
-  loading = false,
-  error = '',
+  loading: initialLoading = false,
+  error: initialError = '',
   onRetry,
   onSaveTemplate,
   onDeleteTemplate,
   onToggleActive,
 }) {
+  let toast
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    toast = useToast()
+  } catch {
+    toast = {
+      success: () => {},
+      error: () => {},
+      info: () => {},
+    }
+  }
+
   const [templates, setTemplates] = useState(initialTemplates)
-  const [categories] = useState(initialCategories)
+  const [categories, setCategories] = useState(initialCategories)
   const [filter, setFilter] = useState('ALL')
   const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(() =>
+    Math.max(1, Math.ceil(initialTemplates.length / ITEMS_PER_PAGE))
+  )
+  const [totalItems, setTotalItems] = useState(initialTemplates.length)
+
+  const [loading, setLoading] = useState(initialLoading)
+  const [error, setError] = useState(initialError)
+  const [reloadKey, setReloadKey] = useState(0)
 
   // Modal states
   const [modalOpen, setModalOpen] = useState(false)
@@ -49,26 +78,96 @@ export default function RecurringTemplates({
   const [confirmDelete, setConfirmDelete] = useState(null)
   const [deleting, setDeleting] = useState(false)
 
-  // Lọc theo trạng thái
-  const filteredTemplates = useMemo(() => {
-    return templates.filter((item) => {
-      if (filter === 'ACTIVE') return item.active === true
-      if (filter === 'INACTIVE') return item.active === false
-      return true
-    })
-  }, [templates, filter])
+  // 1. Tải danh mục nếu chưa có
+  useEffect(() => {
+    if (initialCategories.length > 0) return
 
-  // Phân trang
-  const totalItems = filteredTemplates.length
-  const totalPages = Math.max(1, Math.ceil(totalItems / ITEMS_PER_PAGE))
-  const paginatedTemplates = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE
-    return filteredTemplates.slice(start, start + ITEMS_PER_PAGE)
-  }, [filteredTemplates, currentPage])
+    let ignore = false
+    getCategories()
+      .then((data) => {
+        if (!ignore && Array.isArray(data)) {
+          setCategories(data)
+        }
+      })
+      .catch((err) => {
+        if (!ignore) {
+          console.error('Không thể tải danh mục:', err)
+        }
+      })
+
+    return () => {
+      ignore = true
+    }
+  }, [initialCategories])
+
+  // 2. Tải danh sách mẫu giao dịch định kỳ từ API
+  useEffect(() => {
+    // Nếu truyền dữ liệu tĩnh ban đầu và chưa có mutation, không tải API
+    if (initialTemplates.length > 0 && reloadKey === 0) {
+      return
+    }
+
+    let ignore = false
+
+    const queryParams = {
+      page: currentPage - 1,
+      size: ITEMS_PER_PAGE,
+      ...(filter === 'ACTIVE' ? { active: true } : {}),
+      ...(filter === 'INACTIVE' ? { active: false } : {}),
+    }
+
+    getRecurringTemplates(queryParams)
+      .then((data) => {
+        if (ignore) return
+        if (Array.isArray(data)) {
+          setTemplates(data)
+          setTotalItems(data.length)
+          setTotalPages(Math.max(1, Math.ceil(data.length / ITEMS_PER_PAGE)))
+        } else if (data && typeof data === 'object') {
+          const list = Array.isArray(data.content) ? data.content : []
+          setTemplates(list)
+          const total = data.totalElements ?? list.length
+          setTotalItems(total)
+          setTotalPages(data.totalPages ?? Math.max(1, Math.ceil(total / ITEMS_PER_PAGE)))
+        } else {
+          setTemplates([])
+          setTotalItems(0)
+          setTotalPages(1)
+        }
+        setError('')
+      })
+      .catch((err) => {
+        if (ignore) return
+        setTemplates([])
+        setTotalItems(0)
+        setTotalPages(1)
+        setError(getApiErrorMessage(err, 'Không thể tải danh sách mẫu giao dịch định kỳ.'))
+      })
+      .finally(() => {
+        if (!ignore) setLoading(false)
+      })
+
+    return () => {
+      ignore = true
+    }
+  }, [filter, currentPage, reloadKey, initialTemplates])
+
+  // Lọc client-side dự phòng khi dữ liệu là danh sách tĩnh hoặc mock
+  const displayTemplates = useMemo(() => {
+    if (initialTemplates.length > 0 && reloadKey === 0) {
+      return templates.filter((item) => {
+        if (filter === 'ACTIVE') return item.active === true
+        if (filter === 'INACTIVE') return item.active === false
+        return true
+      })
+    }
+    return templates
+  }, [templates, filter, initialTemplates, reloadKey])
 
   const handleFilterChange = (val) => {
     setFilter(val)
     setCurrentPage(1)
+    setLoading(true)
   }
 
   const handleOpenAdd = () => {
@@ -99,27 +198,20 @@ export default function RecurringTemplates({
       if (onSaveTemplate) {
         await onSaveTemplate(formData, editingTemplate)
       } else {
-        // Mock fallback cho Commit 1 UI test
         if (editingTemplate) {
-          setTemplates((prev) =>
-            prev.map((item) =>
-              item.id === editingTemplate.id
-                ? { ...item, ...formData, id: editingTemplate.id }
-                : item
-            )
-          )
+          await updateRecurringTemplate(editingTemplate.id, formData)
+          toast.success('Cập nhật mẫu giao dịch định kỳ thành công.')
         } else {
-          const newId = Date.now()
-          setTemplates((prev) => [
-            ...prev,
-            { ...formData, id: newId },
-          ])
+          await createRecurringTemplate(formData)
+          toast.success('Thêm mẫu giao dịch định kỳ thành công.')
         }
+        setReloadKey((k) => k + 1)
       }
       setModalOpen(false)
       setEditingTemplate(null)
     } catch (err) {
-      setModalError(err?.message || 'Không thể lưu mẫu giao dịch định kỳ.')
+      const msg = getApiErrorMessage(err, 'Không thể lưu mẫu giao dịch định kỳ.')
+      setModalError(msg)
       throw err
     } finally {
       setSaving(false)
@@ -134,27 +226,43 @@ export default function RecurringTemplates({
       if (onDeleteTemplate) {
         await onDeleteTemplate(confirmDelete)
       } else {
-        // Mock fallback cho Commit 1 UI test
-        setTemplates((prev) => prev.filter((item) => item.id !== confirmDelete.id))
+        await deleteRecurringTemplate(confirmDelete.id)
+        toast.success('Đã xóa mẫu giao dịch định kỳ.')
+        setReloadKey((k) => k + 1)
       }
       setConfirmDelete(null)
     } catch (err) {
-      // Giữ dialog nếu có lỗi
-      console.error(err)
+      const msg = getApiErrorMessage(
+        err,
+        err?.response?.status === 409
+          ? 'Không thể xóa mẫu định kỳ đã được áp dụng. Bạn có thể tắt kích hoạt mẫu này.'
+          : 'Không thể xóa mẫu giao dịch định kỳ.'
+      )
+      toast.error(msg)
     } finally {
       setDeleting(false)
     }
   }
 
   const handleToggle = async (template) => {
-    if (onToggleActive) {
-      await onToggleActive(template)
-    } else {
-      setTemplates((prev) =>
-        prev.map((item) =>
-          item.id === template.id ? { ...item, active: !item.active } : item
-        )
-      )
+    try {
+      if (onToggleActive) {
+        await onToggleActive(template)
+      } else {
+        const nextActive = !template.active
+        await updateRecurringTemplate(template.id, {
+          categoryId: template.categoryId,
+          type: template.type,
+          amount: template.amount,
+          dayOfMonth: template.dayOfMonth,
+          note: template.note,
+          active: nextActive,
+        })
+        toast.success(nextActive ? 'Đã bật mẫu định kỳ.' : 'Đã tắt mẫu định kỳ.')
+        setReloadKey((k) => k + 1)
+      }
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, 'Không thể thay đổi trạng thái mẫu định kỳ.'))
     }
   }
 
@@ -233,33 +341,34 @@ export default function RecurringTemplates({
         >
           <AlertCircle className="h-8 w-8 text-rose-600 dark:text-rose-400" />
           <p className="text-sm font-semibold text-rose-900 dark:text-rose-200">{error}</p>
-          {onRetry && (
-            <button
-              type="button"
-              onClick={onRetry}
-              className="mt-2 rounded-xl bg-rose-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-rose-700"
-            >
-              Thử lại
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => {
+              if (onRetry) onRetry()
+              else setReloadKey((k) => k + 1)
+            }}
+            className="mt-2 rounded-xl bg-rose-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-rose-700"
+          >
+            Thử lại
+          </button>
         </div>
-      ) : filteredTemplates.length === 0 ? (
+      ) : displayTemplates.length === 0 ? (
         /* Empty State */
         <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 p-12 text-center dark:border-slate-800">
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500">
             <Repeat size={28} />
           </div>
           <h3 className="mt-4 text-base font-bold text-slate-800 dark:text-slate-100">
-            {templates.length === 0
+            {totalItems === 0
               ? 'Chưa có mẫu giao dịch định kỳ nào'
               : 'Không tìm thấy mẫu phù hợp'}
           </h3>
           <p className="mt-1 max-w-sm text-xs text-slate-500 dark:text-slate-400">
-            {templates.length === 0
+            {totalItems === 0
               ? 'Tạo mẫu định kỳ để theo dõi các khoản chi phí hoặc thu nhập cố định hằng tháng.'
               : 'Thử chuyển sang bộ lọc "Tất cả" để xem danh sách toàn bộ mẫu.'}
           </p>
-          {templates.length === 0 && (
+          {totalItems === 0 && (
             <button
               type="button"
               onClick={handleOpenAdd}
@@ -274,7 +383,7 @@ export default function RecurringTemplates({
         /* List of Cards */
         <div className="space-y-6">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {paginatedTemplates.map((template) => {
+            {displayTemplates.map((template) => {
               const matchedCategory = categories.find(
                 (c) => String(c.id) === String(template.categoryId)
               )
@@ -300,7 +409,10 @@ export default function RecurringTemplates({
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  onClick={() => {
+                    setLoading(true)
+                    setCurrentPage((p) => Math.max(1, p - 1))
+                  }}
                   disabled={currentPage <= 1}
                   aria-label="Trang trước"
                   className="flex items-center gap-1 rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
@@ -310,7 +422,10 @@ export default function RecurringTemplates({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  onClick={() => {
+                    setLoading(true)
+                    setCurrentPage((p) => Math.min(totalPages, p + 1))
+                  }}
                   disabled={currentPage >= totalPages}
                   aria-label="Trang sau"
                   className="flex items-center gap-1 rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
@@ -411,4 +526,3 @@ export default function RecurringTemplates({
     </div>
   )
 }
-
