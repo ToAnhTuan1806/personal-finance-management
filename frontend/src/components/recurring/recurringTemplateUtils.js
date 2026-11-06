@@ -42,6 +42,59 @@ export function isDay31(day) {
 }
 
 /**
+ * Tính ngày giao dịch thực tế trong tháng: Nếu dayOfMonth > số ngày của tháng thì dùng ngày cuối tháng
+ * @param {number|string} dayOfMonth
+ * @param {number} year
+ * @param {number} month
+ * @returns {string} định dạng DD/MM/YYYY
+ */
+export function resolveTransactionDate(dayOfMonth, year, month) {
+  const lastDay = new Date(year, month, 0).getDate()
+  const day = Math.min(Number(dayOfMonth), lastDay)
+  return `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}/${year}`
+}
+
+/**
+ * Kiểm tra xem ngày có vượt quá số ngày của tháng (bị ép về ngày cuối tháng) hay không
+ * @param {number|string} dayOfMonth
+ * @param {number} year
+ * @param {number} month
+ * @returns {boolean}
+ */
+export function isDayClampedToMonthEnd(dayOfMonth, year, month) {
+  const lastDay = new Date(year, month, 0).getDate()
+  return Number(dayOfMonth) > lastDay
+}
+
+/**
+ * Định dạng ngày ISO (YYYY-MM-DD) hoặc chuỗi ngày sang định dạng hiển thị DD/MM/YYYY
+ * @param {string} dateStr
+ * @param {number|string} [fallbackDay]
+ * @param {number} [fallbackYear]
+ * @param {number} [fallbackMonth]
+ * @returns {string}
+ */
+export function formatDisplayDate(dateStr, fallbackDay, fallbackYear, fallbackMonth) {
+  if (typeof dateStr === 'string' && dateStr.trim()) {
+    const trimmed = dateStr.trim()
+    const isoMatch = trimmed.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/)
+    if (isoMatch) {
+      const [, y, m, d] = isoMatch
+      return `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}/${y}`
+    }
+    if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(trimmed)) {
+      const parts = trimmed.split('/')
+      return `${parts[0].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[2]}`
+    }
+    return trimmed
+  }
+  if (fallbackDay && fallbackYear && fallbackMonth) {
+    return resolveTransactionDate(fallbackDay, fallbackYear, fallbackMonth)
+  }
+  return ''
+}
+
+/**
  * Validate dữ liệu form mẫu giao dịch định kỳ
  * @param {Object} form - { type, categoryId, amount, dayOfMonth, note, active }
  * @param {Array} categories - Danh sách categories hiện có
