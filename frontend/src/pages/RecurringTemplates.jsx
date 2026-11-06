@@ -33,9 +33,11 @@ const filterOptions = [
 
 const ITEMS_PER_PAGE = 6
 
+const EMPTY_ARRAY = []
+
 export default function RecurringTemplates({
-  initialTemplates = [],
-  initialCategories = [],
+  initialTemplates = EMPTY_ARRAY,
+  initialCategories = EMPTY_ARRAY,
   loading: initialLoading = false,
   error: initialError = '',
   onRetry,
@@ -78,9 +80,12 @@ export default function RecurringTemplates({
   const [confirmDelete, setConfirmDelete] = useState(null)
   const [deleting, setDeleting] = useState(false)
 
+  const hasInitialCategories = initialCategories.length > 0
+  const hasInitialTemplates = initialTemplates.length > 0
+
   // 1. Tải danh mục nếu chưa có
   useEffect(() => {
-    if (initialCategories.length > 0) return
+    if (hasInitialCategories) return
 
     let ignore = false
     getCategories()
@@ -98,12 +103,12 @@ export default function RecurringTemplates({
     return () => {
       ignore = true
     }
-  }, [initialCategories])
+  }, [hasInitialCategories])
 
   // 2. Tải danh sách mẫu giao dịch định kỳ từ API
   useEffect(() => {
     // Nếu truyền dữ liệu tĩnh ban đầu và chưa có mutation, không tải API
-    if (initialTemplates.length > 0 && reloadKey === 0) {
+    if (hasInitialTemplates && reloadKey === 0) {
       return
     }
 
@@ -150,7 +155,7 @@ export default function RecurringTemplates({
     return () => {
       ignore = true
     }
-  }, [filter, currentPage, reloadKey, initialTemplates])
+  }, [filter, currentPage, reloadKey, hasInitialTemplates])
 
   // 3. Đóng dialog xác nhận xóa khi nhấn Escape
   useEffect(() => {
@@ -166,7 +171,7 @@ export default function RecurringTemplates({
 
   // Lọc client-side dự phòng khi dữ liệu là danh sách tĩnh hoặc mock
   const displayTemplates = useMemo(() => {
-    if (initialTemplates.length > 0 && reloadKey === 0) {
+    if (hasInitialTemplates && reloadKey === 0) {
       return templates.filter((item) => {
         if (filter === 'ACTIVE') return item.active === true
         if (filter === 'INACTIVE') return item.active === false
@@ -174,7 +179,7 @@ export default function RecurringTemplates({
       })
     }
     return templates
-  }, [templates, filter, initialTemplates, reloadKey])
+  }, [templates, filter, hasInitialTemplates, reloadKey])
 
   const handleFilterChange = (val) => {
     setFilter(val)
