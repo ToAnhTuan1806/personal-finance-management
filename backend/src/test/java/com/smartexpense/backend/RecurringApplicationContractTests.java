@@ -49,6 +49,7 @@ class RecurringApplicationContractTests {
     @MockitoBean MonthlyBudgetRepository budgets;
     @MockitoBean CategoryBudgetRepository categoryBudgets;
     @MockitoBean RecurringTemplateRepository templates;
+    @MockitoBean RecurringApplicationRepository recurringApplications;
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {

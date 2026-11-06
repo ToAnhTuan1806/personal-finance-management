@@ -5,6 +5,7 @@ import com.smartexpense.backend.dto.recurring.RecurringTemplateResponse;
 import com.smartexpense.backend.entity.Category;
 import com.smartexpense.backend.entity.RecurringTemplate;
 import com.smartexpense.backend.repository.CategoryRepository;
+import com.smartexpense.backend.repository.RecurringApplicationRepository;
 import com.smartexpense.backend.repository.RecurringTemplateRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -20,6 +21,7 @@ public class RecurringTemplateService {
 
     private final RecurringTemplateRepository templateRepository;
     private final CategoryRepository categoryRepository;
+    private final RecurringApplicationRepository applicationRepository;
 
     @Transactional(readOnly = true)
     public Page<RecurringTemplateResponse> getAll(Long userId, Boolean active, int page, int size) {
@@ -61,8 +63,10 @@ public class RecurringTemplateService {
     @Transactional
     public void delete(Long id, Long userId) {
         RecurringTemplate template = findOwnedTemplate(id, userId);
-        // TODO D09: kiểm tra lịch sử áp dụng và trả 409 TEMPLATE_IN_USE trước khi xóa.
-        // D08 chưa có marker áp dụng nên chưa thể bảo vệ lịch sử theo cơ chế này.
+        if (applicationRepository.existsByTemplateIdAndTemplateUserId(id, userId)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "TEMPLATE_IN_USE");
+        }
+        // FK RESTRICT của V005 vẫn bảo vệ lịch sử nếu apply commit sau precheck này.
         templateRepository.delete(template);
     }
 
