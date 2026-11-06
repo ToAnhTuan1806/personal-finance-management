@@ -84,12 +84,65 @@ export const deleteRecurringTemplate = async (id) => {
   await axiosClient.delete(`/recurring-templates/${id}`)
 }
 
+/**
+ * Xem trước giao dịch định kỳ cho một tháng/năm cụ thể (GET, không ghi dữ liệu).
+ * @param {number|string} id - ID mẫu định kỳ
+ * @param {number} year  - Năm cần xem trước (1900–2100)
+ * @param {number} month - Tháng cần xem trước (1–12)
+ * @param {Object} options - axios request config bổ sung
+ * @returns {Promise<Object>} Preview DTO:
+ *   { templateId, year, month, transactionDate, categoryId, categoryName,
+ *     type, amount, note, alreadyApplied, canApply, reasonCode }
+ *
+ * Lưu ý: 400 nếu year/month sai; 401 JWT hết hạn; 404 mẫu không tồn tại/khác owner.
+ * canApply=false khi mẫu inactive (reasonCode=TEMPLATE_INACTIVE)
+ *   hoặc đã áp dụng (reasonCode=ALREADY_APPLIED).
+ * API KHÔNG ghi bất kỳ dữ liệu nào — an toàn gọi để hiển thị xem trước.
+ */
+export const previewRecurringTemplate = async (id, year, month, options = {}) => {
+  const response = await axiosClient.get(`/recurring-templates/${id}/preview`, {
+    ...options,
+    params: { year: Number(year), month: Number(month) },
+  })
+  return response.data
+}
+
+/**
+ * Áp dụng mẫu giao dịch định kỳ cho một tháng/năm (POST — ghi dữ liệu thật).
+ * Chỉ gọi sau khi người dùng đã xác nhận bước confirm.
+ * @param {number|string} id - ID mẫu định kỳ
+ * @param {number} year  - Năm áp dụng
+ * @param {number} month - Tháng áp dụng
+ * @param {Object} options - axios request config bổ sung
+ * @returns {Promise<Object>} Application DTO:
+ *   { id, templateId, year, month, transactionId, transaction }
+ *
+ * Lỗi dự kiến:
+ *   400 — year/month sai định dạng
+ *   401 — JWT hết hạn / chưa đăng nhập
+ *   404 — mẫu không tồn tại hoặc khác owner
+ *   409 — TEMPLATE_INACTIVE (mẫu đã tắt) hoặc ALREADY_APPLIED (đã áp dụng tháng này)
+ *
+ * KHÔNG tự gửi lại khi timeout — server có thể đã lưu.
+ * FE phải gọi Preview lại để kiểm tra trạng thái sau timeout.
+ */
+export const applyRecurringTemplate = async (id, year, month, options = {}) => {
+  const response = await axiosClient.post(
+    `/recurring-templates/${id}/apply`,
+    { year: Number(year), month: Number(month) },
+    options,
+  )
+  return response.data
+}
+
 export const recurringTemplateService = {
   getRecurringTemplates,
   getRecurringTemplateById,
   createRecurringTemplate,
   updateRecurringTemplate,
   deleteRecurringTemplate,
+  previewRecurringTemplate,
+  applyRecurringTemplate,
 }
 
 export default recurringTemplateService

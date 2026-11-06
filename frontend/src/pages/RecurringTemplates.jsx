@@ -3,6 +3,7 @@ import {
   AlertCircle,
   ChevronLeft,
   ChevronRight,
+  Eye,
   Info,
   Loader2,
   Plus,
@@ -12,15 +13,18 @@ import PillTabs from '../components/ui/PillTabs'
 import {
   DISCLAIMER_NOTICE,
   formatMoney,
+  RecurringPreviewModal,
   RecurringTemplateCard,
   RecurringTemplateModal,
 } from '../components/recurring'
 import { useToast } from '../contexts/ToastContext'
 import { getCategories } from '../services/categoryService'
 import {
+  applyRecurringTemplate,
   createRecurringTemplate,
   deleteRecurringTemplate,
   getRecurringTemplates,
+  previewRecurringTemplate,
   updateRecurringTemplate,
 } from '../services/recurringTemplateService'
 import { getApiErrorMessage } from '../api/errors'
@@ -79,6 +83,9 @@ export default function RecurringTemplates({
   // Delete dialog state
   const [confirmDelete, setConfirmDelete] = useState(null)
   const [deleting, setDeleting] = useState(false)
+
+  // Preview/Apply modal state
+  const [previewTemplate, setPreviewTemplate] = useState(null)
 
   const hasInitialCategories = initialCategories.length > 0
   const hasInitialTemplates = initialTemplates.length > 0
@@ -283,6 +290,35 @@ export default function RecurringTemplates({
     }
   }
 
+  const handleOpenPreview = (template) => {
+    setPreviewTemplate(template)
+  }
+
+  const handleClosePreview = () => {
+    setPreviewTemplate(null)
+  }
+
+  const handlePreview = async (id, year, month) => {
+    return previewRecurringTemplate(id, year, month)
+  }
+
+  const handleApply = async (id, year, month) => {
+    return applyRecurringTemplate(id, year, month)
+  }
+
+  /**
+   * Callback sau Apply thành công:
+   * Reload danh sách mẫu để cập nhật trạng thái card.
+   * Dữ liệu Dashboard/Transactions/Budgets/Calendar sẽ được đồng bộ
+   * tự nhiên khi người dùng điều hướng đến các trang đó (refetch theo route).
+   */
+  const handleApplySuccess = ({ year, month }) => {
+    toast.success(
+      `Đã áp dụng giao dịch định kỳ cho tháng ${month}/${year} thành công.`
+    )
+    setReloadKey((k) => k + 1)
+  }
+
   return (
     <div className="space-y-6 pb-12">
       {/* Header */}
@@ -405,14 +441,25 @@ export default function RecurringTemplates({
                 (c) => String(c.id) === String(template.categoryId)
               )
               return (
-                <RecurringTemplateCard
-                  key={template.id}
-                  template={template}
-                  category={matchedCategory}
-                  onEdit={handleOpenEdit}
-                  onDelete={setConfirmDelete}
-                  onToggleActive={handleToggle}
-                />
+                <div key={template.id} className="flex flex-col">
+                  <RecurringTemplateCard
+                    template={template}
+                    category={matchedCategory}
+                    onEdit={handleOpenEdit}
+                    onDelete={setConfirmDelete}
+                    onToggleActive={handleToggle}
+                  />
+                  {/* Nút Xem trước — nằm ngay dưới Card, không trong Card */}
+                  <button
+                    type="button"
+                    onClick={() => handleOpenPreview(template)}
+                    aria-label={`Xem trước giao dịch định kỳ ${template.categoryName || 'mẫu'}`}
+                    className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 dark:border-slate-700 dark:text-slate-400 dark:hover:border-blue-700/60 dark:hover:bg-blue-950/20 dark:hover:text-blue-400"
+                  >
+                    <Eye size={13} />
+                    <span>Xem trước</span>
+                  </button>
+                </div>
               )
             })}
           </div>
@@ -465,6 +512,19 @@ export default function RecurringTemplates({
         error={modalError}
         onClose={handleCloseModal}
         onSave={handleSave}
+      />
+
+      {/* Modal Xem trước và Áp dụng (D09) */}
+      {/* key={previewTemplate?.id} → unmount/remount modal mỗi khi mở mẫu khác,
+          tự động reset toàn bộ state nội bộ mà không cần useEffect. */}
+      <RecurringPreviewModal
+        key={previewTemplate?.id ?? 'preview'}
+        isOpen={Boolean(previewTemplate)}
+        template={previewTemplate}
+        onClose={handleClosePreview}
+        onPreview={handlePreview}
+        onApply={handleApply}
+        onApplySuccess={handleApplySuccess}
       />
 
       {/* Delete Confirmation Alert Dialog */}
