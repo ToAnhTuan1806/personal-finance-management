@@ -7,6 +7,9 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.RepeatedTest;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -54,6 +57,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Testcontainers
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @Import(RecurringApplicationMySqlTestSupport.IsolatedDataSource.class)
+@Execution(ExecutionMode.SAME_THREAD)
 class RecurringApplicationIntegrationTests extends RecurringApplicationMySqlTestSupport {
     private static final String BASE = "/api/recurring-templates/";
     @Autowired MockMvc mvc;
@@ -249,6 +253,43 @@ class RecurringApplicationIntegrationTests extends RecurringApplicationMySqlTest
     }
 
     @Test
+    void incomeKeepsExactMaximumDecimalAndNullNote() throws Exception {
+        jdbc.update("UPDATE categories SET type='INCOME' WHERE id=?", category.getId());
+        jdbc.update("UPDATE recurring_templates SET type='INCOME',amount=9999999999999.99,note=NULL WHERE id=?", template.getId());
+        var result = apply(owner, 2026, 11).andExpect(status().isCreated())
+                .andExpect(jsonPath("$.transaction.type").value("INCOME"))
+                .andExpect(jsonPath("$.transaction.note").isEmpty()).andReturn();
+        long transactionId = json.readTree(result.getResponse().getContentAsString()).get("transactionId").asLong();
+        assertThat(jdbc.queryForObject("SELECT amount FROM transactions WHERE id=?", BigDecimal.class, transactionId))
+                .isEqualTo(new BigDecimal("9999999999999.99"));
+    }
+
+    @Test
+    void unusedTemplateCanStillBeDeleted() throws Exception {
+        var history = jdbc.queryForList("SELECT * FROM transactions ORDER BY id");
+        call(owner, HttpMethod.DELETE, BASE + template.getId(), null).andExpect(status().isNoContent());
+        assertThat(jdbc.queryForList("SELECT * FROM transactions ORDER BY id")).isEqualTo(history);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM recurring_templates WHERE id=?", Long.class,
+                template.getId())).isZero();
+    }
+
+    @Test
+    void schemaAssertionsRejectMissingV005Check() throws Exception {
+        try (var connection = jdbc.getDataSource().getConnection()) {
+            ApplicationSchemaAssertions.assertSchema(connection, true, true, true);
+            jdbc.execute("ALTER TABLE recurring_applications DROP CHECK chk_recurring_applications_month");
+            try {
+                org.assertj.core.api.Assertions.assertThatThrownBy(
+                                () -> ApplicationSchemaAssertions.assertSchema(connection, true, true, true))
+                        .isInstanceOf(AssertionError.class).hasMessageContaining("chk_recurring_applications_month");
+            } finally {
+                jdbc.execute("ALTER TABLE recurring_applications ADD CONSTRAINT chk_recurring_applications_month CHECK (month BETWEEN 1 AND 12)");
+            }
+            ApplicationSchemaAssertions.assertSchema(connection, true, true, true);
+        }
+    }
+
+    @Test
     void failureAfterTransactionInsertRollsBackBothRows() throws Exception {
         var before = allRows();
         SqlProbe.failMarker = true;
@@ -260,7 +301,26 @@ class RecurringApplicationIntegrationTests extends RecurringApplicationMySqlTest
         assertThat(allRows()).isEqualTo(before);
     }
 
-    @Test
+    @ParameterizedTest
+    @CsvSource({"transaction_id,9223372036854775807,1452", "month,13,3819", "template_id,NULL,1048"})
+    void nonDuplicateDatabaseFailuresAreInternalErrorsAndRollback(String column, String value, int mysqlCode) throws Exception {
+        var before = allRows();
+        // Fault injection chỉ trong DB container: không sửa migration, FK/CHECK vẫn được MySQL thực thi.
+        jdbc.execute("CREATE TRIGGER d09_test_marker_fault BEFORE INSERT ON recurring_applications "
+                + "FOR EACH ROW SET NEW." + column + "=" + value);
+        MvcResult result;
+        try {
+            result = error(apply(owner, 2026, 11), 500, "INTERNAL_ERROR").andReturn();
+        } finally {
+            jdbc.execute("DROP TRIGGER d09_test_marker_fault");
+        }
+        assertThat(databaseCause(result).getErrorCode()).isEqualTo(mysqlCode);
+        assertThat(result.getResponse().getContentAsString()).doesNotContain(
+                "recurring_applications", "foreign key", "constraint", "SQLException", "d09_test_marker_fault");
+        assertThat(allRows()).isEqualTo(before);
+    }
+
+    @RepeatedTest(10)
     void concurrentRequestsReachUniqueConstraintAndLosingTransactionRollsBack() throws Exception {
         long before = jdbc.queryForObject("SELECT COUNT(*) FROM transactions", Long.class);
         // Barrier ở SQL INSERT marker, sau khi CẢ HAI request đã vượt precheck và INSERT transaction thật.
@@ -276,17 +336,23 @@ class RecurringApplicationIntegrationTests extends RecurringApplicationMySqlTest
         assertThat(results).extracting(r -> r.getResponse().getStatus()).containsExactlyInAnyOrder(201, 409);
         var loser = results.stream().filter(r -> r.getResponse().getStatus() == 409).findFirst().orElseThrow();
         assertThat(json.readTree(loser.getResponse().getContentAsString()).get("code").asString()).isEqualTo("CONFLICT");
-        SQLException duplicate = null;
-        for (Throwable cause = loser.getResolvedException(); cause != null; cause = cause.getCause()) {
-            if (cause instanceof SQLException sql) duplicate = sql;
-        }
-        assertThat((Throwable) duplicate).isNotNull();
+        SQLException duplicate = databaseCause(loser);
         assertThat(duplicate.getErrorCode()).isEqualTo(1062);
+        assertThat(duplicate.getSQLState()).isEqualTo("23000");
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM transactions", Long.class)).isEqualTo(before + 1);
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM recurring_applications WHERE template_id=?", Long.class,
                 template.getId())).isEqualTo(1);
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM recurring_applications a JOIN transactions t ON t.id=a.transaction_id "
                 + "WHERE a.template_id=? AND t.user_id=?", Long.class, template.getId(), owner.getId())).isEqualTo(1);
+    }
+
+    private SQLException databaseCause(MvcResult result) {
+        SQLException databaseError = null;
+        for (Throwable cause = result.getResolvedException(); cause != null; cause = cause.getCause()) {
+            if (cause instanceof SQLException sql) databaseError = sql;
+        }
+        assertThat((Throwable) databaseError).isNotNull();
+        return databaseError;
     }
 
     private ResultActions apply(User user, int year, int month) throws Exception {

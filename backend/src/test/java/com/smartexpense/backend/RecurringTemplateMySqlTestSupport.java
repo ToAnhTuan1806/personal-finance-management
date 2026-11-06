@@ -94,6 +94,8 @@ abstract class RecurringTemplateMySqlTestSupport {
             jdbc.update("INSERT INTO category_budgets (user_id,category_id,year,month,amount_limit) VALUES (?,?,2026,12,3333.33)", owner, category);
             var before = snapshot(jdbc);
             apply(connection, migrations.get(2));
+            // Context D09 nạp thêm RecurringApplication; cần V005 thật trước Hibernate validate.
+            apply(connection, migrations.get(3));
             assertThat(snapshot(jdbc)).isEqualTo(before);
             legacyRows = before;
         }
@@ -124,7 +126,7 @@ abstract class RecurringTemplateMySqlTestSupport {
 
     private static List<Path> approvedMigrations() {
         var paths = List.of("V002__category_icon_color.sql", "V003__create_category_budgets.sql",
-                "V004__create_recurring_templates.sql").stream()
+                "V004__create_recurring_templates.sql", "V005__create_recurring_applications.sql").stream()
                 .map(name -> Path.of("../database/migrations", name).toAbsolutePath().normalize()).toList();
         for (Path path : paths) {
             assertThat(Files.isRegularFile(path)).as("BLOCKED D08-DB: approved SQL required: %s; no substitute DDL", path).isTrue();

@@ -14,6 +14,7 @@ import com.smartexpense.backend.repository.RecurringTemplateRepository;
 import com.smartexpense.backend.repository.TransactionRepository;
 import com.smartexpense.backend.util.RecurringTemplateDates;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +24,7 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.ZoneId;
+import java.sql.SQLException;
 
 @Service
 @RequiredArgsConstructor
@@ -68,16 +70,21 @@ public class RecurringApplicationService {
         transaction.setAmount(template.getAmount());
         transaction.setTransactionDate(date);
         transaction.setNote(template.getNote());
-        transactions.saveAndFlush(transaction);
-
         RecurringApplication application = new RecurringApplication();
         application.setTemplate(template);
         application.setYear(period.getYear());
         application.setMonth(period.getMonthValue());
         application.setTransaction(transaction);
-        // UNIQUE V005 là chốt chống race. Không bắt/retry lỗi ở transaction đã thất bại:
-        // Spring rollback cả Transaction vừa insert trước khi handler hiện tại trả 409 CONFLICT.
-        applications.saveAndFlush(application);
+        try {
+            transactions.saveAndFlush(transaction);
+            // UNIQUE V005 là chốt chống race, kể cả khi hai request cùng vượt precheck.
+            applications.saveAndFlush(application);
+        } catch (DataIntegrityViolationException exception) {
+            // Chỉ 1062/23000 là duplicate. Thoát ngay bằng RuntimeException để Spring rollback;
+            // không query/retry/tiếp tục ghi trong transaction đã lỗi. Không đổi handler D01–D08.
+            throw new ResponseStatusException(isDuplicate(exception) ? HttpStatus.CONFLICT : HttpStatus.INTERNAL_SERVER_ERROR,
+                    null, exception);
+        }
         var transactionResponse = new TransactionResponse(transaction.getId(), category.getId(), category.getName(),
                 transaction.getType(), transaction.getAmount(), date, transaction.getNote());
         return new RecurringApplicationResponse(application.getId(), id, period.getYear(), period.getMonthValue(),
@@ -89,6 +96,15 @@ public class RecurringApplicationService {
         if (!template.isActive()) return "TEMPLATE_INACTIVE";
         if (date.isAfter(LocalDate.now(clock.withZone(VIETNAM)))) return "FUTURE_DATE";
         return null;
+    }
+
+    private boolean isDuplicate(DataIntegrityViolationException exception) {
+        for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
+            if (cause instanceof SQLException sql && sql.getErrorCode() == 1062 && "23000".equals(sql.getSQLState())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private YearMonth period(Integer year, Integer month) {

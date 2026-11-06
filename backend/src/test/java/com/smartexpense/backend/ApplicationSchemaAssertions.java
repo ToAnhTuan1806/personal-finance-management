@@ -24,6 +24,12 @@ final class ApplicationSchemaAssertions {
         MIGRATION_V004
     }
 
+    enum D09ValidationMode {
+        NONE,
+        HIBERNATE_MAPPED,
+        MIGRATION_V005
+    }
+
     static void assertMappedSchema(JdbcTemplate jdbc, EntityManagerFactory factory) {
         Set<String> mapped = factory.getMetamodel().getEntities().stream()
                 .map(entity -> entity.getName()).collect(Collectors.toSet());
@@ -32,10 +38,13 @@ final class ApplicationSchemaAssertions {
         if (d07) expected.add("CategoryBudget");
         boolean d08 = mapped.contains("RecurringTemplate");
         if (d08) expected.add("RecurringTemplate");
+        boolean d09 = mapped.contains("RecurringApplication");
+        if (d09) expected.add("RecurringApplication");
         assertThat(mapped).containsExactlyInAnyOrderElementsOf(expected);
         D08ValidationMode mode = d08 ? D08ValidationMode.HIBERNATE_MAPPED : D08ValidationMode.NONE;
         jdbc.execute((ConnectionCallback<Void>) connection -> {
-            assertSchema(connection, d07, mode);
+            assertSchema(connection, d07, mode,
+                    d09 ? D09ValidationMode.HIBERNATE_MAPPED : D09ValidationMode.NONE);
             return null;
         });
         System.out.printf("QA SCHEMA mappedEntities=%d categoryBudgetMapped=%s recurringTemplateMapped=%s mode=%s%n",
@@ -51,7 +60,18 @@ final class ApplicationSchemaAssertions {
     }
 
     static void assertSchema(Connection connection, boolean d07, D08ValidationMode d08Mode) throws SQLException {
+        assertSchema(connection, d07, d08Mode, D09ValidationMode.NONE);
+    }
+
+    static void assertSchema(Connection connection, boolean d07, boolean d08, boolean d09) throws SQLException {
+        assertSchema(connection, d07, d08 ? D08ValidationMode.MIGRATION_V004 : D08ValidationMode.NONE,
+                d09 ? D09ValidationMode.MIGRATION_V005 : D09ValidationMode.NONE);
+    }
+
+    private static void assertSchema(Connection connection, boolean d07, D08ValidationMode d08Mode,
+                                     D09ValidationMode d09Mode) throws SQLException {
         boolean d08 = d08Mode != D08ValidationMode.NONE;
+        boolean d09 = d09Mode != D09ValidationMode.NONE;
         List<String> tables = new ArrayList<>(List.of("users", "categories", "transactions", "monthly_budgets"));
         List<String> foreignKeys = new ArrayList<>(List.of("categories.user_id->users.id",
                 "transactions.user_id->users.id", "transactions.category_id->categories.id", "monthly_budgets.user_id->users.id"));
@@ -64,6 +84,11 @@ final class ApplicationSchemaAssertions {
             tables.add("recurring_templates");
             foreignKeys.add("recurring_templates.user_id->users.id");
             foreignKeys.add("recurring_templates.category_id->categories.id");
+        }
+        if (d09) {
+            tables.add("recurring_applications");
+            foreignKeys.add("recurring_applications.template_id->recurring_templates.id");
+            foreignKeys.add("recurring_applications.transaction_id->transactions.id");
         }
         assertThat(values(connection, "SELECT table_name FROM information_schema.tables WHERE table_schema=DATABASE() AND table_type='BASE TABLE'"))
                 .containsExactlyInAnyOrderElementsOf(tables);
@@ -166,6 +191,45 @@ final class ApplicationSchemaAssertions {
                         "type:enum('INCOME','EXPENSE'):NO");
                 assertThat(cols.get(7)).isEqualTo("user_id:bigint:NO");
             }
+        }
+        if (d09) assertRecurringApplications(connection, d09Mode);
+    }
+
+    private static void assertRecurringApplications(Connection connection, D09ValidationMode mode) throws SQLException {
+        assertThat(values(connection, """
+                SELECT CONCAT(column_name,':',column_type,':',is_nullable) FROM information_schema.columns
+                WHERE table_schema=DATABASE() AND table_name='recurring_applications' ORDER BY column_name
+                """)).containsExactly("id:bigint:NO", "month:int:NO", "template_id:bigint:NO",
+                "transaction_id:bigint:YES", "year:int:NO");
+        assertThat(values(connection, """
+                SELECT extra FROM information_schema.columns WHERE table_schema=DATABASE()
+                AND table_name='recurring_applications' AND column_name='id'
+                """)).containsExactly("auto_increment");
+        assertThat(values(connection, """
+                SELECT CONCAT(index_name,':',non_unique,':',GROUP_CONCAT(column_name ORDER BY seq_in_index))
+                FROM information_schema.statistics WHERE table_schema=DATABASE() AND table_name='recurring_applications'
+                GROUP BY index_name,non_unique
+                """)).containsExactlyInAnyOrder("PRIMARY:0:id",
+                "uk_recurring_application_template_year_month:0:template_id,year,month",
+                "idx_recurring_applications_transaction:1:transaction_id");
+        List<String> policies = values(connection, """
+                SELECT CONCAT(constraint_name,':',referenced_table_name,':',delete_rule,':',update_rule)
+                FROM information_schema.referential_constraints
+                WHERE constraint_schema=DATABASE() AND table_name='recurring_applications'
+                """);
+        assertThat(policies).hasSize(2);
+        assertThat(policies.stream().map(policy -> policy.replace("NO ACTION", "RESTRICT")).toList())
+                .containsExactlyInAnyOrder("fk_recurring_applications_template:recurring_templates:RESTRICT:RESTRICT",
+                        "fk_recurring_applications_transaction:transactions:SET NULL:RESTRICT");
+        if (mode == D09ValidationMode.MIGRATION_V005) {
+            assertThat(values(connection, """
+                    SELECT CONCAT(t.constraint_name,':',t.enforced,':',
+                      LOWER(REPLACE(REPLACE(REPLACE(REPLACE(c.check_clause,'`',''),' ',''),'(',''),')','')))
+                    FROM information_schema.table_constraints t JOIN information_schema.check_constraints c
+                      ON c.constraint_schema=t.constraint_schema AND c.constraint_name=t.constraint_name
+                    WHERE t.table_schema=DATABASE() AND t.table_name='recurring_applications' AND t.constraint_type='CHECK'
+                    """)).containsExactlyInAnyOrder("chk_recurring_applications_year:YES:yearbetween1900and2100",
+                    "chk_recurring_applications_month:YES:monthbetween1and12");
         }
     }
 

@@ -75,6 +75,8 @@ class D06MigrationIntegrationTests {
             .toAbsolutePath().normalize();
     private static final Path D08_MIGRATION = Path.of("../database/migrations/V004__create_recurring_templates.sql")
             .toAbsolutePath().normalize();
+    private static final Path D09_MIGRATION = Path.of("../database/migrations/V005__create_recurring_applications.sql")
+            .toAbsolutePath().normalize();
     private static final Path BACKUP = Path.of("build/d06-migration-backup/pre-migration.sql").toAbsolutePath();
     private static final String JWT_KEY = randomJwtKey();
     private static String beforeData;
@@ -189,6 +191,10 @@ class D06MigrationIntegrationTests {
             assertThat(dataHash(connection)).isEqualTo(beforeData);
             assertThat(keysHash(connection)).isEqualTo(beforeKeys);
             ApplicationSchemaAssertions.assertSchema(connection, true, true);
+            applyD09Migration(connection);
+            assertThat(dataHash(connection)).isEqualTo(beforeData);
+            assertThat(keysHash(connection)).isEqualTo(beforeKeys);
+            ApplicationSchemaAssertions.assertSchema(connection, true, true, true);
         }
         initialized = true;
     }
@@ -237,6 +243,11 @@ class D06MigrationIntegrationTests {
                 new EncodedResource(new FileSystemResource(D08_MIGRATION), StandardCharsets.UTF_8));
     }
 
+    private static void applyD09Migration(Connection connection) {
+        ScriptUtils.executeSqlScript(connection,
+                new EncodedResource(new FileSystemResource(D09_MIGRATION), StandardCharsets.UTF_8));
+    }
+
     @Test
     void migrationPreservesAllLegacyValuesKeysAndNullMetadata() throws Exception {
         assertThat(environment.getProperty("spring.jpa.hibernate.ddl-auto")).isEqualTo("validate");
@@ -245,7 +256,7 @@ class D06MigrationIntegrationTests {
             assertAppearanceColumns(connection);
             assertThat(dataHash(connection)).isEqualTo(beforeData);
             assertThat(keysHash(connection)).isEqualTo(beforeKeys);
-            ApplicationSchemaAssertions.assertSchema(connection, true, true);
+            ApplicationSchemaAssertions.assertSchema(connection, true, true, true);
             assertThat(rows(connection, "SELECT COUNT(*) FROM categories WHERE icon IS NULL AND color IS NULL"))
                     .containsExactly(List.of("4"));
         }
@@ -298,7 +309,7 @@ class D06MigrationIntegrationTests {
             assertAppearanceColumns(connection);
             assertThat(dataHash(connection)).isEqualTo(beforeData);
             assertThat(keysHash(connection)).isEqualTo(beforeKeys);
-            ApplicationSchemaAssertions.assertSchema(connection, true, true);
+            ApplicationSchemaAssertions.assertSchema(connection, true, true, true);
         }
     }
 
@@ -347,6 +358,10 @@ class D06MigrationIntegrationTests {
                 statement.execute("ALTER TABLE recurring_templates ADD CONSTRAINT chk_recurring_templates_type CHECK (type IN ('INCOME', 'EXPENSE'))");
                 ApplicationSchemaAssertions.assertSchema(connection, true, true);
             }
+            applyD09Migration(connection);
+            assertThat(dataHash(connection)).isEqualTo(beforeData);
+            assertThat(keysHash(connection)).isEqualTo(beforeKeys);
+            ApplicationSchemaAssertions.assertSchema(connection, true, true, true);
         }
         try (HikariDataSource pool = pool(RESTORE)) {
             var registry = new StandardServiceRegistryBuilder()
@@ -378,7 +393,7 @@ class D06MigrationIntegrationTests {
         try (Connection connection = connect(SOURCE)) {
             connection.setAutoCommit(false);
             try {
-                ApplicationSchemaAssertions.assertSchema(connection, true, true);
+                ApplicationSchemaAssertions.assertSchema(connection, true, true, true);
                 try (var statement = connection.createStatement()) {
                     statement.executeUpdate("INSERT INTO category_budgets (user_id,category_id,year,month,amount_limit) VALUES (1,2,2026,10,100.00)");
                     assertSqlViolation(() -> statement.executeUpdate(

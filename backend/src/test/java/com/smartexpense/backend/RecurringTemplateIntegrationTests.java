@@ -318,8 +318,11 @@ class RecurringTemplateIntegrationTests extends RecurringTemplateMySqlTestSuppor
     void migrationTypesConstraintsAndHibernateValidationMatchRealMysql() throws Exception {
         factory.unwrap(SessionFactory.class).getSchemaManager().validateMappedObjects();
         assertThat(jdbc.queryForList("SELECT table_name FROM information_schema.tables WHERE table_schema=DATABASE() AND table_type='BASE TABLE'", String.class))
-                .containsExactlyInAnyOrder("users", "categories", "transactions", "monthly_budgets", "category_budgets", "recurring_templates");
-        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.referential_constraints WHERE constraint_schema=DATABASE()", Integer.class)).isEqualTo(8);
+                .containsExactlyInAnyOrder("users", "categories", "transactions", "monthly_budgets", "category_budgets", "recurring_templates", "recurring_applications");
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.referential_constraints WHERE constraint_schema=DATABASE()", Integer.class)).isEqualTo(10);
+        try (var connection = jdbc.getDataSource().getConnection()) {
+            ApplicationSchemaAssertions.assertSchema(connection, true, true, true);
+        }
         assertThat(jdbc.queryForList("SELECT CONCAT(column_name,':',column_type,':',is_nullable) FROM information_schema.columns "
                 + "WHERE table_schema=DATABASE() AND table_name='recurring_templates'", String.class))
                 .containsExactlyInAnyOrder("id:bigint:NO", "user_id:bigint:NO", "category_id:bigint:NO",

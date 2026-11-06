@@ -54,6 +54,8 @@ abstract class RecurringApplicationMySqlTestSupport {
             super.start();
         }
     }.withDatabaseName(DATABASE).withUsername(USER).withPassword(PASSWORD).withReuse(false)
+            // Chỉ container test này: cho user fixture tạo trigger fault injection, không đổi FK/CHECK.
+            .withCommand("--log-bin-trust-function-creators=1")
             .withLabel("com.smartexpense.test", "d09")
             .withUrlParam("useSSL", "false").withUrlParam("allowPublicKeyRetrieval", "true")
             .withCreateContainerCmdModifier(command -> command.getHostConfig().withPortBindings(

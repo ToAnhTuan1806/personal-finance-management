@@ -19,6 +19,7 @@ import org.testcontainers.DockerClientFactory;
 import org.testcontainers.mysql.MySQLContainer;
 
 import java.math.BigDecimal;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -34,7 +35,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /**
  * D08-DB: Suite kiểm thử tích hợp Migration V004 và các ràng buộc dữ liệu của bảng recurring_templates.
  * Tuân thủ quy tắc kiểm thử an toàn:
- * - Chỉ chạy trên database test độc lập (Testcontainers hoặc MySQL testbed riêng), không chạy trên production.
+ * - Chỉ chạy MySQL Testcontainers qua Docker local; thiếu Docker phải FAIL, không fallback database bên ngoài.
  * - Áp dụng tuần tự MVP fixture -> V002 -> V003 -> V004.
  * - Kiểm tra tính toàn vẹn của dữ liệu cũ D01-D07 sau migration.
  * - Kiểm tra dữ liệu biên hợp lệ, dữ liệu sai bị từ chối bởi CHECK/FK constraints.
@@ -50,7 +51,6 @@ public class RecurringTemplateMigrationIntegrationTests {
     private static String dbUser;
     private static String dbPassword;
     private static MySQLContainer mysqlContainer;
-    private static boolean isLocalMysql = false;
 
     private static HikariDataSource dataSource;
     private static JdbcTemplate jdbc;
@@ -72,33 +72,24 @@ public class RecurringTemplateMigrationIntegrationTests {
         List<Path> migrations = approvedUpgradeMigrations();
 
         // 1. Khởi tạo môi trường database test độc lập
-        if (isDockerRunning()) {
-            log.info("Khởi chạy MySQL Testcontainers cho D08 migration test...");
-            mysqlContainer = new MySQLContainer("mysql:8.0")
-                    .withDatabaseName(DATABASE)
-                    .withUsername("d08_test")
-                    .withPassword("d08_secret_" + UUID.randomUUID())
-                    .withUrlParam("useSSL", "false")
-                    .withUrlParam("allowPublicKeyRetrieval", "true")
-                    .withUrlParam("serverTimezone", "UTC");
-            mysqlContainer.start();
-            jdbcUrl = mysqlContainer.getJdbcUrl();
-            dbUser = mysqlContainer.getUsername();
-            dbPassword = mysqlContainer.getPassword();
-        } else {
-            log.info("Docker không khả dụng, sử dụng MySQL testbed độc lập tại localhost:3306...");
-            isLocalMysql = true;
-            String baseAdminUrl = "jdbc:mysql://127.0.0.1:3306/?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
-            dbUser = "root";
-            dbPassword = "12345";
-
-            // Kiểm tra kết nối trước khi tạo database test
-            try (Connection conn = DriverManager.getConnection(baseAdminUrl, dbUser, dbPassword)) {
-                verifyDatabaseIsolation(DATABASE, baseAdminUrl);
-                conn.createStatement().execute("CREATE DATABASE `" + DATABASE + "` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
-            }
-            jdbcUrl = "jdbc:mysql://127.0.0.1:3306/" + DATABASE + "?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
-        }
+        if (!isDockerRunning()) throw new IllegalStateException("D08 migration requires MySQL Testcontainers; no external database fallback");
+        URI socket = DockerClientFactory.instance().getTransportConfig().getDockerHost();
+        boolean unix = "unix".equals(socket.getScheme()) && socket.getHost() == null;
+        boolean pipe = "npipe".equals(socket.getScheme()) && socket.getPath().startsWith("//./pipe/");
+        if (!unix && !pipe) throw new IllegalStateException("D08 migration requires a local Docker socket");
+        log.info("Khởi chạy MySQL Testcontainers cho D08 migration test...");
+        mysqlContainer = new MySQLContainer("mysql:8.0")
+                .withDatabaseName(DATABASE)
+                .withUsername("d08_test")
+                .withPassword(UUID.randomUUID().toString())
+                .withReuse(false)
+                .withUrlParam("useSSL", "false")
+                .withUrlParam("allowPublicKeyRetrieval", "true")
+                .withUrlParam("serverTimezone", "UTC");
+        mysqlContainer.start();
+        jdbcUrl = mysqlContainer.getJdbcUrl();
+        dbUser = mysqlContainer.getUsername();
+        dbPassword = mysqlContainer.getPassword();
 
         verifyDatabaseIsolation(DATABASE, jdbcUrl);
 
@@ -168,15 +159,6 @@ public class RecurringTemplateMigrationIntegrationTests {
         }
         if (mysqlContainer != null) {
             mysqlContainer.stop();
-        } else if (isLocalMysql && DATABASE.matches("^se_d08_migration_[a-f0-9]{32}$")) {
-            // Chỉ dọn dẹp đúng database test do bài kiểm thử tạo ra
-            try (Connection conn = DriverManager.getConnection(
-                    "jdbc:mysql://127.0.0.1:3306/?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC", "root", "12345")) {
-                conn.createStatement().execute("DROP DATABASE IF EXISTS `" + DATABASE + "`");
-                log.info("Đã dọn dẹp database test: {}", DATABASE);
-            } catch (Exception e) {
-                log.warn("Không thể drop database test: {}", e.getMessage());
-            }
         }
     }
 

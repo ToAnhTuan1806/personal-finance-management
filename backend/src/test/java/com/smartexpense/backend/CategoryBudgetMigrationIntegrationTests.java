@@ -29,7 +29,7 @@ import java.util.regex.Pattern;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-// Fixture MVP -> V002/V003/V004 thật trước Hibernate validate toàn bộ Entity; không create/update ngầm.
+// Fixture MVP -> V002/V003/V004/V005 thật trước Hibernate validate toàn bộ Entity; không create/update ngầm.
 class CategoryBudgetMigrationIntegrationTests {
 
     private static final String DATABASE = "se_d07_migration_" + UUID.randomUUID().toString().replace("-", "");
@@ -63,6 +63,7 @@ class CategoryBudgetMigrationIntegrationTests {
                 }
                 apply(connection, migrations.get(1));
                 apply(connection, migrations.get(2));
+                apply(connection, migrations.get(3));
             }
             byte[] key = new byte[32];
             new SecureRandom().nextBytes(key);
@@ -105,9 +106,9 @@ class CategoryBudgetMigrationIntegrationTests {
                 }
             }
         }
-        assertThat(versions.keySet()).as("BLOCKED D08-DB: require approved V002/V003/V004 after the MVP fixture before validating all mapped entities; no substitute DDL")
-                .contains(2, 3, 4);
-        return List.of(versions.get(2), versions.get(3), versions.get(4));
+        assertThat(versions.keySet()).as("BLOCKED D09-DB: require approved V002/V003/V004/V005 after the MVP fixture before validating all mapped entities; no substitute DDL")
+                .contains(2, 3, 4, 5);
+        return List.of(versions.get(2), versions.get(3), versions.get(4), versions.get(5));
     }
 
     private static MySQLContainer localContainer() {
