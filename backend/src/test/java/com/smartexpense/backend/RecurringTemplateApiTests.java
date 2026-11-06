@@ -71,6 +71,7 @@ class RecurringTemplateApiTests {
     @MockitoBean MonthlyBudgetRepository budgets;
     @MockitoBean CategoryBudgetRepository categoryBudgets;
     @MockitoBean RecurringTemplateRepository templates;
+    @MockitoBean RecurringApplicationRepository recurringApplications;
 
     private Category category;
     private RecurringTemplate template;
