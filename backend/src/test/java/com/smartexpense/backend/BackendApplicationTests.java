@@ -118,6 +118,8 @@ class BackendApplicationTests {
         userB = user(2L, "b@example.test", userA.getPasswordHash());
         when(users.findById(1L)).thenReturn(Optional.of(userA));
         when(users.findById(2L)).thenReturn(Optional.of(userB));
+        when(users.findByIdForCategoryWrite(1L)).thenReturn(Optional.of(userA));
+        when(users.findByIdForCategoryWrite(2L)).thenReturn(Optional.of(userB));
         when(users.findByEmail("a@example.test")).thenReturn(Optional.of(userA));
         when(users.save(any(User.class))).thenAnswer(call -> {
             User user = call.getArgument(0);

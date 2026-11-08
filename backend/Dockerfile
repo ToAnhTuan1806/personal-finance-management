@@ -1,9 +1,12 @@
 # Stage 1: Build stage
-FROM eclipse-temurin:21-jdk-alpine AS builder
+# Keep the Gradle version aligned with gradle/wrapper/gradle-wrapper.properties.
+# The builder already contains Gradle, so packaging does not download its ZIP.
+FROM gradle:9.8.1-jdk21-alpine AS builder
+USER root
 WORKDIR /workspace
 
-# Install bash for Gradle wrapper script
-RUN apk add --no-cache bash
+# Verify the preinstalled build tool without any network access.
+RUN --network=none gradle --version
 
 # Copy gradle wrapper and project definition files
 COPY gradlew .
@@ -14,13 +17,13 @@ COPY build.gradle settings.gradle ./
 RUN sed -i 's/\r$//' ./gradlew && chmod +x ./gradlew
 
 # Download dependencies (cached if build.gradle / settings.gradle didn't change)
-RUN ./gradlew dependencies --no-daemon || true
+RUN gradle dependencies --no-daemon
 
 # Copy source code
 COPY src ./src
 
 # Build the Spring Boot executable JAR without running tests
-RUN ./gradlew bootJar --no-daemon -x test
+RUN gradle bootJar --no-daemon -x test
 
 # Stage 2: Production Runtime
 FROM eclipse-temurin:21-jre-alpine
