@@ -2,8 +2,8 @@ import assert from 'node:assert/strict'
 import test, { afterEach } from 'node:test'
 import axios from 'axios'
 import { createQuickAddSubmission } from '../src/utils/quickAddSubmission.js'
-import { transactionPayload, validateTransactionForm } from '../src/utils/transactionForm.js'
-import { getApiErrorMessage } from '../src/api/errors.js'
+import { transactionPayload, validateTransactionForm, transactionDateWarning, OLD_DATE_WARNING } from '../src/utils/transactionForm.js'
+import { getApiErrorMessage, getApiFieldErrors } from '../src/api/errors.js'
 
 // Cô lập phiên kiểm thử, không đọc credential trình duyệt hoặc gọi DB thật.
 const storage = new Map()
@@ -18,7 +18,7 @@ const { createTransaction } = await import('../src/services/transactionService.j
 
 const originalAdapter = client.defaults.adapter
 afterEach(() => { client.defaults.adapter = originalAdapter; session.clear() })
-const formFor = (type) => ({ type, categoryId: type === 'INCOME' ? '2' : '1', amount: '12.34', transactionDate: '2028-02-29', note: 'Ghi chú tiếng Việt' })
+const formFor = (type) => ({ type, categoryId: type === 'INCOME' ? '2' : '1', amount: '12.34', transactionDate: '2024-02-29', note: 'Ghi chú tiếng Việt' })
 const categories = [{ id: 1, type: 'EXPENSE' }, { id: 2, type: 'INCOME' }]
 const login = () => session.authenticate({ accessToken: 'quick-add-test-only', user: { id: 1, fullName: 'TEST', email: 'quick@example.test' } }, session.getSnapshot().revision)
 const response = (config, data, status = 201) => ({ config, data, status, statusText: '', headers: {} })
@@ -112,4 +112,43 @@ test('đổi phiên trong lúc lưu: bỏ phản hồi cũ và không báo thàn
   finish()
   await assert.rejects(pending, { code: 'ERR_CANCELED' })
   assert.deepEqual(events, [['saving', true], ['saving', false]])
+})
+
+test('Backend 400 theo transactionDate: một POST, giữ form và thông báo field, không xác nhận lưu', async () => {
+  login()
+  const message = 'Ngày giao dịch không được lớn hơn ngày hiện tại.'
+  const form = formFor('EXPENSE'), before = structuredClone(form)
+  let calls = 0
+  client.defaults.adapter = async (config) => {
+    calls++
+    throw new axios.AxiosError('TEST', 'ERR_BAD_REQUEST', config, null,
+      response(config, { code: 'VALIDATION_ERROR', message: 'Dữ liệu không hợp lệ', errors: { transactionDate: message } }, 400))
+  }
+  const { save, events } = submission()
+  await assert.rejects(save(transactionPayload(form)), (error) => {
+    assert.deepEqual(getApiFieldErrors(error, ['transactionDate']), { transactionDate: message })
+    return true
+  })
+  assert.equal(calls, 1)
+  assert.deepEqual(form, before)
+  assert.equal(events.some(([event]) => event === 'saved'), false)
+})
+
+test('Quick Add năm 1970 có cảnh báo nhưng vẫn gửi một POST, giữ nguyên ngày trong DTO', async () => {
+  login()
+  const form = { ...formFor('EXPENSE'), transactionDate: '1970-01-01' }
+  assert.equal(transactionDateWarning(form.transactionDate), OLD_DATE_WARNING)
+  assert.deepEqual(validateTransactionForm(form, categories), {})
+  let calls = 0
+  client.defaults.adapter = async (config) => {
+    calls++
+    assert.equal(config.method, 'post')
+    assert.equal(JSON.parse(config.data).transactionDate, '1970-01-01')
+    return response(config, { id: 1970, ...transactionPayload(form) })
+  }
+  const { save, events } = submission()
+  await save(transactionPayload(form))
+  assert.equal(calls, 1)
+  assert.equal(events.filter(([event]) => event === 'saved').length, 1)
+  assert.equal(form.transactionDate, '1970-01-01')
 })

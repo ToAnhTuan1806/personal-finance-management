@@ -56,7 +56,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Testcontainers
 @Transactional
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-@Import(MySqlIntegrationTestSupport.IsolatedDataSource.class)
+@Import({MySqlIntegrationTestSupport.IsolatedDataSource.class, FixedTransactionClockConfiguration.class})
 class CalendarIntegrationTests extends MySqlIntegrationTestSupport {
 
     @Autowired MockMvc mvc;

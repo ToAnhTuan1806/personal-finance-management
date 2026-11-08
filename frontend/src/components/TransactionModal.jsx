@@ -1,9 +1,10 @@
 import { useRef, useState } from 'react'
-import { X, ArrowDownRight, ArrowUpRight, Calendar, FileText, AlertCircle, Loader2 } from 'lucide-react'
+import { X, ArrowDownRight, ArrowUpRight, Calendar, FileText, AlertCircle, TriangleAlert, Loader2 } from 'lucide-react'
 import MoneyInput from './ui/MoneyInput'
 import CategoryBadge from './category/CategoryBadge'
 import useModalFocus from '../hooks/useModalFocus'
-import { createSubmitGuard, localToday, transactionPayload, validateTransactionForm } from '../utils/transactionForm'
+import useVietnamToday from '../hooks/useVietnamToday'
+import { createSubmitGuard, localToday, transactionDateError, transactionDateWarning, transactionPayload, validateTransactionForm } from '../utils/transactionForm'
 import { getApiErrorMessage, getApiFieldErrors, isRequestCancelled } from '../api/errors'
 
 function TransactionModalContent({
@@ -38,6 +39,10 @@ function TransactionModalContent({
 
   const [errors, setErrors] = useState({})
   const [serverError, setServerError] = useState('')
+  const today = useVietnamToday()
+  const currentDateError = transactionDateError(form.transactionDate, today)
+  const dateError = errors.transactionDate || currentDateError
+  const dateWarning = dateError ? '' : transactionDateWarning(form.transactionDate, today)
   const guard = useRef(createSubmitGuard())
   const close = () => { if (!saving && !guard.current.isPending()) onClose() }
   const dialogRef = useModalFocus(close, saving)
@@ -83,7 +88,8 @@ function TransactionModalContent({
     event.preventDefault()
     if (guard.current.isPending() || saving || categoriesLoading || categoriesError) return
     const validationErrors = validateTransactionForm(form, categories)
-    setErrors(validationErrors)
+    // Lỗi ngày client được tính trực tiếp để tự hết khi qua nửa đêm; lỗi field từ BE vẫn giữ nguyên.
+    setErrors({ ...validationErrors, transactionDate: '' })
 
     if (Object.keys(validationErrors).length > 0) {
       dialogRef.current?.querySelector(`[name="${Object.keys(validationErrors)[0]}"]`)?.focus()
@@ -101,9 +107,9 @@ function TransactionModalContent({
     }
   }
 
-  const inputClass = (name) =>
+  const inputClass = (name, error = errors[name]) =>
     `w-full rounded-xl border p-3 text-sm outline-none transition-all ${
-      errors[name]
+      error
         ? 'border-rose-400 bg-rose-50/50 dark:bg-rose-950/30 text-rose-900 dark:text-rose-200 focus:border-rose-500 focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900/40'
         : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-[#1E293B] text-slate-800 dark:text-slate-100 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900/40'
     }`
@@ -272,17 +278,24 @@ function TransactionModalContent({
                 id="transaction-date"
                 name="transactionDate"
                 type="date"
-                aria-invalid={!!errors.transactionDate}
-                aria-describedby={errors.transactionDate ? 'transaction-date-error' : undefined}
+                max={today}
+                aria-invalid={!!dateError}
+                aria-describedby={dateError ? 'transaction-date-error' : dateWarning ? 'transaction-date-warning' : undefined}
                 value={form.transactionDate}
                 onChange={handleChange}
-                className={inputClass('transactionDate')}
+                className={inputClass('transactionDate', dateError)}
               />
               <Calendar size={16} className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             </div>
-            {errors.transactionDate && (
-              <p id="transaction-date-error" className="mt-1.5 text-xs font-medium text-rose-600 dark:text-rose-300">
-                {errors.transactionDate}
+            {dateError && (
+              <p id="transaction-date-error" role="alert" className="mt-1.5 text-xs font-medium text-rose-600 dark:text-rose-300">
+                {dateError}
+              </p>
+            )}
+            {dateWarning && (
+              <p id="transaction-date-warning" role="status" className="mt-2 flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs font-medium text-amber-900 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-200">
+                <TriangleAlert size={16} aria-hidden="true" className="shrink-0" />
+                <span>{dateWarning}</span>
               </p>
             )}
           </div>

@@ -11,6 +11,7 @@ import Transactions from './pages/Transactions'
 import Budgets from './pages/Budgets'
 import QuickAdd from './pages/QuickAdd'
 import Calendar from './pages/Calendar'
+import RecurringTemplates from './pages/RecurringTemplates'
 import { useAuth } from './contexts/AuthContext'
 
 export default function App() {
@@ -34,6 +35,7 @@ export default function App() {
           <Route path="/categories" element={<Categories />} />
           <Route path="/transactions" element={<Transactions />} />
           <Route path="/budgets" element={<Budgets />} />
+          <Route path="/recurring-templates" element={<RecurringTemplates />} />
         </Route>
       </Route>
 

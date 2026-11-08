@@ -8,6 +8,7 @@ import com.smartexpense.backend.entity.Category;
 import com.smartexpense.backend.enums.TransactionType;
 import com.smartexpense.backend.repository.*;
 import com.smartexpense.backend.service.CategoryService;
+import jakarta.persistence.EntityManagerFactory;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -42,7 +43,7 @@ import static org.mockito.Mockito.*;
 @ActiveProfiles("d03-test")
 @Testcontainers
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-@Import(MySqlIntegrationTestSupport.IsolatedDataSource.class)
+@Import({MySqlIntegrationTestSupport.IsolatedDataSource.class, FixedTransactionClockConfiguration.class})
 class QaDayCategoryIntegrationTests extends MySqlIntegrationTestSupport {
     @Autowired Environment environment;
     @Autowired JsonMapper json;
@@ -52,6 +53,7 @@ class QaDayCategoryIntegrationTests extends MySqlIntegrationTestSupport {
     @Autowired CategoryRepository categories;
     @Autowired TransactionRepository transactions;
     @Autowired MonthlyBudgetRepository budgets;
+    @Autowired EntityManagerFactory entityManagerFactory;
     @MockitoSpyBean CategoryService categoryService;
     private HttpClient http;
     private String base, password, tokenA, tokenB;
@@ -206,6 +208,49 @@ class QaDayCategoryIntegrationTests extends MySqlIntegrationTestSupport {
         assertNoOrphans();
     }
 
+    // Lỗi tên trùng không được đổi metadata cũ hoặc gây mất giao dịch đã liên kết, qua HTTP thật.
+    @ParameterizedTest
+    @ValueSource(strings = {"null", "custom"})
+    void duplicateNameConflictPreservesLinkedTransactionsAndLegacyMetadata(String metadata) throws Exception {
+        var input = categoryBody("QA_NAME_CONFLICT_SOURCE", "EXPENSE");
+        input.put("icon", "gift"); input.put("color", "#123456");
+        var saved = category(input);
+        if (metadata.equals("null")) {
+            jdbc.update("UPDATE categories SET icon=NULL,color=NULL WHERE id=?", saved.getId());
+        }
+        Category source = categories.findById(saved.getId()).orElseThrow();
+        var tx = transaction(tokenA, source, "123.45", "2026-11-03");
+        var beforeCategories = jdbc.queryForList("SELECT * FROM categories ORDER BY id");
+        var beforeTransactions = jdbc.queryForList("SELECT * FROM transactions ORDER BY id");
+        var duplicate = categoryBody("  " + expenseA.getName().toUpperCase(Locale.ROOT) + "  ", "EXPENSE");
+        duplicate.put("icon", "clock"); duplicate.put("color", "#ABCDEF");
+
+        for (String method : List.of("POST", "PUT")) {
+            String path = "/api/categories" + (method.equals("PUT") ? "/" + saved.getId() : "");
+            var response = call(method, path, tokenA, duplicate);
+            error(response, 409, "CONFLICT");
+            var body = json.readTree(response.body());
+            assertThat(body.size()).isEqualTo(3);
+            assertThat(body.get("status").asInt()).isEqualTo(409);
+            assertThat(body.get("message").asString()).isEqualTo("Tên danh mục đã tồn tại với loại này");
+            assertThat(jdbc.queryForList("SELECT * FROM categories ORDER BY id")).isEqualTo(beforeCategories);
+            assertThat(jdbc.queryForList("SELECT * FROM transactions ORDER BY id")).isEqualTo(beforeTransactions);
+        }
+
+        // Self-update thiếu metadata giữ nguyên cả NULL trong DB, không ghi fallback ngược lại.
+        updateCategory(saved.getId(), categoryBody("  " + saved.getName() + "  ", "EXPENSE"));
+        assertThat(jdbc.queryForList("SELECT * FROM categories ORDER BY id")).isEqualTo(beforeCategories);
+        var stored = dto(call("GET", "/api/transactions/" + tx.getId(), tokenA, null), 200, TransactionResponse.class);
+        assertThat(stored.getCategoryId()).isEqualTo(saved.getId());
+        assertThat(stored.getCategoryName()).isEqualTo(saved.getName());
+        assertThat(stored.getAmount()).isEqualByComparingTo("123.45");
+        var category = dto(call("GET", "/api/categories/" + saved.getId(), tokenA, null), 200, CategoryResponse.class);
+        assertThat(category.getIcon()).isEqualTo(metadata.equals("null") ? "tag" : "gift");
+        assertThat(category.getColor()).isEqualTo(metadata.equals("null") ? "#64748B" : "#123456");
+        assertDayAgainstSql("2026-11-03");
+        assertNoOrphans();
+    }
+
     @Test
     void invalidAppearanceAndTypeConflictDoNotMutateRows() throws Exception {
         var input = categoryBody("QA_ORIGINAL", "EXPENSE"); input.put("icon", "gift"); input.put("color", "#123456");
@@ -260,7 +305,7 @@ class QaDayCategoryIntegrationTests extends MySqlIntegrationTestSupport {
     void schemaAndConstraintsRemainCompatible() {
         assertThat(jdbc.queryForList("SELECT CONCAT(column_name,':',column_type,':',is_nullable) FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='categories' AND column_name IN ('icon','color') ORDER BY column_name", String.class))
                 .containsExactly("color:varchar(7):YES", "icon:varchar(40):YES");
-        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.referential_constraints WHERE constraint_schema=DATABASE()", Integer.class)).isEqualTo(4);
+        ApplicationSchemaAssertions.assertMappedSchema(jdbc, entityManagerFactory);
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.statistics WHERE table_schema=DATABASE() AND index_name='uk_budget_user_year_month' AND non_unique=0", Integer.class)).isEqualTo(3);
         assertNoOrphans();
     }

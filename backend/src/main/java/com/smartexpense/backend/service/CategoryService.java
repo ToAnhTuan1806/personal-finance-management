@@ -90,14 +90,17 @@ public class CategoryService {
     // Tạo danh mục mới
     @Transactional
     public CategoryResponse create(CategoryRequest request, Long userId) {
-        User user = userRepository.findById(userId)
+        User user = userRepository.findByIdForCategoryWrite(userId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.UNAUTHORIZED,
                         "Tài khoản không tồn tại"
                 ));
 
+        String name = request.getName().trim();
+        validateUniqueName(userId, request.getType(), name, null);
+
         Category category = new Category();
-        category.setName(request.getName().trim());
+        category.setName(name);
         category.setType(request.getType());
         category.setUser(user);
         category.setIcon(CategoryAppearance.iconOrDefault(request.getIcon()));
@@ -110,6 +113,10 @@ public class CategoryService {
     // Cập nhật danh mục
     @Transactional
     public CategoryResponse update(Long id, CategoryRequest request, Long userId) {
+        // Khóa trước SELECT đầu tiên để precheck đọc dữ liệu sau commit của request trước.
+        userRepository.findByIdForCategoryWrite(userId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Không tìm thấy danh mục"));
         Category category = findOwnedCategory(id, userId);
 
         // Không đổi loại khi danh mục đang có giao dịch
@@ -120,7 +127,10 @@ public class CategoryService {
             );
         }
 
-        category.setName(request.getName().trim());
+        String name = request.getName().trim();
+        validateUniqueName(userId, request.getType(), name, id);
+
+        category.setName(name);
         category.setType(request.getType());
 
         // PUT thiếu field giữ giá trị DB; null được gửi rõ ràng sẽ reset về default trung lập.
@@ -143,6 +153,18 @@ public class CategoryService {
         }
 
         categoryRepository.delete(category);
+    }
+
+    // Kiểm tra trước khi đổi entity để lỗi 409 không làm thay đổi tên/loại/metadata.
+    // CREATE/UPDATE cùng owner đã được serialize bằng khóa DB trước khi gọi precheck.
+    // Không bảo vệ các writer SQL trực tiếp bỏ qua luồng CategoryService.
+    private void validateUniqueName(Long userId, TransactionType type, String name, Long excludedId) {
+        boolean duplicate = excludedId == null
+                ? categoryRepository.existsByUserIdAndTypeAndNameIgnoreCase(userId, type, name)
+                : categoryRepository.existsByUserIdAndTypeAndNameIgnoreCaseAndIdNot(userId, type, name, excludedId);
+        if (duplicate) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Tên danh mục đã tồn tại với loại này");
+        }
     }
 
     // Chỉ tìm danh mục thuộc người dùng hiện tại

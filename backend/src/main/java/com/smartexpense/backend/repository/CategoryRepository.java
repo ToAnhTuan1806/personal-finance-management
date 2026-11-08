@@ -9,6 +9,13 @@ import java.util.Optional;
 
 public interface CategoryRepository extends JpaRepository<Category, Long> {
 
+    // Tên chỉ cần duy nhất trong cùng owner/loại, không phân biệt chữ hoa thường.
+    boolean existsByUserIdAndTypeAndNameIgnoreCase(Long userId, TransactionType type, String name);
+
+    // Khi sửa, bản ghi hiện tại không được coi là một danh mục khác trùng tên.
+    boolean existsByUserIdAndTypeAndNameIgnoreCaseAndIdNot(
+            Long userId, TransactionType type, String name, Long id);
+
     // Lấy tất cả danh mục của một người dùng
     List<Category> findByUserId(Long userId);
 
