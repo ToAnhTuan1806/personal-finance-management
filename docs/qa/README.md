@@ -12,10 +12,21 @@ Mỗi ngày có một báo cáo chung cho **Backend (BE), Frontend (FE) và dữ
 | D04 | 30/10/2026 | Calendar tháng, tổng ngày/tháng và biên ngày | [D04](D04.md) |
 | D05 | 02/11/2026 | Chi tiết ngày, phân trang và rà soát Calendar API | [D05](D05.md) |
 | D06 | 03/11/2026 | Icon/màu, tên danh mục trùng và migration tương thích | [D06](D06.md) |
-| D07 | 04/11/2026 | Ngân sách danh mục, API/MySQL và gate migration còn chờ D07-DB | [D07](D07.md) |
+| D07 | 04/11/2026 | Ngân sách danh mục, API/MySQL và migration V003 | [D07](D07.md) |
 | D08 | 05/11/2026 | Mẫu định kỳ, migration V004, ràng buộc DB và backup/restore | [D08](D08.md) |
+| D09 | 06/11/2026 | Preview/Apply, concurrency, marker, migration V005 và Chrome | [D09](D09.md) |
 
-Nguồn kế hoạch: [SRS 2.2](../SmartExpense_SRS_v2.docx), [Master Plan](../SmartExpense_QuanTriDuAn.xlsx). Quy tắc API hiện có nằm trong [API Contract](../smartexpense-2.0/API_CONTRACT.md).
+Nguồn kế hoạch: [SRS 2.3](../SmartExpense_SRS_v2.docx), [Master Plan](../SmartExpense_QuanTriDuAn.xlsx), [lịch Sprint 3 ngày 09–12/11/2026](../smartexpense-2.0/SPRINT_3_PLAN.md). Quy tắc API hiện có nằm trong [API Contract](../smartexpense-2.0/API_CONTRACT.md).
+
+## Review Sprint 2 ngày 08/11/2026
+
+Đã chạy lại trên `dev` SHA `0bee997755f760b836c7ca2af93aacd4100262e1`: **Backend 779 PASS, 0 FAIL/ERROR/SKIPPED** (27 suite, JUnit XML); **Frontend 417 PASS, 0 FAIL/SKIPPED**, lint/build PASS. Gate D03 **55/55** và Date Validation **16/16** là tập con Backend, không cộng lại. CI đúng SHA PASS cả ba job.
+
+[Báo cáo review Sprint 2](SPRINT_2_REVIEW.md) ghi rõ nguồn bằng chứng và điều kiện trước merge main. Các failure migration/schema D07/D08 lịch sử không tái hiện trong lượt này. D08 BUG-01 Infinite Fetch Loop đã được sửa trong `7811c18`; hồ sơ Chrome D09 hiện có ghi 13/13 PASS, kèm 15 ảnh thật. Lượt review này kiểm tra lại hồ sơ, không tự thực hiện một lượt Chrome mới.
+
+**UI D07: PASS, điều kiện QA đã đóng ngày 08/11/2026.** Người dùng xác nhận nhóm đã kiểm thử đủ CRUD/responsive/Dark Mode trên phiên bản tích hợp và đều PASS; đây là kiểm thử thủ công do người dùng xác nhận, không phải Codex/Browser Agent tự chạy. Xem phần bổ sung trong [D07](D07.md); giữ nguyên bằng chứng và số liệu tự động cũ.
+
+**Bản sửa D06 sau review: Backend 795/795 PASS, 0 FAIL/ERROR/SKIPPED**, 27 suite/795 testcase đã kiểm tra XML; D03 gate 55/55 và Date Validation 16/16 nằm trong tổng. Khóa owner trong MySQL chặn POST/PUT ghi trùng đồng thời; test tập trung 103/103 PASS (CategoryName 35, BackendApplication 68), xem [D06](D06.md). Source đang ở working tree `dev`, base `0bee997`, chưa commit/push nên chưa có CI của patch. Frontend 417/417 là kết quả lượt baseline, không chạy lại trong bản sửa này. Workflow CD vẫn tự deploy cả push `dev` và `main`; CI PASS không thay cho phê duyệt triển khai.
 
 ## Cách đọc kết quả
 
@@ -46,7 +57,7 @@ Mã R01–R06 dưới đây chỉ giúp tra cứu hồ sơ. **Số test là tổ
 
 Các lượt xác nhận thành công trên đều ghi 0 failure/error/skipped cho phần đã chạy. Gate D03 đạt 55/55 trong các lượt xác nhận; đây là tập con Backend. Lượt đầy đủ thành công gần nhất trong bảng lịch sử được ghi tại [D06](D06.md). Không có lượt kiểm thử mới được thực hiện chỉ để tổ chức lại tài liệu.
 
-Lượt Backend D07-BE Commit 3 ngày 04/11/2026, baseline `09d5b1c`: **409 test — 401 PASS, 8 FAIL, 0 ERROR, 0 SKIPPED**, Gate D03 55/55 PASS. D07 API/MySQL mới 42/42 PASS; migration và một số kỳ vọng schema cũ còn bị chặn/lỗi. Chi tiết tại [D07](D07.md); không cộng lượt này vào các tổng lịch sử hoặc coi là regression thành công.
+Lượt Backend D07-BE Commit 3 ngày 04/11/2026, baseline `09d5b1c`: **409 test — 401 PASS, 8 FAIL, 0 ERROR, 0 SKIPPED**, Gate D03 55/55 PASS. Đây là kết quả lịch sử trước tích hợp DB; các lỗi migration/schema đã được xử lý, không còn tái hiện trong regression ngày 08/11 nêu trên. Chi tiết lịch sử tại [D07](D07.md); không cộng các lượt với nhau.
 
 ## Môi trường và cách chạy lại
 
@@ -72,11 +83,11 @@ Bằng chứng tạo lại nằm trong `backend/build/test-results/test/`, `back
 
 ## Giới hạn chung
 
-Bộ tài liệu QA gồm mục lục này và D01–D06. Các báo cáo ngày đã tổng hợp phạm vi BE/FE/DB, baseline, kết quả, bằng chứng chính và rủi ro cần theo dõi. Xác nhận Browser UI của người dùng ngày 04/11/2026 được ghi riêng; số liệu tự động giữ đúng các lượt R01–R06.
+Bộ tài liệu QA gồm mục lục này và D01–D09, cùng báo cáo Date Validation và review Sprint 2. Các báo cáo ngày giữ nguyên baseline, kết quả và bằng chứng lịch sử; kết quả mới không ghi đè số liệu cũ.
 
 - Browser UI D01–D06 hiện PASS theo xác nhận tự kiểm thử của người dùng. Test local và xác nhận UI không thay cho kiểm tra trạng thái VPS.
-- Tên danh mục hiện được kiểm tra trùng ở Service; request đồng thời vẫn có thể tạo trùng. Chi tiết tại [D06](D06.md).
+- Bản sửa D06 ngày 08/11 khóa owner trước kiểm tra/lưu Category qua API. Không tự gộp/xóa dữ liệu trùng cũ và không bảo đảm uniqueness cho writer SQL trực tiếp bỏ qua Service. Chi tiết tại [D06](D06.md).
 - Master Plan còn nội dung backfill metadata, trong khi API hiện hành giữ NULL và dùng fallback; cần nhóm chốt tài liệu riêng, không tự backfill.
-- FR-07–FR-10 ngoài phạm vi các ca D01–D06 được mô tả ở đây; các mục chưa chạy vẫn là NOT_RUN, không được coi hoàn thành.
+- FR-07 và FR-08 có hồ sơ riêng tại D07–D09. FR-09/FR-10 thuộc Sprint 3; các mục chưa chạy vẫn là NOT_RUN, không được coi hoàn thành.
 
-Việc sắp xếp tài liệu không sửa code, migration, lịch sử Git hoặc trạng thái Excel/Trello; không thay cho review và ký nghiệm thu của nhóm.
+Lượt cập nhật ngày 08/11 chỉ sửa tài liệu và lịch kế hoạch; không sửa code, migration, workflow, lịch sử Git hoặc trạng thái thẻ Trello. Không thay cho review và ký nghiệm thu của nhóm.

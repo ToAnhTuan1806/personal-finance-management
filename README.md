@@ -24,13 +24,13 @@
 
 ## SmartExpense 2.0 — Tài liệu và kế hoạch hiện hành
 
-SmartExpense 2.0 phát triển tiếp MVP hiện có. Hai tài liệu nguồn đã được người dùng xác thực: [SRS 2.2 ngày 27/10/2026](docs/SmartExpense_SRS_v2.docx) và [Master Plan 15 ngày](docs/SmartExpense_QuanTriDuAn.xlsx). Việc xác thực nguồn không thay cho review API/schema hoặc chữ ký của thành viên.
+SmartExpense 2.0 phát triển tiếp MVP hiện có. [SRS 2.3](docs/SmartExpense_SRS_v2.docx) và [Master Plan](docs/SmartExpense_QuanTriDuAn.xlsx) được cập nhật lịch ngày 08/11/2026 theo [Trello](https://trello.com/b/RAHIOc4b/smartexpense-personal-finance-management). Việc xác thực nguồn không thay cho review API/schema hoặc chữ ký của thành viên.
 
-- Phạm vi: 12 nhóm FR-01–FR-12, 45 task; mỗi thành viên 15 task trong 15 ngày làm việc T2–T6.
-- D01: **27/10/2026**, vừa chuẩn bị tài liệu vừa thực hiện nhiệm vụ nền tảng; D15: **16/11/2026**. Tuần dự phòng: 23–27/11/2026, không mở rộng tính năng.
-- Đợt 1: 27/10–01/11 (4 ngày làm việc); Đợt 2: 02–06/11 (5 ngày); Đợt 3: 09–13/11 (5 ngày); 16/11 là ngày nghiệm thu bổ sung thứ 15. Không xếp task cuối tuần.
+- SRS giữ 12 nhóm FR-01–FR-12. Master Plan giữ 45 mã task gốc để truy vết; số task/trạng thái baseline không đại diện cho tiến độ hiện tại trên Trello.
+- Sprint 1: **27–30/10**; Sprint 2: **02–06/11**; Sprint 3: **09–12/11/2026**, tổng 13 ngày làm việc T2–T6. **13/11 là ngày bảo vệ, không xếp phát triển.**
+- Sprint 3 có 12 thẻ D10–D13 và 3 thẻ Forgot Password theo kế hoạch. D14/D15 đã được lưu trữ và gộp vào D13 ngày 12/11; không còn mốc phát triển 16/11. Xem [lịch Sprint 3 và nguồn từng thẻ](docs/smartexpense-2.0/SPRINT_3_PLAN.md).
 
-| Thành viên | Vai trò | Nhánh | Số task |
+| Thành viên | Vai trò | Nhánh | Số mã task gốc |
 | --- | --- | --- | --- |
 | Tô Anh Tuấn | Backend + Documentation | feature/tuan | 15 |
 | Trần Thị Thu Trang | Frontend | feature/trang | 15 |
@@ -38,9 +38,9 @@ SmartExpense 2.0 phát triển tiếp MVP hiện có. Hai tài liệu nguồn đ
 
 FE/BE dùng [API Contract](docs/smartexpense-2.0/API_CONTRACT.md): phân biệt API hiện có và API dự kiến, kèm DTO/validation và các điểm cần chốt. Các đề xuất kỹ thuật vẫn chờ review; lưu ý thay đổi dữ liệu nằm ở mục [Migration, backup và rollback](#migration-backup-và-rollback).
 
-Ghi nhận [Trello](https://trello.com/b/RAHIOc4b/smartexpense-personal-finance-management) ngày 28/10/2026: đủ 45 mã SE2, nhưng due date 3 thẻ D01 là 28/10 thay vì 27/10 và 45 thẻ chưa gán member chính thức. Nhóm cần đối chiếu lại; dấu hoàn thành của D01-BE không thay cho bằng chứng duyệt contract. Lượt rút gọn tài liệu không thay đổi Trello.
+Đối chiếu ngày 08/11/2026: cả 15 thẻ BE/FE/DB của D05–D09 trên Trello ở Done. Baseline `dev` SHA `0bee997` đạt **779 Backend + 417 Frontend PASS**, lint/build và CI PASS. UI D07 đã PASS theo xác nhận kiểm thử thủ công của người dùng. Bản sửa D06 concurrency trong working tree đạt **795/795 Backend PASS**, 0 fail/error/skipped, D03 gate 55/55 PASS và 103/103 test tập trung. Frontend không thay đổi trong patch này. Xem [review Sprint 2 trước merge main](docs/qa/SPRINT_2_REVIEW.md) về bản sửa và workflow tự deploy khi push `main`; CI của baseline không thay cho CI của patch mới.
 
-Các chức năng bên dưới mô tả nền tảng MVP đang có trong mã. Quick Add hoàn chỉnh, lịch thu chi, icon/màu danh mục, ngân sách danh mục, mẫu định kỳ, báo cáo nhiều tháng và CSV là phạm vi nâng cấp, chưa được coi là đã hoàn thành. Tài liệu MVP giai đoạn 19–23/10/2026 được giữ làm lịch sử ở cuối trang.
+Mã hiện tại đã tích hợp Quick Add, Calendar, icon/màu danh mục, ngân sách danh mục và mẫu định kỳ kèm Preview/Apply thủ công (D01–D09). Báo cáo nhiều tháng, CSV và Forgot Password nằm trong kế hoạch Sprint 3; chưa coi là đã triển khai chỉ từ lịch Trello. Tài liệu MVP giai đoạn 19–23/10/2026 được giữ làm lịch sử ở cuối trang.
 
 ## 🌐 Trải nghiệm Trực tuyến (Live Demo)
 
