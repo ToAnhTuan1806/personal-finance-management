@@ -90,7 +90,7 @@ public class CategoryService {
     // Tạo danh mục mới
     @Transactional
     public CategoryResponse create(CategoryRequest request, Long userId) {
-        User user = userRepository.findById(userId)
+        User user = userRepository.findByIdForCategoryWrite(userId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.UNAUTHORIZED,
                         "Tài khoản không tồn tại"
@@ -113,6 +113,10 @@ public class CategoryService {
     // Cập nhật danh mục
     @Transactional
     public CategoryResponse update(Long id, CategoryRequest request, Long userId) {
+        // Khóa trước SELECT đầu tiên để precheck đọc dữ liệu sau commit của request trước.
+        userRepository.findByIdForCategoryWrite(userId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Không tìm thấy danh mục"));
         Category category = findOwnedCategory(id, userId);
 
         // Không đổi loại khi danh mục đang có giao dịch
@@ -152,7 +156,8 @@ public class CategoryService {
     }
 
     // Kiểm tra trước khi đổi entity để lỗi 409 không làm thay đổi tên/loại/metadata.
-    // Đây là precheck, không thay thế unique constraint khi các request ghi đồng thời.
+    // CREATE/UPDATE cùng owner đã được serialize bằng khóa DB trước khi gọi precheck.
+    // Không bảo vệ các writer SQL trực tiếp bỏ qua luồng CategoryService.
     private void validateUniqueName(Long userId, TransactionType type, String name, Long excludedId) {
         boolean duplicate = excludedId == null
                 ? categoryRepository.existsByUserIdAndTypeAndNameIgnoreCase(userId, type, name)

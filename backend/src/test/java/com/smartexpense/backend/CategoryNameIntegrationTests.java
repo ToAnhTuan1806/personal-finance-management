@@ -9,6 +9,7 @@ import com.smartexpense.backend.repository.UserRepository;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -43,6 +44,7 @@ import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.request;
@@ -51,7 +53,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 // HTTP qua MockMvc, JWT/Service/Repository/MySQL thật; từng request commit hoặc rollback riêng.
 @SpringBootTest(classes = BackendApplication.class, properties = {
         "spring.config.location=classpath:/application-d03-test.properties",
-        "spring.jpa.properties.hibernate.session_factory.statement_inspector=com.smartexpense.backend.CategoryNameIntegrationTests$PauseCategoryInsert"})
+        "spring.jpa.properties.hibernate.session_factory.statement_inspector=com.smartexpense.backend.CategoryNameIntegrationTests$CategoryWriteRace"})
 @ActiveProfiles("d03-test")
 @AutoConfigureMockMvc(print = MockMvcPrint.NONE)
 @Testcontainers
@@ -209,29 +211,109 @@ class CategoryNameIntegrationTests extends MySqlIntegrationTestSupport {
         assertThat(categories.count()).isEqualTo(2);
     }
 
-    // Characterization của rủi ro đã biết: không có UNIQUE thì precheck không bảo đảm khi ghi đồng thời.
+    @RepeatedTest(5)
+    void concurrentCreatesRejectDuplicateAndPersistExactlyOneCategory() throws Exception {
+        var results = race(
+                new CategoryWrite(userA, HttpMethod.POST, "/api/categories", categoryBody("  Race  ", "EXPENSE")),
+                new CategoryWrite(userA, HttpMethod.POST, "/api/categories", categoryBody("rAcE", "EXPENSE")));
+        assertThat(results.stream().map(result -> result.andReturn().getResponse().getStatus()))
+                .containsExactlyInAnyOrder(201, 409);
+        assertConflictResult(results);
+        assertRaceNameCount(1);
+        assertThat(categories.count()).isEqualTo(1);
+    }
+
+    @RepeatedTest(5)
+    void concurrentUpdatesRejectDuplicateAndPreserveTheLosingCategory() throws Exception {
+        CategoryResponse first = create(userA, "Trước A", TransactionType.EXPENSE);
+        CategoryResponse second = create(userA, "Trước B", TransactionType.EXPENSE);
+        var results = race(
+                new CategoryWrite(userA, HttpMethod.PUT, "/api/categories/" + first.getId(), categoryBody("  Race  ", "EXPENSE")),
+                new CategoryWrite(userA, HttpMethod.PUT, "/api/categories/" + second.getId(), categoryBody("rAcE", "EXPENSE")));
+        assertThat(results.stream().map(result -> result.andReturn().getResponse().getStatus()))
+                .containsExactlyInAnyOrder(200, 409);
+        assertConflictResult(results);
+        assertStored(results.get(0).andReturn().getResponse().getStatus() == 409 ? first : second);
+        assertRaceNameCount(1);
+        assertThat(categories.count()).isEqualTo(2);
+    }
+
+    @RepeatedTest(5)
+    void concurrentCreateAndUpdateShareTheSameOwnerLock() throws Exception {
+        CategoryResponse original = create(userA, "Tên ban đầu", TransactionType.EXPENSE);
+        var results = race(
+                new CategoryWrite(userA, HttpMethod.POST, "/api/categories", categoryBody("  Race  ", "EXPENSE")),
+                new CategoryWrite(userA, HttpMethod.PUT, "/api/categories/" + original.getId(), categoryBody("rAcE", "EXPENSE")));
+        int created = results.get(0).andReturn().getResponse().getStatus();
+        int updated = results.get(1).andReturn().getResponse().getStatus();
+        assertThat((created == 201 && updated == 409) || (created == 409 && updated == 200))
+                .as("POST=%s, PUT=%s: chỉ một request thành công", created, updated).isTrue();
+        assertConflictResult(results);
+        if (updated == 409) assertStored(original);
+        assertRaceNameCount(1);
+        assertThat(categories.count()).isEqualTo(created == 201 ? 2 : 1);
+    }
+
     @Test
-    void concurrentCreatesCanBothPassTheRealPrecheckWithoutDatabaseUniqueness() throws Exception {
-        // Dừng ngay trước INSERT: cả hai precheck phải kết thúc trước khi một bản ghi được ghi/commit.
-        PauseCategoryInsert.barrier = new CyclicBarrier(2);
+    void concurrentCreatesForDifferentOwnersAllowTheSameName() throws Exception {
+        var results = race(
+                new CategoryWrite(userA, HttpMethod.POST, "/api/categories", categoryBody("Race", "EXPENSE")),
+                new CategoryWrite(userB, HttpMethod.POST, "/api/categories", categoryBody("Race", "EXPENSE")));
+        assertThat(results.stream().map(result -> result.andReturn().getResponse().getStatus()))
+                .containsExactly(201, 201);
+        assertThat(categories.findByUserId(userA.getId())).hasSize(1);
+        assertThat(categories.findByUserId(userB.getId())).hasSize(1);
+        assertThat(categories.count()).isEqualTo(2);
+    }
+
+    @Test
+    void concurrentCreatesForDifferentTypesAllowTheSameName() throws Exception {
+        var results = race(
+                new CategoryWrite(userA, HttpMethod.POST, "/api/categories", categoryBody("Race", "EXPENSE")),
+                new CategoryWrite(userA, HttpMethod.POST, "/api/categories", categoryBody("Race", "INCOME")));
+        assertThat(results.stream().map(result -> result.andReturn().getResponse().getStatus()))
+                .containsExactly(201, 201);
+        assertThat(categories.findByUserIdAndType(userA.getId(), TransactionType.EXPENSE)).hasSize(1);
+        assertThat(categories.findByUserIdAndType(userA.getId(), TransactionType.INCOME)).hasSize(1);
+        assertThat(categories.count()).isEqualTo(2);
+    }
+
+    private record CategoryWrite(User owner, HttpMethod method, String path, Map<String, Object> body) {
+    }
+
+    private Map<String, Object> categoryBody(String name, String type) {
+        return Map.of("name", name, "type", type, "icon", "wallet", "color", "#ABCDEF");
+    }
+
+    private void assertConflictResult(List<ResultActions> results) throws Exception {
+        conflict(results.stream().filter(result -> result.andReturn().getResponse().getStatus() == 409)
+                .findFirst().orElseThrow());
+    }
+
+    private void assertRaceNameCount(long count) {
+        assertThat(jdbc.queryForObject("""
+                SELECT COUNT(*) FROM categories WHERE user_id = ? AND type = 'EXPENSE' AND UPPER(name) = 'RACE'
+                """, Long.class, userA.getId())).isEqualTo(count);
+    }
+
+    private List<ResultActions> race(CategoryWrite firstWrite, CategoryWrite secondWrite) throws Exception {
+        // Hai request cùng tới SELECT FOR UPDATE trước khi bất kỳ request nào lấy khóa.
+        // Không chặn ở INSERT: request thứ hai phải chờ khóa DB trước precheck.
+        CategoryWriteRace.lockAttempts.set(0);
+        CategoryWriteRace.barrier = new CyclicBarrier(2);
         var executor = Executors.newFixedThreadPool(2);
         try {
-            var body = Map.<String, Object>of("name", "Race", "type", "EXPENSE");
-            var first = executor.submit(() -> write(userA, HttpMethod.POST, "/api/categories", body)
-                    .andReturn().getResponse().getStatus());
-            var second = executor.submit(() -> write(userA, HttpMethod.POST, "/api/categories", body)
-                    .andReturn().getResponse().getStatus());
-            assertThat(List.of(first.get(40, TimeUnit.SECONDS), second.get(40, TimeUnit.SECONDS)))
-                    .containsExactly(201, 201);
-            assertThat(jdbc.queryForObject("""
-                    SELECT COUNT(*) FROM categories WHERE user_id = ? AND type = 'EXPENSE' AND UPPER(name) = 'RACE'
-                    """, Long.class, userA.getId())).isEqualTo(2L);
+            var first = executor.submit(() -> write(firstWrite.owner(), firstWrite.method(), firstWrite.path(), firstWrite.body()));
+            var second = executor.submit(() -> write(secondWrite.owner(), secondWrite.method(), secondWrite.path(), secondWrite.body()));
+            var results = List.of(first.get(40, TimeUnit.SECONDS), second.get(40, TimeUnit.SECONDS));
+            assertThat(CategoryWriteRace.lockAttempts.get()).isEqualTo(2);
+            return results;
         } finally {
             executor.shutdownNow();
             try {
                 assertThat(executor.awaitTermination(10, TimeUnit.SECONDS)).isTrue();
             } finally {
-                PauseCategoryInsert.barrier = null;
+                CategoryWriteRace.barrier = null;
             }
         }
     }
@@ -278,21 +360,25 @@ class CategoryNameIntegrationTests extends MySqlIntegrationTestSupport {
         return users.saveAndFlush(owner);
     }
 
-    // Chỉ đồng bộ thời điểm INSERT trong ca race; không đổi SQL, tham số hoặc kết quả SELECT.
-    public static class PauseCategoryInsert implements StatementInspector {
+    // Chỉ đồng bộ trước SQL lấy khóa; không thay SQL, tham số hoặc kết quả của database.
+    public static class CategoryWriteRace implements StatementInspector {
         private static volatile CyclicBarrier barrier;
+        private static final AtomicInteger lockAttempts = new AtomicInteger();
 
         @Override
         public String inspect(String sql) {
             CyclicBarrier active = barrier;
-            if (active != null && sql.stripLeading().toLowerCase(Locale.ROOT).startsWith("insert into categories ")) {
+            String normalized = sql.stripLeading().toLowerCase(Locale.ROOT);
+            if (active != null && normalized.startsWith("select ")
+                    && normalized.contains(" from users ") && normalized.contains(" for update")) {
                 try {
+                    lockAttempts.incrementAndGet();
                     active.await(20, TimeUnit.SECONDS);
                 } catch (InterruptedException error) {
                     Thread.currentThread().interrupt();
-                    throw new IllegalStateException("Đã ngắt đồng bộ INSERT của test race", error);
+                    throw new IllegalStateException("Đã ngắt đồng bộ khóa owner của test race", error);
                 } catch (BrokenBarrierException | TimeoutException error) {
-                    throw new IllegalStateException("Không đồng bộ được hai INSERT của test race", error);
+                    throw new IllegalStateException("Không đồng bộ được hai request khóa owner của test race", error);
                 }
             }
             return sql;

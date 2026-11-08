@@ -64,7 +64,7 @@ CalendarMonth = { year, month, incomeTotal, expenseTotal,
 ```
 
 - Register: fullName không blank/≤100, email hợp lệ, password≥8; email trim/lowercase, tên trim. Register trả User, **không cấp JWT**. Login chỉ yêu cầu password không blank. Không có refresh/revoke/logout server; logout xóa phiên client.
-- Category: name không blank/≤100, type bắt buộc; icon/color theo mục D06 bên dưới. Từ bổ sung D06-BE ngày 03/11/2026, precheck tên trùng cùng owner/type trả 409 theo quy tắc bên dưới; chưa có UNIQUE constraint bảo đảm ghi đồng thời.
+- Category: name không blank/≤100, type bắt buộc; icon/color theo mục D06 bên dưới. Precheck tên trùng cùng owner/type trả 409 theo quy tắc bên dưới. Bản sửa ngày 08/11/2026 khóa owner trong MySQL trước precheck để bảo vệ POST/PUT đồng thời qua API; không thêm UNIQUE constraint.
 - Transaction: mọi field bắt buộc trừ note (null hoặc ≤500); category cùng owner/type, tiền theo mục 1. FE mặc định ngày hôm nay.
 - Filter: month **hoặc** đủ startDate/endDate, không gửi cả hai; start≤end, inclusive hai đầu. keyword trim, tìm note không phân biệt hoa/thường; `%`/`_` hiện là wildcard LIKE. categoryId khác owner trong filter trả danh sách rỗng.
 - page≥0, size 1–100, offset = page × size phải ≤2147483647 (giới hạn JPA); vượt offset trả 400 VALIDATION_ERROR, không tự clamp page. Page hợp lệ vượt phạm vi dữ liệu vẫn trả content rỗng. Sort ngày DESC/id DESC, không nhận sort tùy ý. FE mặc định 10 dòng, giữ field number. Danh mục không có sort cố định.
@@ -94,7 +94,9 @@ Response **409** dùng nguyên ApiError D02, không tạo `errors.name` hoặc c
 {"status":409,"code":"CONFLICT","message":"Tên danh mục đã tồn tại với loại này"}
 ```
 
-**Giới hạn đồng thời:** đây là Service precheck, không phải cam kết UNIQUE ở database. Hai POST hoặc PUT đồng thời có thể cùng đọc “chưa trùng” trước khi một request commit và vẫn tạo tên trùng. Không thêm index/migration hoặc thay transaction isolation trong lượt này. Xem [hồ sơ kiểm chứng D06](../qa/D06.md); bảo đảm uniqueness khi ghi đồng thời cần phương án riêng được DB/nhóm duyệt, bao gồm kiểm tra dữ liệu cũ và quy tắc so sánh tên.
+**Ghi đồng thời — bản sửa ngày 08/11/2026:** POST và PUT lấy khóa `PESSIMISTIC_WRITE` trên hàng User của JWT owner trong cùng transaction, trước mọi SELECT Category/precheck. Khóa được giữ đến commit/rollback. Các request cùng owner được xử lý lần lượt; request sau kiểm tra dữ liệu đã commit và trả 409 nếu trùng tên/type. Áp dụng chung cho POST–POST, PUT–PUT và POST–PUT, kể cả khi owner chưa có Category. Khác owner hoặc khác type vẫn được cùng tên. Không thay endpoint, DTO, ApiError, transaction isolation hoặc schema.
+
+Khóa nằm ở MySQL, không phải mutex trong một JVM; mọi instance ứng dụng phải cùng dùng luồng CategoryService này trên cùng database. Đây không phải UNIQUE constraint cho mọi writer SQL trực tiếp. Không tự sửa/xóa/gộp dữ liệu trùng cũ. Giới hạn precheck không khóa trong bản 03/11 được giữ trong [hồ sơ D06 lịch sử](../qa/D06.md); bản sửa và bằng chứng kiểm thử mới được ghi riêng ở đầu báo cáo đó.
 
 Endpoint, DTO thành công, JSON number/field hiện có và ApiError được giữ nguyên. Trả 409 cho tên trùng là **thay đổi validation có chủ đích theo yêu cầu bổ sung**, thay cho hành vi cho phép trùng trước đây; không coi là hành vi đã có trong contract ngày 30/10.
 
