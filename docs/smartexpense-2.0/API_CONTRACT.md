@@ -45,6 +45,7 @@ Mọi đường dẫn trong bảng đều nằm dưới `/api`; Input là body, 
 | GET | `/dashboard/summary` | Query month bắt buộc | 200 `{year,month,totalIncome,totalExpense,balance}` | 400 tháng sai |
 | GET | `/dashboard/expenses-by-category` | Query month bắt buộc | 200 `[{categoryId,categoryName,totalAmount}]` | 400 tháng sai |
 | GET | `/calendar/month` | Query year,month bắt buộc | 200 CalendarMonth; Backend D04, chờ FE xác nhận | 400 kỳ sai; 401 JWT thiếu/sai/hết hạn |
+| GET | `/reports/monthly` | Query from,to bắt buộc, YYYY-MM | 200 MonthlyReport D10, chờ FE xác nhận tích hợp | 400 kỳ sai/quá 6 tháng; 401 JWT thiếu/sai/hết hạn |
 
 ### DTO và validation
 
@@ -329,6 +330,34 @@ Chỉ duplicate key MySQL **1062 / SQLSTATE 23000** mới được chuyển sang
 
 **Phụ thuộc D07-DB/Commit 3:** migration chưa có trong nhánh tại thời điểm triển khai; chưa xác nhận concurrency, FK và kết quả MySQL thực. DB cần khớp bảng/cột/nullable/DECIMAL của Entity, FK users/categories và UNIQUE bốn cột. Không dùng khởi động ứng dụng với `ddl-auto=update` thay migration được duyệt. D07 không đổi CategoryService hoặc tự thêm cascade; chính sách chặn xóa/đổi loại category đang có budget phải phối hợp DB/FE, chưa coi FK riêng lẻ là bằng chứng category cùng owner. Không đổi schema, runner hoặc cấu hình trong Commit 2.
 
+### Reports D10 — hợp đồng triển khai theo nhiệm vụ SE2-D10-BE
+
+Nhiệm vụ D10-BE được cung cấp trong phiên làm việc ngày **08/11/2026**, hạn task **09/11/2026**, thay thế đề xuất Reports cũ (`fromMonth/toMonth`, tối đa 12 tháng, DTO `income/expense`). Phần Reports trong SRS vẫn ghi đề xuất cũ; cần đồng bộ khi nhóm chốt tài liệu. Đây là hợp đồng Backend đã triển khai trong working tree, **chưa xác nhận FE tích hợp hoặc nghiệm thu**.
+
+- `GET /api/reports/monthly?from=YYYY-MM&to=YYYY-MM`: hai tham số bắt buộc, đúng định dạng, năm **1900–2100**. Khoảng bao gồm cả hai tháng, cho phép **1–6 tháng liên tiếp**; thiếu/rỗng/sai định dạng, `from > to` hoặc trên 6 tháng trả **400 VALIDATION_ERROR** theo ApiError hiện có.
+- JWT bắt buộc; owner chỉ lấy từ subject đã xác thực. Query `userId` không thay owner; JWT thiếu/sai/hết hạn trả **401 UNAUTHORIZED** theo Security hiện có.
+- `months` tăng dần và có đủ mọi tháng trong khoảng; tháng trống có `totalIncome=totalExpense=balance=0`. Tổng theo `Transaction.type`; `balance=totalIncome-totalExpense`, có thể âm.
+- `expensesByCategory` chỉ gồm EXPENSE trong **toàn bộ khoảng**, nhóm theo `categoryId` và tên danh mục, sắp `totalAmount DESC`; không có chi tiêu trả `[]`. Thứ tự danh mục có tổng bằng nhau không được bảo đảm. Không trả giao dịch riêng lẻ hoặc thông tin tài khoản.
+- DB dùng `[ngày đầu from, ngày đầu tháng sau to)`, kể cả tháng 12 sang tháng 1. Hai truy vấn tổng hợp trong transaction `readOnly`, không tải Entity để cộng tiền hoặc query từng tháng/danh mục.
+- Tiền là JSON number/Backend BigDecimal, không làm tròn trung gian; `0` và `0.00` tương đương. Tổng có thể vượt giới hạn một giao dịch; FE lưu ý độ chính xác JavaScript Number. DTO/service có thể dùng lại cho AI D11; D10 chưa có Chat/Gemini hoặc trường ngân sách/phần trăm.
+
+Ví dụ cấu trúc response **200 OK** (dữ liệu minh họa, không phải bằng chứng chạy thật):
+
+```json
+{
+  "from": "2026-09",
+  "to": "2026-11",
+  "months": [
+    {"month":"2026-09","totalIncome":100.10,"totalExpense":20.05,"balance":80.05},
+    {"month":"2026-10","totalIncome":0,"totalExpense":0,"balance":0},
+    {"month":"2026-11","totalIncome":0,"totalExpense":30.15,"balance":-30.15}
+  ],
+  "expensesByCategory": [
+    {"categoryId":1,"categoryName":"Ăn uống","totalAmount":50.20}
+  ]
+}
+```
+
 ## 3. API dự kiến — cần review trước triển khai
 
 API mới yêu cầu JWT, ID dương, input hợp lệ; lỗi chung theo mục 1. Category/template khác owner trả 404; category thuộc owner nhưng sai type trả 400.
@@ -344,7 +373,6 @@ API mới yêu cầu JWT, ID dương, input hợp lệ; lỗi chung theo mục 1
 | DELETE | `/recurring-templates/{id}` | Path id | 204; 409 TEMPLATE_IN_USE nếu đã áp dụng |
 | GET | `/recurring-templates/{id}/preview` | Query year,month bắt buộc | 200 Preview, không ghi dữ liệu |
 | POST | `/recurring-templates/{id}/apply` | `{year,month}` | 201 Application; 409 TEMPLATE_INACTIVE/ALREADY_APPLIED |
-| GET | `/reports/monthly` | Query fromMonth,toMonth bắt buộc | 200 MonthlyReport; 400 kỳ sai/quá giới hạn |
 | GET | `/reports/categories` | Query fromMonth,toMonth bắt buộc | 200 CategoryReport; 400 kỳ sai/quá giới hạn |
 | GET | `/transactions/export` | Query Filter, không page/size/sort | 200 CSV; 400 filter sai; 422 EXPORT_LIMIT_EXCEEDED |
 
@@ -358,8 +386,6 @@ Template = { id, categoryName, ...TemplateInput }
 Preview = { templateId, year, month, transactionDate, categoryId, categoryName,
   type, amount, note, alreadyApplied, canApply, reasonCode }
 Application = { id, templateId, year, month, transactionId, transaction:Transaction }
-MonthlyReport = { fromMonth, toMonth, totalIncome, totalExpense, balance,
-  months:[{month,income,expense,balance}] }
 CategoryReport = { fromMonth, toMonth, totalExpense,
   categories:[{categoryId,categoryName,totalAmount,categoryShare}] }
 ```
@@ -370,14 +396,14 @@ CategoryReport = { fromMonth, toMonth, totalExpense,
 
 **Phân loại lỗi ghi D09:** chỉ MySQL **1062 / SQLSTATE 23000** là duplicate trả **409 CONFLICT**. FK, CHECK, NOT NULL hoặc lỗi toàn vẹn khác trả **500 INTERNAL_ERROR** trung lập, không lộ SQL/constraint. Chỉ áp dụng đường ghi Apply D09; D01–D08 giữ handler hiện tại. Lỗi ghi luôn rollback cả transaction và marker, không retry trong transaction đã lỗi.
 
-- **Báo cáo (FR-09):** from/to inclusive, đề xuất tối đa 12 tháng; months ASC, tháng trống 0; tổng/balance khớp Dashboard/SQL. Category chỉ EXPENSE, sort totalAmount DESC/categoryId ASC, categoryShare là % round HALF_UP 2 số (tổng làm tròn có thể khác 100); rỗng trả categories=[]. Drilldown dùng filter giao dịch.
+- **Báo cáo (FR-09):** MonthlyReport đã triển khai theo mục Reports D10 ở trên, tối đa 6 tháng. `/reports/categories` riêng và `categoryShare` vẫn là đề xuất, chưa triển khai trong D10; đề xuất sort totalAmount DESC/categoryId ASC, categoryShare là % round HALF_UP 2 số (tổng làm tròn có thể khác 100); rỗng trả categories=[]. Drilldown dùng filter giao dịch.
 - **CSV (FR-10):** xuất toàn bộ filter/owner, sort ngày DESC/id DESC; đề xuất tối đa 10.000 dòng, vượt trả 422 trước khi gửi file, không cắt cụt; count/export nhất quán. UTF-8 BOM, comma/CRLF, quote cell và nhân đôi nháy kép. Header `ID,Ngày giao dịch,Loại,Danh mục,Số tiền (VND),Ghi chú`; tiền dot/2 số, không phân cách nghìn. Rỗng chỉ BOM+header. Với category/note, nếu ký tự đầu sau khoảng trắng/tab/CR/LF là `=,+,-,@`, thêm nháy đơn trước cell rồi escape để chặn formula injection. Không xuất userId/email/password/token.
 - CSV headers: `Content-Type: text/csv; charset=UTF-8`, `Content-Disposition: attachment; filename="smart-expense-YYYYMMDD.csv"`, `Cache-Control: no-store`; tên theo ngày UTC+07:00. FE tải blob, phân biệt JSON lỗi; page/size/sort gửi lên trả 400. Report chuyển khoảng tháng thành range ngày khi export. Cross-origin đọc filename cần review expose header CORS; chưa đổi cấu hình.
 
 ## 4. Những điểm cần chốt
 
 - **FE — Q01/Q04/Q13:** endpoint/DTO mới, lịch, submit và UX timeout. Idempotency-Key nếu cần phải có thiết kế cả nhóm duyệt, chưa có storage/TTL/replay.
-- **Cả nhóm — Q02/Q03/Q05–Q09/Q11:** mã lỗi nghiệp vụ 2.0, metadata/default, rule ngân sách/xóa/định kỳ, report 12 tháng, CSV 10.000; thống nhất email≤255, miền năm/ngày, keyword≤500 tìm literal và tiền JSON number. Các giới hạn mới vẫn là đề xuất.
+- **Cả nhóm — Q02/Q03/Q05–Q09/Q11:** mã lỗi nghiệp vụ 2.0, metadata/default, rule ngân sách/xóa/định kỳ, Reports D10 chờ FE xác nhận tích hợp, CSV 10.000; thống nhất email≤255, miền năm/ngày, keyword≤500 tìm literal và tiền JSON number. Ngoài Reports D10 đã ghi riêng ở trên, các giới hạn mới vẫn là đề xuất.
 - **DB/QA — Q10/Q14:** version migration/runner/FK/ddl-auto, backup/rollback, CI gate/pin SHA; xem [README](../../README.md#migration-backup-và-rollback).
 - **Q12:** nguồn kế hoạch đã xác nhận: 12 FR, 45 task, 27/10–16/11/2026, ba owner/nhánh theo README; không phải duyệt API/schema hoặc ký thay thành viên.
 
