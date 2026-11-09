@@ -412,15 +412,136 @@
 }
 
 /* Responsive: trên mobile luôn hiển thị tên menu */
+.se040-mobile-extras {
+  display: none;
+}
+
 @media (max-width: 1023px) {
   .se040-rail {
-    width: 220px;
+    display: flex;
+    flex-direction: column;
+    width: min(220px, calc(100vw - 24px));
     transform: translateX(-120%);
-    transition: transform .35s var(--se-ease);
+    /* Khi đóng, ẩn khỏi thứ tự Tab và trình đọc màn hình sau khi trượt xong */
+    visibility: hidden;
+    transition:
+      transform .35s var(--se-ease),
+      visibility 0s linear .35s;
   }
 
   .se040.is-open .se040-rail {
     transform: translateX(0);
+    visibility: visible;
+    transition:
+      transform .35s var(--se-ease),
+      visibility 0s;
+  }
+
+  /* Menu cuộn được khi màn hình thấp, không đẩy phần tài khoản ra ngoài */
+  .se040-menu {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .se040-highlight::before {
+    left: 3px;
+  }
+
+  .se040-menu-row,
+  .se040-item {
+    height: 44px;
+    min-height: 44px;
+  }
+
+  /* Hàng cao 44px + khoảng cách 4px = bước 48px, đồng bộ với thanh sáng */
+  .se040-highlight {
+    height: 44px;
+    transform: translateY(calc(var(--se-active-index) * 48px));
+  }
+
+  .se040-profile-wrap {
+    position: relative;
+    bottom: auto;
+    left: auto;
+    right: auto;
+    flex: none;
+    margin-top: 10px;
+  }
+
+  .se040-mobile-extras {
+    display: block;
+    flex: none;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, .12);
+  }
+
+  .se040-extras-logout,
+  .se040-extras-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 44px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background .2s, color .2s;
+  }
+
+  .se040-extras-logout {
+    width: 100%;
+    margin-top: 8px;
+    border: 1px solid rgba(248, 113, 113, .45);
+    background: rgba(239, 68, 68, .14);
+    color: #fecaca;
+    cursor: pointer;
+  }
+
+  .se040-extras-logout:hover {
+    background: rgba(239, 68, 68, .26);
+    color: #fff;
+  }
+
+  .se040-extras-auth {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .se040-extras-link {
+    border: 1px solid rgba(255, 255, 255, .28);
+    color: #f8fafc;
+  }
+
+  .se040-extras-link:hover {
+    background: rgba(255, 255, 255, .12);
+  }
+
+  .se040-extras-link.is-primary {
+    border-color: #2563eb;
+    background: #2563eb;
+    color: #fff;
+  }
+
+  .se040-extras-link.is-primary:hover {
+    background: #1d4ed8;
+  }
+
+  /* Màn hình rất thấp (ví dụ xoay ngang): cho cả Drawer cuộn để vẫn chạm được mọi mục */
+  @media (max-height: 620px) {
+    .se040-rail {
+      overflow-y: auto;
+    }
+
+    .se040-menu {
+      flex: none;
+      overflow: visible;
+    }
   }
 
   .se040-name,

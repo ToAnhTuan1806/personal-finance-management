@@ -16,6 +16,7 @@ export default function FloatingInput({
   onBlur,
   error = '',
   autoComplete,
+  placeholder,
   disabled = false,
 }) {
   const labelRef = useRef(null)
@@ -26,6 +27,14 @@ export default function FloatingInput({
 
   const floating = focused || String(value).length > 0
   const passwordField = type === 'password'
+  const resolvedPlaceholder =
+    placeholder !== undefined
+      ? placeholder
+      : type === 'email'
+        ? 'name@example.com'
+        : type === 'password'
+          ? '••••••••'
+          : ' '
   const validEmail =
     type === 'email' &&
     emailPattern.test(String(value).trim()) &&
@@ -76,7 +85,7 @@ export default function FloatingInput({
           autoComplete={autoComplete}
           disabled={disabled}
           spellCheck={false}
-          placeholder=" "
+          placeholder={resolvedPlaceholder || ' '}
           aria-invalid={!!error}
           aria-describedby={error ? `${id}-error` : undefined}
           className="se025-input"

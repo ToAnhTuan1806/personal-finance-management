@@ -12,7 +12,12 @@ import {
   isDay31,
   validateRecurringTemplateForm,
 } from '../src/components/recurring/recurringTemplateUtils.js'
-import { navigation } from '../src/components/layout/navigation.js'
+import {
+  navigation,
+  mobilePrimaryNavigation,
+  mobileMoreNavigation,
+  isMobileMoreRoute,
+} from '../src/components/layout/navigation.js'
 
 let server
 let RecurringTemplateCard
@@ -241,15 +246,32 @@ test('QA-D08-07: Accessibility - Dialog xóa chuẩn role="alertdialog" và nhã
   assert.match(pageHtml, /aria-label="Bật tắt mẫu định kỳ Bảo hiểm"/)
 })
 
-test('QA-D08-08: Điều hướng MobileNavigation hỗ trợ 8 mục menu đồng đều (grid-cols-8)', async () => {
-  assert.equal(navigation.length, 8, 'Menu hệ thống phải có 8 mục sau khi thêm Định kỳ và Báo cáo')
+test('QA-D08-08: Điều hướng hệ thống giữ đủ 8 mục trên Sidebar/Drawer và thu gọn 5 mục trên MobileNavigation (grid-cols-5)', async () => {
+  assert.equal(navigation.length, 8, 'Menu hệ thống phải có đủ 8 mục trên Sidebar/Drawer')
+  const quickAddItem = navigation.find((item) => item.path === '/quick-add')
+  const transactionsItem = navigation.find((item) => item.path === '/transactions')
   const recurringItem = navigation.find((item) => item.path === '/recurring-templates')
-  assert.equal(recurringItem?.label, 'Định kỳ')
+
+  assert.equal(quickAddItem?.label, 'Ghi chép')
+  assert.equal(transactionsItem?.label, 'Lịch sử giao dịch')
+  assert.equal(transactionsItem?.mobileLabel, 'Lịch sử')
+  assert.equal(recurringItem?.label, 'Giao dịch định kỳ')
+  assert.equal(recurringItem?.mobileLabel, 'Định kỳ')
   assert.equal(recurringItem?.authRequired, true)
+
+  assert.equal(mobilePrimaryNavigation.length, 4, 'Mobile primary navigation gồm 4 route chính')
+  assert.equal(mobileMoreNavigation.length, 4, 'Menu Khác trên mobile gồm 4 route phụ')
+  assert.equal(isMobileMoreRoute('/categories'), true)
+  assert.equal(isMobileMoreRoute('/budgets'), true)
+  assert.equal(isMobileMoreRoute('/recurring-templates'), true)
+  assert.equal(isMobileMoreRoute('/reports'), true)
+  assert.equal(isMobileMoreRoute('/'), false)
+  assert.equal(isMobileMoreRoute('/transactions'), false)
 
   const fs = await import('node:fs')
   const content = fs.readFileSync(new URL('../src/components/layout/MobileNavigation.jsx', import.meta.url), 'utf8')
-  assert.match(content, /grid-cols-8/, 'Mobile navigation phải dùng grid-cols-8 để không bị tràn dòng')
+  assert.match(content, /grid-cols-5/, 'Mobile navigation phải dùng grid-cols-5 cho 4 mục chính + nút Khác')
+  assert.match(content, /Mở menu khác/, 'Nút Khác phải có aria-label rõ ràng')
 })
 
 test('QA-D08-09: Chuẩn hóa dữ liệu API - Ghi chú rỗng gửi null, số tiền gửi dạng Number', async () => {
@@ -274,4 +296,49 @@ test('QA-D08-09: Chuẩn hóa dữ liệu API - Ghi chú rỗng gửi null, số
   assert.equal(typeof body.amount, 'number')
   assert.equal(typeof body.dayOfMonth, 'number')
   assert.equal(body.note, null, 'Ghi chú rỗng phải chuyển thành null theo API contract')
+})
+
+test('QA-UI-POLISH: Đồng bộ copywriting GuestDashboard tháng 11, ẩn phân trang rỗng, Header backdrop-blur và Auth UI', async () => {
+  const fs = await import('node:fs')
+
+  const dashboardSrc = fs.readFileSync(new URL('../src/pages/Dashboard.jsx', import.meta.url), 'utf8')
+  assert.match(dashboardSrc, /Theo dõi thu chi mỗi ngày/)
+  assert.match(dashboardSrc, /Tổng quan tháng 11/)
+  assert.match(dashboardSrc, /Dữ liệu minh họa/)
+  assert.match(dashboardSrc, /Lương tháng 11/)
+  assert.match(dashboardSrc, /01\/11\/2026/)
+  assert.match(dashboardSrc, /03\/11\/2026/)
+  assert.match(dashboardSrc, /05\/11\/2026/)
+  assert.match(
+    dashboardSrc,
+    /Theo dõi tỷ trọng chi tiêu theo danh mục và dòng tiền theo thời gian qua các biểu đồ trực quan\./
+  )
+  assert.match(dashboardSrc, /Bảo vệ dữ liệu tài chính của bạn/)
+  assert.match(
+    dashboardSrc,
+    /SmartExpense sử dụng xác thực đăng nhập và phân quyền tài khoản để bảo vệ thông tin thu chi cá nhân\./
+  )
+  assert.doesNotMatch(dashboardSrc, /Tổng quan tháng 10/)
+  assert.doesNotMatch(dashboardSrc, /Lương tháng 10/)
+
+  const transactionsSrc = fs.readFileSync(new URL('../src/pages/Transactions.jsx', import.meta.url), 'utf8')
+  assert.match(
+    transactionsSrc,
+    /\{\(loading \|\| error \|\| totalElements > 0\) && \(/,
+    'Phân trang Transactions chỉ hiển thị khi đang tải, có lỗi hoặc totalElements > 0'
+  )
+
+  const mainLayoutSrc = fs.readFileSync(new URL('../src/components/layout/MainLayout.jsx', import.meta.url), 'utf8')
+  assert.match(mainLayoutSrc, /backdrop-blur-md/)
+  assert.match(mainLayoutSrc, /bg-white\/80/)
+  assert.match(mainLayoutSrc, /dark:bg-slate-900\/80/)
+  assert.match(mainLayoutSrc, /dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800/)
+
+  const loginSrc = fs.readFileSync(new URL('../src/pages/Login.jsx', import.meta.url), 'utf8')
+  assert.match(loginSrc, /placeholder="name@example\.com"/)
+  assert.match(loginSrc, /placeholder="••••••••"/)
+  assert.doesNotMatch(loginSrc, /\/forgot-password/, 'Không thêm dead link /forgot-password khi D12 chưa triển khai')
+
+  const authCardSrc = fs.readFileSync(new URL('../src/components/auth/AuthCard.jsx', import.meta.url), 'utf8')
+  assert.match(authCardSrc, /bg-blue-600 hover:bg-blue-700 text-white font-semibold/)
 })

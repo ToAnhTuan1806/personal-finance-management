@@ -377,7 +377,8 @@ test('RecurringTemplates: render danh sách các card mẫu khi có dữ liệu'
 test('navigation: cấu hình đúng route /recurring-templates cho giao dịch định kỳ', () => {
   const recurringNav = navigation.find((item) => item.path === '/recurring-templates')
   assert.ok(recurringNav, 'Phải có mục navigation /recurring-templates')
-  assert.equal(recurringNav.label, 'Định kỳ')
+  assert.equal(recurringNav.label, 'Giao dịch định kỳ')
+  assert.equal(recurringNav.mobileLabel, 'Định kỳ')
   assert.equal(recurringNav.authRequired, true)
   assert.ok(recurringNav.icon, 'Phải có Icon lucide')
 })

@@ -190,6 +190,7 @@ export default function Login() {
         name="email"
         type="email"
         label="Địa chỉ email"
+        placeholder="name@example.com"
         autoComplete="email"
         value={form.email}
         onChange={handleChange}
@@ -203,6 +204,7 @@ export default function Login() {
         name="password"
         type="password"
         label="Mật khẩu"
+        placeholder="••••••••"
         autoComplete="current-password"
         value={form.password}
         onChange={handleChange}
