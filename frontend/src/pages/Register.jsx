@@ -207,6 +207,7 @@ export default function Register() {
         id="register-name"
         name="fullName"
         label="Họ và tên"
+        placeholder="Nguyễn Văn A"
         autoComplete="name"
         value={form.fullName}
         onChange={handleChange}
@@ -220,6 +221,7 @@ export default function Register() {
         name="email"
         type="email"
         label="Địa chỉ email"
+        placeholder="name@example.com"
         autoComplete="email"
         value={form.email}
         onChange={handleChange}
@@ -233,6 +235,7 @@ export default function Register() {
         name="password"
         type="password"
         label="Mật khẩu (ít nhất 8 ký tự)"
+        placeholder="••••••••"
         autoComplete="new-password"
         value={form.password}
         onChange={handleChange}
@@ -246,6 +249,7 @@ export default function Register() {
         name="confirmPassword"
         type="password"
         label="Xác nhận mật khẩu"
+        placeholder="••••••••"
         autoComplete="new-password"
         value={form.confirmPassword}
         onChange={handleChange}

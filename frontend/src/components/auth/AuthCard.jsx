@@ -73,7 +73,7 @@ export default function AuthCard({
               success ? 'Thành công' :
               mode === 'register' ? 'Đăng ký' : 'Đăng nhập'
             }
-            className={`se062-action
+            className={`se062-action bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl transition-colors shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed
               ${busy ? 'busy' : ''}
               ${success ? 'ok' : ''}`}
           >

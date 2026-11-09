@@ -1,16 +1,19 @@
 /* Lucian UX/UI Prompt #040 · MIT License (c) 2026 Seokwoooo · https://lucianlabs.dev/uxui-prompt/#040 */
 
 import { useEffect, useRef, useState } from 'react'
-import { NavLink, useLocation, useNavigate } from 'react-router'
+import { Link, NavLink, useLocation, useNavigate } from 'react-router'
 import {
   PanelLeftClose,
   X,
   UserRound,
   Lock,
   LogOut,
+  LogIn,
+  UserPlus,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
 import walletLogo from '../../assets/wallet-logo.png'
+import { ThemeSegmented } from './ThemeToggle'
 
 import './Sidebar.css'
 import { navigation as menus } from './navigation'
@@ -83,7 +86,7 @@ export default function Sidebar({
   const handleItemClick = (event, item) => {
     if (!isAuthenticated && item.authRequired) {
       event.preventDefault()
-      onClose?.()
+      onClose?.({ restoreFocus: false })
       navigate('/login', {
         state: {
           from: item.path,
@@ -92,7 +95,7 @@ export default function Sidebar({
       })
       return
     }
-    onClose?.()
+    onClose?.({ restoreFocus: false })
   }
 
   const handleProfileClick = () => {
@@ -105,6 +108,7 @@ export default function Sidebar({
 
   const handleDoLogout = () => {
     setProfileMenuOpen(false)
+    onClose?.({ restoreFocus: false })
     if (onLogout) {
       onLogout()
     } else {
@@ -162,7 +166,7 @@ export default function Sidebar({
               type="button"
               onClick={onClose}
               aria-label="Đóng Sidebar"
-              className="ml-auto rounded-lg p-1.5 text-slate-300 hover:bg-white/10 lg:hidden"
+              className="ml-auto rounded-lg p-2.5 text-slate-300 hover:bg-white/10 lg:hidden"
             >
               <X size={18} />
             </button>
@@ -224,6 +228,44 @@ export default function Sidebar({
             )
           })}
         </ul>
+
+        {/* Chỉ hiển thị trong Drawer mobile: giao diện và tài khoản (đã bị ẩn khỏi Header hẹp) */}
+        <div className="se040-mobile-extras">
+          <ThemeSegmented />
+
+          {isAuthenticated ? (
+            <button
+              type="button"
+              id="drawer-logout-btn"
+              onClick={handleDoLogout}
+              className="se040-extras-logout"
+            >
+              <LogOut size={16} aria-hidden="true" />
+              <span>Đăng xuất</span>
+            </button>
+          ) : (
+            <div className="se040-extras-auth">
+              <Link
+                to="/login"
+                id="drawer-login-link"
+                onClick={() => onClose?.({ restoreFocus: false })}
+                className="se040-extras-link"
+              >
+                <LogIn size={16} aria-hidden="true" />
+                <span>Đăng nhập</span>
+              </Link>
+              <Link
+                to="/register"
+                id="drawer-register-link"
+                onClick={() => onClose?.({ restoreFocus: false })}
+                className="se040-extras-link is-primary"
+              >
+                <UserPlus size={16} aria-hidden="true" />
+                <span>Đăng ký</span>
+              </Link>
+            </div>
+          )}
+        </div>
 
         {/* Profile chip & menu */}
         <div className="se040-profile-wrap" ref={profileRef}>

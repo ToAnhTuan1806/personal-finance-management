@@ -711,7 +711,8 @@ export default function Transactions() {
           </>
         )}
 
-        {/* Phân trang */}
+        {/* Phân trang: chỉ ẩn khi đã tải thành công và thực sự không có giao dịch */}
+        {(loading || error || totalElements > 0) && (
         <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 px-6 py-4 bg-slate-50/50 dark:bg-[#1E293B]/30">
           <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
             Trang {totalPages === 0 ? 0 : page + 1} / {totalPages} (Tổng {totalElements} giao dịch)
@@ -738,6 +739,7 @@ export default function Transactions() {
             </button>
           </div>
         </div>
+        )}
       </div>
 
       {/* Modal Thêm / Sửa giao dịch */}
