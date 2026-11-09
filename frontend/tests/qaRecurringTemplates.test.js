@@ -241,15 +241,15 @@ test('QA-D08-07: Accessibility - Dialog xóa chuẩn role="alertdialog" và nhã
   assert.match(pageHtml, /aria-label="Bật tắt mẫu định kỳ Bảo hiểm"/)
 })
 
-test('QA-D08-08: Điều hướng MobileNavigation hỗ trợ 7 mục menu đồng đều (grid-cols-7)', async () => {
-  assert.equal(navigation.length, 7, 'Menu hệ thống phải có 7 mục sau khi thêm Định kỳ')
+test('QA-D08-08: Điều hướng MobileNavigation hỗ trợ 8 mục menu đồng đều (grid-cols-8)', async () => {
+  assert.equal(navigation.length, 8, 'Menu hệ thống phải có 8 mục sau khi thêm Định kỳ và Báo cáo')
   const recurringItem = navigation.find((item) => item.path === '/recurring-templates')
   assert.equal(recurringItem?.label, 'Định kỳ')
   assert.equal(recurringItem?.authRequired, true)
 
   const fs = await import('node:fs')
   const content = fs.readFileSync(new URL('../src/components/layout/MobileNavigation.jsx', import.meta.url), 'utf8')
-  assert.match(content, /grid-cols-7/, 'Mobile navigation phải dùng grid-cols-7 để không bị tràn dòng')
+  assert.match(content, /grid-cols-8/, 'Mobile navigation phải dùng grid-cols-8 để không bị tràn dòng')
 })
 
 test('QA-D08-09: Chuẩn hóa dữ liệu API - Ghi chú rỗng gửi null, số tiền gửi dạng Number', async () => {

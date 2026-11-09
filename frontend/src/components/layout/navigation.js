@@ -1,4 +1,4 @@
-import { ArrowLeftRight, CalendarDays, CirclePlus, LayoutDashboard, Repeat, Tags, Wallet } from 'lucide-react'
+import { ArrowLeftRight, BarChart3, CalendarDays, CirclePlus, LayoutDashboard, Repeat, Tags, Wallet } from 'lucide-react'
 
 // D04 thêm lịch tháng; chi tiết ngày được triển khai riêng ở D05.
 export const navigation = [
@@ -9,4 +9,5 @@ export const navigation = [
   { path: '/categories', label: 'Danh mục', icon: Tags, authRequired: true },
   { path: '/budgets', label: 'Ngân sách', icon: Wallet, authRequired: true },
   { path: '/recurring-templates', label: 'Định kỳ', icon: Repeat, authRequired: true },
+  { path: '/reports', label: 'Báo cáo', icon: BarChart3, authRequired: true },
 ]

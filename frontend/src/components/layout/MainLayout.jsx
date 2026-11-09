@@ -15,6 +15,7 @@ const pageTitles = {
   '/budgets': 'Ngân sách hàng tháng',
   '/quick-add': 'Ghi thu chi nhanh',
   '/recurring-templates': 'Giao dịch định kỳ',
+  '/reports': 'Báo cáo tài chính',
 }
 
 export default function MainLayout() {
