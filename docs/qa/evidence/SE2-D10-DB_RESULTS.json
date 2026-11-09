@@ -1,0 +1,3264 @@
+{
+  "task": "SE2-D10-DB",
+  "startedUtc": "2026-11-08T17:17:59.115308+00:00",
+  "tests": [
+    {
+      "id": "API-01",
+      "group": "HTTP+SQL+Dashboard",
+      "input": {
+        "from": "2026-09",
+        "to": "2026-09"
+      },
+      "expected": "one month, income and expense",
+      "actual": {
+        "http": 200,
+        "bodyRaw": "{\"from\":\"2026-09\",\"to\":\"2026-09\",\"months\":[{\"month\":\"2026-09\",\"totalIncome\":1000.30,\"totalExpense\":350.35,\"balance\":649.95}],\"expensesByCategory\":[{\"categoryId\":36,\"categoryName\":\"QA D10 Food\",\"totalAmount\":300.30},{\"categoryId\":37,\"categoryName\":\"QA D10 Transport\",\"totalAmount\":50.05}]}",
+        "sql": {
+          "from": "2026-09",
+          "to": "2026-09",
+          "months": [
+            {
+              "month": "2026-09",
+              "totalIncome": "1000.30",
+              "totalExpense": "350.35",
+              "balance": "649.95"
+            }
+          ],
+          "expensesByCategory": [
+            {
+              "categoryId": 36,
+              "totalAmount": "300.30",
+              "categoryName": "QA D10 Food"
+            },
+            {
+              "categoryId": 37,
+              "totalAmount": "50.05",
+              "categoryName": "QA D10 Transport"
+            }
+          ]
+        },
+        "dashboard": [
+          {
+            "year": 2026,
+            "month": 9,
+            "totalIncome": "1000.30",
+            "totalExpense": "350.35",
+            "balance": "649.95"
+          }
+        ],
+        "durationMs": "35.433"
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "API-02",
+      "group": "HTTP+SQL+Dashboard",
+      "input": {
+        "from": "2026-09",
+        "to": "2026-11"
+      },
+      "expected": "three months",
+      "actual": {
+        "http": 200,
+        "bodyRaw": "{\"from\":\"2026-09\",\"to\":\"2026-11\",\"months\":[{\"month\":\"2026-09\",\"totalIncome\":1000.30,\"totalExpense\":350.35,\"balance\":649.95},{\"month\":\"2026-10\",\"totalIncome\":0,\"totalExpense\":0,\"balance\":0},{\"month\":\"2026-11\",\"totalIncome\":2000.00,\"totalExpense\":501.00,\"balance\":1499.00}],\"expensesByCategory\":[{\"categoryId\":36,\"categoryName\":\"QA D10 Food\",\"totalAmount\":650.55},{\"categoryId\":37,\"categoryName\":\"QA D10 Transport\",\"totalAmount\":200.80}]}",
+        "sql": {
+          "from": "2026-09",
+          "to": "2026-11",
+          "months": [
+            {
+              "month": "2026-09",
+              "totalIncome": "1000.30",
+              "totalExpense": "350.35",
+              "balance": "649.95"
+            },
+            {
+              "month": "2026-10",
+              "totalIncome": "0",
+              "totalExpense": "0",
+              "balance": "0"
+            },
+            {
+              "month": "2026-11",
+              "totalIncome": "2000.00",
+              "totalExpense": "501.00",
+              "balance": "1499.00"
+            }
+          ],
+          "expensesByCategory": [
+            {
+              "categoryId": 36,
+              "totalAmount": "650.55",
+              "categoryName": "QA D10 Food"
+            },
+            {
+              "categoryId": 37,
+              "totalAmount": "200.80",
+              "categoryName": "QA D10 Transport"
+            }
+          ]
+        },
+        "dashboard": [
+          {
+            "year": 2026,
+            "month": 9,
+            "totalIncome": "1000.30",
+            "totalExpense": "350.35",
+            "balance": "649.95"
+          },
+          {
+            "year": 2026,
+            "month": 10,
+            "totalIncome": 0,
+            "totalExpense": 0,
+            "balance": 0
+          },
+          {
+            "year": 2026,
+            "month": 11,
+            "totalIncome": "2000.00",
+            "totalExpense": "501.00",
+            "balance": "1499.00"
+          }
+        ],
+        "durationMs": "28.726"
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "API-03",
+      "group": "HTTP+SQL+Dashboard",
+      "input": {
+        "from": "2026-05",
+        "to": "2026-10"
+      },
+      "expected": "exactly six inclusive months",
+      "actual": {
+        "http": 200,
+        "bodyRaw": "{\"from\":\"2026-05\",\"to\":\"2026-10\",\"months\":[{\"month\":\"2026-05\",\"totalIncome\":1.11,\"totalExpense\":0,\"balance\":1.11},{\"month\":\"2026-06\",\"totalIncome\":0,\"totalExpense\":2.22,\"balance\":-2.22},{\"month\":\"2026-07\",\"totalIncome\":0,\"totalExpense\":0,\"balance\":0},{\"month\":\"2026-08\",\"totalIncome\":900.00,\"totalExpense\":0,\"balance\":900.00},{\"month\":\"2026-09\",\"totalIncome\":1000.30,\"totalExpense\":350.35,\"balance\":649.95},{\"month\":\"2026-10\",\"totalIncome\":0,\"totalExpense\":0,\"balance\":0}],\"expensesByCategory\":[{\"categoryId\":36,\"categoryName\":\"QA D10 Food\",\"totalAmount\":302.52},{\"categoryId\":37,\"categoryName\":\"QA D10 Transport\",\"totalAmount\":50.05}]}",
+        "sql": {
+          "from": "2026-05",
+          "to": "2026-10",
+          "months": [
+            {
+              "month": "2026-05",
+              "totalIncome": "1.11",
+              "totalExpense": "0.00",
+              "balance": "1.11"
+            },
+            {
+              "month": "2026-06",
+              "totalIncome": "0.00",
+              "totalExpense": "2.22",
+              "balance": "-2.22"
+            },
+            {
+              "month": "2026-07",
+              "totalIncome": "0",
+              "totalExpense": "0",
+              "balance": "0"
+            },
+            {
+              "month": "2026-08",
+              "totalIncome": "900.00",
+              "totalExpense": "0.00",
+              "balance": "900.00"
+            },
+            {
+              "month": "2026-09",
+              "totalIncome": "1000.30",
+              "totalExpense": "350.35",
+              "balance": "649.95"
+            },
+            {
+              "month": "2026-10",
+              "totalIncome": "0",
+              "totalExpense": "0",
+              "balance": "0"
+            }
+          ],
+          "expensesByCategory": [
+            {
+              "categoryId": 36,
+              "totalAmount": "302.52",
+              "categoryName": "QA D10 Food"
+            },
+            {
+              "categoryId": 37,
+              "totalAmount": "50.05",
+              "categoryName": "QA D10 Transport"
+            }
+          ]
+        },
+        "dashboard": [
+          {
+            "year": 2026,
+            "month": 5,
+            "totalIncome": "1.11",
+            "totalExpense": 0,
+            "balance": "1.11"
+          },
+          {
+            "year": 2026,
+            "month": 6,
+            "totalIncome": 0,
+            "totalExpense": "2.22",
+            "balance": "-2.22"
+          },
+          {
+            "year": 2026,
+            "month": 7,
+            "totalIncome": 0,
+            "totalExpense": 0,
+            "balance": 0
+          },
+          {
+            "year": 2026,
+            "month": 8,
+            "totalIncome": "900.00",
+            "totalExpense": 0,
+            "balance": "900.00"
+          },
+          {
+            "year": 2026,
+            "month": 9,
+            "totalIncome": "1000.30",
+            "totalExpense": "350.35",
+            "balance": "649.95"
+          },
+          {
+            "year": 2026,
+            "month": 10,
+            "totalIncome": 0,
+            "totalExpense": 0,
+            "balance": 0
+          }
+        ],
+        "durationMs": "32.443"
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "API-04",
+      "group": "HTTP+SQL+Dashboard",
+      "input": {
+        "from": "2026-10",
+        "to": "2026-10"
+      },
+      "expected": "empty month zeros and no categories",
+      "actual": {
+        "http": 200,
+        "bodyRaw": "{\"from\":\"2026-10\",\"to\":\"2026-10\",\"months\":[{\"month\":\"2026-10\",\"totalIncome\":0,\"totalExpense\":0,\"balance\":0}],\"expensesByCategory\":[]}",
+        "sql": {
+          "from": "2026-10",
+          "to": "2026-10",
+          "months": [
+            {
+              "month": "2026-10",
+              "totalIncome": "0",
+              "totalExpense": "0",
+              "balance": "0"
+            }
+          ],
+          "expensesByCategory": []
+        },
+        "dashboard": [
+          {
+            "year": 2026,
+            "month": 10,
+            "totalIncome": 0,
+            "totalExpense": 0,
+            "balance": 0
+          }
+        ],
+        "durationMs": "10.049"
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "API-05",
+      "group": "HTTP+SQL+Dashboard",
+      "input": {
+        "from": "2026-09",
+        "to": "2026-11"
+      },
+      "expected": "empty middle month preserved",
+      "actual": {
+        "http": 200,
+        "bodyRaw": "{\"from\":\"2026-09\",\"to\":\"2026-11\",\"months\":[{\"month\":\"2026-09\",\"totalIncome\":1000.30,\"totalExpense\":350.35,\"balance\":649.95},{\"month\":\"2026-10\",\"totalIncome\":0,\"totalExpense\":0,\"balance\":0},{\"month\":\"2026-11\",\"totalIncome\":2000.00,\"totalExpense\":501.00,\"balance\":1499.00}],\"expensesByCategory\":[{\"categoryId\":36,\"categoryName\":\"QA D10 Food\",\"totalAmount\":650.55},{\"categoryId\":37,\"categoryName\":\"QA D10 Transport\",\"totalAmount\":200.80}]}",
+        "sql": {
+          "from": "2026-09",
+          "to": "2026-11",
+          "months": [
+            {
+              "month": "2026-09",
+              "totalIncome": "1000.30",
+              "totalExpense": "350.35",
+              "balance": "649.95"
+            },
+            {
+              "month": "2026-10",
+              "totalIncome": "0",
+              "totalExpense": "0",
+              "balance": "0"
+            },
+            {
+              "month": "2026-11",
+              "totalIncome": "2000.00",
+              "totalExpense": "501.00",
+              "balance": "1499.00"
+            }
+          ],
+          "expensesByCategory": [
+            {
+              "categoryId": 36,
+              "totalAmount": "650.55",
+              "categoryName": "QA D10 Food"
+            },
+            {
+              "categoryId": 37,
+              "totalAmount": "200.80",
+              "categoryName": "QA D10 Transport"
+            }
+          ]
+        },
+        "dashboard": [
+          {
+            "year": 2026,
+            "month": 9,
+            "totalIncome": "1000.30",
+            "totalExpense": "350.35",
+            "balance": "649.95"
+          },
+          {
+            "year": 2026,
+            "month": 10,
+            "totalIncome": 0,
+            "totalExpense": 0,
+            "balance": 0
+          },
+          {
+            "year": 2026,
+            "month": 11,
+            "totalIncome": "2000.00",
+            "totalExpense": "501.00",
+            "balance": "1499.00"
+          }
+        ],
+        "durationMs": "12.621"
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "API-06",
+      "group": "HTTP+SQL+Dashboard",
+      "input": {
+        "from": "2025-12",
+        "to": "2026-01"
+      },
+      "expected": "December to January",
+      "actual": {
+        "http": 200,
+        "bodyRaw": "{\"from\":\"2025-12\",\"to\":\"2026-01\",\"months\":[{\"month\":\"2025-12\",\"totalIncome\":0,\"totalExpense\":22.22,\"balance\":-22.22},{\"month\":\"2026-01\",\"totalIncome\":111.11,\"totalExpense\":0,\"balance\":111.11}],\"expensesByCategory\":[{\"categoryId\":36,\"categoryName\":\"QA D10 Food\",\"totalAmount\":22.22}]}",
+        "sql": {
+          "from": "2025-12",
+          "to": "2026-01",
+          "months": [
+            {
+              "month": "2025-12",
+              "totalIncome": "0.00",
+              "totalExpense": "22.22",
+              "balance": "-22.22"
+            },
+            {
+              "month": "2026-01",
+              "totalIncome": "111.11",
+              "totalExpense": "0.00",
+              "balance": "111.11"
+            }
+          ],
+          "expensesByCategory": [
+            {
+              "categoryId": 36,
+              "totalAmount": "22.22",
+              "categoryName": "QA D10 Food"
+            }
+          ]
+        },
+        "dashboard": [
+          {
+            "year": 2025,
+            "month": 12,
+            "totalIncome": 0,
+            "totalExpense": "22.22",
+            "balance": "-22.22"
+          },
+          {
+            "year": 2026,
+            "month": 1,
+            "totalIncome": "111.11",
+            "totalExpense": 0,
+            "balance": "111.11"
+          }
+        ],
+        "durationMs": "30.042"
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "API-07",
+      "group": "HTTP+SQL+Dashboard",
+      "input": {
+        "from": "2024-02",
+        "to": "2024-02"
+      },
+      "expected": "leap day 2024-02-29 included; March excluded",
+      "actual": {
+        "http": 200,
+        "bodyRaw": "{\"from\":\"2024-02\",\"to\":\"2024-02\",\"months\":[{\"month\":\"2024-02\",\"totalIncome\":0.20,\"totalExpense\":0.10,\"balance\":0.10}],\"expensesByCategory\":[{\"categoryId\":36,\"categoryName\":\"QA D10 Food\",\"totalAmount\":0.10}]}",
+        "sql": {
+          "from": "2024-02",
+          "to": "2024-02",
+          "months": [
+            {
+              "month": "2024-02",
+              "totalIncome": "0.20",
+              "totalExpense": "0.10",
+              "balance": "0.10"
+            }
+          ],
+          "expensesByCategory": [
+            {
+              "categoryId": 36,
+              "totalAmount": "0.10",
+              "categoryName": "QA D10 Food"
+            }
+          ]
+        },
+        "dashboard": [
+          {
+            "year": 2024,
+            "month": 2,
+            "totalIncome": "0.20",
+            "totalExpense": "0.10",
+            "balance": "0.10"
+          }
+        ],
+        "durationMs": "31.015"
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "API-08",
+      "group": "HTTP+SQL+Dashboard",
+      "input": {
+        "from": "2026-09",
+        "to": "2026-09"
+      },
+      "expected": "multiple transactions in same category",
+      "actual": {
+        "http": 200,
+        "bodyRaw": "{\"from\":\"2026-09\",\"to\":\"2026-09\",\"months\":[{\"month\":\"2026-09\",\"totalIncome\":1000.30,\"totalExpense\":350.35,\"balance\":649.95}],\"expensesByCategory\":[{\"categoryId\":36,\"categoryName\":\"QA D10 Food\",\"totalAmount\":300.30},{\"categoryId\":37,\"categoryName\":\"QA D10 Transport\",\"totalAmount\":50.05}]}",
+        "sql": {
+          "from": "2026-09",
+          "to": "2026-09",
+          "months": [
+            {
+              "month": "2026-09",
+              "totalIncome": "1000.30",
+              "totalExpense": "350.35",
+              "balance": "649.95"
+            }
+          ],
+          "expensesByCategory": [
+            {
+              "categoryId": 36,
+              "totalAmount": "300.30",
+              "categoryName": "QA D10 Food"
+            },
+            {
+              "categoryId": 37,
+              "totalAmount": "50.05",
+              "categoryName": "QA D10 Transport"
+            }
+          ]
+        },
+        "dashboard": [
+          {
+            "year": 2026,
+            "month": 9,
+            "totalIncome": "1000.30",
+            "totalExpense": "350.35",
+            "balance": "649.95"
+          }
+        ],
+        "durationMs": "30.806"
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "API-09",
+      "group": "HTTP+SQL+Dashboard",
+      "input": {
+        "from": "2026-11",
+        "to": "2026-11"
+      },
+      "expected": "unused and income categories excluded",
+      "actual": {
+        "http": 200,
+        "bodyRaw": "{\"from\":\"2026-11\",\"to\":\"2026-11\",\"months\":[{\"month\":\"2026-11\",\"totalIncome\":2000.00,\"totalExpense\":501.00,\"balance\":1499.00}],\"expensesByCategory\":[{\"categoryId\":36,\"categoryName\":\"QA D10 Food\",\"totalAmount\":350.25},{\"categoryId\":37,\"categoryName\":\"QA D10 Transport\",\"totalAmount\":150.75}]}",
+        "sql": {
+          "from": "2026-11",
+          "to": "2026-11",
+          "months": [
+            {
+              "month": "2026-11",
+              "totalIncome": "2000.00",
+              "totalExpense": "501.00",
+              "balance": "1499.00"
+            }
+          ],
+          "expensesByCategory": [
+            {
+              "categoryId": 36,
+              "totalAmount": "350.25",
+              "categoryName": "QA D10 Food"
+            },
+            {
+              "categoryId": 37,
+              "totalAmount": "150.75",
+              "categoryName": "QA D10 Transport"
+            }
+          ]
+        },
+        "dashboard": [
+          {
+            "year": 2026,
+            "month": 11,
+            "totalIncome": "2000.00",
+            "totalExpense": "501.00",
+            "balance": "1499.00"
+          }
+        ],
+        "durationMs": "35.422"
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "API-10",
+      "group": "HTTP+SQL+Dashboard",
+      "input": {
+        "from": "2026-05",
+        "to": "2026-10"
+      },
+      "expected": "Reports/SQL/Dashboard reconciliation",
+      "actual": {
+        "http": 200,
+        "bodyRaw": "{\"from\":\"2026-05\",\"to\":\"2026-10\",\"months\":[{\"month\":\"2026-05\",\"totalIncome\":1.11,\"totalExpense\":0,\"balance\":1.11},{\"month\":\"2026-06\",\"totalIncome\":0,\"totalExpense\":2.22,\"balance\":-2.22},{\"month\":\"2026-07\",\"totalIncome\":0,\"totalExpense\":0,\"balance\":0},{\"month\":\"2026-08\",\"totalIncome\":900.00,\"totalExpense\":0,\"balance\":900.00},{\"month\":\"2026-09\",\"totalIncome\":1000.30,\"totalExpense\":350.35,\"balance\":649.95},{\"month\":\"2026-10\",\"totalIncome\":0,\"totalExpense\":0,\"balance\":0}],\"expensesByCategory\":[{\"categoryId\":36,\"categoryName\":\"QA D10 Food\",\"totalAmount\":302.52},{\"categoryId\":37,\"categoryName\":\"QA D10 Transport\",\"totalAmount\":50.05}]}",
+        "sql": {
+          "from": "2026-05",
+          "to": "2026-10",
+          "months": [
+            {
+              "month": "2026-05",
+              "totalIncome": "1.11",
+              "totalExpense": "0.00",
+              "balance": "1.11"
+            },
+            {
+              "month": "2026-06",
+              "totalIncome": "0.00",
+              "totalExpense": "2.22",
+              "balance": "-2.22"
+            },
+            {
+              "month": "2026-07",
+              "totalIncome": "0",
+              "totalExpense": "0",
+              "balance": "0"
+            },
+            {
+              "month": "2026-08",
+              "totalIncome": "900.00",
+              "totalExpense": "0.00",
+              "balance": "900.00"
+            },
+            {
+              "month": "2026-09",
+              "totalIncome": "1000.30",
+              "totalExpense": "350.35",
+              "balance": "649.95"
+            },
+            {
+              "month": "2026-10",
+              "totalIncome": "0",
+              "totalExpense": "0",
+              "balance": "0"
+            }
+          ],
+          "expensesByCategory": [
+            {
+              "categoryId": 36,
+              "totalAmount": "302.52",
+              "categoryName": "QA D10 Food"
+            },
+            {
+              "categoryId": 37,
+              "totalAmount": "50.05",
+              "categoryName": "QA D10 Transport"
+            }
+          ]
+        },
+        "dashboard": [
+          {
+            "year": 2026,
+            "month": 5,
+            "totalIncome": "1.11",
+            "totalExpense": 0,
+            "balance": "1.11"
+          },
+          {
+            "year": 2026,
+            "month": 6,
+            "totalIncome": 0,
+            "totalExpense": "2.22",
+            "balance": "-2.22"
+          },
+          {
+            "year": 2026,
+            "month": 7,
+            "totalIncome": 0,
+            "totalExpense": 0,
+            "balance": 0
+          },
+          {
+            "year": 2026,
+            "month": 8,
+            "totalIncome": "900.00",
+            "totalExpense": 0,
+            "balance": "900.00"
+          },
+          {
+            "year": 2026,
+            "month": 9,
+            "totalIncome": "1000.30",
+            "totalExpense": "350.35",
+            "balance": "649.95"
+          },
+          {
+            "year": 2026,
+            "month": 10,
+            "totalIncome": 0,
+            "totalExpense": 0,
+            "balance": 0
+          }
+        ],
+        "durationMs": "30.802"
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "API-21",
+      "group": "HTTP+SQL+Dashboard",
+      "input": {
+        "from": "1900-01",
+        "to": "1900-01"
+      },
+      "expected": "minimum year",
+      "actual": {
+        "http": 200,
+        "bodyRaw": "{\"from\":\"1900-01\",\"to\":\"1900-01\",\"months\":[{\"month\":\"1900-01\",\"totalIncome\":1.90,\"totalExpense\":0,\"balance\":1.90}],\"expensesByCategory\":[]}",
+        "sql": {
+          "from": "1900-01",
+          "to": "1900-01",
+          "months": [
+            {
+              "month": "1900-01",
+              "totalIncome": "1.90",
+              "totalExpense": "0.00",
+              "balance": "1.90"
+            }
+          ],
+          "expensesByCategory": []
+        },
+        "dashboard": [
+          {
+            "year": 1900,
+            "month": 1,
+            "totalIncome": "1.90",
+            "totalExpense": 0,
+            "balance": "1.90"
+          }
+        ],
+        "durationMs": "20.303"
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "API-22",
+      "group": "HTTP+SQL+Dashboard",
+      "input": {
+        "from": "2100-12",
+        "to": "2100-12"
+      },
+      "expected": "maximum year, next exclusive bound 2101-01",
+      "actual": {
+        "http": 200,
+        "bodyRaw": "{\"from\":\"2100-12\",\"to\":\"2100-12\",\"months\":[{\"month\":\"2100-12\",\"totalIncome\":0,\"totalExpense\":2.10,\"balance\":-2.10}],\"expensesByCategory\":[{\"categoryId\":36,\"categoryName\":\"QA D10 Food\",\"totalAmount\":2.10}]}",
+        "sql": {
+          "from": "2100-12",
+          "to": "2100-12",
+          "months": [
+            {
+              "month": "2100-12",
+              "totalIncome": "0.00",
+              "totalExpense": "2.10",
+              "balance": "-2.10"
+            }
+          ],
+          "expensesByCategory": [
+            {
+              "categoryId": 36,
+              "totalAmount": "2.10",
+              "categoryName": "QA D10 Food"
+            }
+          ]
+        },
+        "dashboard": [
+          {
+            "year": 2100,
+            "month": 12,
+            "totalIncome": 0,
+            "totalExpense": "2.10",
+            "balance": "-2.10"
+          }
+        ],
+        "durationMs": "31.425"
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "API-23",
+      "group": "HTTP+SQL+Dashboard",
+      "input": {
+        "from": "2030-01",
+        "to": "2030-01"
+      },
+      "expected": "cents and aggregate 19999999999999.98",
+      "actual": {
+        "http": 200,
+        "bodyRaw": "{\"from\":\"2030-01\",\"to\":\"2030-01\",\"months\":[{\"month\":\"2030-01\",\"totalIncome\":0.30,\"totalExpense\":19999999999999.98,\"balance\":-19999999999999.68}],\"expensesByCategory\":[{\"categoryId\":36,\"categoryName\":\"QA D10 Food\",\"totalAmount\":19999999999999.98}]}",
+        "sql": {
+          "from": "2030-01",
+          "to": "2030-01",
+          "months": [
+            {
+              "month": "2030-01",
+              "totalIncome": "0.30",
+              "totalExpense": "19999999999999.98",
+              "balance": "-19999999999999.68"
+            }
+          ],
+          "expensesByCategory": [
+            {
+              "categoryId": 36,
+              "totalAmount": "19999999999999.98",
+              "categoryName": "QA D10 Food"
+            }
+          ]
+        },
+        "dashboard": [
+          {
+            "year": 2030,
+            "month": 1,
+            "totalIncome": "0.30",
+            "totalExpense": "19999999999999.98",
+            "balance": "-19999999999999.68"
+          }
+        ],
+        "durationMs": "25.465"
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "API-11",
+      "group": "validation",
+      "input": {
+        "query": "to=2026-11"
+      },
+      "expected": "400 missing from",
+      "actual": {
+        "http": 400,
+        "bodyRaw": "{\"status\":400,\"code\":\"VALIDATION_ERROR\",\"message\":\"Dữ liệu không hợp lệ\"}"
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "API-12",
+      "group": "validation",
+      "input": {
+        "query": "from=2026-09"
+      },
+      "expected": "400 missing to",
+      "actual": {
+        "http": 400,
+        "bodyRaw": "{\"status\":400,\"code\":\"VALIDATION_ERROR\",\"message\":\"Dữ liệu không hợp lệ\"}"
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "API-13a",
+      "group": "validation",
+      "input": {
+        "query": "from=2026-9&to=2026-11"
+      },
+      "expected": "400 wrong YYYY-MM",
+      "actual": {
+        "http": 400,
+        "bodyRaw": "{\"status\":400,\"code\":\"VALIDATION_ERROR\",\"message\":\"Tháng phải có định dạng YYYY-MM\"}"
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "API-13b",
+      "group": "validation",
+      "input": {
+        "query": "from=&to=2026-11"
+      },
+      "expected": "400 empty from",
+      "actual": {
+        "http": 400,
+        "bodyRaw": "{\"status\":400,\"code\":\"VALIDATION_ERROR\",\"message\":\"Tháng phải có định dạng YYYY-MM\"}"
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "API-13c",
+      "group": "validation",
+      "input": {
+        "query": "from=2026-09&to="
+      },
+      "expected": "400 empty to",
+      "actual": {
+        "http": 400,
+        "bodyRaw": "{\"status\":400,\"code\":\"VALIDATION_ERROR\",\"message\":\"Tháng phải có định dạng YYYY-MM\"}"
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "API-14a",
+      "group": "validation",
+      "input": {
+        "query": "from=2026-00&to=2026-11"
+      },
+      "expected": "400 month 00",
+      "actual": {
+        "http": 400,
+        "bodyRaw": "{\"status\":400,\"code\":\"VALIDATION_ERROR\",\"message\":\"Tháng phải có định dạng YYYY-MM\"}"
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "API-14b",
+      "group": "validation",
+      "input": {
+        "query": "from=2026-09&to=2026-13"
+      },
+      "expected": "400 month 13",
+      "actual": {
+        "http": 400,
+        "bodyRaw": "{\"status\":400,\"code\":\"VALIDATION_ERROR\",\"message\":\"Tháng phải có định dạng YYYY-MM\"}"
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "API-15",
+      "group": "validation",
+      "input": {
+        "query": "from=2026-11&to=2026-09"
+      },
+      "expected": "400 reversed",
+      "actual": {
+        "http": 400,
+        "bodyRaw": "{\"status\":400,\"code\":\"VALIDATION_ERROR\",\"message\":\"Khoảng báo cáo phải từ 1 đến 6 tháng, from không được lớn hơn to\"}"
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "API-16",
+      "group": "validation",
+      "input": {
+        "query": "from=2026-01&to=2026-07"
+      },
+      "expected": "400 seven months",
+      "actual": {
+        "http": 400,
+        "bodyRaw": "{\"status\":400,\"code\":\"VALIDATION_ERROR\",\"message\":\"Khoảng báo cáo phải từ 1 đến 6 tháng, from không được lớn hơn to\"}"
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "API-17a",
+      "group": "validation",
+      "input": {
+        "query": "from=1899-12&to=1900-01"
+      },
+      "expected": "400 below 1900",
+      "actual": {
+        "http": 400,
+        "bodyRaw": "{\"status\":400,\"code\":\"VALIDATION_ERROR\",\"message\":\"Năm phải nằm trong khoảng 1900-2100\"}"
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "API-17b",
+      "group": "validation",
+      "input": {
+        "query": "from=2100-12&to=2101-01"
+      },
+      "expected": "400 above 2100",
+      "actual": {
+        "http": 400,
+        "bodyRaw": "{\"status\":400,\"code\":\"VALIDATION_ERROR\",\"message\":\"Năm phải nằm trong khoảng 1900-2100\"}"
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "API-24",
+      "group": "validation",
+      "input": {
+        "query": "from=2026-09%27%20OR%201%3D1%20--&to=2026-11"
+      },
+      "expected": "400 injection input",
+      "actual": {
+        "http": 400,
+        "bodyRaw": "{\"status\":400,\"code\":\"VALIDATION_ERROR\",\"message\":\"Tháng phải có định dạng YYYY-MM\"}"
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "API-18a",
+      "group": "JWT",
+      "input": {
+        "case": "missing"
+      },
+      "expected": "401 without SQL/trace/credentials",
+      "actual": {
+        "http": 401,
+        "bodyRaw": "{\"status\":401,\"code\":\"UNAUTHORIZED\",\"message\":\"Vui lòng đăng nhập lại\"}"
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "API-18b",
+      "group": "JWT",
+      "input": {
+        "case": "invalid"
+      },
+      "expected": "401 without SQL/trace/credentials",
+      "actual": {
+        "http": 401,
+        "bodyRaw": "{\"status\":401,\"code\":\"UNAUTHORIZED\",\"message\":\"Vui lòng đăng nhập lại\"}"
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "API-18c",
+      "group": "JWT",
+      "input": {
+        "case": "expired"
+      },
+      "expected": "401 without SQL/trace/credentials",
+      "actual": {
+        "http": 401,
+        "bodyRaw": "{\"status\":401,\"code\":\"UNAUTHORIZED\",\"message\":\"Vui lòng đăng nhập lại\"}"
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "API-19A",
+      "group": "owner isolation",
+      "input": {
+        "owner": "A",
+        "from": "2026-09",
+        "to": "2026-11"
+      },
+      "expected": "only authenticated owner's SQL totals",
+      "actual": {
+        "http": 200,
+        "bodyRaw": "{\"from\":\"2026-09\",\"to\":\"2026-11\",\"months\":[{\"month\":\"2026-09\",\"totalIncome\":1000.30,\"totalExpense\":350.35,\"balance\":649.95},{\"month\":\"2026-10\",\"totalIncome\":0,\"totalExpense\":0,\"balance\":0},{\"month\":\"2026-11\",\"totalIncome\":2000.00,\"totalExpense\":501.00,\"balance\":1499.00}],\"expensesByCategory\":[{\"categoryId\":36,\"categoryName\":\"QA D10 Food\",\"totalAmount\":650.55},{\"categoryId\":37,\"categoryName\":\"QA D10 Transport\",\"totalAmount\":200.80}]}",
+        "sql": {
+          "from": "2026-09",
+          "to": "2026-11",
+          "months": [
+            {
+              "month": "2026-09",
+              "totalIncome": "1000.30",
+              "totalExpense": "350.35",
+              "balance": "649.95"
+            },
+            {
+              "month": "2026-10",
+              "totalIncome": "0",
+              "totalExpense": "0",
+              "balance": "0"
+            },
+            {
+              "month": "2026-11",
+              "totalIncome": "2000.00",
+              "totalExpense": "501.00",
+              "balance": "1499.00"
+            }
+          ],
+          "expensesByCategory": [
+            {
+              "categoryId": 36,
+              "totalAmount": "650.55",
+              "categoryName": "QA D10 Food"
+            },
+            {
+              "categoryId": 37,
+              "totalAmount": "200.80",
+              "categoryName": "QA D10 Transport"
+            }
+          ]
+        },
+        "dashboard": [
+          {
+            "year": 2026,
+            "month": 9,
+            "totalIncome": "1000.30",
+            "totalExpense": "350.35",
+            "balance": "649.95"
+          },
+          {
+            "year": 2026,
+            "month": 10,
+            "totalIncome": 0,
+            "totalExpense": 0,
+            "balance": 0
+          },
+          {
+            "year": 2026,
+            "month": 11,
+            "totalIncome": "2000.00",
+            "totalExpense": "501.00",
+            "balance": "1499.00"
+          }
+        ],
+        "durationMs": "20.775"
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "API-19B",
+      "group": "owner isolation",
+      "input": {
+        "owner": "B",
+        "from": "2026-09",
+        "to": "2026-11"
+      },
+      "expected": "only authenticated owner's SQL totals",
+      "actual": {
+        "http": 200,
+        "bodyRaw": "{\"from\":\"2026-09\",\"to\":\"2026-11\",\"months\":[{\"month\":\"2026-09\",\"totalIncome\":9000.00,\"totalExpense\":999.99,\"balance\":8000.01},{\"month\":\"2026-10\",\"totalIncome\":0,\"totalExpense\":0,\"balance\":0},{\"month\":\"2026-11\",\"totalIncome\":0,\"totalExpense\":0,\"balance\":0}],\"expensesByCategory\":[{\"categoryId\":40,\"categoryName\":\"QA D10 Food\",\"totalAmount\":999.99}]}",
+        "sql": {
+          "from": "2026-09",
+          "to": "2026-11",
+          "months": [
+            {
+              "month": "2026-09",
+              "totalIncome": "9000.00",
+              "totalExpense": "999.99",
+              "balance": "8000.01"
+            },
+            {
+              "month": "2026-10",
+              "totalIncome": "0",
+              "totalExpense": "0",
+              "balance": "0"
+            },
+            {
+              "month": "2026-11",
+              "totalIncome": "0",
+              "totalExpense": "0",
+              "balance": "0"
+            }
+          ],
+          "expensesByCategory": [
+            {
+              "categoryId": 40,
+              "totalAmount": "999.99",
+              "categoryName": "QA D10 Food"
+            }
+          ]
+        },
+        "dashboard": [
+          {
+            "year": 2026,
+            "month": 9,
+            "totalIncome": "9000.00",
+            "totalExpense": "999.99",
+            "balance": "8000.01"
+          },
+          {
+            "year": 2026,
+            "month": 10,
+            "totalIncome": 0,
+            "totalExpense": 0,
+            "balance": 0
+          },
+          {
+            "year": 2026,
+            "month": 11,
+            "totalIncome": 0,
+            "totalExpense": 0,
+            "balance": 0
+          }
+        ],
+        "durationMs": "34.909"
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "API-20",
+      "group": "owner override",
+      "input": {
+        "owner": "A",
+        "queryUserIdAlias": "B"
+      },
+      "expected": "userId cannot replace JWT owner",
+      "actual": {
+        "http": 200,
+        "bodyRaw": "{\"from\":\"2026-09\",\"to\":\"2026-11\",\"months\":[{\"month\":\"2026-09\",\"totalIncome\":1000.30,\"totalExpense\":350.35,\"balance\":649.95},{\"month\":\"2026-10\",\"totalIncome\":0,\"totalExpense\":0,\"balance\":0},{\"month\":\"2026-11\",\"totalIncome\":2000.00,\"totalExpense\":501.00,\"balance\":1499.00}],\"expensesByCategory\":[{\"categoryId\":36,\"categoryName\":\"QA D10 Food\",\"totalAmount\":650.55},{\"categoryId\":37,\"categoryName\":\"QA D10 Transport\",\"totalAmount\":200.80}]}",
+        "sql": {
+          "from": "2026-09",
+          "to": "2026-11",
+          "months": [
+            {
+              "month": "2026-09",
+              "totalIncome": "1000.30",
+              "totalExpense": "350.35",
+              "balance": "649.95"
+            },
+            {
+              "month": "2026-10",
+              "totalIncome": "0",
+              "totalExpense": "0",
+              "balance": "0"
+            },
+            {
+              "month": "2026-11",
+              "totalIncome": "2000.00",
+              "totalExpense": "501.00",
+              "balance": "1499.00"
+            }
+          ],
+          "expensesByCategory": [
+            {
+              "categoryId": 36,
+              "totalAmount": "650.55",
+              "categoryName": "QA D10 Food"
+            },
+            {
+              "categoryId": 37,
+              "totalAmount": "200.80",
+              "categoryName": "QA D10 Transport"
+            }
+          ]
+        },
+        "dashboard": [
+          {
+            "year": 2026,
+            "month": 9,
+            "totalIncome": "1000.30",
+            "totalExpense": "350.35",
+            "balance": "649.95"
+          },
+          {
+            "year": 2026,
+            "month": 10,
+            "totalIncome": 0,
+            "totalExpense": 0,
+            "balance": 0
+          },
+          {
+            "year": 2026,
+            "month": 11,
+            "totalIncome": "2000.00",
+            "totalExpense": "501.00",
+            "balance": "1499.00"
+          }
+        ],
+        "durationMs": "22.424"
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "SQL-AI-01",
+      "group": "SQL+Budget+AI fixture",
+      "input": {
+        "periods": [
+          "2026-09",
+          "2026-11"
+        ]
+      },
+      "expected": "under/over budgets agree with SQL; two owners; empty month",
+      "actual": {
+        "monthly-9": {
+          "id": 1,
+          "year": 2026,
+          "month": 9,
+          "amountLimit": "500.00",
+          "spentAmount": "350.35",
+          "remainingAmount": "149.65",
+          "exceeded": false
+        },
+        "monthly-11": {
+          "id": 2,
+          "year": 2026,
+          "month": 11,
+          "amountLimit": "400.00",
+          "spentAmount": "501.00",
+          "remainingAmount": "-101.00",
+          "exceeded": true
+        },
+        "categories": [
+          {
+            "id": 1,
+            "categoryId": 36,
+            "categoryName": "QA D10 Food",
+            "year": 2026,
+            "month": 11,
+            "amountLimit": "1000.00",
+            "spentAmount": "350.25",
+            "remainingAmount": "649.75",
+            "usagePercentage": "35.03",
+            "exceeded": false,
+            "status": "SAFE"
+          },
+          {
+            "id": 2,
+            "categoryId": 37,
+            "categoryName": "QA D10 Transport",
+            "year": 2026,
+            "month": 11,
+            "amountLimit": "100.00",
+            "spentAmount": "150.75",
+            "remainingAmount": "-50.75",
+            "usagePercentage": "150.75",
+            "exceeded": true,
+            "status": "OVER_BUDGET"
+          }
+        ]
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "PERF-01",
+      "group": "MySQL general_log+EXPLAIN",
+      "input": {
+        "ownerRows": 120,
+        "otherOwnerExtraRows": 20000
+      },
+      "expected": "two aggregate SELECTs; existing owner/date index; no migration",
+      "actual": {
+        "beforeBulkOtherOwner": {
+          "transactionSelects": 2,
+          "capturedStatements": [
+            {
+              "sql": "SET SESSION TRANSACTION READ ONLY",
+              "kind": "Query",
+              "client": "d10_qa[d10_qa] @  [172.17.0.1]",
+              "thread": 11
+            },
+            {
+              "sql": "SET autocommit=0",
+              "kind": "Query",
+              "client": "d10_qa[d10_qa] @  [172.17.0.1]",
+              "thread": 11
+            },
+            {
+              "sql": "select year(t1_0.transaction_date),month(t1_0.transaction_date),t1_0.type,sum(t1_0.amount) from transactions t1_0 where t1_0.user_id=1 and t1_0.transaction_date>='2025-01-01' and t1_0.transaction_date<'2025-07-01' group by year(t1_0.transaction_date),month(t1_0.transaction_date),t1_0.type order by year(t1_0.transaction_date),month(t1_0.transaction_date)",
+              "kind": "Query",
+              "client": "d10_qa[d10_qa] @  [172.17.0.1]",
+              "thread": 11
+            },
+            {
+              "sql": "select c1_0.id,c1_0.name,sum(t1_0.amount) from transactions t1_0 join categories c1_0 on c1_0.id=t1_0.category_id where t1_0.user_id=1 and t1_0.type='EXPENSE' and t1_0.transaction_date>='2025-01-01' and t1_0.transaction_date<'2025-07-01' group by c1_0.id,c1_0.name order by sum(t1_0.amount) desc",
+              "kind": "Query",
+              "client": "d10_qa[d10_qa] @  [172.17.0.1]",
+              "thread": 11
+            },
+            {
+              "sql": "COMMIT",
+              "kind": "Query",
+              "client": "d10_qa[d10_qa] @  [172.17.0.1]",
+              "thread": 11
+            },
+            {
+              "sql": "SET autocommit=1",
+              "kind": "Query",
+              "client": "d10_qa[d10_qa] @  [172.17.0.1]",
+              "thread": 11
+            },
+            {
+              "sql": "SET SESSION TRANSACTION READ WRITE",
+              "kind": "Query",
+              "client": "d10_qa[d10_qa] @  [172.17.0.1]",
+              "thread": 11
+            },
+            {
+              "sql": "select @@version_comment limit 1",
+              "kind": "Query",
+              "client": "root[root] @ localhost []",
+              "thread": 56
+            },
+            {
+              "sql": "SET GLOBAL general_log=OFF",
+              "kind": "Query",
+              "client": "root[root] @ localhost []",
+              "thread": 56
+            }
+          ],
+          "sql": [
+            "select year(t1_0.transaction_date),month(t1_0.transaction_date),t1_0.type,sum(t1_0.amount) from transactions t1_0 where t1_0.user_id=1 and t1_0.transaction_date>='2025-01-01' and t1_0.transaction_date<'2025-07-01' group by year(t1_0.transaction_date),month(t1_0.transaction_date),t1_0.type order by year(t1_0.transaction_date),month(t1_0.transaction_date)",
+            "select c1_0.id,c1_0.name,sum(t1_0.amount) from transactions t1_0 join categories c1_0 on c1_0.id=t1_0.category_id where t1_0.user_id=1 and t1_0.type='EXPENSE' and t1_0.transaction_date>='2025-01-01' and t1_0.transaction_date<'2025-07-01' group by c1_0.id,c1_0.name order by sum(t1_0.amount) desc"
+          ],
+          "durationMs": "21.849",
+          "response": {
+            "from": "2025-01",
+            "to": "2025-06",
+            "months": [
+              {
+                "month": "2025-01",
+                "totalIncome": 0,
+                "totalExpense": "2.00",
+                "balance": "-2.00"
+              },
+              {
+                "month": "2025-02",
+                "totalIncome": 0,
+                "totalExpense": "2.00",
+                "balance": "-2.00"
+              },
+              {
+                "month": "2025-03",
+                "totalIncome": 0,
+                "totalExpense": "2.00",
+                "balance": "-2.00"
+              },
+              {
+                "month": "2025-04",
+                "totalIncome": 0,
+                "totalExpense": "2.00",
+                "balance": "-2.00"
+              },
+              {
+                "month": "2025-05",
+                "totalIncome": 0,
+                "totalExpense": "2.00",
+                "balance": "-2.00"
+              },
+              {
+                "month": "2025-06",
+                "totalIncome": 0,
+                "totalExpense": "2.00",
+                "balance": "-2.00"
+              }
+            ],
+            "expensesByCategory": [
+              {
+                "categoryId": 36,
+                "categoryName": "QA D10 Food",
+                "totalAmount": "12.00"
+              }
+            ]
+          }
+        },
+        "afterBulkOtherOwner": {
+          "transactionSelects": 2,
+          "capturedStatements": [
+            {
+              "sql": "SET SESSION TRANSACTION READ ONLY",
+              "kind": "Query",
+              "client": "d10_qa[d10_qa] @  [172.17.0.1]",
+              "thread": 11
+            },
+            {
+              "sql": "SET autocommit=0",
+              "kind": "Query",
+              "client": "d10_qa[d10_qa] @  [172.17.0.1]",
+              "thread": 11
+            },
+            {
+              "sql": "select year(t1_0.transaction_date),month(t1_0.transaction_date),t1_0.type,sum(t1_0.amount) from transactions t1_0 where t1_0.user_id=1 and t1_0.transaction_date>='2025-01-01' and t1_0.transaction_date<'2025-07-01' group by year(t1_0.transaction_date),month(t1_0.transaction_date),t1_0.type order by year(t1_0.transaction_date),month(t1_0.transaction_date)",
+              "kind": "Query",
+              "client": "d10_qa[d10_qa] @  [172.17.0.1]",
+              "thread": 11
+            },
+            {
+              "sql": "select c1_0.id,c1_0.name,sum(t1_0.amount) from transactions t1_0 join categories c1_0 on c1_0.id=t1_0.category_id where t1_0.user_id=1 and t1_0.type='EXPENSE' and t1_0.transaction_date>='2025-01-01' and t1_0.transaction_date<'2025-07-01' group by c1_0.id,c1_0.name order by sum(t1_0.amount) desc",
+              "kind": "Query",
+              "client": "d10_qa[d10_qa] @  [172.17.0.1]",
+              "thread": 11
+            },
+            {
+              "sql": "COMMIT",
+              "kind": "Query",
+              "client": "d10_qa[d10_qa] @  [172.17.0.1]",
+              "thread": 11
+            },
+            {
+              "sql": "SET autocommit=1",
+              "kind": "Query",
+              "client": "d10_qa[d10_qa] @  [172.17.0.1]",
+              "thread": 11
+            },
+            {
+              "sql": "SET SESSION TRANSACTION READ WRITE",
+              "kind": "Query",
+              "client": "d10_qa[d10_qa] @  [172.17.0.1]",
+              "thread": 11
+            },
+            {
+              "sql": "select @@version_comment limit 1",
+              "kind": "Query",
+              "client": "root[root] @ localhost []",
+              "thread": 61
+            },
+            {
+              "sql": "SET GLOBAL general_log=OFF",
+              "kind": "Query",
+              "client": "root[root] @ localhost []",
+              "thread": 61
+            }
+          ],
+          "sql": [
+            "select year(t1_0.transaction_date),month(t1_0.transaction_date),t1_0.type,sum(t1_0.amount) from transactions t1_0 where t1_0.user_id=1 and t1_0.transaction_date>='2025-01-01' and t1_0.transaction_date<'2025-07-01' group by year(t1_0.transaction_date),month(t1_0.transaction_date),t1_0.type order by year(t1_0.transaction_date),month(t1_0.transaction_date)",
+            "select c1_0.id,c1_0.name,sum(t1_0.amount) from transactions t1_0 join categories c1_0 on c1_0.id=t1_0.category_id where t1_0.user_id=1 and t1_0.type='EXPENSE' and t1_0.transaction_date>='2025-01-01' and t1_0.transaction_date<'2025-07-01' group by c1_0.id,c1_0.name order by sum(t1_0.amount) desc"
+          ],
+          "durationMs": "27.826",
+          "response": {
+            "from": "2025-01",
+            "to": "2025-06",
+            "months": [
+              {
+                "month": "2025-01",
+                "totalIncome": 0,
+                "totalExpense": "2.00",
+                "balance": "-2.00"
+              },
+              {
+                "month": "2025-02",
+                "totalIncome": 0,
+                "totalExpense": "2.00",
+                "balance": "-2.00"
+              },
+              {
+                "month": "2025-03",
+                "totalIncome": 0,
+                "totalExpense": "2.00",
+                "balance": "-2.00"
+              },
+              {
+                "month": "2025-04",
+                "totalIncome": 0,
+                "totalExpense": "2.00",
+                "balance": "-2.00"
+              },
+              {
+                "month": "2025-05",
+                "totalIncome": 0,
+                "totalExpense": "2.00",
+                "balance": "-2.00"
+              },
+              {
+                "month": "2025-06",
+                "totalIncome": 0,
+                "totalExpense": "2.00",
+                "balance": "-2.00"
+              }
+            ],
+            "expensesByCategory": [
+              {
+                "categoryId": 36,
+                "categoryName": "QA D10 Food",
+                "totalAmount": "12.00"
+              }
+            ]
+          }
+        },
+        "rowCounts": {
+          "total": 20145,
+          "ownerA": 143
+        },
+        "explain": [
+          {
+            "query_block": {
+              "select_id": 1,
+              "cost_info": {
+                "query_cost": "174.26"
+              },
+              "ordering_operation": {
+                "using_filesort": false,
+                "grouping_operation": {
+                  "using_temporary_table": true,
+                  "using_filesort": true,
+                  "cost_info": {
+                    "sort_cost": "120.00"
+                  },
+                  "table": {
+                    "table_name": "t1_0",
+                    "access_type": "range",
+                    "possible_keys": [
+                      "idx_transactions_user_date"
+                    ],
+                    "key": "idx_transactions_user_date",
+                    "used_key_parts": [
+                      "user_id",
+                      "transaction_date"
+                    ],
+                    "key_length": "11",
+                    "rows_examined_per_scan": 120,
+                    "rows_produced_per_join": 120,
+                    "filtered": "100.00",
+                    "index_condition": "((`se_d10_qa_80cb55a5156c4a3384eb04edecb5999c`.`t1_0`.`user_id` = 1) and (`se_d10_qa_80cb55a5156c4a3384eb04edecb5999c`.`t1_0`.`transaction_date` >= DATE'2025-01-01') and (`se_d10_qa_80cb55a5156c4a3384eb04edecb5999c`.`t1_0`.`transaction_date` < DATE'2025-07-01'))",
+                    "cost_info": {
+                      "read_cost": "42.26",
+                      "eval_cost": "12.00",
+                      "prefix_cost": "54.26",
+                      "data_read_per_join": "240K"
+                    },
+                    "used_columns": [
+                      "id",
+                      "amount",
+                      "transaction_date",
+                      "type",
+                      "user_id"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          {
+            "query_block": {
+              "select_id": 1,
+              "cost_info": {
+                "query_cost": "75.26"
+              },
+              "ordering_operation": {
+                "using_filesort": true,
+                "grouping_operation": {
+                  "using_temporary_table": true,
+                  "using_filesort": false,
+                  "nested_loop": [
+                    {
+                      "table": {
+                        "table_name": "t1_0",
+                        "access_type": "range",
+                        "possible_keys": [
+                          "idx_transactions_user_date",
+                          "fk_transactions_category"
+                        ],
+                        "key": "idx_transactions_user_date",
+                        "used_key_parts": [
+                          "user_id",
+                          "transaction_date"
+                        ],
+                        "key_length": "11",
+                        "rows_examined_per_scan": 120,
+                        "rows_produced_per_join": 60,
+                        "filtered": "50.00",
+                        "index_condition": "((`se_d10_qa_80cb55a5156c4a3384eb04edecb5999c`.`t1_0`.`user_id` = 1) and (`se_d10_qa_80cb55a5156c4a3384eb04edecb5999c`.`t1_0`.`transaction_date` >= DATE'2025-01-01') and (`se_d10_qa_80cb55a5156c4a3384eb04edecb5999c`.`t1_0`.`transaction_date` < DATE'2025-07-01'))",
+                        "cost_info": {
+                          "read_cost": "48.26",
+                          "eval_cost": "6.00",
+                          "prefix_cost": "54.26",
+                          "data_read_per_join": "120K"
+                        },
+                        "used_columns": [
+                          "id",
+                          "amount",
+                          "transaction_date",
+                          "type",
+                          "user_id",
+                          "category_id"
+                        ],
+                        "attached_condition": "(`se_d10_qa_80cb55a5156c4a3384eb04edecb5999c`.`t1_0`.`type` = 'EXPENSE')"
+                      }
+                    },
+                    {
+                      "table": {
+                        "table_name": "c1_0",
+                        "access_type": "eq_ref",
+                        "possible_keys": [
+                          "PRIMARY"
+                        ],
+                        "key": "PRIMARY",
+                        "used_key_parts": [
+                          "id"
+                        ],
+                        "key_length": "8",
+                        "ref": [
+                          "se_d10_qa_80cb55a5156c4a3384eb04edecb5999c.t1_0.category_id"
+                        ],
+                        "rows_examined_per_scan": 1,
+                        "rows_produced_per_join": 60,
+                        "filtered": "100.00",
+                        "cost_info": {
+                          "read_cost": "15.00",
+                          "eval_cost": "6.00",
+                          "prefix_cost": "75.26",
+                          "data_read_per_join": "36K"
+                        },
+                        "used_columns": [
+                          "id",
+                          "name"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ],
+        "latencyMs": {
+          "samples": 10,
+          "min": "29.314",
+          "median": "31.197",
+          "max": "35.783"
+        },
+        "newIndexesOrMigrations": false
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "HTTP-CONCURRENT-01",
+      "group": "read concurrency",
+      "input": {
+        "requests": 8
+      },
+      "expected": "eight 200 responses with identical SQL totals",
+      "actual": {
+        "requests": 8,
+        "statuses": [
+          200,
+          200,
+          200,
+          200,
+          200,
+          200,
+          200,
+          200
+        ],
+        "sameMonthlyTotals": true,
+        "durationMs": [
+          "11.582",
+          "11.494",
+          "10.484",
+          "16.471",
+          "16.048",
+          "9.947",
+          "26.257",
+          "25.813"
+        ]
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "HTTP-500-01",
+      "group": "safe server error",
+      "input": {
+        "fault": "private DB SELECT permission only"
+      },
+      "expected": "neutral 500, no SQL/trace/credentials, recovery 200",
+      "actual": {
+        "http": 500,
+        "bodyRaw": "{\"status\":500,\"code\":\"INTERNAL_ERROR\",\"message\":\"Đã xảy ra lỗi máy chủ. Vui lòng thử lại sau\"}",
+        "recoveryHttp": 200,
+        "fault": "SELECT revoked/restored only in disposable QA database"
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "FE-SERVICE-01",
+      "group": "real FE service -> HTTP -> MySQL",
+      "input": {
+        "checks": 7
+      },
+      "expected": "1/3/6 months, empty, validation, owner switch, 401 session clear",
+      "actual": [
+        {
+          "from": "2026-09",
+          "to": "2026-09",
+          "status": "PASS",
+          "summary": {
+            "totalIncome": "1000.3",
+            "totalExpense": "350.35",
+            "balance": "649.95"
+          }
+        },
+        {
+          "from": "2026-09",
+          "to": "2026-11",
+          "status": "PASS",
+          "summary": {
+            "totalIncome": "3000.3",
+            "totalExpense": "851.35",
+            "balance": "2148.95"
+          }
+        },
+        {
+          "from": "2026-05",
+          "to": "2026-10",
+          "status": "PASS",
+          "summary": {
+            "totalIncome": "1901.41",
+            "totalExpense": "352.57",
+            "balance": "1548.84"
+          }
+        },
+        {
+          "from": "2026-10",
+          "to": "2026-10",
+          "status": "PASS",
+          "summary": {
+            "totalIncome": 0,
+            "totalExpense": 0,
+            "balance": 0
+          }
+        },
+        {
+          "case": "invalid-range",
+          "status": "PASS"
+        },
+        {
+          "case": "switch-owner-B",
+          "status": "PASS",
+          "summary": {
+            "totalIncome": 9000,
+            "totalExpense": "999.99",
+            "balance": "8000.01"
+          }
+        },
+        {
+          "case": "401-clears-session",
+          "status": "PASS"
+        }
+      ],
+      "status": "PASS"
+    },
+    {
+      "id": "UI01",
+      "group": "browser CDP",
+      "input": {
+        "case": "UI01"
+      },
+      "expected": "Login and open /reports via sidebar navigation",
+      "actual": {
+        "path": "/reports",
+        "heading": "Báo cáo thu – chi & Thống kê",
+        "hasSessionToken": true,
+        "initialRange": {
+          "from": "2026-09",
+          "to": "2026-11"
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "UI02",
+      "group": "browser CDP",
+      "input": {
+        "case": "UI02"
+      },
+      "expected": "1-month report filter (2026-11 preset and 2026-09 custom) matches SQL",
+      "actual": {
+        "preset2026_11": {
+          "income": "2.000 ₫",
+          "expense": "501 ₫",
+          "balance": "+1.499 ₫"
+        },
+        "custom2026_09": {
+          "income": "1.000,3 ₫",
+          "expense": "350,35 ₫",
+          "balance": "+649,95 ₫"
+        }
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "UI03",
+      "group": "browser CDP",
+      "input": {
+        "case": "UI03"
+      },
+      "expected": "3-month report filter (2026-09..2026-11) matches SQL",
+      "actual": {
+        "range": "2026-09..2026-11",
+        "monthRowsCount": 3,
+        "monthRows": [
+          "09/2026 1.000,3 ₫ 350,35 ₫ +649,95 ₫ 64,98%",
+          "10/2026 0 ₫ 0 ₫ 0 ₫ —",
+          "11/2026 2.000 ₫ 501 ₫ +1.499 ₫ 74,95%"
+        ],
+        "kpis": [
+          "3.000,3 ₫",
+          "851,35 ₫",
+          "+2.148,95 ₫"
+        ]
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "UI04",
+      "group": "browser CDP",
+      "input": {
+        "case": "UI04"
+      },
+      "expected": "6-month report filter (2026-06..2026-11 and 2026-05..2026-10) matches SQL",
+      "actual": {
+        "presetRange": "2026-06..2026-11",
+        "customRange": "2026-05..2026-10",
+        "monthRowsCount": 6,
+        "kpis": [
+          "1.901,41 ₫",
+          "352,57 ₫",
+          "+1.548,84 ₫"
+        ]
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "UI05",
+      "group": "browser CDP",
+      "input": {
+        "case": "UI05"
+      },
+      "expected": "Invalid ranges (from > to, > 6 months) show alert and block submit",
+      "actual": {
+        "reversedAlert": "Tháng bắt đầu không được lớn hơn tháng kết thúc.",
+        "overSixMonthsAlert": "Khoảng thời gian báo cáo tối đa 6 tháng (hiện đang chọn 7 tháng).",
+        "submitDisabled": true,
+        "extraHttpRequestsSent": 0
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "UI06",
+      "group": "browser CDP",
+      "input": {
+        "case": "UI06"
+      },
+      "expected": "Empty month (2026-10) shows empty states and 0 ₫ KPIs",
+      "actual": {
+        "month": "2026-10",
+        "barEmptyText": "Chưa có phát sinh thu – chi trong khoảng thời gian đã chọn",
+        "categoryEmptyText": "Chưa có khoản chi tiêu nào trong khoảng thời gian đã chọn"
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "UI07",
+      "group": "browser CDP",
+      "input": {
+        "case": "UI07"
+      },
+      "expected": "Monthly bar chart SVG and table rows/footer match SQL",
+      "actual": {
+        "hasSvg": true,
+        "ticks": [
+          "09/2026",
+          "10/2026",
+          "11/2026",
+          "0",
+          "500",
+          "1k",
+          "1,5k",
+          "2k"
+        ],
+        "tfoot": "Tổng cộng 3.000,3 ₫ 851,35 ₫ +2.148,95 ₫ 71,62%"
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "UI08",
+      "group": "browser CDP",
+      "input": {
+        "case": "UI08"
+      },
+      "expected": "KPI cards, Donut SVG and category breakdown table/percentages match SQL",
+      "actual": {
+        "hasDonutSvg": true,
+        "segmentsCount": 2,
+        "rows": [
+          "#1 QA D10 Food 650,55 ₫ 76,41%",
+          "#2 QA D10 Transport 200,8 ₫ 23,59%"
+        ],
+        "progress": [
+          {
+            "label": "Tỷ trọng chi tiêu QA D10 Food",
+            "val": 76.41
+          },
+          {
+            "label": "Tỷ trọng chi tiêu QA D10 Transport",
+            "val": 23.59
+          }
+        ]
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "UI09",
+      "group": "browser CDP",
+      "input": {
+        "case": "UI09"
+      },
+      "expected": "Switch account A -> B on UI isolates owner data",
+      "actual": {
+        "loggedOutRedirectToLogin": true,
+        "ownerBKpis": [
+          "9.000 ₫",
+          "999,99 ₫",
+          "+8.000,01 ₫"
+        ],
+        "ownerALeakedInDom": false
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "UI10",
+      "group": "browser CDP",
+      "input": {
+        "case": "UI10"
+      },
+      "expected": "Network failure clears stale KPIs and Retry recovers real data",
+      "actual": {
+        "errorClearedStaleKpi": true,
+        "retryRestoredKpis": [
+          "3.000,3 ₫",
+          "851,35 ₫",
+          "+2.148,95 ₫"
+        ]
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "UI11",
+      "group": "browser CDP",
+      "input": {
+        "case": "UI11"
+      },
+      "expected": "Light/Dark theme toggle updates DOM class and computed styles",
+      "actual": {
+        "darkClassApplied": true,
+        "darkCardBg": "rgb(24, 34, 52)",
+        "lightCardBg": "rgb(255, 255, 255)"
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "UI12",
+      "group": "browser CDP",
+      "input": {
+        "case": "UI12"
+      },
+      "expected": "Responsive layout at 320x700, 375x667, 430x932 and 1440x900 without overflow",
+      "actual": {
+        "viewports": [
+          {
+            "viewport": "320x700",
+            "scrollWidth": 320,
+            "clientWidth": 320,
+            "noHorizontalOverflow": true,
+            "hasMobileReportsLink": true,
+            "hasSidebarReportsLink": true,
+            "submitHeight": 40
+          },
+          {
+            "viewport": "375x667",
+            "scrollWidth": 375,
+            "clientWidth": 375,
+            "noHorizontalOverflow": true,
+            "hasMobileReportsLink": true,
+            "hasSidebarReportsLink": true,
+            "submitHeight": 40
+          },
+          {
+            "viewport": "430x932",
+            "scrollWidth": 430,
+            "clientWidth": 430,
+            "noHorizontalOverflow": true,
+            "hasMobileReportsLink": true,
+            "hasSidebarReportsLink": true,
+            "submitHeight": 40
+          },
+          {
+            "viewport": "1440x900",
+            "scrollWidth": 1425,
+            "clientWidth": 1425,
+            "noHorizontalOverflow": true,
+            "hasMobileReportsLink": true,
+            "hasSidebarReportsLink": true,
+            "submitHeight": 40
+          }
+        ]
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "UI13",
+      "group": "browser CDP",
+      "input": {
+        "case": "UI13"
+      },
+      "expected": "Dashboard cash flow & KPIs use full monthly transactions when month has > 8 items",
+      "actual": {
+        "month": "2026-11",
+        "recentPageSize8Count": 8,
+        "monthlyEndpointCount": 10,
+        "earlyIncome2000Included": true,
+        "browserFetchedPageSize100": true,
+        "dashboardCashFlowSvgRendered": true,
+        "dashboardKpis": {
+          "income": "2.000 ₫",
+          "expense": "508 ₫",
+          "balance": "1.492 ₫"
+        }
+      },
+      "status": "PASS"
+    }
+  ],
+  "browser": {
+    "status": "PASS",
+    "method": "Google Chrome Headless CDP (--headless=new --remote-debugging-port) with disposable --user-data-dir",
+    "browserVersion": "Chrome/156.0.8078.81",
+    "protocolVersion": "1.3",
+    "database": "se_d10_qa_ab190502e1ec4de480212638be200eba",
+    "apiCallsCount": 56,
+    "cases": [
+      "UI01",
+      "UI02",
+      "UI03",
+      "UI04",
+      "UI05",
+      "UI06",
+      "UI07",
+      "UI08",
+      "UI09",
+      "UI10",
+      "UI11",
+      "UI12",
+      "UI13"
+    ]
+  },
+  "git": {
+    "DB": {
+      "head": "d956bef93b6a146fc2b7d3a47404d5e6b797d693",
+      "branch": "feature/quynh",
+      "status": "?? backend/src/test/resources/d10-reports-fixture.sql\n?? docs/qa/SE2-D10-DB_REPORT.md\n?? docs/qa/evidence/\n?? scripts/qa/"
+    },
+    "BE": {
+      "head": "d956bef93b6a146fc2b7d3a47404d5e6b797d693",
+      "branch": "feature/tuan",
+      "status": "M README.md\n M backend/src/main/java/com/smartexpense/backend/repository/TransactionRepository.java\n M docs/SmartExpense_QuanTriDuAn.xlsx\n M docs/SmartExpense_SRS_v2.docx\n M docs/qa/README.md\n M docs/smartexpense-2.0/API_CONTRACT.md\n M docs/smartexpense-2.0/SPRINT_3_PLAN.md\n?? backend/src/main/java/com/smartexpense/backend/controller/ReportController.java\n?? backend/src/main/java/com/smartexpense/backend/dto/report/\n?? backend/src/main/java/com/smartexpense/backend/service/ReportService.java\n?? backend/src/test/java/com/smartexpense/backend/ReportApiTests.java\n?? backend/src/test/java/com/smartexpense/backend/ReportIntegrationTests.java\n?? docs/qa/SE2-D10-BE_REPORT.md"
+    },
+    "FE": {
+      "head": "d956bef93b6a146fc2b7d3a47404d5e6b797d693",
+      "branch": "feature/trang",
+      "status": "M frontend/src/App.jsx\n M frontend/src/components/layout/MainLayout.jsx\n M frontend/src/components/layout/MobileNavigation.jsx\n M frontend/src/components/layout/navigation.js\n M frontend/tests/qaRecurringTemplates.test.js\n?? frontend/src/components/reports/\n?? frontend/src/pages/Reports.jsx\n?? frontend/src/services/reportService.js\n?? frontend/tests/reportApiIntegration.test.js\n?? frontend/tests/reportComponents.test.js"
+    }
+  },
+  "snapshot": {
+    "jarSha256": "d3dab36868aec39770beef49a75557a91ff32c9d6d2c58e5b03f5a0821cf32f4",
+    "backendSources": {
+      ".env.example": "9228c0d4c104d7f6d994f1962aab1fc7e07f6325167760095ec4ced696562716",
+      ".github/workflows/cd.yml": "6407787336af21fb1323be6ea0211cf2e3dbb8427bbf6459ca132cd97ce6b30b",
+      ".github/workflows/ci.yml": "330981f656bb17c14940d068cd913931ffa388141f8e2eb961eb7284260484d8",
+      ".gitignore": "05848eb69ed80bf5df5c28bab92dc7e7994eb494c1cd595196e22c257122fff6",
+      "README.md": "58ccb7ca74ec667989cda0dac4a6295fdcffcdee306f1f2d285ccb1ce740e965",
+      "backend/.dockerignore": "69f1d9066a153ad004e80d6d65c61e022887b93bbbc348c20e1f4af13c4c2ed8",
+      "backend/.gitattributes": "193fbf6c445dea576a6f238c5262320931945a2ea03bae24b161b30856919a09",
+      "backend/.gitignore": "795029e58e368bb91c71cb3adb971491562622d4b1684604f278cdbfb8fec238",
+      "backend/Dockerfile": "15da7cb3a267e32569f833178e4e39f44437111fac282dce451c818aa1dea29c",
+      "backend/build.gradle": "61c8a1dc7190384f7162fe60dd19d55dc14c6c8410b2e71ca9fe92d4573cd8d5",
+      "backend/gradle/wrapper/gradle-wrapper.jar": "3b8a25775a69158b5ad2b1d17a80a88dc7b40a352a73eb27d06c612a7ce68e98",
+      "backend/gradle/wrapper/gradle-wrapper.properties": "04a9f816b592a30ffe72d1241c20bb7956e498cf321cc43d0cc2b0a56facfd21",
+      "backend/gradlew": "a5a5c199ba02189ae8c46a334223371a20599d9c298ef65e7540ede4a3f72d59",
+      "backend/gradlew.bat": "f17917f8dbe61182b149273ee78090fec1197442c3f38276af907bfa5190db16",
+      "backend/settings.gradle": "e03828fa8c89ed13b6ae3ed2ac54b4a4eed2a6e86f69dc70dd07bb7ec0c4ab81",
+      "backend/src/main/java/com/smartexpense/backend/BackendApplication.java": "edca1360cba3e3967400d1a679db1255d9f3c386e60324a436141b0b641dfbb4",
+      "backend/src/main/java/com/smartexpense/backend/config/SecurityConfig.java": "ac383f372af203e1270d61dab02e48e1a5cce676c002d498bf061e5f2fec18fc",
+      "backend/src/main/java/com/smartexpense/backend/config/TransactionDateConfig.java": "79596c336bec09ded8a894cd9968587c1b66aacadb11cb359c659f4f73c5b93f",
+      "backend/src/main/java/com/smartexpense/backend/controller/AuthController.java": "1d38f4bc8ae9ce0ac032e265f169e4efd32640c0aa625767c636aa3c147b78ac",
+      "backend/src/main/java/com/smartexpense/backend/controller/BudgetController.java": "4a916818c359701f8c72583ea1b7fc0590360c20b2f2c371b6cf26b79bac6b22",
+      "backend/src/main/java/com/smartexpense/backend/controller/CalendarController.java": "50b4ba68148fe37d9c03804b9e8ddc48280b3c853c6f0da3c32c5910047cd759",
+      "backend/src/main/java/com/smartexpense/backend/controller/CategoryBudgetController.java": "5ccb5705dbb0e249f4a16cf68a47df7ee34b2f4be0f9a3039bbdfbad92b37f88",
+      "backend/src/main/java/com/smartexpense/backend/controller/CategoryController.java": "d057e3bf8489ad5c3bd961b246b1aa4a5126fc6b56aba2fbf8b6349a0aad848a",
+      "backend/src/main/java/com/smartexpense/backend/controller/DashboardController.java": "7ed87ecd973583b98648244c857b967654fd48b0f89c016b942309060f22728d",
+      "backend/src/main/java/com/smartexpense/backend/controller/RecurringTemplateController.java": "1db6910ac6ed07c61f232a8fd0593c7aba8cece7de3c9f6d5aa79dde67c1b724",
+      "backend/src/main/java/com/smartexpense/backend/controller/ReportController.java": "e441b2316df889ea82a4ded174d2ad26702ae297740a89645932b7dd9ee203a8",
+      "backend/src/main/java/com/smartexpense/backend/controller/TransactionController.java": "38569964aa338818ce8f53d8288f40f7056668fffc376b77d5278a1cc4a2f56e",
+      "backend/src/main/java/com/smartexpense/backend/controller/UserController.java": "d694c4c55d7e76be8a4d144e930964b08fe50ae3514243154e8b61d79d317bc4",
+      "backend/src/main/java/com/smartexpense/backend/dto/ApiError.java": "d87fe28763cf2b6590a5976b212b9bb96a925f5290d1030d71821319b8d465a7",
+      "backend/src/main/java/com/smartexpense/backend/dto/auth/AuthResponse.java": "64a195ef65ac33b2dddadff151cffd2446fd775164734e68833f8e6dbe392b72",
+      "backend/src/main/java/com/smartexpense/backend/dto/auth/LoginRequest.java": "e6570c7b82ad49ad81146f8f57ba72d44aaad429a4023f9e82abc263e9da45d4",
+      "backend/src/main/java/com/smartexpense/backend/dto/auth/RegisterRequest.java": "d79a3511346fc7d73ab1d377124d833fccd5a8ef90885648cfe4c68a2b6389ba",
+      "backend/src/main/java/com/smartexpense/backend/dto/auth/UserResponse.java": "c03ff4dfb4f857a73343066996565d0fde0aea1a527a302fd9d09c4211e84bd7",
+      "backend/src/main/java/com/smartexpense/backend/dto/budget/BudgetRequest.java": "f4db1f6dab46ace03b6871ffb91a849ea8e8b28bf5e4cc6cf1295de19b393e8b",
+      "backend/src/main/java/com/smartexpense/backend/dto/budget/BudgetResponse.java": "6792c226d8cae84511e01978c137344c04ff89b8c6f482cd9b337acd87c0c019",
+      "backend/src/main/java/com/smartexpense/backend/dto/calendar/CalendarDayResponse.java": "816227586bd9293d0776697f11a9e5683413903f2ce71754852ce7e6d02bea75",
+      "backend/src/main/java/com/smartexpense/backend/dto/calendar/CalendarMonthResponse.java": "b9ce67927013ec878589929ecd97599b52ef950e2568d800310c79d028350360",
+      "backend/src/main/java/com/smartexpense/backend/dto/category/CategoryAppearance.java": "ca0dd7137259a0856d14a6cec70db8f72a6e0e363abf94961875afad53d3916c",
+      "backend/src/main/java/com/smartexpense/backend/dto/category/CategoryRequest.java": "382e5c896ada7fc4a776a743ad28bcafcef144de9be6ac44054fc596aed7225a",
+      "backend/src/main/java/com/smartexpense/backend/dto/category/CategoryResponse.java": "d7849cf0d7d61908e23cf17a5dc99054a8a052379caefa484dd4d4eebd96de5a",
+      "backend/src/main/java/com/smartexpense/backend/dto/categorybudget/CategoryBudgetLimitRequest.java": "5b42358fc284d873c179a5b6ae6a8a3c2e50302fc6516e1b30ac7327c4497171",
+      "backend/src/main/java/com/smartexpense/backend/dto/categorybudget/CategoryBudgetRequest.java": "ba8762bfaa00b2ccce95fd3107e81d732b8328c4faa84946f374e559aaf44e98",
+      "backend/src/main/java/com/smartexpense/backend/dto/categorybudget/CategoryBudgetResponse.java": "7502f030a7f9ef78b5347f3e94e7587dbdd919b33dd417a9380ee1a3d6293339",
+      "backend/src/main/java/com/smartexpense/backend/dto/dashboard/CategoryExpenseResponse.java": "61634e6d6a0dcbcb5cb4b60a80e90f3dc7a10f8afb4a576b4d1e7267abcf4df6",
+      "backend/src/main/java/com/smartexpense/backend/dto/dashboard/DashboardSummaryResponse.java": "7d2bef8001289d179d61a418ad6947cb559adf7eea6bb6ee149e0786ca0e531b",
+      "backend/src/main/java/com/smartexpense/backend/dto/recurring/RecurringApplicationRequest.java": "df0c7fcd26eb2d8c52ae4e543fe822c9395851734dbafaf3664d577518856af2",
+      "backend/src/main/java/com/smartexpense/backend/dto/recurring/RecurringApplicationResponse.java": "475ac4da7179b5ac28be91c625c75846d8dde16964e8250ecb360ce780187a9c",
+      "backend/src/main/java/com/smartexpense/backend/dto/recurring/RecurringPeriodIntegerDeserializer.java": "3843e1daf925d752473b6707f5446dc9b9c394810e485fee064d66b12e6a4e20",
+      "backend/src/main/java/com/smartexpense/backend/dto/recurring/RecurringPreviewResponse.java": "1cb7b7db3572c7fbd17c364f01b60527e7b745ad5e653c53cf5a4fa63757797b",
+      "backend/src/main/java/com/smartexpense/backend/dto/recurring/RecurringTemplateJsonDeserializers.java": "9403caf9bb8918b64794f9169b76751f382b2325714bb261abc6fa6b69bcf4e3",
+      "backend/src/main/java/com/smartexpense/backend/dto/recurring/RecurringTemplateRequest.java": "7a4f08a29a997b963cf40adeab8dd1b93b3a470770c0f95ab0847437eb9d79dc",
+      "backend/src/main/java/com/smartexpense/backend/dto/recurring/RecurringTemplateResponse.java": "20b023e8a3aaf1cd4bd87078c8bd4d7d3facc45d4fd8b59ce538e894bea10c51",
+      "backend/src/main/java/com/smartexpense/backend/dto/report/MonthlyReportResponse.java": "a5a0f96bb5311d39b8c55eb3fe10ae476f8c69b6718c7634b17d98e33fe7bec9",
+      "backend/src/main/java/com/smartexpense/backend/dto/report/MonthlySummaryResponse.java": "abcbf520b62e6d1f1d0677934e6c142464502c2c9bbf15775c2c19b4d76e4893",
+      "backend/src/main/java/com/smartexpense/backend/dto/transaction/TransactionRequest.java": "ca8a081cafd4130b2897f235696f2a8c9fd67788315c1347ecbce82d12ad410a",
+      "backend/src/main/java/com/smartexpense/backend/dto/transaction/TransactionResponse.java": "26673222c023c9188c0b75235570d324ca38442fd073e9406eb1fb30bbc9ac62",
+      "backend/src/main/java/com/smartexpense/backend/entity/Category.java": "814a1b7bbf3d38d50fa85041e08867fbd0359ac3747beca8ed445443d468cf88",
+      "backend/src/main/java/com/smartexpense/backend/entity/CategoryBudget.java": "21d4108cf2128011b692982c48b366ef469fa8dd5863d0cc5447c350ff20b132",
+      "backend/src/main/java/com/smartexpense/backend/entity/MonthlyBudget.java": "d8af976e59e10c8341528d3158f35a6bcb7b2c4fe95915839d7952b4e0f0f893",
+      "backend/src/main/java/com/smartexpense/backend/entity/RecurringApplication.java": "8ba8a2c793ab7af6747ccb6818ef2d308d9d7486c92154c8443b2a72e2ce3694",
+      "backend/src/main/java/com/smartexpense/backend/entity/RecurringTemplate.java": "32f3842cd1d029b760b9111bfe9c7c9b509ce90f6f8ce82f6c5ee12f5b5b895b",
+      "backend/src/main/java/com/smartexpense/backend/entity/Transaction.java": "4e8a835988e9aa2100739fb9d3b55df502dd4d9e8c6bd0bd61d4c99cfefe261e",
+      "backend/src/main/java/com/smartexpense/backend/entity/User.java": "0666a22f00619dafe50198aae7739e09053f0e53c217bb7a01bec7f6792e0b12",
+      "backend/src/main/java/com/smartexpense/backend/enums/CategoryBudgetStatus.java": "a3b5c07be5a86e677bc306edcdd226bc15ce75af973e32602c1f1cab48c931de",
+      "backend/src/main/java/com/smartexpense/backend/enums/TransactionType.java": "e4fbb62789702651e945ff3e11026c5d4efc7b3a09d0389d6550e63aef32f254",
+      "backend/src/main/java/com/smartexpense/backend/exception/CategoryBudgetExceptionHandler.java": "3b014973afcf900d2da3b12aabe80302066d30beb89b13d39a1f5f2a8b8e5d22",
+      "backend/src/main/java/com/smartexpense/backend/exception/GlobalExceptionHandler.java": "23de4f44d5020820f4a0b2b36923fcd88e15d83d0b8ab2a73e4781d509075ac7",
+      "backend/src/main/java/com/smartexpense/backend/repository/CategoryBudgetRepository.java": "f6cfebb14a96b1b4ff63aeb029331114c52bfa34fe18b64af94d0058719a5c73",
+      "backend/src/main/java/com/smartexpense/backend/repository/CategoryRepository.java": "f32a3ba2fa560d7530cbe09e0ef68a58296d421feb8f0be03588c2d73ca950b5",
+      "backend/src/main/java/com/smartexpense/backend/repository/MonthlyBudgetRepository.java": "47cbe639d7220eca9eb8581601cfc40f294bb4ce25b418e417c7ccc0292c496b",
+      "backend/src/main/java/com/smartexpense/backend/repository/RecurringApplicationRepository.java": "bf080f306544d97b7363e37e4e0771d074c54c59cfec5607bc645d220877451a",
+      "backend/src/main/java/com/smartexpense/backend/repository/RecurringTemplateRepository.java": "7bced7892ab3773cc92735f44cd1b414e767a93979b9b2a48fbc4ad24f6a690b",
+      "backend/src/main/java/com/smartexpense/backend/repository/TransactionRepository.java": "11fca352f2744f767fd00c7ae0159fb54785f8813951fdd8bcbde4c2116aca6f",
+      "backend/src/main/java/com/smartexpense/backend/repository/UserRepository.java": "fae36dcd132a847cecd4d8fd39642ef5f41b4a9e2802035e085f47da55acbeb7",
+      "backend/src/main/java/com/smartexpense/backend/security/ApiSecurityExceptionHandler.java": "9f98e43a3c7701b2e49d2fbd7739e5431ba6ac92945c75eae550a7abd67e8508",
+      "backend/src/main/java/com/smartexpense/backend/security/JwtConfig.java": "8d59f51181a653f143a9f4008b1dad558778653f95519b2a1a9ea91d2e203c8d",
+      "backend/src/main/java/com/smartexpense/backend/service/AuthService.java": "cada9f41eb9e40777c79693bb6f0c52023d4fa86ebfe3e3e3bdd12632f784ebe",
+      "backend/src/main/java/com/smartexpense/backend/service/BudgetService.java": "da4be99b2e640445e85b3dc37476d87e764df5ef0b35bdb06da6149c8b512bce",
+      "backend/src/main/java/com/smartexpense/backend/service/CalendarService.java": "e58a3ff77fe48a476a04c0d8badca15303c97a885b12f8ed172001964af7bf9c",
+      "backend/src/main/java/com/smartexpense/backend/service/CategoryBudgetService.java": "3b6d8101027ce70a712543f161ed1c866919e4de9b8e6bd6d5d7cfa19837ff53",
+      "backend/src/main/java/com/smartexpense/backend/service/CategoryService.java": "7ece52371c597459040981b84f2cdd1f3133b0961691c27beb7ecf9214abff8b",
+      "backend/src/main/java/com/smartexpense/backend/service/DashboardService.java": "d9fef72a957ae8bdd71a225c1cfbc1cf9c23ea79436c87d13aac499d032d31b9",
+      "backend/src/main/java/com/smartexpense/backend/service/RecurringApplicationService.java": "5028e4dafa783c52c8ea1815cbc98ed537713a6c2123dded983a6553993eb9e4",
+      "backend/src/main/java/com/smartexpense/backend/service/RecurringTemplateService.java": "e7641bb9fa978c973ca32b3d2a70f6aa561621a4a996981235c94cb2e9721334",
+      "backend/src/main/java/com/smartexpense/backend/service/ReportService.java": "a0507ad1a5e192336a61af26c7a72a072b65bdc44a68c75041431a8c87f4f920",
+      "backend/src/main/java/com/smartexpense/backend/service/TransactionService.java": "7c96f5edb8b858e7a5de5a5ec954bff2b1ea987d491725e313b06e2e9f1e5064",
+      "backend/src/main/java/com/smartexpense/backend/util/RecurringTemplateDates.java": "e8980f93c852006281e7410d537713ac404f7ca366d7d696840da053f04c4029",
+      "backend/src/main/java/com/smartexpense/backend/validation/NotFutureTransactionDate.java": "b3b4a1812d2a4015a7215289b7875f196a75bab0bc31cf59c5dd89f26c8692af",
+      "backend/src/main/java/com/smartexpense/backend/validation/NotFutureTransactionDateValidator.java": "53f575b37c82eb8e0f78e5515fbae347816b8b920569cef0d0f04132b7390527",
+      "backend/src/main/resources/application.properties": "4983cb9989c202a812fe8e40653ff7bcce766fe4154e5682a1b6a05f5eab560e",
+      "backend/src/test/java/com/smartexpense/backend/ApplicationSchemaAssertions.java": "6d33bfdd40c5fdfdf3932d1dc4bd9bc3755fa23e1417c2a961ca0d1037726b82",
+      "backend/src/test/java/com/smartexpense/backend/BackendApplicationTests.java": "4fad572d484eb8a93086d38847cd01f3834ea347239378772887476e0898bee7",
+      "backend/src/test/java/com/smartexpense/backend/CalendarIntegrationTests.java": "fb7755b76a98cdef4b531b7d46707db65b4803e2c278d29d79d3dfef3360d94f",
+      "backend/src/test/java/com/smartexpense/backend/CalendarQueryIntegrationTests.java": "45823bc26b1659506e0ca82839e161495a52b2323e89809123452f999818cb01",
+      "backend/src/test/java/com/smartexpense/backend/CalendarServiceTests.java": "d7a711fea6d503ec939742c65f83fa68c9a368b52d9dddda7a4b40dfc8507d7a",
+      "backend/src/test/java/com/smartexpense/backend/CategoryAppearanceIntegrationTests.java": "35757640d1e0d17ba46ef5768c527ac4871a1a3cd49e17a8d5fac671f04fda65",
+      "backend/src/test/java/com/smartexpense/backend/CategoryAppearanceTests.java": "8d7083ff5b51388529c4e0cecc9d56db20c06a9a5cb2f3cdc83955a623da9c22",
+      "backend/src/test/java/com/smartexpense/backend/CategoryBudgetIntegrationTests.java": "001bee6c4aa3a8d7a88011baab9047e2ba0710509b68c598dbcda563149162e7",
+      "backend/src/test/java/com/smartexpense/backend/CategoryBudgetMigrationIntegrationTests.java": "436d9ba5e0c863409dfc73a1b05def4ddce123885bb7e927ca2ee98237d2043e",
+      "backend/src/test/java/com/smartexpense/backend/CategoryBudgetServiceTests.java": "b0ca8e664606dad4691755c47f6bc0b47ef97763c18e0e0bdb786abc64019cc4",
+      "backend/src/test/java/com/smartexpense/backend/CategoryNameIntegrationTests.java": "a3e0fd58c421773f694bee26878be49fd1dd3b4c19d225a387f749cfb4975c73",
+      "backend/src/test/java/com/smartexpense/backend/D06MigrationIntegrationTests.java": "5ca3a1aae66aa5e2884ebfa3a545e097d2aef0e590ed432d0c5dadd25e53b363",
+      "backend/src/test/java/com/smartexpense/backend/FixedTransactionClockConfiguration.java": "c0ebeac5097d56a95093f54b7cb8f0e746c4f8658bb1a74405030c8668b32fad",
+      "backend/src/test/java/com/smartexpense/backend/MySqlIntegrationTestSupport.java": "e10621a89d14c2ad933f7680d0fa61dfb121d72bc84689e4dd8359a3d64c7908",
+      "backend/src/test/java/com/smartexpense/backend/QaBaselineAuthIntegrationTests.java": "f602b4e07e1e76740883ff31d8450cf72a16d67e577f3ccef53aea270a8f7282",
+      "backend/src/test/java/com/smartexpense/backend/QaDayCategoryIntegrationTests.java": "96add0d04f4231f59c8e56a681e158ac97476560370b3b05d783804ac74d49ee",
+      "backend/src/test/java/com/smartexpense/backend/QaTransactionCalendarIntegrationTests.java": "ec0959786a413000f0bbad372ee703410a983188124591ece6df9f1fe39c81ba",
+      "backend/src/test/java/com/smartexpense/backend/RecurringApplicationContractTests.java": "c8f73ca91267fc6871b50efbe4316525342004cfc486d97b2beaaaf03031ede9",
+      "backend/src/test/java/com/smartexpense/backend/RecurringApplicationIntegrationTests.java": "e07e33f9f696c5cb4d687fd8d523b9b4108925b61bcb18f90c389472a3637333",
+      "backend/src/test/java/com/smartexpense/backend/RecurringApplicationMigrationIntegrationTests.java": "ab72c4ea8ac28574ee92e8c0c528068bb3f65d5781b2dd548f489f5de95b101c",
+      "backend/src/test/java/com/smartexpense/backend/RecurringApplicationMySqlTestSupport.java": "d30f907f9f11cac802c5c1f7467f7dbdf182641314d4eef9e73b1eee1afb6862",
+      "backend/src/test/java/com/smartexpense/backend/RecurringTemplateApiTests.java": "817450b40d734ffd9af2666fd9657137c8f97e22e6da4c44817fe4bf018c68b3",
+      "backend/src/test/java/com/smartexpense/backend/RecurringTemplateContractTests.java": "2ca4fcc8aa4347af6c1f01b10ecd6408478e5191bde94130d3022c0e7f2a4494",
+      "backend/src/test/java/com/smartexpense/backend/RecurringTemplateDatesTests.java": "2b0254dc029dfc3cfb7377004b39e3e6bc948b8022e30355b2ea972b957ac587",
+      "backend/src/test/java/com/smartexpense/backend/RecurringTemplateIntegrationTests.java": "be1f243487c8b60ac08607bb8424f048d7407139e591bee7ffd2318fbe785061",
+      "backend/src/test/java/com/smartexpense/backend/RecurringTemplateMigrationIntegrationTests.java": "06e4be2dfc30eff3f15bb5ad9edab9640cbd030d58f5351f2c8f8468bd21f2d2",
+      "backend/src/test/java/com/smartexpense/backend/RecurringTemplateMySqlTestSupport.java": "0ec6473fe20809bd1f7d3cb632c19b3c2c7c36c5bc3c8dde093dd5c5ee5743a3",
+      "backend/src/test/java/com/smartexpense/backend/RegistrationCategoryIntegrationTests.java": "ec38ad41f5d0111ff0885e0ab76d50cd08228273ba2525c5ddc95ae59e265dfc",
+      "backend/src/test/java/com/smartexpense/backend/ReportApiTests.java": "ed2df03c7596d2e9367466c31e5dbab5a97e18f2b3f4e9214d8283d59b5fb357",
+      "backend/src/test/java/com/smartexpense/backend/ReportIntegrationTests.java": "00a413de08b9c89c0b7510c90f5efc93b7fc718fc50acab166c1b1dbd5f5ea4e",
+      "backend/src/test/java/com/smartexpense/backend/TransactionCreateIntegrationTests.java": "83408a956fdf89588507533e8d0355fabf31e6ddf38a2939697fa67a3a6505a2",
+      "backend/src/test/java/com/smartexpense/backend/TransactionDateIntegrationTests.java": "61dfa9801f92d56106ba04795e0e5fa3a5fef3b8d126f3ed616a465e72896360",
+      "backend/src/test/java/com/smartexpense/backend/TransactionDayIntegrationTests.java": "41ea0d40ae62484cedb914bb5fe3bab87f0952cddd9c60e97d31e8a9e97c48fd",
+      "backend/src/test/java/com/smartexpense/backend/security/ApiSecurityExceptionHandlerTests.java": "e6df3125fa5d8f8b456340d5e01954f9fb6b7d9f46f4f758b939a1dbdd621358",
+      "backend/src/test/resources/application-d03-test.properties": "9408af4910d5df1e0f4ea734f4b49ecb246e9675f781e3456c6634194077ffd4",
+      "backend/src/test/resources/application-d06-migration-test.properties": "70bcb061e288d6354442d8fa274ec887a1b13b19af3b2bf77b8d06df93ad4f1d",
+      "backend/src/test/resources/d06-legacy-schema.sql": "aa02c1a770b4786ce087a2feb729b9cc844a5744026fa0a8d210d9ff9f3d25e0",
+      "compose.yaml": "946b7985911457d7d9cbbb775d0c6c81bd431c83a6ec9f80bec39fed9451c929",
+      "database/migrations/README.md": "712323a5170755ef59d7130080a1c2778c3698c4aeb27958631dff99e9a5d8a2",
+      "database/migrations/V002__category_icon_color.sql": "02dfb91fbf51b88eacb2e4e90b79beec1e3dda822f7d03e8f0fa0b54498ae8ff",
+      "database/migrations/V003__create_category_budgets.sql": "d26d5fef8d09c6cb1d63a19e2a6d3af9ceb76381b3974e136250d9e055ede67b",
+      "database/migrations/V004__create_recurring_templates.sql": "ec6ecbb9cded66e025a00c103a23b549046df5551eae89c7871a88a85193f565",
+      "database/migrations/V005__create_recurring_applications.sql": "9433eb4465ec407d47013b164198bd3c240422f6fd857ae12d983d46a78b736d",
+      "database/seed.sql": "4765bc6324e6adb449ddfaaedad6648d245e334b824e3f4046a65a5ce3c5730c",
+      "docs/BaoCao_SmartExpense_Project_Proposal.docx": "be7131a8d1f367586827de6f82e95b58f88607f7882a8a248aa6fa9f24231516",
+      "docs/SmartExpense_QuanTriDuAn.xlsx": "4de2aac97d70b987ccd20c3006299af745f9dcab3ff0ff3f57490ad4acd8e782",
+      "docs/SmartExpense_SRS.docx": "178df5f91765278a0d3184b50bd95a995cdb9c047df2e262d4370366cf207603",
+      "docs/SmartExpense_SRS_v2.docx": "e5d0d07393ec15876e75ea273ac80c071ab07f96391520f2e14a3ee06f9939ad",
+      "docs/postman/README_POSTMAN.md": "ac7b241207fd7f82beba2e22b8c1f3f4d77c9707b8e4048bb4196e1819e68f92",
+      "docs/postman/SmartExpense_Postman_Collection.json": "b823adedb9d27ba7da7ff86eef10c88b74143b22ce77803654535a1b5f9ff646",
+      "docs/qa/D01.md": "6b60bddd60443a7adc9210549d03f7c30d54d33d619407681161a8758c7d1361",
+      "docs/qa/D02.md": "5df89956a1ce4a6b190140c1d11800e392a4520b37d3d1fabe0eac17230c35dc",
+      "docs/qa/D03.md": "e351b9bdb144878c9188d3ca3789dd8e1bf0a444b993ace2f94673eb2a765f72",
+      "docs/qa/D04.md": "3fd69580b3dbffdd6649e40e4470ff6aca57753f80b28decdf9fef0ad54bd922",
+      "docs/qa/D05.md": "7fb190cec3b1a55c1a50d30622cc633a55f0ce2d674a9aaa1cd026e4ddb94257",
+      "docs/qa/D06.md": "8e0c81fddb08a15159ba0211755c1eb5edf0c57360c43ad06473f9c5915f26ae",
+      "docs/qa/D07.md": "d1b60293f0af408e15a8324e155b45f6833a35f5cc23f1278eddb1eaa9002e69",
+      "docs/qa/D08.md": "bd058d83e0d984c71ca0d9f8dcc512f696aaee29fc29224ad429927f49d80fb2",
+      "docs/qa/D09.md": "ba9f5152279345d59736917f3057054b0048f683717cb10904b7826fb7948caa",
+      "docs/qa/README.md": "3c0d6e9ae05f1bf46e4e248f8a7275dbdaebb3eeb5ec5a5d0c7854bb45bb0235",
+      "docs/qa/SE2-D10-BE_REPORT.md": "94d69d4683b4b7333cfdca16990897a4bccd0ae5f397e4164802caea1ade3a45",
+      "docs/qa/SE2_FIX_DATE_01.md": "e4de822042433d845dfb3edfdcdf4dbda1f21018627e4589d50d8774bb954663",
+      "docs/qa/SPRINT_2_REVIEW.md": "d21cd199e29ec59bb000b96d2302716cf48ce0b98f320650cd9b3c29e37c0ccd",
+      "docs/smartexpense-2.0/API_CONTRACT.md": "4982d473b4fdc826c852ee9e2915a02fe420a2979199f90e21bbef0f62817796",
+      "docs/smartexpense-2.0/SPRINT_3_PLAN.md": "254af3f214aceb48bd530be926313581ad867f72eadfedfd9c7b5b3b6272f284",
+      "frontend/.dockerignore": "38cead94d213b18fd4c8988d3005549ad3bcc39e44e7a0c55c4ec08a7f9e74aa",
+      "frontend/.env.example": "23d5a096e18d8a4b59ad4fb2aa5d03377d0a6c17a4331f434e8e26c8745dd34c",
+      "frontend/.gitignore": "772485ed8d9d5dafdfd174c938d1feb007e58ae4440c533f5989d977865e69ae",
+      "frontend/Dockerfile": "0296f0215a24bbfab8b972b5a7de5343df83be2221ea0e354eeee06ce47f9e29",
+      "frontend/README.md": "bfad25ea29e9f6c9db79a0ec6624f08a712f04cb10e4db61dccb4e7aef119cc4",
+      "frontend/eslint.config.js": "0197d9a843aaae267303c4d1ab1a43afad1afacc7646cdf6cf94a5af6b815fb8",
+      "frontend/index.html": "ec7620cc22ddf4f1324ce99845b3a8095b7fddae790e4bc9b0ab3f27cb3cbcd5",
+      "frontend/nginx.conf": "97a3f6a585efe9dde7bb99360324ce0bfbbc1338fb250bd38544b857301dfa0e",
+      "frontend/package-lock.json": "8254c9d3ebcc347f9660e929178d35ff94ca269b147fb4b0a574e624e4430190",
+      "frontend/package.json": "9ccaea3de2f86daa8db0c90efebd512e61682f6c27cc4c8099b602d41857cf0c",
+      "frontend/public/Vi.png": "628be09fa2a5579bf073a5d004bc2915a2a60070a0f9a40f5b4791183fd597b0",
+      "frontend/public/favicon.svg": "450c8dc2526c21962d8c78693b4021e1cb05ab2e8432dc6a3c846a3f3d1e875f",
+      "frontend/public/images/auth-bg.webp": "79b0b7bbbb94a5cd56de2dd326090d4f0f85468c5eca242e9ec034647463e9b4",
+      "frontend/src/App.jsx": "ca9845dd822f4229783a65532a197e7ac07f72bc616cf00981165d0be48f3552",
+      "frontend/src/api/axiosClient.js": "ae4da0f7f18a0cf2725c4628beb016227eb2f2c1a0ea75170d7766dd025b3197",
+      "frontend/src/api/errors.js": "c5cd8bb1cd477ec439ec1e4a2f15c01e9f1321024f42fa3b8fd06dc1e9e17f78",
+      "frontend/src/assets/wallet-logo.png": "628be09fa2a5579bf073a5d004bc2915a2a60070a0f9a40f5b4791183fd597b0",
+      "frontend/src/auth/actions.js": "eaf7b40f0a1835bb171b56ddf18d62ebae17cffe59c2754162663ce3f44963ac",
+      "frontend/src/auth/session.js": "c24ad5192392d0ec7f00cb01ff5aac599797cf781588fa573a4df5151a747bb2",
+      "frontend/src/components/BudgetModal.jsx": "6cab508416b887c9e3825e4ea8d04a67f0f8157a0a638c2b5e74d51d18efd53c",
+      "frontend/src/components/CategoryBudgetModal.jsx": "5993630d67db3e24aada00a2caea1cc167ad24acea9a7a61c5e605666f38edb8",
+      "frontend/src/components/CategoryModal.jsx": "8bddefc43f864d5b3da3a64ed65bfce9dc59ea8938adc32fbc2a513e02716469",
+      "frontend/src/components/ProtectedRoute.jsx": "b06aed329939d6626d348ee0dde50b062e889109b2f2d67f7611d8c9dffe1ac1",
+      "frontend/src/components/TransactionModal.jsx": "4953c98e8b7040e871bf9a3abc3bef8615364d8e447390267880bedaff7f65af",
+      "frontend/src/components/auth/AuthCard.css": "50cfe1b578300be80f31068d9e03da640394868effa420560bee837457fd68b7",
+      "frontend/src/components/auth/AuthCard.jsx": "3c3c99bd5ff7e94a899bd6f41cf7b9b94b0a0be62ec3ab23e60a3bbc12542e65",
+      "frontend/src/components/budget/CategoryBudgetCard.jsx": "22de179d53f11d7703e15e598f09222a3382fc215045117d43c0cea46cfed2e5",
+      "frontend/src/components/budget/CategoryBudgetModal.jsx": "a5e24ac17e79a0895d2791bd7921a944b229d3575e85379d238dff2d530bdbd5",
+      "frontend/src/components/budget/CategoryBudgetSection.jsx": "7f5326469fcdd9da854a8629ca10b43534fa90690fc6f89f5a7151e7d90d82df",
+      "frontend/src/components/budget/categoryBudgetUtils.js": "2e9500958785e462aa360f3ec904ff491ab851b992d9edb283ce7ba3d717ecfc",
+      "frontend/src/components/budget/index.js": "2bd7d754d8df416d19d1fc812c00430bd2cb2cab4f72e7106d162464d118eeee",
+      "frontend/src/components/calendar/DayTransactions.jsx": "b3e1334f338d66fc2ad7c2fdbf8ad20fc851f5b2df0db4abf84038afd7c02585",
+      "frontend/src/components/calendar/MonthCalendar.jsx": "e5bb683577452784d9c64ebb7ed19f5270815309e19f791bfb97da92d43999df",
+      "frontend/src/components/category/CategoryAppearancePicker.jsx": "4d1ea7952b357d80eba70770a14faa3b38f7460a124edc81f46353e71e3f675c",
+      "frontend/src/components/category/CategoryBadge.jsx": "c528983b8065ce7b9aaabbe29fbc7ecd2fcfa54f0c302f74762f6e33a2267006",
+      "frontend/src/components/dashboard/DashboardWidgets.css": "c0b8500e1832c4398bc0c496bc94cb2c1615008f18d8ebfec9f661cfeeecb955",
+      "frontend/src/components/dashboard/ExpenseDonutChart.jsx": "5511a5646f62a1a9af386ad8f6d019951b3d6916f61485e7e98ffa719683c293",
+      "frontend/src/components/dashboard/RollingNumber.jsx": "293d3df1523ac82f624f7ec476b8bef27641e0cc3890742ba4b944ac76384510",
+      "frontend/src/components/layout/MainLayout.jsx": "76074a05f0c20ec462dca1ebc88fea4317a578a500f2d214d3bc6b46b89761b5",
+      "frontend/src/components/layout/MobileNavigation.jsx": "b8178d1b847074dc471c2d392568c1f41af2341dd4350a85874661377097d0ee",
+      "frontend/src/components/layout/Sidebar.css": "93c1725123fd8f1007055737dab417aceb9da9cefaf45d4db1e5ac2f0083251d",
+      "frontend/src/components/layout/Sidebar.jsx": "06ed48f7f5d0f8984f4c99c995aac42ec7758ec48afd855f8d36ee211f976e5b",
+      "frontend/src/components/layout/ThemeToggle.jsx": "6262d83769f2f5a9891e540a0e4e77f0cf907e6ea13607a884e1abc80791b98f",
+      "frontend/src/components/layout/navigation.js": "8f97fdf2bdcb7990a91eaaf7622aed79a384938c975cd112566e4e954966bbcd",
+      "frontend/src/components/recurring/RecurringPreviewModal.jsx": "2be357c68e03175f83b7a02dc939860fd90ea5948720b97e92b0df7e76e50e4d",
+      "frontend/src/components/recurring/RecurringTemplateCard.jsx": "567ebdc5a4289ca45ddcc0e94d397d5ada1fb9dc8ef54066cec1590365aacbad",
+      "frontend/src/components/recurring/RecurringTemplateModal.jsx": "70fccded3e4105f702045d927873675a5a8a4b40bb10cfdf5799d8b182e9f4b0",
+      "frontend/src/components/recurring/index.js": "5359ac540e0ce92a29c3d9afc70e516fd1188ca201d230913c98a1e662325e08",
+      "frontend/src/components/recurring/recurringTemplateUtils.js": "5e823fe5dd1d9142f1f5c01e828eeb8fc789cd5c62ea975c24d68f214b7d6202",
+      "frontend/src/components/ui/AsyncState.jsx": "da49463dcc4a79168a35db111cf8cfb71f5b08198adef2ffa20dbf9f95132d92",
+      "frontend/src/components/ui/DateRangePicker.jsx": "dd1cb30a2b6b9c3a90bb9f08a8bc2bfb3c218112563decb0d282a23e040cd430",
+      "frontend/src/components/ui/FloatingInput.css": "9b0c7378123b2954bec5c9e79373bdbbd35a98dcdab25f603497455f82ca579d",
+      "frontend/src/components/ui/FloatingInput.jsx": "6dec58476a773a98f5e55fdf7c871cf1fc46e6cde2d82c2146529344609d9c08",
+      "frontend/src/components/ui/LucianUI.css": "345ad85e2c3a5bbfa581e223e0efa866ccfc2fd6cb782931d77f435b290d5253",
+      "frontend/src/components/ui/MoneyInput.jsx": "31966a104985e2db79260153125c7beb1209b31a3151dcb8362de98759b299ab",
+      "frontend/src/components/ui/PillTabs.jsx": "5c12fa0b6c930d33122920282b12d35820451f404e9ee62985edf709792d9b07",
+      "frontend/src/contexts/AuthContext.jsx": "e13eb6d4b1eb9ee1d6dfacfd21e9c717107d82015cbca1b9e0126bc8dc850155",
+      "frontend/src/contexts/QuickAddContext.jsx": "3ea7c8fe2ce12651f6f4d958d8d13c82fb84de5b775cdea57773ed4b0323fc65",
+      "frontend/src/contexts/ThemeContext.jsx": "a2d43b315a2e535942e338059deb35285944d585ece06af585f7b54005de4f40",
+      "frontend/src/contexts/ToastContext.jsx": "5b2010f70507a3f2871d96f6a5f3e3cc48b8b657680c0e3a3dc9ea85ee055ce9",
+      "frontend/src/hooks/useModalFocus.js": "78ae5b5b8ac08db8a72f4cfa5f2e372695c23bceb31138e452dc36cdb5ed4e2e",
+      "frontend/src/hooks/useVietnamToday.js": "021d293f23e90c3c804a57b5cf29f448780d80eb16937c5f534230f1cbe8ec08",
+      "frontend/src/index.css": "556827cfaadc6fe5272d46d024004b611452243b64527d12a0f955cbb58de803",
+      "frontend/src/main.jsx": "fc8e02dea24acda7b416f63fb757a2c8cf1bed9e139f40d7a444df7e4f6f4dd8",
+      "frontend/src/pages/Budgets.jsx": "ef0ff402a3c0395216765aaaca376725fadda951b665b5114f6a1dc080a5af2f",
+      "frontend/src/pages/Calendar.jsx": "bae643c534d182c53f092a6b59162a4aa51c9b252871ca38210b68fd81222371",
+      "frontend/src/pages/Categories.jsx": "f30d6c719e6f74594f846e4742c828829b1c98ae5c05da3e7a88b5720e369198",
+      "frontend/src/pages/Dashboard.jsx": "a734c36c03db6ac7be2152b3ba2b39fec4815a7b6f0e882f5c9512aa5a2fd386",
+      "frontend/src/pages/Login.jsx": "01026cc23bc14ca9afbf588ea67442c803e55cfa73477f19b33ef58535b337a5",
+      "frontend/src/pages/QuickAdd.jsx": "d3daecca85806dd77d3e7dca9f565ce088a63cfda83cc7cb66246fdb553cc1c8",
+      "frontend/src/pages/RecurringTemplates.jsx": "4f8b1962f70c9a43510998ba63ebd706b9ded00a053dcfd2d8fd5e6ba29bd292",
+      "frontend/src/pages/Register.jsx": "f36fcad62437473cbfcad0ce53415c493b2c755ea53a2ff72910d7f4def314eb",
+      "frontend/src/pages/Transactions.jsx": "31622d526f9bc2536e505c4849e3b04fff4d843cc3751b543f0caa21c615b8f3",
+      "frontend/src/services/authService.js": "fe37d2f77dea0be3b027fef45b45d8bf8411a412b35bf9247fd86765887cfce0",
+      "frontend/src/services/budgetService.js": "dfbf73e49af10c8492894f84cbe93b6cdc2ce75a1cc5d16e1f3392fb58cdb439",
+      "frontend/src/services/calendarService.js": "8b62ae9c05f7173d4fb9c9277b8df137ae7b6cae412280bfb8b037b3d942e171",
+      "frontend/src/services/categoryBudgetService.js": "a46f27e70dbd9ce37fccadb31164df3d26149baffa26f9f4498972966d155458",
+      "frontend/src/services/categoryService.js": "6dede42b6fa0664585ae922e3a973128293d9d96e6a1ab01f3f8dc0f21657a83",
+      "frontend/src/services/dashboardService.js": "157c49efc5664fba16b8305b03ad452828b757f244aed991e0cb015794d1068e",
+      "frontend/src/services/dayTransactionService.js": "ed249704b0583808d776e8aa04f55d2de152549e1e5882ce9f10447f101fbba5",
+      "frontend/src/services/recurringTemplateService.js": "7ff2290d35473964c285b8847685524a9a9a5b3d193b7be5c59085a12dbb99c0",
+      "frontend/src/services/transactionService.js": "f544c51eaf00c82d9d9816360ebef93a064fec6fb8bff7f9bac307e5a192e7a3",
+      "frontend/src/styles/auth-background.css": "487d4d465d6eee496a4761edc41d05dc8915ebda1ed552b3d578164700fb1bb7",
+      "frontend/src/utils/calendar.js": "0e20c2aa307f34df015861171b1a8c44a458f088a2ef427efc397beeb13284c9",
+      "frontend/src/utils/calendarSelection.js": "d74bb30ebf0f08141237438857da92968d485b495af5ef62c0d65d4a8b38ff11",
+      "frontend/src/utils/cashFlow.js": "75570145ad0fd1190ecf36bdddd9f993308e7403a4c4cada459a7fefc1869292",
+      "frontend/src/utils/categoryAppearance.js": "5d43b4af1779973ff8af311f97fa633809d7bd917ffc2518560775c40095ae73",
+      "frontend/src/utils/quickAddSubmission.js": "43fba5605ee8ad132c0494b79925f406effa6cb775a6efe4c962fc4b34cf1452",
+      "frontend/src/utils/transactionForm.js": "3fdf7f5556b3ecf9c2c29ab3569227466069c3779d98bf3124e039b63940512e",
+      "frontend/src/utils/vietnamDayClock.js": "5401d5eff85fd49e7bc8e719c89d295c2337bc5664e7d68b9cdaec0bb05332d5",
+      "frontend/tests/api.test.js": "5d3cc5e0217ad3b892ac8404358cb7c94e55d93c93a3246a3ca7e5bbe4b74f0a",
+      "frontend/tests/auth.test.js": "49fcd3a37218129284cb2a6e06dadf244c80f2371d2a5a5f52d0eba65f99c9b1",
+      "frontend/tests/calendar.test.js": "32a83ae58b71a4ecdf9badbdef78b162afcdcab99c9fe99c8d3d7d6bd35479f2",
+      "frontend/tests/calendarComponent.test.js": "88634b4b35df3f0d593d032741b3547fbaff0592b7beccf1b9d1eb8c49b0ae8d",
+      "frontend/tests/cashFlow.test.js": "08681e876d619a5b2fc383cb70bdff6f70ee0f2bfb99866c7e7433531f232998",
+      "frontend/tests/categoryAppearance.test.js": "655784dc4bbe52e7735fc573a29b23bb0aeea3e88439e91c2992b3d01789eb71",
+      "frontend/tests/categoryBudgetApiIntegration.test.js": "bdc9c102d4883a83545130039f847c6fee747751cdc59195120afe85074cf8a5",
+      "frontend/tests/categoryBudgetComponents.test.js": "ff8b96e49bb156bd22703c803d5a0eeb150b428cbc89f8c0f41ad714c8fe88e5",
+      "frontend/tests/categoryModalValidation.test.js": "722dbd5efcf3fdb70c7f796bf46bb9ef43518665707cf991c9429e262380b8d3",
+      "frontend/tests/d05d06Components.test.js": "c4d3500085d07c0c9f6142839ecf1acc9f4627fd2a0484c542e9c73caa3d73e3",
+      "frontend/tests/dayTransactions.test.js": "5a7c585e11e3d351dcd4e1d84a152ea284dd7014efb77d4f07f5dac5df884f39",
+      "frontend/tests/frontendQaComponents.test.js": "56504d22bca90cd5bb5ddf64fa4759ab3ea220d9bac63932499a6ea032e66d5b",
+      "frontend/tests/qaAuthSession.test.js": "564d0bf94c3a315e0ec4cebbfc99bd0f13e05d656d852c04c99f59f9c7dfaa2f",
+      "frontend/tests/qaDayCategory.test.js": "d00d4f088734caf5b1c8438d095747d2bab452320ba56e7fb9f2aa32f2020841",
+      "frontend/tests/qaQuickAddCalendar.test.js": "53e1ce10ce6ed4fb6743d8147ecb6f291a8f6fd26641f509616918b2bbda2e1c",
+      "frontend/tests/qaRecurringTemplates.test.js": "04ee8292cc9c76cfd3481da033bf88cbb38619a7805182e054b8c47abc68cc84",
+      "frontend/tests/quickAdd.test.js": "568f52d6361a492dda737f26c9357ddae41884630483c7f3888b151b64a497ff",
+      "frontend/tests/quickAddIntegration.test.js": "7f3baac038525d768d740d476495efc4fdf02e65a7336af57ecab26ad2b76d7b",
+      "frontend/tests/recurringPreviewApply.test.js": "65b77215f1218b54573863512858dcd99ecf14f4c5a71c5e1bc4a5adf4a68c4f",
+      "frontend/tests/recurringTemplateApiIntegration.test.js": "dbe7d7dd57e826944ee3ca60709442fbf457be5f21a7102cf8f17487e2339d79",
+      "frontend/tests/recurringTemplateComponents.test.js": "110fff0bf3b1892eac657d2fcdf7d9eba55ed1b95ca7d2c41148286266b4ca70",
+      "frontend/tests/recurringTemplateLoop.test.js": "ab9841c1479e52299334fef745cc9589b388510a9ebec22211ad8ab6683efc3b",
+      "frontend/tests/transactionDate.test.js": "efabd80637f0df5abdf2722c1bec0392e8c02122f04dd85f2c08b13e21a0553c",
+      "frontend/tests/transactionModal.test.js": "61cbd47ca3c48852748bba5670184e39e65b8536aa2732d2d9c50441d6918ab8",
+      "frontend/vite.config.js": "13812f7e77158deaf1ac7981457ced5f9daa2e4dba1e402932c12c35bff8ed65",
+      "scripts/Read-LocalEnvironment.ps1": "2cc5e6d72d7704005e1cdad8e6c24c0c773351cf56d90d6e0508a5d54abd469b",
+      "scripts/backup-db.ps1": "016b77eca2f71b69a5f8db42a823ab2bf6f0a93d6b4b3e4ea309bca889f80ad3",
+      "scripts/restore-db.ps1": "217e87440f8137334f8f2e0505b2ad63db5fcb03eb88bd38711e850ebce0016c",
+      "scripts/smoke-test.ps1": "cc331646969d9d31742cd8dfd17283f1f1123ee320aca2536bb1c3adc87e299d",
+      "scripts/start-backend.ps1": "ebf2a842433846f66222d95f303670fc740b40e33e3b5972fa49b807dbe2d394",
+      "scripts/test-db-scripts.ps1": "867c3f8f43384d9f6f069fb20692121e24e00147763a40658bfa4a69269d0bb8"
+    },
+    "frontendSources": {
+      ".env.example": "9228c0d4c104d7f6d994f1962aab1fc7e07f6325167760095ec4ced696562716",
+      ".github/workflows/cd.yml": "6407787336af21fb1323be6ea0211cf2e3dbb8427bbf6459ca132cd97ce6b30b",
+      ".github/workflows/ci.yml": "330981f656bb17c14940d068cd913931ffa388141f8e2eb961eb7284260484d8",
+      ".gitignore": "05848eb69ed80bf5df5c28bab92dc7e7994eb494c1cd595196e22c257122fff6",
+      "README.md": "fbb8459065bae9e26f3082d9dcfd1d0ecdee0a87ae70125c34d43be90cf626ee",
+      "backend/.dockerignore": "69f1d9066a153ad004e80d6d65c61e022887b93bbbc348c20e1f4af13c4c2ed8",
+      "backend/.gitattributes": "fe495e43270d435b102b52732f83383357ac97d0633e8644b4b41a65bb03a66f",
+      "backend/.gitignore": "35ab27d6a44e05ca61013eca857e0ece777c10b33140402e660d4cddc7c1d566",
+      "backend/Dockerfile": "15da7cb3a267e32569f833178e4e39f44437111fac282dce451c818aa1dea29c",
+      "backend/build.gradle": "61c8a1dc7190384f7162fe60dd19d55dc14c6c8410b2e71ca9fe92d4573cd8d5",
+      "backend/gradle/wrapper/gradle-wrapper.jar": "3b8a25775a69158b5ad2b1d17a80a88dc7b40a352a73eb27d06c612a7ce68e98",
+      "backend/gradle/wrapper/gradle-wrapper.properties": "e41ca96b180303827bc7a9de613e84adad8f4271454cd4625a3bc8912affb9de",
+      "backend/gradlew": "a5a5c199ba02189ae8c46a334223371a20599d9c298ef65e7540ede4a3f72d59",
+      "backend/gradlew.bat": "f17917f8dbe61182b149273ee78090fec1197442c3f38276af907bfa5190db16",
+      "backend/settings.gradle": "3f0d322bb1fc8d36fe4532e8319795aed819bce956f9e390d60942c7bde3ae84",
+      "backend/src/main/java/com/smartexpense/backend/BackendApplication.java": "16cc65d526b237a39dc92d3c2b40e7203c26f7d62c63bb97b8d0536dc7d329b1",
+      "backend/src/main/java/com/smartexpense/backend/config/SecurityConfig.java": "ac383f372af203e1270d61dab02e48e1a5cce676c002d498bf061e5f2fec18fc",
+      "backend/src/main/java/com/smartexpense/backend/config/TransactionDateConfig.java": "79596c336bec09ded8a894cd9968587c1b66aacadb11cb359c659f4f73c5b93f",
+      "backend/src/main/java/com/smartexpense/backend/controller/AuthController.java": "1d38f4bc8ae9ce0ac032e265f169e4efd32640c0aa625767c636aa3c147b78ac",
+      "backend/src/main/java/com/smartexpense/backend/controller/BudgetController.java": "4a916818c359701f8c72583ea1b7fc0590360c20b2f2c371b6cf26b79bac6b22",
+      "backend/src/main/java/com/smartexpense/backend/controller/CalendarController.java": "50b4ba68148fe37d9c03804b9e8ddc48280b3c853c6f0da3c32c5910047cd759",
+      "backend/src/main/java/com/smartexpense/backend/controller/CategoryBudgetController.java": "5ccb5705dbb0e249f4a16cf68a47df7ee34b2f4be0f9a3039bbdfbad92b37f88",
+      "backend/src/main/java/com/smartexpense/backend/controller/CategoryController.java": "d057e3bf8489ad5c3bd961b246b1aa4a5126fc6b56aba2fbf8b6349a0aad848a",
+      "backend/src/main/java/com/smartexpense/backend/controller/DashboardController.java": "7ed87ecd973583b98648244c857b967654fd48b0f89c016b942309060f22728d",
+      "backend/src/main/java/com/smartexpense/backend/controller/RecurringTemplateController.java": "1db6910ac6ed07c61f232a8fd0593c7aba8cece7de3c9f6d5aa79dde67c1b724",
+      "backend/src/main/java/com/smartexpense/backend/controller/TransactionController.java": "38569964aa338818ce8f53d8288f40f7056668fffc376b77d5278a1cc4a2f56e",
+      "backend/src/main/java/com/smartexpense/backend/controller/UserController.java": "d694c4c55d7e76be8a4d144e930964b08fe50ae3514243154e8b61d79d317bc4",
+      "backend/src/main/java/com/smartexpense/backend/dto/ApiError.java": "d87fe28763cf2b6590a5976b212b9bb96a925f5290d1030d71821319b8d465a7",
+      "backend/src/main/java/com/smartexpense/backend/dto/auth/AuthResponse.java": "64a195ef65ac33b2dddadff151cffd2446fd775164734e68833f8e6dbe392b72",
+      "backend/src/main/java/com/smartexpense/backend/dto/auth/LoginRequest.java": "e6570c7b82ad49ad81146f8f57ba72d44aaad429a4023f9e82abc263e9da45d4",
+      "backend/src/main/java/com/smartexpense/backend/dto/auth/RegisterRequest.java": "d79a3511346fc7d73ab1d377124d833fccd5a8ef90885648cfe4c68a2b6389ba",
+      "backend/src/main/java/com/smartexpense/backend/dto/auth/UserResponse.java": "c03ff4dfb4f857a73343066996565d0fde0aea1a527a302fd9d09c4211e84bd7",
+      "backend/src/main/java/com/smartexpense/backend/dto/budget/BudgetRequest.java": "f4db1f6dab46ace03b6871ffb91a849ea8e8b28bf5e4cc6cf1295de19b393e8b",
+      "backend/src/main/java/com/smartexpense/backend/dto/budget/BudgetResponse.java": "6792c226d8cae84511e01978c137344c04ff89b8c6f482cd9b337acd87c0c019",
+      "backend/src/main/java/com/smartexpense/backend/dto/calendar/CalendarDayResponse.java": "816227586bd9293d0776697f11a9e5683413903f2ce71754852ce7e6d02bea75",
+      "backend/src/main/java/com/smartexpense/backend/dto/calendar/CalendarMonthResponse.java": "b9ce67927013ec878589929ecd97599b52ef950e2568d800310c79d028350360",
+      "backend/src/main/java/com/smartexpense/backend/dto/category/CategoryAppearance.java": "ca0dd7137259a0856d14a6cec70db8f72a6e0e363abf94961875afad53d3916c",
+      "backend/src/main/java/com/smartexpense/backend/dto/category/CategoryRequest.java": "382e5c896ada7fc4a776a743ad28bcafcef144de9be6ac44054fc596aed7225a",
+      "backend/src/main/java/com/smartexpense/backend/dto/category/CategoryResponse.java": "d7849cf0d7d61908e23cf17a5dc99054a8a052379caefa484dd4d4eebd96de5a",
+      "backend/src/main/java/com/smartexpense/backend/dto/categorybudget/CategoryBudgetLimitRequest.java": "5b42358fc284d873c179a5b6ae6a8a3c2e50302fc6516e1b30ac7327c4497171",
+      "backend/src/main/java/com/smartexpense/backend/dto/categorybudget/CategoryBudgetRequest.java": "ba8762bfaa00b2ccce95fd3107e81d732b8328c4faa84946f374e559aaf44e98",
+      "backend/src/main/java/com/smartexpense/backend/dto/categorybudget/CategoryBudgetResponse.java": "7502f030a7f9ef78b5347f3e94e7587dbdd919b33dd417a9380ee1a3d6293339",
+      "backend/src/main/java/com/smartexpense/backend/dto/dashboard/CategoryExpenseResponse.java": "61634e6d6a0dcbcb5cb4b60a80e90f3dc7a10f8afb4a576b4d1e7267abcf4df6",
+      "backend/src/main/java/com/smartexpense/backend/dto/dashboard/DashboardSummaryResponse.java": "7d2bef8001289d179d61a418ad6947cb559adf7eea6bb6ee149e0786ca0e531b",
+      "backend/src/main/java/com/smartexpense/backend/dto/recurring/RecurringApplicationRequest.java": "df0c7fcd26eb2d8c52ae4e543fe822c9395851734dbafaf3664d577518856af2",
+      "backend/src/main/java/com/smartexpense/backend/dto/recurring/RecurringApplicationResponse.java": "475ac4da7179b5ac28be91c625c75846d8dde16964e8250ecb360ce780187a9c",
+      "backend/src/main/java/com/smartexpense/backend/dto/recurring/RecurringPeriodIntegerDeserializer.java": "3843e1daf925d752473b6707f5446dc9b9c394810e485fee064d66b12e6a4e20",
+      "backend/src/main/java/com/smartexpense/backend/dto/recurring/RecurringPreviewResponse.java": "1cb7b7db3572c7fbd17c364f01b60527e7b745ad5e653c53cf5a4fa63757797b",
+      "backend/src/main/java/com/smartexpense/backend/dto/recurring/RecurringTemplateJsonDeserializers.java": "9403caf9bb8918b64794f9169b76751f382b2325714bb261abc6fa6b69bcf4e3",
+      "backend/src/main/java/com/smartexpense/backend/dto/recurring/RecurringTemplateRequest.java": "7a4f08a29a997b963cf40adeab8dd1b93b3a470770c0f95ab0847437eb9d79dc",
+      "backend/src/main/java/com/smartexpense/backend/dto/recurring/RecurringTemplateResponse.java": "20b023e8a3aaf1cd4bd87078c8bd4d7d3facc45d4fd8b59ce538e894bea10c51",
+      "backend/src/main/java/com/smartexpense/backend/dto/transaction/TransactionRequest.java": "ca8a081cafd4130b2897f235696f2a8c9fd67788315c1347ecbce82d12ad410a",
+      "backend/src/main/java/com/smartexpense/backend/dto/transaction/TransactionResponse.java": "26673222c023c9188c0b75235570d324ca38442fd073e9406eb1fb30bbc9ac62",
+      "backend/src/main/java/com/smartexpense/backend/entity/Category.java": "814a1b7bbf3d38d50fa85041e08867fbd0359ac3747beca8ed445443d468cf88",
+      "backend/src/main/java/com/smartexpense/backend/entity/CategoryBudget.java": "21d4108cf2128011b692982c48b366ef469fa8dd5863d0cc5447c350ff20b132",
+      "backend/src/main/java/com/smartexpense/backend/entity/MonthlyBudget.java": "d8af976e59e10c8341528d3158f35a6bcb7b2c4fe95915839d7952b4e0f0f893",
+      "backend/src/main/java/com/smartexpense/backend/entity/RecurringApplication.java": "8ba8a2c793ab7af6747ccb6818ef2d308d9d7486c92154c8443b2a72e2ce3694",
+      "backend/src/main/java/com/smartexpense/backend/entity/RecurringTemplate.java": "32f3842cd1d029b760b9111bfe9c7c9b509ce90f6f8ce82f6c5ee12f5b5b895b",
+      "backend/src/main/java/com/smartexpense/backend/entity/Transaction.java": "4e8a835988e9aa2100739fb9d3b55df502dd4d9e8c6bd0bd61d4c99cfefe261e",
+      "backend/src/main/java/com/smartexpense/backend/entity/User.java": "0666a22f00619dafe50198aae7739e09053f0e53c217bb7a01bec7f6792e0b12",
+      "backend/src/main/java/com/smartexpense/backend/enums/CategoryBudgetStatus.java": "a3b5c07be5a86e677bc306edcdd226bc15ce75af973e32602c1f1cab48c931de",
+      "backend/src/main/java/com/smartexpense/backend/enums/TransactionType.java": "e4fbb62789702651e945ff3e11026c5d4efc7b3a09d0389d6550e63aef32f254",
+      "backend/src/main/java/com/smartexpense/backend/exception/CategoryBudgetExceptionHandler.java": "3b014973afcf900d2da3b12aabe80302066d30beb89b13d39a1f5f2a8b8e5d22",
+      "backend/src/main/java/com/smartexpense/backend/exception/GlobalExceptionHandler.java": "23de4f44d5020820f4a0b2b36923fcd88e15d83d0b8ab2a73e4781d509075ac7",
+      "backend/src/main/java/com/smartexpense/backend/repository/CategoryBudgetRepository.java": "f6cfebb14a96b1b4ff63aeb029331114c52bfa34fe18b64af94d0058719a5c73",
+      "backend/src/main/java/com/smartexpense/backend/repository/CategoryRepository.java": "f32a3ba2fa560d7530cbe09e0ef68a58296d421feb8f0be03588c2d73ca950b5",
+      "backend/src/main/java/com/smartexpense/backend/repository/MonthlyBudgetRepository.java": "47cbe639d7220eca9eb8581601cfc40f294bb4ce25b418e417c7ccc0292c496b",
+      "backend/src/main/java/com/smartexpense/backend/repository/RecurringApplicationRepository.java": "bf080f306544d97b7363e37e4e0771d074c54c59cfec5607bc645d220877451a",
+      "backend/src/main/java/com/smartexpense/backend/repository/RecurringTemplateRepository.java": "7bced7892ab3773cc92735f44cd1b414e767a93979b9b2a48fbc4ad24f6a690b",
+      "backend/src/main/java/com/smartexpense/backend/repository/TransactionRepository.java": "041fba2fffbaaf2db5b048687aa72dda94b05c3857d65e83ce2043e1d97d8465",
+      "backend/src/main/java/com/smartexpense/backend/repository/UserRepository.java": "fae36dcd132a847cecd4d8fd39642ef5f41b4a9e2802035e085f47da55acbeb7",
+      "backend/src/main/java/com/smartexpense/backend/security/ApiSecurityExceptionHandler.java": "9f98e43a3c7701b2e49d2fbd7739e5431ba6ac92945c75eae550a7abd67e8508",
+      "backend/src/main/java/com/smartexpense/backend/security/JwtConfig.java": "8d59f51181a653f143a9f4008b1dad558778653f95519b2a1a9ea91d2e203c8d",
+      "backend/src/main/java/com/smartexpense/backend/service/AuthService.java": "cada9f41eb9e40777c79693bb6f0c52023d4fa86ebfe3e3e3bdd12632f784ebe",
+      "backend/src/main/java/com/smartexpense/backend/service/BudgetService.java": "da4be99b2e640445e85b3dc37476d87e764df5ef0b35bdb06da6149c8b512bce",
+      "backend/src/main/java/com/smartexpense/backend/service/CalendarService.java": "e58a3ff77fe48a476a04c0d8badca15303c97a885b12f8ed172001964af7bf9c",
+      "backend/src/main/java/com/smartexpense/backend/service/CategoryBudgetService.java": "3b6d8101027ce70a712543f161ed1c866919e4de9b8e6bd6d5d7cfa19837ff53",
+      "backend/src/main/java/com/smartexpense/backend/service/CategoryService.java": "7ece52371c597459040981b84f2cdd1f3133b0961691c27beb7ecf9214abff8b",
+      "backend/src/main/java/com/smartexpense/backend/service/DashboardService.java": "d9fef72a957ae8bdd71a225c1cfbc1cf9c23ea79436c87d13aac499d032d31b9",
+      "backend/src/main/java/com/smartexpense/backend/service/RecurringApplicationService.java": "5028e4dafa783c52c8ea1815cbc98ed537713a6c2123dded983a6553993eb9e4",
+      "backend/src/main/java/com/smartexpense/backend/service/RecurringTemplateService.java": "e7641bb9fa978c973ca32b3d2a70f6aa561621a4a996981235c94cb2e9721334",
+      "backend/src/main/java/com/smartexpense/backend/service/TransactionService.java": "7c96f5edb8b858e7a5de5a5ec954bff2b1ea987d491725e313b06e2e9f1e5064",
+      "backend/src/main/java/com/smartexpense/backend/util/RecurringTemplateDates.java": "e8980f93c852006281e7410d537713ac404f7ca366d7d696840da053f04c4029",
+      "backend/src/main/java/com/smartexpense/backend/validation/NotFutureTransactionDate.java": "b3b4a1812d2a4015a7215289b7875f196a75bab0bc31cf59c5dd89f26c8692af",
+      "backend/src/main/java/com/smartexpense/backend/validation/NotFutureTransactionDateValidator.java": "53f575b37c82eb8e0f78e5515fbae347816b8b920569cef0d0f04132b7390527",
+      "backend/src/main/resources/application.properties": "4983cb9989c202a812fe8e40653ff7bcce766fe4154e5682a1b6a05f5eab560e",
+      "backend/src/test/java/com/smartexpense/backend/ApplicationSchemaAssertions.java": "6d33bfdd40c5fdfdf3932d1dc4bd9bc3755fa23e1417c2a961ca0d1037726b82",
+      "backend/src/test/java/com/smartexpense/backend/BackendApplicationTests.java": "4fad572d484eb8a93086d38847cd01f3834ea347239378772887476e0898bee7",
+      "backend/src/test/java/com/smartexpense/backend/CalendarIntegrationTests.java": "fb7755b76a98cdef4b531b7d46707db65b4803e2c278d29d79d3dfef3360d94f",
+      "backend/src/test/java/com/smartexpense/backend/CalendarQueryIntegrationTests.java": "45823bc26b1659506e0ca82839e161495a52b2323e89809123452f999818cb01",
+      "backend/src/test/java/com/smartexpense/backend/CalendarServiceTests.java": "d7a711fea6d503ec939742c65f83fa68c9a368b52d9dddda7a4b40dfc8507d7a",
+      "backend/src/test/java/com/smartexpense/backend/CategoryAppearanceIntegrationTests.java": "35757640d1e0d17ba46ef5768c527ac4871a1a3cd49e17a8d5fac671f04fda65",
+      "backend/src/test/java/com/smartexpense/backend/CategoryAppearanceTests.java": "8d7083ff5b51388529c4e0cecc9d56db20c06a9a5cb2f3cdc83955a623da9c22",
+      "backend/src/test/java/com/smartexpense/backend/CategoryBudgetIntegrationTests.java": "001bee6c4aa3a8d7a88011baab9047e2ba0710509b68c598dbcda563149162e7",
+      "backend/src/test/java/com/smartexpense/backend/CategoryBudgetMigrationIntegrationTests.java": "436d9ba5e0c863409dfc73a1b05def4ddce123885bb7e927ca2ee98237d2043e",
+      "backend/src/test/java/com/smartexpense/backend/CategoryBudgetServiceTests.java": "b0ca8e664606dad4691755c47f6bc0b47ef97763c18e0e0bdb786abc64019cc4",
+      "backend/src/test/java/com/smartexpense/backend/CategoryNameIntegrationTests.java": "a3e0fd58c421773f694bee26878be49fd1dd3b4c19d225a387f749cfb4975c73",
+      "backend/src/test/java/com/smartexpense/backend/D06MigrationIntegrationTests.java": "5ca3a1aae66aa5e2884ebfa3a545e097d2aef0e590ed432d0c5dadd25e53b363",
+      "backend/src/test/java/com/smartexpense/backend/FixedTransactionClockConfiguration.java": "c0ebeac5097d56a95093f54b7cb8f0e746c4f8658bb1a74405030c8668b32fad",
+      "backend/src/test/java/com/smartexpense/backend/MySqlIntegrationTestSupport.java": "e10621a89d14c2ad933f7680d0fa61dfb121d72bc84689e4dd8359a3d64c7908",
+      "backend/src/test/java/com/smartexpense/backend/QaBaselineAuthIntegrationTests.java": "f602b4e07e1e76740883ff31d8450cf72a16d67e577f3ccef53aea270a8f7282",
+      "backend/src/test/java/com/smartexpense/backend/QaDayCategoryIntegrationTests.java": "96add0d04f4231f59c8e56a681e158ac97476560370b3b05d783804ac74d49ee",
+      "backend/src/test/java/com/smartexpense/backend/QaTransactionCalendarIntegrationTests.java": "ec0959786a413000f0bbad372ee703410a983188124591ece6df9f1fe39c81ba",
+      "backend/src/test/java/com/smartexpense/backend/RecurringApplicationContractTests.java": "c8f73ca91267fc6871b50efbe4316525342004cfc486d97b2beaaaf03031ede9",
+      "backend/src/test/java/com/smartexpense/backend/RecurringApplicationIntegrationTests.java": "e07e33f9f696c5cb4d687fd8d523b9b4108925b61bcb18f90c389472a3637333",
+      "backend/src/test/java/com/smartexpense/backend/RecurringApplicationMigrationIntegrationTests.java": "ab72c4ea8ac28574ee92e8c0c528068bb3f65d5781b2dd548f489f5de95b101c",
+      "backend/src/test/java/com/smartexpense/backend/RecurringApplicationMySqlTestSupport.java": "d30f907f9f11cac802c5c1f7467f7dbdf182641314d4eef9e73b1eee1afb6862",
+      "backend/src/test/java/com/smartexpense/backend/RecurringTemplateApiTests.java": "817450b40d734ffd9af2666fd9657137c8f97e22e6da4c44817fe4bf018c68b3",
+      "backend/src/test/java/com/smartexpense/backend/RecurringTemplateContractTests.java": "2ca4fcc8aa4347af6c1f01b10ecd6408478e5191bde94130d3022c0e7f2a4494",
+      "backend/src/test/java/com/smartexpense/backend/RecurringTemplateDatesTests.java": "2b0254dc029dfc3cfb7377004b39e3e6bc948b8022e30355b2ea972b957ac587",
+      "backend/src/test/java/com/smartexpense/backend/RecurringTemplateIntegrationTests.java": "be1f243487c8b60ac08607bb8424f048d7407139e591bee7ffd2318fbe785061",
+      "backend/src/test/java/com/smartexpense/backend/RecurringTemplateMigrationIntegrationTests.java": "06e4be2dfc30eff3f15bb5ad9edab9640cbd030d58f5351f2c8f8468bd21f2d2",
+      "backend/src/test/java/com/smartexpense/backend/RecurringTemplateMySqlTestSupport.java": "0ec6473fe20809bd1f7d3cb632c19b3c2c7c36c5bc3c8dde093dd5c5ee5743a3",
+      "backend/src/test/java/com/smartexpense/backend/RegistrationCategoryIntegrationTests.java": "ec38ad41f5d0111ff0885e0ab76d50cd08228273ba2525c5ddc95ae59e265dfc",
+      "backend/src/test/java/com/smartexpense/backend/TransactionCreateIntegrationTests.java": "83408a956fdf89588507533e8d0355fabf31e6ddf38a2939697fa67a3a6505a2",
+      "backend/src/test/java/com/smartexpense/backend/TransactionDateIntegrationTests.java": "61dfa9801f92d56106ba04795e0e5fa3a5fef3b8d126f3ed616a465e72896360",
+      "backend/src/test/java/com/smartexpense/backend/TransactionDayIntegrationTests.java": "41ea0d40ae62484cedb914bb5fe3bab87f0952cddd9c60e97d31e8a9e97c48fd",
+      "backend/src/test/java/com/smartexpense/backend/security/ApiSecurityExceptionHandlerTests.java": "e6df3125fa5d8f8b456340d5e01954f9fb6b7d9f46f4f758b939a1dbdd621358",
+      "backend/src/test/resources/application-d03-test.properties": "9408af4910d5df1e0f4ea734f4b49ecb246e9675f781e3456c6634194077ffd4",
+      "backend/src/test/resources/application-d06-migration-test.properties": "70bcb061e288d6354442d8fa274ec887a1b13b19af3b2bf77b8d06df93ad4f1d",
+      "backend/src/test/resources/d06-legacy-schema.sql": "aa02c1a770b4786ce087a2feb729b9cc844a5744026fa0a8d210d9ff9f3d25e0",
+      "compose.yaml": "946b7985911457d7d9cbbb775d0c6c81bd431c83a6ec9f80bec39fed9451c929",
+      "database/migrations/README.md": "712323a5170755ef59d7130080a1c2778c3698c4aeb27958631dff99e9a5d8a2",
+      "database/migrations/V002__category_icon_color.sql": "02dfb91fbf51b88eacb2e4e90b79beec1e3dda822f7d03e8f0fa0b54498ae8ff",
+      "database/migrations/V003__create_category_budgets.sql": "d26d5fef8d09c6cb1d63a19e2a6d3af9ceb76381b3974e136250d9e055ede67b",
+      "database/migrations/V004__create_recurring_templates.sql": "ec6ecbb9cded66e025a00c103a23b549046df5551eae89c7871a88a85193f565",
+      "database/migrations/V005__create_recurring_applications.sql": "9433eb4465ec407d47013b164198bd3c240422f6fd857ae12d983d46a78b736d",
+      "database/seed.sql": "4765bc6324e6adb449ddfaaedad6648d245e334b824e3f4046a65a5ce3c5730c",
+      "docs/BaoCao_SmartExpense_Project_Proposal.docx": "be7131a8d1f367586827de6f82e95b58f88607f7882a8a248aa6fa9f24231516",
+      "docs/SmartExpense_QuanTriDuAn.xlsx": "c4103086841438cacf8a1fbaa7ed6546245d0ae85d36d4fc5349a0de643daaa5",
+      "docs/SmartExpense_SRS.docx": "178df5f91765278a0d3184b50bd95a995cdb9c047df2e262d4370366cf207603",
+      "docs/SmartExpense_SRS_v2.docx": "80a95a0622e7f81bb6d4cdfb05534da71f6f84d41016012deade534c7c8d754c",
+      "docs/postman/README_POSTMAN.md": "ac7b241207fd7f82beba2e22b8c1f3f4d77c9707b8e4048bb4196e1819e68f92",
+      "docs/postman/SmartExpense_Postman_Collection.json": "b823adedb9d27ba7da7ff86eef10c88b74143b22ce77803654535a1b5f9ff646",
+      "docs/qa/D01.md": "6b60bddd60443a7adc9210549d03f7c30d54d33d619407681161a8758c7d1361",
+      "docs/qa/D02.md": "5df89956a1ce4a6b190140c1d11800e392a4520b37d3d1fabe0eac17230c35dc",
+      "docs/qa/D03.md": "e351b9bdb144878c9188d3ca3789dd8e1bf0a444b993ace2f94673eb2a765f72",
+      "docs/qa/D04.md": "3fd69580b3dbffdd6649e40e4470ff6aca57753f80b28decdf9fef0ad54bd922",
+      "docs/qa/D05.md": "7fb190cec3b1a55c1a50d30622cc633a55f0ce2d674a9aaa1cd026e4ddb94257",
+      "docs/qa/D06.md": "8e0c81fddb08a15159ba0211755c1eb5edf0c57360c43ad06473f9c5915f26ae",
+      "docs/qa/D07.md": "d1b60293f0af408e15a8324e155b45f6833a35f5cc23f1278eddb1eaa9002e69",
+      "docs/qa/D08.md": "bd058d83e0d984c71ca0d9f8dcc512f696aaee29fc29224ad429927f49d80fb2",
+      "docs/qa/D09.md": "ba9f5152279345d59736917f3057054b0048f683717cb10904b7826fb7948caa",
+      "docs/qa/README.md": "cd8e5f71072ac96cb7b9ae920821d00ae48e4a8c3639cf52a1ce6b62abe11000",
+      "docs/qa/SE2_FIX_DATE_01.md": "e4de822042433d845dfb3edfdcdf4dbda1f21018627e4589d50d8774bb954663",
+      "docs/qa/SPRINT_2_REVIEW.md": "b0b8af30c82f2225889d2f44ce5350b35fe1f2f0b1f022d5c5bc4e95fed8862e",
+      "docs/smartexpense-2.0/API_CONTRACT.md": "b9baeb2f9d407bf1dcdb9f2683fd3139fbcc3e0f6f6be691f69acdd8cd3a8248",
+      "docs/smartexpense-2.0/SPRINT_3_PLAN.md": "08ee994960c7703770479e8b2f662cd9a2a3803ee4d776c649c6ef376d2093e4",
+      "frontend/.dockerignore": "38cead94d213b18fd4c8988d3005549ad3bcc39e44e7a0c55c4ec08a7f9e74aa",
+      "frontend/.env.example": "23d5a096e18d8a4b59ad4fb2aa5d03377d0a6c17a4331f434e8e26c8745dd34c",
+      "frontend/.gitignore": "772485ed8d9d5dafdfd174c938d1feb007e58ae4440c533f5989d977865e69ae",
+      "frontend/Dockerfile": "0296f0215a24bbfab8b972b5a7de5343df83be2221ea0e354eeee06ce47f9e29",
+      "frontend/README.md": "bfad25ea29e9f6c9db79a0ec6624f08a712f04cb10e4db61dccb4e7aef119cc4",
+      "frontend/eslint.config.js": "9f9b44b8e55768eaf86e417b96919510b12055d87806e0e2f0703c5a0eb64817",
+      "frontend/index.html": "ec7620cc22ddf4f1324ce99845b3a8095b7fddae790e4bc9b0ab3f27cb3cbcd5",
+      "frontend/nginx.conf": "97a3f6a585efe9dde7bb99360324ce0bfbbc1338fb250bd38544b857301dfa0e",
+      "frontend/package-lock.json": "8254c9d3ebcc347f9660e929178d35ff94ca269b147fb4b0a574e624e4430190",
+      "frontend/package.json": "9ccaea3de2f86daa8db0c90efebd512e61682f6c27cc4c8099b602d41857cf0c",
+      "frontend/public/Vi.png": "628be09fa2a5579bf073a5d004bc2915a2a60070a0f9a40f5b4791183fd597b0",
+      "frontend/public/favicon.svg": "450c8dc2526c21962d8c78693b4021e1cb05ab2e8432dc6a3c846a3f3d1e875f",
+      "frontend/public/images/auth-bg.webp": "79b0b7bbbb94a5cd56de2dd326090d4f0f85468c5eca242e9ec034647463e9b4",
+      "frontend/src/App.jsx": "da86043abef1d5510fbf540ff438f8efc91c76ee9c033ec5a4f571ea8125eaa3",
+      "frontend/src/api/axiosClient.js": "ae4da0f7f18a0cf2725c4628beb016227eb2f2c1a0ea75170d7766dd025b3197",
+      "frontend/src/api/errors.js": "c5cd8bb1cd477ec439ec1e4a2f15c01e9f1321024f42fa3b8fd06dc1e9e17f78",
+      "frontend/src/assets/wallet-logo.png": "628be09fa2a5579bf073a5d004bc2915a2a60070a0f9a40f5b4791183fd597b0",
+      "frontend/src/auth/actions.js": "eaf7b40f0a1835bb171b56ddf18d62ebae17cffe59c2754162663ce3f44963ac",
+      "frontend/src/auth/session.js": "c24ad5192392d0ec7f00cb01ff5aac599797cf781588fa573a4df5151a747bb2",
+      "frontend/src/components/BudgetModal.jsx": "6cab508416b887c9e3825e4ea8d04a67f0f8157a0a638c2b5e74d51d18efd53c",
+      "frontend/src/components/CategoryBudgetModal.jsx": "5993630d67db3e24aada00a2caea1cc167ad24acea9a7a61c5e605666f38edb8",
+      "frontend/src/components/CategoryModal.jsx": "8bddefc43f864d5b3da3a64ed65bfce9dc59ea8938adc32fbc2a513e02716469",
+      "frontend/src/components/ProtectedRoute.jsx": "b06aed329939d6626d348ee0dde50b062e889109b2f2d67f7611d8c9dffe1ac1",
+      "frontend/src/components/TransactionModal.jsx": "4953c98e8b7040e871bf9a3abc3bef8615364d8e447390267880bedaff7f65af",
+      "frontend/src/components/auth/AuthCard.css": "50cfe1b578300be80f31068d9e03da640394868effa420560bee837457fd68b7",
+      "frontend/src/components/auth/AuthCard.jsx": "3c3c99bd5ff7e94a899bd6f41cf7b9b94b0a0be62ec3ab23e60a3bbc12542e65",
+      "frontend/src/components/budget/CategoryBudgetCard.jsx": "22de179d53f11d7703e15e598f09222a3382fc215045117d43c0cea46cfed2e5",
+      "frontend/src/components/budget/CategoryBudgetModal.jsx": "a5e24ac17e79a0895d2791bd7921a944b229d3575e85379d238dff2d530bdbd5",
+      "frontend/src/components/budget/CategoryBudgetSection.jsx": "7f5326469fcdd9da854a8629ca10b43534fa90690fc6f89f5a7151e7d90d82df",
+      "frontend/src/components/budget/categoryBudgetUtils.js": "2e9500958785e462aa360f3ec904ff491ab851b992d9edb283ce7ba3d717ecfc",
+      "frontend/src/components/budget/index.js": "2bd7d754d8df416d19d1fc812c00430bd2cb2cab4f72e7106d162464d118eeee",
+      "frontend/src/components/calendar/DayTransactions.jsx": "b3e1334f338d66fc2ad7c2fdbf8ad20fc851f5b2df0db4abf84038afd7c02585",
+      "frontend/src/components/calendar/MonthCalendar.jsx": "e5bb683577452784d9c64ebb7ed19f5270815309e19f791bfb97da92d43999df",
+      "frontend/src/components/category/CategoryAppearancePicker.jsx": "4d1ea7952b357d80eba70770a14faa3b38f7460a124edc81f46353e71e3f675c",
+      "frontend/src/components/category/CategoryBadge.jsx": "c528983b8065ce7b9aaabbe29fbc7ecd2fcfa54f0c302f74762f6e33a2267006",
+      "frontend/src/components/dashboard/DashboardWidgets.css": "c0b8500e1832c4398bc0c496bc94cb2c1615008f18d8ebfec9f661cfeeecb955",
+      "frontend/src/components/dashboard/ExpenseDonutChart.jsx": "5511a5646f62a1a9af386ad8f6d019951b3d6916f61485e7e98ffa719683c293",
+      "frontend/src/components/dashboard/RollingNumber.jsx": "293d3df1523ac82f624f7ec476b8bef27641e0cc3890742ba4b944ac76384510",
+      "frontend/src/components/layout/MainLayout.jsx": "5bb3387d6d1d34fae0fc54c6ad31a5c2df05dbcbc319d1a8e12611e681a3e2c8",
+      "frontend/src/components/layout/MobileNavigation.jsx": "feeeb801d05f50ed1ab68cbc145d2b7833baad27790bdce9f830bb5dc0e0a027",
+      "frontend/src/components/layout/Sidebar.css": "93c1725123fd8f1007055737dab417aceb9da9cefaf45d4db1e5ac2f0083251d",
+      "frontend/src/components/layout/Sidebar.jsx": "06ed48f7f5d0f8984f4c99c995aac42ec7758ec48afd855f8d36ee211f976e5b",
+      "frontend/src/components/layout/ThemeToggle.jsx": "6262d83769f2f5a9891e540a0e4e77f0cf907e6ea13607a884e1abc80791b98f",
+      "frontend/src/components/layout/navigation.js": "665ebff1e9fa09a5deb06e31f4136e03f67fce975a9354940106216e186821a4",
+      "frontend/src/components/recurring/RecurringPreviewModal.jsx": "2be357c68e03175f83b7a02dc939860fd90ea5948720b97e92b0df7e76e50e4d",
+      "frontend/src/components/recurring/RecurringTemplateCard.jsx": "567ebdc5a4289ca45ddcc0e94d397d5ada1fb9dc8ef54066cec1590365aacbad",
+      "frontend/src/components/recurring/RecurringTemplateModal.jsx": "70fccded3e4105f702045d927873675a5a8a4b40bb10cfdf5799d8b182e9f4b0",
+      "frontend/src/components/recurring/index.js": "5359ac540e0ce92a29c3d9afc70e516fd1188ca201d230913c98a1e662325e08",
+      "frontend/src/components/recurring/recurringTemplateUtils.js": "5e823fe5dd1d9142f1f5c01e828eeb8fc789cd5c62ea975c24d68f214b7d6202",
+      "frontend/src/components/reports/CategoryBreakdownSection.jsx": "cde3eb84198404c4811292e17f564b8e87fefd670d93991e6d7d93ff2fc31411",
+      "frontend/src/components/reports/MonthlyComparisonChart.jsx": "eab6878e597c1c0668f3d1ba512f36f2b0a5ba6b66c1f64d40f226f50b8c96a8",
+      "frontend/src/components/reports/index.js": "0bcf209d6324a424105b610f8590a24717bfab60f4bf4f18a6f6fc20b06e173c",
+      "frontend/src/components/reports/reportUtils.js": "e27b71380eff245e8ff52696ff141ea993e9378a53d22f957b7438310a760fea",
+      "frontend/src/components/ui/AsyncState.jsx": "da49463dcc4a79168a35db111cf8cfb71f5b08198adef2ffa20dbf9f95132d92",
+      "frontend/src/components/ui/DateRangePicker.jsx": "dd1cb30a2b6b9c3a90bb9f08a8bc2bfb3c218112563decb0d282a23e040cd430",
+      "frontend/src/components/ui/FloatingInput.css": "9b0c7378123b2954bec5c9e79373bdbbd35a98dcdab25f603497455f82ca579d",
+      "frontend/src/components/ui/FloatingInput.jsx": "6dec58476a773a98f5e55fdf7c871cf1fc46e6cde2d82c2146529344609d9c08",
+      "frontend/src/components/ui/LucianUI.css": "345ad85e2c3a5bbfa581e223e0efa866ccfc2fd6cb782931d77f435b290d5253",
+      "frontend/src/components/ui/MoneyInput.jsx": "31966a104985e2db79260153125c7beb1209b31a3151dcb8362de98759b299ab",
+      "frontend/src/components/ui/PillTabs.jsx": "5c12fa0b6c930d33122920282b12d35820451f404e9ee62985edf709792d9b07",
+      "frontend/src/contexts/AuthContext.jsx": "e13eb6d4b1eb9ee1d6dfacfd21e9c717107d82015cbca1b9e0126bc8dc850155",
+      "frontend/src/contexts/QuickAddContext.jsx": "3ea7c8fe2ce12651f6f4d958d8d13c82fb84de5b775cdea57773ed4b0323fc65",
+      "frontend/src/contexts/ThemeContext.jsx": "a2d43b315a2e535942e338059deb35285944d585ece06af585f7b54005de4f40",
+      "frontend/src/contexts/ToastContext.jsx": "5b2010f70507a3f2871d96f6a5f3e3cc48b8b657680c0e3a3dc9ea85ee055ce9",
+      "frontend/src/hooks/useModalFocus.js": "78ae5b5b8ac08db8a72f4cfa5f2e372695c23bceb31138e452dc36cdb5ed4e2e",
+      "frontend/src/hooks/useVietnamToday.js": "021d293f23e90c3c804a57b5cf29f448780d80eb16937c5f534230f1cbe8ec08",
+      "frontend/src/index.css": "556827cfaadc6fe5272d46d024004b611452243b64527d12a0f955cbb58de803",
+      "frontend/src/main.jsx": "fc8e02dea24acda7b416f63fb757a2c8cf1bed9e139f40d7a444df7e4f6f4dd8",
+      "frontend/src/pages/Budgets.jsx": "ef0ff402a3c0395216765aaaca376725fadda951b665b5114f6a1dc080a5af2f",
+      "frontend/src/pages/Calendar.jsx": "bae643c534d182c53f092a6b59162a4aa51c9b252871ca38210b68fd81222371",
+      "frontend/src/pages/Categories.jsx": "f30d6c719e6f74594f846e4742c828829b1c98ae5c05da3e7a88b5720e369198",
+      "frontend/src/pages/Dashboard.jsx": "a734c36c03db6ac7be2152b3ba2b39fec4815a7b6f0e882f5c9512aa5a2fd386",
+      "frontend/src/pages/Login.jsx": "01026cc23bc14ca9afbf588ea67442c803e55cfa73477f19b33ef58535b337a5",
+      "frontend/src/pages/QuickAdd.jsx": "d3daecca85806dd77d3e7dca9f565ce088a63cfda83cc7cb66246fdb553cc1c8",
+      "frontend/src/pages/RecurringTemplates.jsx": "4f8b1962f70c9a43510998ba63ebd706b9ded00a053dcfd2d8fd5e6ba29bd292",
+      "frontend/src/pages/Register.jsx": "f36fcad62437473cbfcad0ce53415c493b2c755ea53a2ff72910d7f4def314eb",
+      "frontend/src/pages/Reports.jsx": "6d15b0ad683e91e2d047612bc272a5156a353b68fff5ccefaef5fe3152531896",
+      "frontend/src/pages/Transactions.jsx": "31622d526f9bc2536e505c4849e3b04fff4d843cc3751b543f0caa21c615b8f3",
+      "frontend/src/services/authService.js": "fe37d2f77dea0be3b027fef45b45d8bf8411a412b35bf9247fd86765887cfce0",
+      "frontend/src/services/budgetService.js": "dfbf73e49af10c8492894f84cbe93b6cdc2ce75a1cc5d16e1f3392fb58cdb439",
+      "frontend/src/services/calendarService.js": "8b62ae9c05f7173d4fb9c9277b8df137ae7b6cae412280bfb8b037b3d942e171",
+      "frontend/src/services/categoryBudgetService.js": "a46f27e70dbd9ce37fccadb31164df3d26149baffa26f9f4498972966d155458",
+      "frontend/src/services/categoryService.js": "6dede42b6fa0664585ae922e3a973128293d9d96e6a1ab01f3f8dc0f21657a83",
+      "frontend/src/services/dashboardService.js": "157c49efc5664fba16b8305b03ad452828b757f244aed991e0cb015794d1068e",
+      "frontend/src/services/dayTransactionService.js": "ed249704b0583808d776e8aa04f55d2de152549e1e5882ce9f10447f101fbba5",
+      "frontend/src/services/recurringTemplateService.js": "7ff2290d35473964c285b8847685524a9a9a5b3d193b7be5c59085a12dbb99c0",
+      "frontend/src/services/reportService.js": "cf76d7e4fbfa4e890436caef6124fb6e29eae8df16be2fae054b0af76937142b",
+      "frontend/src/services/transactionService.js": "f544c51eaf00c82d9d9816360ebef93a064fec6fb8bff7f9bac307e5a192e7a3",
+      "frontend/src/styles/auth-background.css": "487d4d465d6eee496a4761edc41d05dc8915ebda1ed552b3d578164700fb1bb7",
+      "frontend/src/utils/calendar.js": "0e20c2aa307f34df015861171b1a8c44a458f088a2ef427efc397beeb13284c9",
+      "frontend/src/utils/calendarSelection.js": "d74bb30ebf0f08141237438857da92968d485b495af5ef62c0d65d4a8b38ff11",
+      "frontend/src/utils/cashFlow.js": "75570145ad0fd1190ecf36bdddd9f993308e7403a4c4cada459a7fefc1869292",
+      "frontend/src/utils/categoryAppearance.js": "5d43b4af1779973ff8af311f97fa633809d7bd917ffc2518560775c40095ae73",
+      "frontend/src/utils/quickAddSubmission.js": "43fba5605ee8ad132c0494b79925f406effa6cb775a6efe4c962fc4b34cf1452",
+      "frontend/src/utils/transactionForm.js": "3fdf7f5556b3ecf9c2c29ab3569227466069c3779d98bf3124e039b63940512e",
+      "frontend/src/utils/vietnamDayClock.js": "5401d5eff85fd49e7bc8e719c89d295c2337bc5664e7d68b9cdaec0bb05332d5",
+      "frontend/tests/api.test.js": "5d3cc5e0217ad3b892ac8404358cb7c94e55d93c93a3246a3ca7e5bbe4b74f0a",
+      "frontend/tests/auth.test.js": "49fcd3a37218129284cb2a6e06dadf244c80f2371d2a5a5f52d0eba65f99c9b1",
+      "frontend/tests/calendar.test.js": "32a83ae58b71a4ecdf9badbdef78b162afcdcab99c9fe99c8d3d7d6bd35479f2",
+      "frontend/tests/calendarComponent.test.js": "88634b4b35df3f0d593d032741b3547fbaff0592b7beccf1b9d1eb8c49b0ae8d",
+      "frontend/tests/cashFlow.test.js": "08681e876d619a5b2fc383cb70bdff6f70ee0f2bfb99866c7e7433531f232998",
+      "frontend/tests/categoryAppearance.test.js": "655784dc4bbe52e7735fc573a29b23bb0aeea3e88439e91c2992b3d01789eb71",
+      "frontend/tests/categoryBudgetApiIntegration.test.js": "bdc9c102d4883a83545130039f847c6fee747751cdc59195120afe85074cf8a5",
+      "frontend/tests/categoryBudgetComponents.test.js": "ff8b96e49bb156bd22703c803d5a0eeb150b428cbc89f8c0f41ad714c8fe88e5",
+      "frontend/tests/categoryModalValidation.test.js": "722dbd5efcf3fdb70c7f796bf46bb9ef43518665707cf991c9429e262380b8d3",
+      "frontend/tests/d05d06Components.test.js": "c4d3500085d07c0c9f6142839ecf1acc9f4627fd2a0484c542e9c73caa3d73e3",
+      "frontend/tests/dayTransactions.test.js": "5a7c585e11e3d351dcd4e1d84a152ea284dd7014efb77d4f07f5dac5df884f39",
+      "frontend/tests/frontendQaComponents.test.js": "56504d22bca90cd5bb5ddf64fa4759ab3ea220d9bac63932499a6ea032e66d5b",
+      "frontend/tests/qaAuthSession.test.js": "564d0bf94c3a315e0ec4cebbfc99bd0f13e05d656d852c04c99f59f9c7dfaa2f",
+      "frontend/tests/qaDayCategory.test.js": "d00d4f088734caf5b1c8438d095747d2bab452320ba56e7fb9f2aa32f2020841",
+      "frontend/tests/qaQuickAddCalendar.test.js": "53e1ce10ce6ed4fb6743d8147ecb6f291a8f6fd26641f509616918b2bbda2e1c",
+      "frontend/tests/qaRecurringTemplates.test.js": "94e3816e1c1402f160d09bde14f815d95a382198b97c0da773a6f9da6843eeb8",
+      "frontend/tests/quickAdd.test.js": "568f52d6361a492dda737f26c9357ddae41884630483c7f3888b151b64a497ff",
+      "frontend/tests/quickAddIntegration.test.js": "7f3baac038525d768d740d476495efc4fdf02e65a7336af57ecab26ad2b76d7b",
+      "frontend/tests/recurringPreviewApply.test.js": "65b77215f1218b54573863512858dcd99ecf14f4c5a71c5e1bc4a5adf4a68c4f",
+      "frontend/tests/recurringTemplateApiIntegration.test.js": "dbe7d7dd57e826944ee3ca60709442fbf457be5f21a7102cf8f17487e2339d79",
+      "frontend/tests/recurringTemplateComponents.test.js": "110fff0bf3b1892eac657d2fcdf7d9eba55ed1b95ca7d2c41148286266b4ca70",
+      "frontend/tests/recurringTemplateLoop.test.js": "ab9841c1479e52299334fef745cc9589b388510a9ebec22211ad8ab6683efc3b",
+      "frontend/tests/reportApiIntegration.test.js": "940bb816975f191030b07e0a855b176741d03dacb4bfa33b02a625cefae4a3f8",
+      "frontend/tests/reportComponents.test.js": "4e632a358f7f037b3fe31bf0db005678943cadc0aa7e19f1fe99b98905535d9c",
+      "frontend/tests/transactionDate.test.js": "efabd80637f0df5abdf2722c1bec0392e8c02122f04dd85f2c08b13e21a0553c",
+      "frontend/tests/transactionModal.test.js": "61cbd47ca3c48852748bba5670184e39e65b8536aa2732d2d9c50441d6918ab8",
+      "frontend/vite.config.js": "13812f7e77158deaf1ac7981457ced5f9daa2e4dba1e402932c12c35bff8ed65",
+      "scripts/Read-LocalEnvironment.ps1": "2cc5e6d72d7704005e1cdad8e6c24c0c773351cf56d90d6e0508a5d54abd469b",
+      "scripts/backup-db.ps1": "016b77eca2f71b69a5f8db42a823ab2bf6f0a93d6b4b3e4ea309bca889f80ad3",
+      "scripts/restore-db.ps1": "217e87440f8137334f8f2e0505b2ad63db5fcb03eb88bd38711e850ebce0016c",
+      "scripts/smoke-test.ps1": "cc331646969d9d31742cd8dfd17283f1f1123ee320aca2536bb1c3adc87e299d",
+      "scripts/start-backend.ps1": "ebf2a842433846f66222d95f303670fc740b40e33e3b5972fa49b807dbe2d394",
+      "scripts/test-db-scripts.ps1": "867c3f8f43384d9f6f069fb20692121e24e00147763a40658bfa4a69269d0bb8"
+    },
+    "contractSha256": "4982d473b4fdc826c852ee9e2915a02fe420a2979199f90e21bbef0f62817796"
+  },
+  "environment": {
+    "docker": "29.9.2\n",
+    "java": "Java HotSpot(TM) 64-Bit Server VM (build 21.0.10+8-LTS-217, mixed mode, sharing)",
+    "mysql": "8.0.46",
+    "database": "se_d10_qa_80cb55a5156c4a3384eb04edecb5999c",
+    "transport": "loopback only",
+    "hibernate": "validate",
+    "sqlMode": "ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION"
+  },
+  "schemaInputs": {
+    "backend\\src\\test\\resources\\d06-legacy-schema.sql": "aa02c1a770b4786ce087a2feb729b9cc844a5744026fa0a8d210d9ff9f3d25e0",
+    "database\\migrations\\V002__category_icon_color.sql": "02dfb91fbf51b88eacb2e4e90b79beec1e3dda822f7d03e8f0fa0b54498ae8ff",
+    "database\\migrations\\V003__create_category_budgets.sql": "d26d5fef8d09c6cb1d63a19e2a6d3af9ceb76381b3974e136250d9e055ede67b",
+    "database\\migrations\\V004__create_recurring_templates.sql": "ec6ecbb9cded66e025a00c103a23b549046df5551eae89c7871a88a85193f565",
+    "database\\migrations\\V005__create_recurring_applications.sql": "9433eb4465ec407d47013b164198bd3c240422f6fd857ae12d983d46a78b736d"
+  },
+  "indexes": [
+    {
+      "seq": 1,
+      "name": "fk_transactions_category",
+      "column": "category_id"
+    },
+    {
+      "seq": 1,
+      "name": "idx_transactions_user_date",
+      "column": "user_id"
+    },
+    {
+      "seq": 2,
+      "name": "idx_transactions_user_date",
+      "column": "transaction_date"
+    },
+    {
+      "seq": 1,
+      "name": "PRIMARY",
+      "column": "id"
+    }
+  ],
+  "fixtureSha256": "161324624ee52a47a99ba6897441b6096c83830ef87771a364827b699e78dd56",
+  "dbFinishedUtc": "2026-11-08T17:18:37.472641+00:00",
+  "aiFixture": {
+    "report": {
+      "from": "2026-09",
+      "to": "2026-11",
+      "months": [
+        {
+          "month": "2026-09",
+          "totalIncome": "1000.30",
+          "totalExpense": "350.35",
+          "balance": "649.95"
+        },
+        {
+          "month": "2026-10",
+          "totalIncome": "0",
+          "totalExpense": "0",
+          "balance": "0"
+        },
+        {
+          "month": "2026-11",
+          "totalIncome": "2000.00",
+          "totalExpense": "501.00",
+          "balance": "1499.00"
+        }
+      ],
+      "expensesByCategory": [
+        {
+          "categoryId": 36,
+          "totalAmount": "650.55",
+          "categoryName": "QA D10 Food"
+        },
+        {
+          "categoryId": 37,
+          "totalAmount": "200.80",
+          "categoryName": "QA D10 Transport"
+        }
+      ]
+    },
+    "budgets": {
+      "monthly-9": {
+        "id": 1,
+        "year": 2026,
+        "month": 9,
+        "amountLimit": "500.00",
+        "spentAmount": "350.35",
+        "remainingAmount": "149.65",
+        "exceeded": false
+      },
+      "monthly-11": {
+        "id": 2,
+        "year": 2026,
+        "month": 11,
+        "amountLimit": "400.00",
+        "spentAmount": "501.00",
+        "remainingAmount": "-101.00",
+        "exceeded": true
+      },
+      "categories": [
+        {
+          "id": 1,
+          "categoryId": 36,
+          "categoryName": "QA D10 Food",
+          "year": 2026,
+          "month": 11,
+          "amountLimit": "1000.00",
+          "spentAmount": "350.25",
+          "remainingAmount": "649.75",
+          "usagePercentage": "35.03",
+          "exceeded": false,
+          "status": "SAFE"
+        },
+        {
+          "id": 2,
+          "categoryId": 37,
+          "categoryName": "QA D10 Transport",
+          "year": 2026,
+          "month": 11,
+          "amountLimit": "100.00",
+          "spentAmount": "150.75",
+          "remainingAmount": "-50.75",
+          "usagePercentage": "150.75",
+          "exceeded": true,
+          "status": "OVER_BUDGET"
+        }
+      ]
+    },
+    "owners": [
+      "A",
+      "B"
+    ],
+    "emptyMonth": "2026-10"
+  },
+  "lastMeasuredLog": [
+    {
+      "sql": "SET SESSION TRANSACTION READ ONLY",
+      "kind": "Query",
+      "client": "d10_qa[d10_qa] @  [172.17.0.1]",
+      "thread": 11
+    },
+    {
+      "sql": "SET autocommit=0",
+      "kind": "Query",
+      "client": "d10_qa[d10_qa] @  [172.17.0.1]",
+      "thread": 11
+    },
+    {
+      "sql": "select year(t1_0.transaction_date),month(t1_0.transaction_date),t1_0.type,sum(t1_0.amount) from transactions t1_0 where t1_0.user_id=1 and t1_0.transaction_date>='2025-01-01' and t1_0.transaction_date<'2025-07-01' group by year(t1_0.transaction_date),month(t1_0.transaction_date),t1_0.type order by year(t1_0.transaction_date),month(t1_0.transaction_date)",
+      "kind": "Query",
+      "client": "d10_qa[d10_qa] @  [172.17.0.1]",
+      "thread": 11
+    },
+    {
+      "sql": "select c1_0.id,c1_0.name,sum(t1_0.amount) from transactions t1_0 join categories c1_0 on c1_0.id=t1_0.category_id where t1_0.user_id=1 and t1_0.type='EXPENSE' and t1_0.transaction_date>='2025-01-01' and t1_0.transaction_date<'2025-07-01' group by c1_0.id,c1_0.name order by sum(t1_0.amount) desc",
+      "kind": "Query",
+      "client": "d10_qa[d10_qa] @  [172.17.0.1]",
+      "thread": 11
+    },
+    {
+      "sql": "COMMIT",
+      "kind": "Query",
+      "client": "d10_qa[d10_qa] @  [172.17.0.1]",
+      "thread": 11
+    },
+    {
+      "sql": "SET autocommit=1",
+      "kind": "Query",
+      "client": "d10_qa[d10_qa] @  [172.17.0.1]",
+      "thread": 11
+    },
+    {
+      "sql": "SET SESSION TRANSACTION READ WRITE",
+      "kind": "Query",
+      "client": "d10_qa[d10_qa] @  [172.17.0.1]",
+      "thread": 11
+    },
+    {
+      "sql": "select @@version_comment limit 1",
+      "kind": "Query",
+      "client": "root[root] @ localhost []",
+      "thread": 61
+    },
+    {
+      "sql": "SET GLOBAL general_log=OFF",
+      "kind": "Query",
+      "client": "root[root] @ localhost []",
+      "thread": 61
+    }
+  ],
+  "performance": {
+    "beforeBulkOtherOwner": {
+      "transactionSelects": 2,
+      "capturedStatements": [
+        {
+          "sql": "SET SESSION TRANSACTION READ ONLY",
+          "kind": "Query",
+          "client": "d10_qa[d10_qa] @  [172.17.0.1]",
+          "thread": 11
+        },
+        {
+          "sql": "SET autocommit=0",
+          "kind": "Query",
+          "client": "d10_qa[d10_qa] @  [172.17.0.1]",
+          "thread": 11
+        },
+        {
+          "sql": "select year(t1_0.transaction_date),month(t1_0.transaction_date),t1_0.type,sum(t1_0.amount) from transactions t1_0 where t1_0.user_id=1 and t1_0.transaction_date>='2025-01-01' and t1_0.transaction_date<'2025-07-01' group by year(t1_0.transaction_date),month(t1_0.transaction_date),t1_0.type order by year(t1_0.transaction_date),month(t1_0.transaction_date)",
+          "kind": "Query",
+          "client": "d10_qa[d10_qa] @  [172.17.0.1]",
+          "thread": 11
+        },
+        {
+          "sql": "select c1_0.id,c1_0.name,sum(t1_0.amount) from transactions t1_0 join categories c1_0 on c1_0.id=t1_0.category_id where t1_0.user_id=1 and t1_0.type='EXPENSE' and t1_0.transaction_date>='2025-01-01' and t1_0.transaction_date<'2025-07-01' group by c1_0.id,c1_0.name order by sum(t1_0.amount) desc",
+          "kind": "Query",
+          "client": "d10_qa[d10_qa] @  [172.17.0.1]",
+          "thread": 11
+        },
+        {
+          "sql": "COMMIT",
+          "kind": "Query",
+          "client": "d10_qa[d10_qa] @  [172.17.0.1]",
+          "thread": 11
+        },
+        {
+          "sql": "SET autocommit=1",
+          "kind": "Query",
+          "client": "d10_qa[d10_qa] @  [172.17.0.1]",
+          "thread": 11
+        },
+        {
+          "sql": "SET SESSION TRANSACTION READ WRITE",
+          "kind": "Query",
+          "client": "d10_qa[d10_qa] @  [172.17.0.1]",
+          "thread": 11
+        },
+        {
+          "sql": "select @@version_comment limit 1",
+          "kind": "Query",
+          "client": "root[root] @ localhost []",
+          "thread": 56
+        },
+        {
+          "sql": "SET GLOBAL general_log=OFF",
+          "kind": "Query",
+          "client": "root[root] @ localhost []",
+          "thread": 56
+        }
+      ],
+      "sql": [
+        "select year(t1_0.transaction_date),month(t1_0.transaction_date),t1_0.type,sum(t1_0.amount) from transactions t1_0 where t1_0.user_id=1 and t1_0.transaction_date>='2025-01-01' and t1_0.transaction_date<'2025-07-01' group by year(t1_0.transaction_date),month(t1_0.transaction_date),t1_0.type order by year(t1_0.transaction_date),month(t1_0.transaction_date)",
+        "select c1_0.id,c1_0.name,sum(t1_0.amount) from transactions t1_0 join categories c1_0 on c1_0.id=t1_0.category_id where t1_0.user_id=1 and t1_0.type='EXPENSE' and t1_0.transaction_date>='2025-01-01' and t1_0.transaction_date<'2025-07-01' group by c1_0.id,c1_0.name order by sum(t1_0.amount) desc"
+      ],
+      "durationMs": "21.849",
+      "response": {
+        "from": "2025-01",
+        "to": "2025-06",
+        "months": [
+          {
+            "month": "2025-01",
+            "totalIncome": 0,
+            "totalExpense": "2.00",
+            "balance": "-2.00"
+          },
+          {
+            "month": "2025-02",
+            "totalIncome": 0,
+            "totalExpense": "2.00",
+            "balance": "-2.00"
+          },
+          {
+            "month": "2025-03",
+            "totalIncome": 0,
+            "totalExpense": "2.00",
+            "balance": "-2.00"
+          },
+          {
+            "month": "2025-04",
+            "totalIncome": 0,
+            "totalExpense": "2.00",
+            "balance": "-2.00"
+          },
+          {
+            "month": "2025-05",
+            "totalIncome": 0,
+            "totalExpense": "2.00",
+            "balance": "-2.00"
+          },
+          {
+            "month": "2025-06",
+            "totalIncome": 0,
+            "totalExpense": "2.00",
+            "balance": "-2.00"
+          }
+        ],
+        "expensesByCategory": [
+          {
+            "categoryId": 36,
+            "categoryName": "QA D10 Food",
+            "totalAmount": "12.00"
+          }
+        ]
+      }
+    },
+    "afterBulkOtherOwner": {
+      "transactionSelects": 2,
+      "capturedStatements": [
+        {
+          "sql": "SET SESSION TRANSACTION READ ONLY",
+          "kind": "Query",
+          "client": "d10_qa[d10_qa] @  [172.17.0.1]",
+          "thread": 11
+        },
+        {
+          "sql": "SET autocommit=0",
+          "kind": "Query",
+          "client": "d10_qa[d10_qa] @  [172.17.0.1]",
+          "thread": 11
+        },
+        {
+          "sql": "select year(t1_0.transaction_date),month(t1_0.transaction_date),t1_0.type,sum(t1_0.amount) from transactions t1_0 where t1_0.user_id=1 and t1_0.transaction_date>='2025-01-01' and t1_0.transaction_date<'2025-07-01' group by year(t1_0.transaction_date),month(t1_0.transaction_date),t1_0.type order by year(t1_0.transaction_date),month(t1_0.transaction_date)",
+          "kind": "Query",
+          "client": "d10_qa[d10_qa] @  [172.17.0.1]",
+          "thread": 11
+        },
+        {
+          "sql": "select c1_0.id,c1_0.name,sum(t1_0.amount) from transactions t1_0 join categories c1_0 on c1_0.id=t1_0.category_id where t1_0.user_id=1 and t1_0.type='EXPENSE' and t1_0.transaction_date>='2025-01-01' and t1_0.transaction_date<'2025-07-01' group by c1_0.id,c1_0.name order by sum(t1_0.amount) desc",
+          "kind": "Query",
+          "client": "d10_qa[d10_qa] @  [172.17.0.1]",
+          "thread": 11
+        },
+        {
+          "sql": "COMMIT",
+          "kind": "Query",
+          "client": "d10_qa[d10_qa] @  [172.17.0.1]",
+          "thread": 11
+        },
+        {
+          "sql": "SET autocommit=1",
+          "kind": "Query",
+          "client": "d10_qa[d10_qa] @  [172.17.0.1]",
+          "thread": 11
+        },
+        {
+          "sql": "SET SESSION TRANSACTION READ WRITE",
+          "kind": "Query",
+          "client": "d10_qa[d10_qa] @  [172.17.0.1]",
+          "thread": 11
+        },
+        {
+          "sql": "select @@version_comment limit 1",
+          "kind": "Query",
+          "client": "root[root] @ localhost []",
+          "thread": 61
+        },
+        {
+          "sql": "SET GLOBAL general_log=OFF",
+          "kind": "Query",
+          "client": "root[root] @ localhost []",
+          "thread": 61
+        }
+      ],
+      "sql": [
+        "select year(t1_0.transaction_date),month(t1_0.transaction_date),t1_0.type,sum(t1_0.amount) from transactions t1_0 where t1_0.user_id=1 and t1_0.transaction_date>='2025-01-01' and t1_0.transaction_date<'2025-07-01' group by year(t1_0.transaction_date),month(t1_0.transaction_date),t1_0.type order by year(t1_0.transaction_date),month(t1_0.transaction_date)",
+        "select c1_0.id,c1_0.name,sum(t1_0.amount) from transactions t1_0 join categories c1_0 on c1_0.id=t1_0.category_id where t1_0.user_id=1 and t1_0.type='EXPENSE' and t1_0.transaction_date>='2025-01-01' and t1_0.transaction_date<'2025-07-01' group by c1_0.id,c1_0.name order by sum(t1_0.amount) desc"
+      ],
+      "durationMs": "27.826",
+      "response": {
+        "from": "2025-01",
+        "to": "2025-06",
+        "months": [
+          {
+            "month": "2025-01",
+            "totalIncome": 0,
+            "totalExpense": "2.00",
+            "balance": "-2.00"
+          },
+          {
+            "month": "2025-02",
+            "totalIncome": 0,
+            "totalExpense": "2.00",
+            "balance": "-2.00"
+          },
+          {
+            "month": "2025-03",
+            "totalIncome": 0,
+            "totalExpense": "2.00",
+            "balance": "-2.00"
+          },
+          {
+            "month": "2025-04",
+            "totalIncome": 0,
+            "totalExpense": "2.00",
+            "balance": "-2.00"
+          },
+          {
+            "month": "2025-05",
+            "totalIncome": 0,
+            "totalExpense": "2.00",
+            "balance": "-2.00"
+          },
+          {
+            "month": "2025-06",
+            "totalIncome": 0,
+            "totalExpense": "2.00",
+            "balance": "-2.00"
+          }
+        ],
+        "expensesByCategory": [
+          {
+            "categoryId": 36,
+            "categoryName": "QA D10 Food",
+            "totalAmount": "12.00"
+          }
+        ]
+      }
+    },
+    "rowCounts": {
+      "total": 20145,
+      "ownerA": 143
+    },
+    "explain": [
+      {
+        "query_block": {
+          "select_id": 1,
+          "cost_info": {
+            "query_cost": "174.26"
+          },
+          "ordering_operation": {
+            "using_filesort": false,
+            "grouping_operation": {
+              "using_temporary_table": true,
+              "using_filesort": true,
+              "cost_info": {
+                "sort_cost": "120.00"
+              },
+              "table": {
+                "table_name": "t1_0",
+                "access_type": "range",
+                "possible_keys": [
+                  "idx_transactions_user_date"
+                ],
+                "key": "idx_transactions_user_date",
+                "used_key_parts": [
+                  "user_id",
+                  "transaction_date"
+                ],
+                "key_length": "11",
+                "rows_examined_per_scan": 120,
+                "rows_produced_per_join": 120,
+                "filtered": "100.00",
+                "index_condition": "((`se_d10_qa_80cb55a5156c4a3384eb04edecb5999c`.`t1_0`.`user_id` = 1) and (`se_d10_qa_80cb55a5156c4a3384eb04edecb5999c`.`t1_0`.`transaction_date` >= DATE'2025-01-01') and (`se_d10_qa_80cb55a5156c4a3384eb04edecb5999c`.`t1_0`.`transaction_date` < DATE'2025-07-01'))",
+                "cost_info": {
+                  "read_cost": "42.26",
+                  "eval_cost": "12.00",
+                  "prefix_cost": "54.26",
+                  "data_read_per_join": "240K"
+                },
+                "used_columns": [
+                  "id",
+                  "amount",
+                  "transaction_date",
+                  "type",
+                  "user_id"
+                ]
+              }
+            }
+          }
+        }
+      },
+      {
+        "query_block": {
+          "select_id": 1,
+          "cost_info": {
+            "query_cost": "75.26"
+          },
+          "ordering_operation": {
+            "using_filesort": true,
+            "grouping_operation": {
+              "using_temporary_table": true,
+              "using_filesort": false,
+              "nested_loop": [
+                {
+                  "table": {
+                    "table_name": "t1_0",
+                    "access_type": "range",
+                    "possible_keys": [
+                      "idx_transactions_user_date",
+                      "fk_transactions_category"
+                    ],
+                    "key": "idx_transactions_user_date",
+                    "used_key_parts": [
+                      "user_id",
+                      "transaction_date"
+                    ],
+                    "key_length": "11",
+                    "rows_examined_per_scan": 120,
+                    "rows_produced_per_join": 60,
+                    "filtered": "50.00",
+                    "index_condition": "((`se_d10_qa_80cb55a5156c4a3384eb04edecb5999c`.`t1_0`.`user_id` = 1) and (`se_d10_qa_80cb55a5156c4a3384eb04edecb5999c`.`t1_0`.`transaction_date` >= DATE'2025-01-01') and (`se_d10_qa_80cb55a5156c4a3384eb04edecb5999c`.`t1_0`.`transaction_date` < DATE'2025-07-01'))",
+                    "cost_info": {
+                      "read_cost": "48.26",
+                      "eval_cost": "6.00",
+                      "prefix_cost": "54.26",
+                      "data_read_per_join": "120K"
+                    },
+                    "used_columns": [
+                      "id",
+                      "amount",
+                      "transaction_date",
+                      "type",
+                      "user_id",
+                      "category_id"
+                    ],
+                    "attached_condition": "(`se_d10_qa_80cb55a5156c4a3384eb04edecb5999c`.`t1_0`.`type` = 'EXPENSE')"
+                  }
+                },
+                {
+                  "table": {
+                    "table_name": "c1_0",
+                    "access_type": "eq_ref",
+                    "possible_keys": [
+                      "PRIMARY"
+                    ],
+                    "key": "PRIMARY",
+                    "used_key_parts": [
+                      "id"
+                    ],
+                    "key_length": "8",
+                    "ref": [
+                      "se_d10_qa_80cb55a5156c4a3384eb04edecb5999c.t1_0.category_id"
+                    ],
+                    "rows_examined_per_scan": 1,
+                    "rows_produced_per_join": 60,
+                    "filtered": "100.00",
+                    "cost_info": {
+                      "read_cost": "15.00",
+                      "eval_cost": "6.00",
+                      "prefix_cost": "75.26",
+                      "data_read_per_join": "36K"
+                    },
+                    "used_columns": [
+                      "id",
+                      "name"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "latencyMs": {
+      "samples": 10,
+      "min": "29.314",
+      "median": "31.197",
+      "max": "35.783"
+    },
+    "newIndexesOrMigrations": false
+  },
+  "frontendService": [
+    {
+      "from": "2026-09",
+      "to": "2026-09",
+      "status": "PASS",
+      "summary": {
+        "totalIncome": "1000.3",
+        "totalExpense": "350.35",
+        "balance": "649.95"
+      }
+    },
+    {
+      "from": "2026-09",
+      "to": "2026-11",
+      "status": "PASS",
+      "summary": {
+        "totalIncome": "3000.3",
+        "totalExpense": "851.35",
+        "balance": "2148.95"
+      }
+    },
+    {
+      "from": "2026-05",
+      "to": "2026-10",
+      "status": "PASS",
+      "summary": {
+        "totalIncome": "1901.41",
+        "totalExpense": "352.57",
+        "balance": "1548.84"
+      }
+    },
+    {
+      "from": "2026-10",
+      "to": "2026-10",
+      "status": "PASS",
+      "summary": {
+        "totalIncome": 0,
+        "totalExpense": 0,
+        "balance": 0
+      }
+    },
+    {
+      "case": "invalid-range",
+      "status": "PASS"
+    },
+    {
+      "case": "switch-owner-B",
+      "status": "PASS",
+      "summary": {
+        "totalIncome": 9000,
+        "totalExpense": "999.99",
+        "balance": "8000.01"
+      }
+    },
+    {
+      "case": "401-clears-session",
+      "status": "PASS"
+    }
+  ],
+  "dbEvidenceReused": true,
+  "sourceWorktreesUnchanged": true,
+  "cleanup": "JVM stopped, private config removed, temporary MySQL container removed, disposable Chrome profile removed",
+  "counts": {
+    "PASS": 49,
+    "FAIL": 0,
+    "BLOCKED": 0,
+    "SKIPPED": 0,
+    "automatedDbPass": 36,
+    "browserPass": 13
+  },
+  "finishedUtc": "2026-11-08T18:05:51.109079+00:00"
+}
