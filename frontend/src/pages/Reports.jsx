@@ -1,19 +1,28 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   AlertCircle,
   ArrowDownRight,
   ArrowUpRight,
   BarChart3,
   Calendar,
+  Download,
   Filter,
+  Loader2,
   RefreshCw,
   Wallet,
 } from 'lucide-react'
-import { getApiErrorMessage } from '../api/errors.js'
+import { getApiErrorMessage, isRequestCancelled } from '../api/errors.js'
 import { useQuickAdd } from '../contexts/QuickAddContext.jsx'
+import { useToast } from '../contexts/ToastContext.jsx'
 import { getMonthlyReport } from '../services/reportService.js'
+import {
+  exportTransactionsCsv,
+  getCsvExportErrorMessage,
+  monthRangeToDateRange,
+} from '../services/csvExportService.js'
 import MonthlyComparisonChart from '../components/reports/MonthlyComparisonChart.jsx'
 import CategoryBreakdownSection from '../components/reports/CategoryBreakdownSection.jsx'
+import MonthPickerInput from '../components/ui/MonthPickerInput.jsx'
 import {
   MAX_REPORT_MONTHS,
   MAX_REPORT_YEAR,
@@ -33,7 +42,11 @@ export function ReportsPage({
   initialReport = null,
   initialLoading = true,
   initialError = '',
+  initialExporting = false,
+  initialExportError = '',
   fetchReport = getMonthlyReport,
+  onExportCsv = exportTransactionsCsv,
+  toast = null,
 }) {
   let mutationVersion
   try {
@@ -67,7 +80,15 @@ export function ReportsPage({
   const [report, setReport] = useState(initialReport)
   const [loading, setLoading] = useState(initialLoading)
   const [error, setError] = useState(initialError)
+  const [exporting, setExporting] = useState(initialExporting)
+  const [exportError, setExportError] = useState(initialExportError)
+  const exportingRef = useRef(false)
   const [reloadKey, setReloadKey] = useState(0)
+
+  const appliedValidation = useMemo(
+    () => validateMonthRange(appliedRange.from, appliedRange.to),
+    [appliedRange.from, appliedRange.to]
+  )
 
   const draftValidation = useMemo(
     () => validateMonthRange(draftFrom, draftTo),
@@ -136,6 +157,7 @@ export function ReportsPage({
     if (validation.valid) {
       setLoading(true)
       setError('')
+      setExportError('')
       setAppliedRange(nextRange)
       setReloadKey((prev) => prev + 1)
     }
@@ -146,6 +168,7 @@ export function ReportsPage({
     if (!draftValidation.valid) return
     setLoading(true)
     setError('')
+    setExportError('')
     setAppliedRange({
       from: draftFrom,
       to: draftTo,
@@ -157,6 +180,30 @@ export function ReportsPage({
     setLoading(true)
     setError('')
     setReloadKey((prev) => prev + 1)
+  }
+
+  const handleExportCsv = async () => {
+    if (exportingRef.current || exporting) return
+    exportingRef.current = true
+    setExporting(true)
+    setExportError('')
+
+    try {
+      const dateRange = monthRangeToDateRange(appliedRange.from, appliedRange.to)
+      await onExportCsv(dateRange)
+      toast?.success('Đã tải xuống file CSV báo cáo.')
+    } catch (err) {
+      if (!isRequestCancelled(err)) {
+        const msg = getCsvExportErrorMessage(err)
+        if (msg) {
+          setExportError(msg)
+          toast?.error(msg)
+        }
+      }
+    } finally {
+      exportingRef.current = false
+      setExporting(false)
+    }
   }
 
   const summary = useMemo(
@@ -241,17 +288,16 @@ export function ReportsPage({
               <Calendar size={13} />
               <span>Từ tháng</span>
             </label>
-            <input
+            <MonthPickerInput
               id="report-from-month"
-              type="month"
               min={`${MIN_REPORT_YEAR}-01`}
               max={`${MAX_REPORT_YEAR}-12`}
               value={draftFrom}
+              theme="dark-panel"
               onChange={(event) => {
                 setDraftFrom(event.target.value)
                 setActivePreset('')
               }}
-              className="w-full rounded-xl border border-white/20 bg-slate-900/60 px-3.5 py-2 text-xs sm:text-sm font-bold text-white outline-none transition-colors focus:border-blue-400 focus-visible:ring-2 focus-visible:ring-blue-400"
             />
           </div>
 
@@ -263,17 +309,16 @@ export function ReportsPage({
               <Calendar size={13} />
               <span>Đến tháng</span>
             </label>
-            <input
+            <MonthPickerInput
               id="report-to-month"
-              type="month"
               min={`${MIN_REPORT_YEAR}-01`}
               max={`${MAX_REPORT_YEAR}-12`}
               value={draftTo}
+              theme="dark-panel"
               onChange={(event) => {
                 setDraftTo(event.target.value)
                 setActivePreset('')
               }}
-              className="w-full rounded-xl border border-white/20 bg-slate-900/60 px-3.5 py-2 text-xs sm:text-sm font-bold text-white outline-none transition-colors focus:border-blue-400 focus-visible:ring-2 focus-visible:ring-blue-400"
             />
           </div>
 
@@ -300,6 +345,22 @@ export function ReportsPage({
               />
               <span>Làm mới</span>
             </button>
+
+            <button
+              type="button"
+              id="reports-export-csv-btn"
+              onClick={handleExportCsv}
+              disabled={exporting || !appliedValidation.valid}
+              aria-busy={exporting}
+              className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-white/25 bg-white/15 px-3.5 py-2.5 text-xs sm:text-sm font-semibold text-white transition-colors hover:bg-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {exporting ? (
+                <Loader2 size={15} className="animate-spin" aria-hidden="true" />
+              ) : (
+                <Download size={15} aria-hidden="true" />
+              )}
+              <span>Tải CSV</span>
+            </button>
           </div>
         </form>
 
@@ -315,7 +376,19 @@ export function ReportsPage({
         )}
       </section>
 
-      {/* 2. Cảnh báo lỗi API nếu có */}
+      {/* 2. Cảnh báo lỗi xuất CSV hoặc lỗi API nếu có */}
+      {exportError && (
+        <div
+          role="alert"
+          className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800 dark:border-rose-900/60 dark:bg-rose-950/30 dark:text-rose-300"
+        >
+          <div className="flex items-center gap-2">
+            <AlertCircle size={19} className="shrink-0" />
+            <span>{exportError}</span>
+          </div>
+        </div>
+      )}
+
       {error && !loading && (
         <div
           role="alert"
@@ -463,5 +536,6 @@ export function ReportsPage({
 }
 
 export default function Reports() {
-  return <ReportsPage />
+  const toast = useToast()
+  return <ReportsPage toast={toast} />
 }
