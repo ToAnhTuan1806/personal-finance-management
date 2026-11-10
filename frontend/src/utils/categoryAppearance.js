@@ -13,8 +13,25 @@ export const CATEGORY_ICONS = [
   ['users', 'Giao lưu', Users], ['zap', 'Tiền điện', Zap], ['phone', 'Liên lạc', Phone],
   ['hand-coins', 'Phụ cấp', HandCoins], ['trending-up', 'Đầu tư', TrendingUp], ['clock', 'Tạm thời', Clock],
 ].map(([key, label, Icon]) => ({ key, label, Icon }))
-export const COLOR_PALETTE = ['#64748B', '#F59E0B', '#3B82F6', '#8B5CF6', '#EC4899', '#F97316',
-  '#EF4444', '#6366F1', '#EAB308', '#06B6D4', '#14B8A6', '#A855F7', '#22C55E', '#10B981', '#84CC16', '#0EA5E9', '#059669']
+export const COLOR_PALETTE = [
+  '#64748B', // Slate (Mặc định)
+  '#F59E0B', // Amber (Ăn uống)
+  '#3B82F6', // Blue (Mua sắm / Chi tiêu)
+  '#7C3AED', // Violet (Thời trang)
+  '#DB2777', // Rose Pink (Làm đẹp / Mỹ phẩm)
+  '#EA580C', // Warm Orange (Giao lưu)
+  '#DC2626', // Crimson Red (Y tế / Sức khỏe)
+  '#4F46E5', // Indigo (Giáo dục)
+  '#CA8A04', // Warm Gold (Hóa đơn / Tiền điện)
+  '#0891B2', // Ocean Cyan (Đi lại / Xăng xe)
+  '#0D9488', // Teal (Liên lạc / Viễn thông)
+  '#9333EA', // Purple (Nhà cửa)
+  '#16A34A', // Fresh Green (Thu nhập / Tiền lương)
+  '#059669', // Emerald (Đầu tư)
+  '#65A30D', // Sage Olive (Tiền thưởng)
+  '#0284C7', // Sky Blue (Thu nhập phụ)
+  '#57534E', // Warm Stone (Thu nhập tạm thời)
+]
 export const isCategoryIcon = (value) => CATEGORY_ICONS.some((item) => item.key === value)
 export const isCategoryColor = (value) => typeof value === 'string' && /^#[0-9A-Fa-f]{6}$/.test(value)
 export const categoryAppearance = (category) => ({

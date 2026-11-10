@@ -6,7 +6,6 @@ import {
   Plus,
   Trash2,
   Wallet,
-  Calendar,
   Loader2,
   AlertCircle,
   TrendingDown,
@@ -16,6 +15,7 @@ import {
 import BudgetModal from '../components/BudgetModal'
 import { CategoryBudgetSection, CategoryBudgetModal } from '../components/budget'
 import AsyncState from '../components/ui/AsyncState'
+import MonthPickerInput from '../components/ui/MonthPickerInput'
 import { useToast } from '../contexts/ToastContext'
 import { useQuickAdd } from '../contexts/QuickAddContext'
 import { getApiErrorMessage, isRequestCancelled } from '../api/errors'
@@ -361,37 +361,32 @@ export default function Budgets() {
             >
               Chọn tháng
             </label>
-            <div className="relative">
-              <input
-                id="budget-month"
-                type="month"
-                min="1900-01"
-                max="2100-12"
-                value={selectedMonth}
-                disabled={saving || deleting || categorySaving || deletingCategoryBudget}
-                onChange={(e) => {
-                  setSelectedMonth(e.target.value)
-                  setConfirmDelete(false)
-                  setCategoryToDelete(null)
-                  if (!categorySaving) {
-                    setCategoryModalOpen(false)
-                    setEditingCategoryBudget(null)
-                    setCategoryModalError('')
-                  }
-                  if (!saving) {
-                    setModalOpen(false)
-                  }
-                  setSuccess('')
-                  setError('')
-                  setLoading(true)
-                  setCategoryBudgets([])
-                  setCategoryBudgetsLoading(true)
-                  setCategoryBudgetsError('')
-                }}
-                className="rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#1E293B] py-2.5 pl-4 pr-10 text-sm font-semibold text-slate-800 dark:text-slate-100 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900/40 transition-all shadow-2xs"
-              />
-              <Calendar size={16} className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-            </div>
+            <MonthPickerInput
+              id="budget-month"
+              min="1900-01"
+              max="2100-12"
+              value={selectedMonth}
+              disabled={saving || deleting || categorySaving || deletingCategoryBudget}
+              onChange={(e) => {
+                setSelectedMonth(e.target.value)
+                setConfirmDelete(false)
+                setCategoryToDelete(null)
+                if (!categorySaving) {
+                  setCategoryModalOpen(false)
+                  setEditingCategoryBudget(null)
+                  setCategoryModalError('')
+                }
+                if (!saving) {
+                  setModalOpen(false)
+                }
+                setSuccess('')
+                setError('')
+                setLoading(true)
+                setCategoryBudgets([])
+                setCategoryBudgetsLoading(true)
+                setCategoryBudgetsError('')
+              }}
+            />
           </div>
         </div>
       </div>

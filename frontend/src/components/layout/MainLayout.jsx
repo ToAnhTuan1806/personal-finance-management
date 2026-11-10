@@ -7,6 +7,7 @@ import ThemeToggle from './ThemeToggle'
 import { useAuth } from '../../contexts/AuthContext'
 import { QuickAddProvider, useQuickAdd } from '../../contexts/QuickAddContext'
 import MobileNavigation from './MobileNavigation'
+import AiAssistantWidget from '../ai/AiAssistantWidget'
 
 const pageTitles = {
   '/': 'Tổng quan',
@@ -212,6 +213,12 @@ function LayoutContent() {
         <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-7xl p-4 pb-28 sm:p-6 sm:pb-28 lg:p-8">
           <Outlet />
         </main>
+        {isAuthenticated && (
+          <AiAssistantWidget
+            mobileMenuOpen={mobileOpen}
+            onQuickAdd={() => openQuickAdd('EXPENSE')}
+          />
+        )}
         <MobileNavigation menuOpen={mobileOpen} onOpenMenu={openMenu} />
       </div>
     </div>

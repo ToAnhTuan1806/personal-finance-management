@@ -4,6 +4,10 @@ import {
   summarizeReportMonths,
   validateMonthRange,
 } from '../components/reports/reportUtils.js'
+import {
+  exportReportTransactionsCsv,
+  monthRangeToDateRange,
+} from './csvExportService.js'
 
 const invalidResponse = (message) =>
   Object.assign(new Error(message), { code: 'INVALID_API_RESPONSE' })
@@ -105,9 +109,13 @@ export async function getMonthlyReport(params = {}, options = {}) {
   return result
 }
 
+export { exportReportTransactionsCsv, monthRangeToDateRange }
+
 export const reportService = {
   getMonthlyReport,
   normalizeMonthlyReport,
+  exportReportTransactionsCsv,
+  monthRangeToDateRange,
 }
 
 export default reportService
