@@ -325,6 +325,16 @@
   }
 }
 
+@media (max-width: 380px) {
+  .se062-form-pane {
+    padding: 24px 18px 22px;
+  }
+
+  .se062-title {
+    font-size: 22px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .se062-page *,
   .se062-page *::before,

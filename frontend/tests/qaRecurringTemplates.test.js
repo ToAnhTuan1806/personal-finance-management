@@ -335,9 +335,11 @@ test('QA-UI-POLISH: Đồng bộ copywriting GuestDashboard tháng 11, ẩn phâ
   assert.match(mainLayoutSrc, /dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800/)
 
   const loginSrc = fs.readFileSync(new URL('../src/pages/Login.jsx', import.meta.url), 'utf8')
+  const appSrc = fs.readFileSync(new URL('../src/App.jsx', import.meta.url), 'utf8')
   assert.match(loginSrc, /placeholder="name@example\.com"/)
   assert.match(loginSrc, /placeholder="••••••••"/)
-  assert.doesNotMatch(loginSrc, /\/forgot-password/, 'Không thêm dead link /forgot-password khi D12 chưa triển khai')
+  assert.match(loginSrc, /to="\/forgot-password"/)
+  assert.match(appSrc, /path="\/forgot-password"/, 'Liên kết /forgot-password trong Login.jsx phải có route tương ứng trong App.jsx')
 
   const authCardSrc = fs.readFileSync(new URL('../src/components/auth/AuthCard.jsx', import.meta.url), 'utf8')
   assert.match(authCardSrc, /bg-blue-600 hover:bg-blue-700 text-white font-semibold/)

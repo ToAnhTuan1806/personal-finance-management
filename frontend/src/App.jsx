@@ -5,6 +5,8 @@ import MainLayout from './components/layout/MainLayout'
 
 import Login from './pages/Login'
 import Register from './pages/Register'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
 import Dashboard from './pages/Dashboard'
 import Categories from './pages/Categories'
 import Transactions from './pages/Transactions'
@@ -22,6 +24,8 @@ export default function App() {
       {/* Trang công khai */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
 
       {/* Giao diện chính MainLayout */}
       {/* Đổi phiên sẽ bỏ toàn bộ dữ liệu/form của tài khoản trước. */}
