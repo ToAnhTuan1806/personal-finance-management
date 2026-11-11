@@ -72,6 +72,7 @@ class AiChatApiTests {
     @BeforeEach
     void setup() {
         owner = OWNERS.incrementAndGet(); token = bearer(false);
+        when(users.findAuthVersionById(owner)).thenReturn(Optional.of(0L));
         when(provider.explain(anyString(), any())).thenReturn("Hãy theo dõi chi tiêu và ưu tiên khoản thiết yếu; gợi ý chỉ để tham khảo.");
     }
 
@@ -95,7 +96,9 @@ class AiChatApiTests {
         verify(transactions).sumExpensesByCategory(owner, TransactionType.EXPENSE, START, END);
         if (intent.equals("ADVICE")) verify(provider).explain(eq(intent), any());
         else verifyNoInteractions(provider);
-        verifyNoInteractions(categories, users);
+        verifyNoInteractions(categories);
+        verify(users).findAuthVersionById(owner);
+        verifyNoMoreInteractions(users);
     }
 
     @Test

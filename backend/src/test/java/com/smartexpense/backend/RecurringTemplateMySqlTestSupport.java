@@ -97,7 +97,8 @@ abstract class RecurringTemplateMySqlTestSupport {
             // Context D09 nạp thêm RecurringApplication; cần V005 thật trước Hibernate validate.
             apply(connection, migrations.get(3));
             assertThat(snapshot(jdbc)).isEqualTo(before);
-            legacyRows = before;
+            D12MigrationTestSupport.apply(connection);
+            legacyRows = snapshot(jdbc);
         }
     }
 

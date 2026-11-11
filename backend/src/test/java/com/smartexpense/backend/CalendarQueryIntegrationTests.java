@@ -111,9 +111,12 @@ public class CalendarQueryIntegrationTests extends MySqlIntegrationTestSupport {
         } finally {
             CaptureSql.end();
         }
-        // Kiểm chứng API chỉ gọi một SELECT tổng hợp, không N+1 hoặc tải toàn bộ Transaction.
-        assertThat(statements).hasSize(1);
-        String sql = statements.getFirst();
+        // D12 thêm đúng một SELECT scalar kiểm tra JWT; Calendar vẫn chỉ có một query tổng hợp.
+        assertThat(statements).hasSize(2);
+        assertThat(statements.stream().filter(statement -> statement.toLowerCase(Locale.ROOT).contains("auth_version")))
+                .hasSize(1);
+        String sql = statements.stream().filter(statement -> statement.toLowerCase(Locale.ROOT).contains("sum("))
+                .findFirst().orElseThrow();
         assertThat(sql.toLowerCase(Locale.ROOT)).contains("sum(", "group by", "transaction_date");
         assertThat(response.days()).hasSize(31);
         assertExpectedDays(response, selected);

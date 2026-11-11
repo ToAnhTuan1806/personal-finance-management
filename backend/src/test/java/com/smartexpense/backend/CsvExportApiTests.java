@@ -10,6 +10,7 @@ import com.smartexpense.backend.security.*;
 import com.smartexpense.backend.service.TransactionExportService;
 import com.smartexpense.backend.service.TransactionService;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,6 +53,11 @@ class CsvExportApiTests {
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) { registry.add("app.jwt.secret", () -> KEY); }
 
+    @BeforeEach
+    void authVersion() {
+        when(users.findAuthVersionById(7L)).thenReturn(Optional.of(0L));
+    }
+
     @Test
     void exportsAllBatchesWithFiltersSortAndOwnerFromJwt() throws Exception {
         var start = LocalDate.of(2026, 11, 1);
@@ -81,7 +87,9 @@ class CsvExportApiTests {
         assertThat(csv.getLast().getFirst()).isEqualTo("1");
         verify(transactions, times(2)).searchTransactions(eq(7L), eq(TransactionType.EXPENSE), eq(12L),
                 eq(start), eq(end), eq("cà phê"), any());
-        verifyNoInteractions(categories, users);
+        verifyNoInteractions(categories);
+        verify(users).findAuthVersionById(7L);
+        verifyNoMoreInteractions(users);
     }
 
     @ParameterizedTest

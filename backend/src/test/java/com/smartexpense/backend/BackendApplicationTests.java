@@ -94,6 +94,7 @@ class BackendApplicationTests {
     @MockitoBean CategoryBudgetRepository categoryBudgets;
     @MockitoBean RecurringTemplateRepository recurringTemplates;
     @MockitoBean RecurringApplicationRepository recurringApplications;
+    @MockitoBean com.smartexpense.backend.service.PasswordResetService passwordReset;
 
     private String password;
     private User userA;
@@ -112,6 +113,8 @@ class BackendApplicationTests {
 
     @BeforeEach
     void fixtures() {
+        when(users.findAuthVersionById(1L)).thenReturn(Optional.of(0L));
+        when(users.findAuthVersionById(2L)).thenReturn(Optional.of(0L));
         // Tạo dữ liệu riêng cho A/B để phát hiện truy cập chéo chủ sở hữu.
         password = UUID.randomUUID().toString();
         userA = user(1L, "a@example.test", passwords.encode(password));
@@ -211,9 +214,23 @@ class BackendApplicationTests {
         Map<?, ?> body = json.readValue(result.getResponse().getContentAsString(), Map.class);
         Jwt jwt = decoder.decode((String) body.get("accessToken"));
         assertThat(jwt.getSubject()).isEqualTo("1");
+        assertThat(((Number) jwt.getClaim("auth_version")).longValue()).isZero();
         assertThat(jwt.getExpiresAt()).isAfter(Instant.now());
         assertThat(result.getRequest().getSession(false)).isNull();
         assertThat(result.getResponse().getHeader(HttpHeaders.SET_COOKIE)).isNull();
+    }
+
+    @Test
+    void bcryptByteLimitIsValidatedInsteadOfCausingServerError() throws Exception {
+        String oversized = "ệ".repeat(25); // 75 bytes dù chỉ có 25 ký tự.
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> passwords.encode(oversized))
+                .isInstanceOf(IllegalArgumentException.class);
+        expectError(mvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON)
+                        .content(json.writeValueAsString(Map.of("fullName", "D12", "email", "new@example.test", "password", oversized)))),
+                400, "VALIDATION_ERROR").andExpect(jsonPath("$.errors.password").exists());
+        expectError(mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+                .content(loginBody("a@example.test", oversized))), 401, "UNAUTHORIZED");
+        verify(users, never()).save(any());
     }
 
     @ParameterizedTest

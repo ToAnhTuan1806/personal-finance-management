@@ -50,6 +50,7 @@ class RecurringApplicationContractTests {
     @MockitoBean CategoryBudgetRepository categoryBudgets;
     @MockitoBean RecurringTemplateRepository templates;
     @MockitoBean RecurringApplicationRepository recurringApplications;
+    @MockitoBean com.smartexpense.backend.service.PasswordResetService passwordReset;
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {

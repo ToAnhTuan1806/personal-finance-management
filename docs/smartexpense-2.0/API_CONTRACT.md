@@ -4,7 +4,7 @@ Nguồn: [SRS 2.2 ngày 27/10/2026](../SmartExpense_SRS_v2.docx), [Master Plan](
 
 ## 1. Quy ước chung
 
-- Base path `/api`. JSON request/response, trừ CSV; không thêm envelope vào response thành công cũ. Gửi `Authorization: Bearer <ACCESS_TOKEN>`; chỉ POST register/login công khai.
+- Base path `/api`. JSON request/response, trừ CSV; không thêm envelope vào response thành công cũ. Gửi `Authorization: Bearer <ACCESS_TOKEN>` cho API bảo vệ; chỉ POST register/login/forgot-password/reset-password công khai.
 - Owner luôn từ JWT, không lấy userId client. List/thống kê/export chỉ lấy dữ liệu owner; lookup ID không tồn tại/khác owner trả 404. Ngoại lệ hiện có: POST/PUT transactions trả **400** cho category sai/khác owner.
 - ID là integer/Java Long; type là INCOME/EXPENSE. Tiền JSON number, BE BigDecimal; input 0.01–9999999999999.99, tối đa 2 số thập phân. FE lưu ý sai số JavaScript ở số lớn; giữ nguyên tên/kiểu field cũ.
 - Ngày YYYY-MM-DD, tháng YYYY-MM; không chuyển DATE qua UTC. API mới đề xuất năm 1900–2100, tháng 1–12, giờ nghiệp vụ UTC+07:00. Validation năm của giao dịch cũ chưa thống nhất với Budget/Dashboard.
@@ -23,6 +23,8 @@ Mọi đường dẫn trong bảng đều nằm dưới `/api`; Input là body, 
 | --- | --- | --- | --- | --- |
 | POST | `/auth/register` | `{fullName,email,password}` | 201 User | 400 validation; 409 email trùng |
 | POST | `/auth/login` | `{email,password}` | 200 `{accessToken,tokenType:"Bearer",user:User}` | 400 validation; 401 sai tài khoản/mật khẩu |
+| POST | `/auth/forgot-password` | `{email}` | 200 `{message}` chung, không cần JWT; D12 local | 400 validation; 429 AUTH_RATE_LIMITED theo IP |
+| POST | `/auth/reset-password` | `{token,newPassword}` | 200 `{message}`, không cấp JWT; D12 local | 400 INVALID_RESET_TOKEN/PASSWORD_REUSE/VALIDATION_ERROR; 429 AUTH_RATE_LIMITED |
 | GET | `/users/me` | Không body | 200 User | 401 user không tồn tại |
 | GET | `/categories` | Query type? | 200 Category[] | 400 enum sai |
 | GET | `/categories/{id}` | Path id | 200 Category | 404 owner |
@@ -66,7 +68,7 @@ CalendarMonth = { year, month, incomeTotal, expenseTotal,
   days:[{date,incomeTotal,expenseTotal}] }
 ```
 
-- Register: fullName không blank/≤100, email hợp lệ, password≥8; email trim/lowercase, tên trim. Register trả User, **không cấp JWT**. Login chỉ yêu cầu password không blank. Không có refresh/revoke/logout server; logout xóa phiên client.
+- Register: fullName không blank/≤100, email hợp lệ, password≥8 và tối đa 72 bytes UTF-8 (giới hạn BCrypt); email trim/lowercase, tên trim. Register trả User, **không cấp JWT**. Login yêu cầu password không blank; quá 72 bytes trả 401 như sai thông tin đăng nhập. Không có refresh/logout server; logout xóa phiên client. D12 vô hiệu JWT cũ sau reset qua `auth_version` như bên dưới.
 - Category: name không blank/≤100, type bắt buộc; icon/color theo mục D06 bên dưới. Precheck tên trùng cùng owner/type trả 409 theo quy tắc bên dưới. Bản sửa ngày 08/11/2026 khóa owner trong MySQL trước precheck để bảo vệ POST/PUT đồng thời qua API; không thêm UNIQUE constraint.
 - Transaction: mọi field bắt buộc trừ note (null hoặc ≤500); category cùng owner/type, tiền theo mục 1. FE mặc định ngày hôm nay.
 - Filter: month **hoặc** đủ startDate/endDate, không gửi cả hai; start≤end, inclusive hai đầu. keyword trim, tìm note không phân biệt hoa/thường; `%`/`_` hiện là wildcard LIKE. categoryId khác owner trong filter trả danh sách rỗng.
@@ -400,7 +402,7 @@ Reply ví dụ là kết quả định dạng Backend, không phải bằng ch�
 
 - Dùng Java HttpClient có sẵn, **Interactions REST v1** `https://generativelanguage.googleapis.com/v1/interactions`, `store=false`, không previous_interaction_id, không tools/background. Đọc `steps[type=model_output].content[type=text]` khi status=completed. Model bắt buộc do người chạy chọn qua **GEMINI_MODEL**, không đặt tên mặc định dễ lỗi thời; key chỉ từ **GEMINI_API_KEY** ở môi trường tiến trình Backend. Không thêm dependency hoặc sửa cấu hình production.
 - Tham khảo chính thức đã đối chiếu: [Interactions overview](https://ai.google.dev/gemini-api/docs/interactions-overview), [REST v1 schema](https://ai.google.dev/api/interactions-api-v1). Bản sửa Hybrid chỉ gửi yêu cầu tư vấn chung, không gửi số liệu/context tài chính; không lưu hội thoại trong DB hoặc chủ động log request/response/key. DTO Chat che nội dung trong `toString()` để Spring MVC DEBUG không ghi prompt/phản hồi; CSV trả Resource với mô tả trung lập để tránh log byte payload.
-- Local: truyền hai biến vào terminal/Run Configuration của Backend qua cơ chế secret của máy, không đặt trong React/Git. Script `scripts/start-backend.ps1` hiện chỉ đọc các biến DB/JWT từ file env, **không nạp GEMINI_* từ file**; phải cung cấp chúng sẵn trong môi trường tiến trình cha/IDE. Compose hiện chưa cấu hình truyền hai biến này; cần người quản lý duyệt riêng trước khi chạy AI bằng container. API vẫn khởi động bình thường khi chưa có cấu hình Gemini.
+- Local: truyền hai biến vào terminal/Run Configuration của Backend qua cơ chế secret của máy, không đặt trong React/Git. Script `scripts/start-backend.ps1` đọc các biến DB/JWT/SMTP từ file env, **không nạp GEMINI_* từ file**; phải cung cấp chúng sẵn trong môi trường tiến trình cha/IDE. Compose hiện chưa cấu hình truyền hai biến này; cần người quản lý duyệt riêng trước khi chạy AI bằng container. API vẫn khởi động bình thường khi chưa có cấu hình Gemini.
 - Connect timeout 3 giây, nằm trong deadline toàn request/body **25 giây**. `generation_config` gửi `thinking_level="low"` và `max_output_tokens=1024`; không dùng minimal, không đổi model từ GEMINI_MODEL. Không tự retry. Tối đa 8 request provider đồng thời/instance, body provider ≤65.536 byte, nội dung provider ≤4.000 ký tự; quá giới hạn trả lỗi an toàn. Các lỗi provider chỉ phát sinh trên ADVICE: HTTP 503 → 503 AI_UNAVAILABLE, 429 → 429 AI_QUOTA_EXCEEDED; chỉ timeout mới trả 504 AI_TIMEOUT.
 - Bàn giao FE: timeout riêng cho Chat cần lớn hơn 25 giây và có khoảng đệm cho DB/network. Axios mặc định 10 giây trong worktree hiện tại chưa được đổi trong bản sửa BE này; không đổi JSON response thành công.
 - **10 câu hỏi/phút/JWT owner/instance**, cửa sổ 60 giây tính từ request đầu; tính cả từ chối và provider lỗi. Hết hạn mức trả 429/Retry-After:60, không query/call provider thêm. Bộ nhớ limiter tối đa 10.000 owner còn hiệu lực; quá dung lượng trả 503. Restart làm mất bộ đếm; nhiều instance chưa có shared limiter. Khi scale phải review limiter dùng chung trước.
@@ -446,6 +448,68 @@ Ví dụ cấu trúc response **200 OK** (dữ liệu minh họa, không phải 
   ]
 }
 ```
+
+### D12 — Quên mật khẩu, SMTP và phiên bản JWT
+
+Phạm vi được giao SE2-D12-BE, hạn **11/11/2026 UTC+07**. Đây là hợp đồng source local cho Trang tích hợp và Quỳnh review DB; không xác nhận đã có migration hoặc triển khai production.
+
+`POST /api/auth/forgot-password`, không cần Bearer, JSON:
+
+```json
+{"email":"user@example.com"}
+```
+
+Email bắt buộc, hợp lệ, tối đa 255 ký tự; Backend chuẩn hóa trim/lowercase như login/register. HTTP **200**, `Cache-Control: no-store`, giống hệt cho email có/không tồn tại và email bị giới hạn gửi:
+
+```json
+{"message":"Nếu email tồn tại trong hệ thống, chúng tôi sẽ gửi hướng dẫn đặt lại mật khẩu."}
+```
+
+Response chỉ xác nhận tiếp nhận yêu cầu chung, **không xác nhận email đã giao**. HTTP thread không query tài khoản/DB hoặc chờ SMTP; task được xử lý bởi 2 worker, hàng đợi tối đa 100. Khi đầy hàng đợi vẫn trả thông báo chung và ghi event vận hành `password_reset_queue_full`, không chạy SMTP trên HTTP thread. Không đổi mật khẩu/version khi yêu cầu gửi link. Hàng đợi nằm trong bộ nhớ, không đảm bảo giao mail sau khi tiến trình bị dừng đột ngột; không có retry tự động/outbox ở D12.
+
+`POST /api/auth/reset-password`, không cần Bearer, JSON:
+
+```json
+{"token":"RESET_TOKEN","newPassword":"NewPassword123!"}
+```
+
+Mật khẩu không blank, tối thiểu 8 ký tự, tối đa **72 bytes UTF-8**, không trim mật khẩu. Mật khẩu trùng hiện tại trả **400 PASSWORD_REUSE** (`Mật khẩu mới phải khác mật khẩu hiện tại.`), không tiêu thụ token. Lỗi validation trả ApiError `VALIDATION_ERROR` và `errors.newPassword` nếu do Bean Validation. Thành công HTTP **200**, `Cache-Control: no-store`:
+
+```json
+{"message":"Mật khẩu đã được đặt lại thành công. Vui lòng đăng nhập."}
+```
+
+Token thiếu, sai định dạng/không tồn tại, hết hạn, đã dùng hoặc bị thay thế đều trả HTTP **400**:
+
+```json
+{"status":400,"code":"INVALID_RESET_TOKEN","message":"Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn."}
+```
+
+Không trả token/JWT/user/email/ID trong hai response. FE gọi hai API này không kèm Authorization (Bearer sai/hết hạn vẫn bị bộ lọc từ chối); giữ token từ query chỉ để gửi reset, không log link/token, không tự đăng nhập; thành công chuyển về Login và xóa phiên cũ. Security chỉ permitAll **POST** register/login/forgot-password/reset-password; không mở `/api/auth/**`.
+
+**Token và transaction:** SecureRandom 32 bytes → Base64 URL-safe không padding (43 ký tự); DB chỉ lưu SHA-256 lowercase hex 64 ký tự. Thời hạn đúng 30 phút từ thời điểm cấp; `now >= expires_at` bị từ chối. Clock được inject, DATETIME(6) lưu giờ UTC (không theo múi giờ mặc định của server). Mọi đường cấp/reset khóa hàng User trước rồi mới khóa/ghi token. Reset đọc lại token bằng `SELECT ... FOR UPDATE` sau khóa User, cập nhật password/version/used_at trong cùng transaction; hai request cùng token chỉ một thành công, lỗi DB rollback toàn bộ. Cấp token mới vô hiệu các token chưa dùng trước đó; `used_at` được dùng chung để đánh dấu tiêu thụ hoặc vô hiệu, không phải lịch sử xác nhận người dùng đã reset.
+
+**Handoff D12-DB — Quỳnh sở hữu duy nhất** `database/migrations/V006__create_password_reset_tokens.sql`, Backend không tạo SQL thay thế. Contract: `password_reset_tokens(id BIGINT PK AUTO_INCREMENT, user_id BIGINT NOT NULL FK users(id), token_hash CHAR(64) NOT NULL UNIQUE, expires_at DATETIME(6) NOT NULL, created_at DATETIME(6) NOT NULL, used_at DATETIME(6) NULL)` và `users.auth_version BIGINT NOT NULL DEFAULT 0`. V006 dùng FK RESTRICT và index `user_id`, giữ dữ liệu users hiện có. Trước khi hợp nhất branch có thể kiểm thử bằng snapshot SQL nguyên bản trong thư mục build cô lập. `PasswordResetBackendMigrationIntegrationTests` bắt buộc SQL thật từ schema MVP → V002–V006 trên MySQL 8, validate mapping và test reset; thiếu SQL phải FAIL, không skip hoặc thay bằng Hibernate DDL. Harness D06–D09 áp V006 trước khi khởi động Backend hiện tại; test schema lịch sử giữ nguyên kiểm tra từng version, phần validate Entity hiện tại dùng schema V002–V006 cô lập riêng. Bộ test DB `PasswordResetMigrationIntegrationTests` thuộc Quỳnh được giữ riêng để tránh trùng tên với bộ BE. Không xác nhận migration đã được áp dụng production từ kết quả kiểm thử local.
+
+**JWT:** login phát thêm claim số nguyên `auth_version`. JWT trước D12 thiếu claim được coi là 0; chỉ dùng được khi version DB còn 0. Reset thành công tăng version; JWT cũ ở mọi session bị trả **401 UNAUTHORIZED**, JWT mới sau login bằng mật khẩu mới hoạt động. User bị xóa bị từ chối. Giữ HS256, subject user ID dương và validator thời hạn mặc định. Sau các bước này, decoder chạy đúng **một scalar SELECT auth_version theo PK User/request JWT hợp lệ**, không fetch dữ liệu tài chính hoặc cache version; token sai chữ ký/thời hạn/claim không query DB. Đây là chi phí bổ sung có giới hạn để vô hiệu ngay sau commit; cần đo latency/pool trên môi trường tích hợp trước khi scale. Không thêm session/refresh token.
+
+**Rate limit mỗi instance:** cửa sổ 15 phút từ request đầu; forgot tối đa **10 request/IP**, gửi tối đa **3/email chuẩn hóa**, reset tối đa **30 lần/IP** (tính cả token sai). Email bị chặn vẫn 200 chung. Vượt IP trả HTTP **429**, `Retry-After: 900`, ApiError `AUTH_RATE_LIMITED`, message `Quá nhiều yêu cầu. Vui lòng thử lại sau.` Bộ đếm tối đa 10.000 key (email chỉ lưu hash), đầy thì từ chối tương ứng thay vì bỏ giới hạn đang hoạt động. IP lấy từ socket `remoteAddr`, không tự đọc X-Forwarded-For; không cấu hình trusted proxy trong D12. Đằng sau proxy, nhiều client có thể cùng quota IP. Restart xóa bộ đếm; nhiều instance chưa dùng limiter chung. Không khóa tài khoản do forgot/reset thất bại.
+
+**SMTP — Spring Mail/JavaMailSender**, hoàn toàn từ môi trường. Compose truyền đủ tám biến bên dưới; script local đọc file env được chọn hoặc kế thừa biến SMTP của tiến trình cha khi file không khai báo. Script khôi phục môi trường khi kết thúc, không in secret và không thay biến Gemini của tiến trình cha.
+
+| Biến | Ý nghĩa / mặc định |
+| --- | --- |
+| `SMTP_HOST` | Host SMTP, mặc định rỗng; không chọn provider |
+| `SMTP_PORT` | Port SMTP, mặc định 587 |
+| `SMTP_USERNAME`, `SMTP_PASSWORD` | Credential provider cấp; không lưu vào Git |
+| `SMTP_FROM` | Địa chỉ gửi được provider cho phép, mặc định rỗng |
+| `APP_FRONTEND_URL` | Origin FE tin cậy, ví dụ `https://finance.example`; không có path/query/fragment/userinfo |
+| `SMTP_AUTH` | Mặc định true; false chỉ cho SMTP sandbox không auth |
+| `SMTP_STARTTLS` | Mặc định true, enable và required; false chỉ cho sandbox cô lập |
+
+Link duy nhất: `APP_FRONTEND_URL/reset-password?token=<raw-token>`; không dùng Host/Origin client. HTTPS bắt buộc cho host ngoài loopback; HTTP localhost/127.0.0.1/[::1] chỉ trong development, profile `prod`/`production` vẫn bắt buộc HTTPS. Subject `Đặt lại mật khẩu SmartExpense`, nội dung thông báo link, hạn 30 phút, chỉ dùng một lần và bỏ qua nếu không yêu cầu. Không gửi password. Connect/read/write timeout đều 5000 ms, mail debug tắt. Không cấu hình implicit TLS/port 465 trong D12; cần cấu hình STARTTLS phù hợp provider thực tế.
+
+Khi thiếu SMTP/from/FE URL, Auth khác vẫn chạy; worker không tạo token và ghi `password_reset_email_not_configured`. Mail chỉ gửi sau commit token. Gửi lỗi/timeout ghi `password_reset_email_delivery_failed`, vô hiệu đúng hash của token không giao được bằng transaction riêng; nếu DB lỗi khi cleanup ghi `password_reset_processing_failed`, token vẫn có TTL 30 phút. Log chỉ có event cố định, không exception/raw SMTP/link/email/secret. Hai response vẫn trung lập, không có trạng thái “đã giao”. DTO Auth loại email/password/token khỏi toString. Test mail dùng mock và SMTP stub loopback; **không coi là Email Live PASS**.
 
 ## 3. API dự kiến — cần review trước triển khai
 
