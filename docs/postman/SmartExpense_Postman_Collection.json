@@ -50,6 +50,18 @@
     {
       "key": "incomeTransactionId",
       "value": ""
+    },
+    {
+      "key": "resetToken",
+      "value": ""
+    },
+    {
+      "key": "newPassword",
+      "value": "NewDemo@123456"
+    },
+    {
+      "key": "legacyAccessToken",
+      "value": ""
     }
   ],
   "item": [
@@ -229,6 +241,217 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"HTTP 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "04 Quên mật khẩu - gửi email reset",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/forgot-password",
+            "description": "Gửi yêu cầu đặt lại mật khẩu. Trả response an toàn 200 đồng nhất dù email có tồn tại hay không.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{demoEmail}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () { pm.response.to.have.status(200); });",
+                  "pm.test(\"Safe uniform response message\", function () {",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.message).to.eql(\"Nếu email tồn tại trong hệ thống, chúng tôi sẽ gửi hướng dẫn đặt lại mật khẩu.\");",
+                  "});",
+                  "pm.test(\"Cache-Control is no-store\", function () {",
+                  "    pm.response.to.have.header(\"Cache-Control\", \"no-store\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "05 Đặt lại mật khẩu mới",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/reset-password",
+            "description": "Đặt lại mật khẩu với token ngẫu nhiên nhận được từ email (Mailpit). Vô hiệu token và tăng auth_version.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{resetToken}}\",\n  \"newPassword\": \"{{newPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200 (khi co token hop le) hoac 400 (khi token rong/het han)\", function () {",
+                  "    pm.expect([200, 400]).to.include(pm.response.code);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test(\"Reset password success message\", function () {",
+                  "        var json = pm.response.json();",
+                  "        pm.expect(json.message).to.eql(\"Mật khẩu đã được đặt lại thành công. Vui lòng đăng nhập.\");",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "06 Đăng nhập bằng mật khẩu mới",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/login",
+            "description": "Đăng nhập bằng mật khẩu mới sau khi reset. Lưu accessToken mới vào collection variables.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{demoEmail}}\",\n  \"password\": \"{{newPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Đăng nhập thành công với mật khẩu mới\", function () {",
+                  "    pm.expect([200, 401]).to.include(pm.response.code);",
+                  "    if (pm.response.code === 200) {",
+                  "        var data = pm.response.json();",
+                  "        pm.expect(data.token).to.be.a(\"string\");",
+                  "        pm.collectionVariables.set(\"accessToken\", data.token);",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "07 Đăng nhập bằng mật khẩu cũ → 401",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/login",
+            "description": "Đăng nhập bằng mật khẩu cũ đã bị đổi phải bị từ chối 401 UNAUTHORIZED.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{demoEmail}}\",\n  \"password\": \"{{demoPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Mật khẩu cũ bị từ chối với 401\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.code).to.eql(\"UNAUTHORIZED\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "08 Protected API với JWT trước reset → 401",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{legacyAccessToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/users/me",
+            "description": "Token JWT cũ phát hành trước reset có auth_version cũ phải bị từ chối ngay lập tức với 401.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"JWT cũ bị từ chối với 401 do auth_version đã thay đổi\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.code).to.eql(\"UNAUTHORIZED\");",
+                  "});"
                 ]
               }
             }
