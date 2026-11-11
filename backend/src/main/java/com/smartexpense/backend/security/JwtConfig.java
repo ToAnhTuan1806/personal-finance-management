@@ -1,6 +1,7 @@
 package com.smartexpense.backend.security;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
+import com.smartexpense.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -42,7 +43,7 @@ public class JwtConfig {
     }
 
     @Bean
-    public JwtDecoder jwtDecoder(SecretKey key) {
+    public JwtDecoder jwtDecoder(SecretKey key, UserRepository users) {
         // Chỉ chấp nhận chữ ký HS256; kiểm tra thời gian hiệu lực bằng validator bên dưới.
         NimbusJwtDecoder decoder = NimbusJwtDecoder.withSecretKey(key)
                 .macAlgorithm(MacAlgorithm.HS256)
@@ -62,6 +63,27 @@ public class JwtConfig {
         // Giữ kiểm tra thời gian mặc định của Spring khi bổ sung kiểm tra claim ứng dụng.
         decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(
                 JwtValidators.createDefault(), applicationClaims));
-        return decoder;
+        return encoded -> {
+            // Không query DB cho token sai chữ ký/subject/thời hạn.
+            Jwt jwt = decoder.decode(encoded);
+            Object claim = jwt.getClaims().get("auth_version");
+            long version = 0; // JWT trước D12 chỉ hợp lệ khi User chưa reset (version=0).
+            if (claim != null) {
+                if (!(claim instanceof Long || claim instanceof Integer) || ((Number) claim).longValue() < 0) {
+                    throw new BadJwtException("Token không hợp lệ");
+                }
+                version = ((Number) claim).longValue();
+            } else if (jwt.getClaims().containsKey("auth_version")) {
+                throw new BadJwtException("Token không hợp lệ");
+            }
+            try {
+                // Đúng một scalar SELECT theo PK; không cache để revoke có hiệu lực ngay sau commit.
+                Long current = users.findAuthVersionById(Long.parseLong(jwt.getSubject())).orElse(null);
+                if (current == null || current != version) throw new BadJwtException("Token không hợp lệ");
+            } catch (org.springframework.dao.DataAccessException exception) {
+                throw new BadJwtException("Token không hợp lệ");
+            }
+            return jwt;
+        };
     }
 }

@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
+import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
 @Service
@@ -31,9 +32,7 @@ public class AuthService {
     // User và danh mục mặc định phải cùng thành công; lỗi ở bước nào cũng rollback toàn bộ.
     @Transactional
     public UserResponse register(RegisterRequest request) {
-        String email = request.getEmail()
-                .trim()
-                .toLowerCase(Locale.ROOT);
+        String email = normalizeEmail(request.getEmail());
 
         if (userRepository.existsByEmail(email)) {
             throw new ResponseStatusException(
@@ -59,15 +58,13 @@ public class AuthService {
 
     // Đăng nhập và trả JWT
     public AuthResponse login(LoginRequest request) {
-        String email = request.getEmail()
-                .trim()
-                .toLowerCase(Locale.ROOT);
+        String email = normalizeEmail(request.getEmail());
 
         User user = userRepository.findByEmail(email)
                 .orElseThrow(this::invalidCredentials);
 
         // So sánh mật khẩu với BCrypt hash trong DB
-        if (!passwordEncoder.matches(
+        if (request.getPassword().getBytes(StandardCharsets.UTF_8).length > 72 || !passwordEncoder.matches(
                 request.getPassword(),
                 user.getPasswordHash())) {
             throw invalidCredentials();
@@ -91,6 +88,7 @@ public class AuthService {
                 .issuedAt(now)
                 .expiresAt(now.plusSeconds(jwtExpiration))
                 .subject(user.getId().toString())
+                .claim("auth_version", user.getAuthVersion())
                 .build();
 
         JwsHeader header = JwsHeader
@@ -116,5 +114,9 @@ public class AuthService {
                 HttpStatus.UNAUTHORIZED,
                 "Email hoặc mật khẩu không chính xác"
         );
+    }
+
+    static String normalizeEmail(String email) {
+        return email.trim().toLowerCase(Locale.ROOT);
     }
 }

@@ -133,7 +133,10 @@ class ReportIntegrationTests extends MySqlIntegrationTestSupport {
         var statistics = entityManagerFactory.unwrap(SessionFactory.class).getStatistics();
         statistics.clear();
         var response = report(userA, "2026-01", "2026-06");
-        assertThat(statistics.getPrepareStatementCount()).isEqualTo(2);
+        // Hai query tổng hợp giữ nguyên; D12 thêm một SELECT scalar xác thực, không load User entity.
+        assertThat(statistics.getPrepareStatementCount()).isEqualTo(3);
+        assertThat(statistics.getQueryStatistics("select u.authVersion from User u where u.id = :userId").getExecutionCount())
+                .isEqualTo(1);
         assertThat(statistics.getEntityLoadCount()).isZero();
         assertThat(response.months()).hasSize(6).allSatisfy(month -> {
             assertThat(month.totalIncome()).isZero();

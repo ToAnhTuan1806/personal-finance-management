@@ -42,11 +42,13 @@ public class SecurityConfig {
                         .accessDeniedHandler(errorHandler)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        // Đăng ký và đăng nhập được truy cập khi chưa có JWT.
+                        // Chỉ bốn POST Auth đã chốt được truy cập khi chưa có JWT.
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/api/auth/register",
-                                "/api/auth/login"
+                                "/api/auth/login",
+                                "/api/auth/forgot-password",
+                                "/api/auth/reset-password"
                         ).permitAll()
                         // Các API còn lại bắt buộc có JWT hợp lệ.
                         .anyRequest().authenticated()

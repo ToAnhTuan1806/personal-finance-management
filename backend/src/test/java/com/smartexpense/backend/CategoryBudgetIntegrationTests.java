@@ -299,7 +299,9 @@ class CategoryBudgetIntegrationTests extends MySqlIntegrationTestSupport {
             call(userA, HttpMethod.GET, "/api/category-budgets?year=2026&month=12", null)
                     .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(2))
                     .andExpect(jsonPath("$[0].spentAmount").value(10));
-            assertThat(BudgetSql.selects).hasSize(2);
+            // Hai query nghiệp vụ giữ nguyên; D12 thêm đúng một query xác thực theo PK.
+            assertThat(BudgetSql.selects).hasSize(3);
+            assertThat(BudgetSql.selects.stream().filter(sql -> sql.contains("auth_version"))).hasSize(1);
             assertThat(BudgetSql.selects).anyMatch(sql -> sql.contains("category_budgets") && sql.contains("join"))
                     .anyMatch(sql -> sql.contains("sum(") && sql.contains("group by"));
         } finally {
