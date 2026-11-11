@@ -7,8 +7,15 @@ import * as authApi from '../services/authService.js'
 const AuthContext = createContext(null)
 const actions = createAuthActions(session, authApi)
 
+// eslint-disable-next-line react-refresh/only-export-components
+export const PUBLIC_AUTH_PATHS = ['/login', '/register', '/forgot-password', '/reset-password']
+
+// eslint-disable-next-line react-refresh/only-export-components
+export const isPublicAuthPathname = (pathname = '') =>
+  PUBLIC_AUTH_PATHS.includes(String(pathname || ''))
+
 export function AuthProvider({ children }) {
-  const state = useSyncExternalStore(session.subscribe, session.getSnapshot)
+  const state = useSyncExternalStore(session.subscribe, session.getSnapshot, session.getSnapshot)
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -20,7 +27,7 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     if (state.reason !== 'expired') return
-    if (!['/login', '/register'].includes(location.pathname)) {
+    if (!isPublicAuthPathname(location.pathname)) {
       navigate('/login', { replace: true, state: {
         from: location.pathname,
         message: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',

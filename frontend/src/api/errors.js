@@ -5,6 +5,22 @@ export const isRequestCancelled = (error) => axios.isCancel(error) || error?.cod
 export const EXPORT_LIMIT_EXCEEDED_MESSAGE =
   'Có quá nhiều giao dịch để xuất. Vui lòng thu hẹp khoảng thời gian hoặc bộ lọc.'
 
+export const INVALID_RESET_TOKEN_MESSAGE =
+  'Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.'
+
+export const AUTH_RATE_LIMITED_MESSAGE =
+  'Bạn đã gửi yêu cầu quá nhiều lần. Vui lòng thử lại sau.'
+
+const INTERNAL_LEAK_PATTERN =
+  /(?:Exception|StackTrace|at\s+[a-z0-9_.]+\(|smtp|mail\.|javamail|select\s+.+\s+from|insert\s+into|update\s+.+\s+set|token\s*=|[A-Za-z0-9_-]{43})/i
+
+export function sanitizeServerErrorMessage(rawMessage) {
+  if (typeof rawMessage !== 'string') return ''
+  const trimmed = rawMessage.trim().slice(0, 300)
+  if (!trimmed || INTERNAL_LEAK_PATTERN.test(trimmed)) return ''
+  return trimmed
+}
+
 // Không đưa stack trace hoặc chi tiết lỗi hệ thống vào giao diện.
 export function getApiErrorMessage(error, fallback = 'Không thể hoàn tất yêu cầu. Vui lòng thử lại.') {
   if (isRequestCancelled(error)) return ''
@@ -15,8 +31,9 @@ export function getApiErrorMessage(error, fallback = 'Không thể hoàn tất y
   const errorCode = typeof error?.response?.data?.code === 'string'
     ? error.response.data.code
     : typeof error?.code === 'string' ? error.code : ''
-  const serverMessage = typeof error?.response?.data?.message === 'string'
-    ? error.response.data.message.slice(0, 300) : ''
+  const serverMessage = sanitizeServerErrorMessage(error?.response?.data?.message)
+  if (errorCode === 'INVALID_RESET_TOKEN') return INVALID_RESET_TOKEN_MESSAGE
+  if (errorCode === 'AUTH_RATE_LIMITED' || status === 429) return AUTH_RATE_LIMITED_MESSAGE
   if (!status) return 'Không thể kết nối máy chủ. Vui lòng kiểm tra mạng và thử lại.'
   if (status === 401) return 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.'
   if (status === 403) return 'Bạn không có quyền thực hiện thao tác này.'

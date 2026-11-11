@@ -212,6 +212,15 @@ export default function Login() {
         error={errors.password}
         disabled={phase !== 'idle'}
       />
+
+      <div className="-mt-2 flex justify-end">
+        <Link
+          to="/forgot-password"
+          className="inline-flex min-h-[44px] items-center rounded-lg px-1 text-xs font-medium text-blue-600 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-blue-400"
+        >
+          Quên mật khẩu?
+        </Link>
+      </div>
     </AuthCard>
   )
 }

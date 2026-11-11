@@ -16,12 +16,24 @@ export default function AuthCard({
   serverError,
   successTitle,
   successDescription,
+  submitLabel,
+  submitAriaLabel,
+  hideSubmitButton = false,
+  welcomeActions,
   footer,
   children,
 }) {
   const busy = phase === 'loading'
   const success = phase === 'success' || phase === 'welcome'
   const welcome = phase === 'welcome'
+  const resolvedSubmitLabel =
+    submitLabel || (mode === 'register' ? 'Tạo tài khoản' : 'Đăng nhập')
+  const resolvedAriaLabel =
+    busy
+      ? 'Đang xử lý'
+      : success
+        ? 'Thành công'
+        : submitAriaLabel || submitLabel || (mode === 'register' ? 'Đăng ký' : 'Đăng nhập')
 
   return (
     <main className="se062-page auth-page">
@@ -65,25 +77,22 @@ export default function AuthCard({
 
           <div className="se062-fields">{children}</div>
 
-          <button
-            type="submit"
-            disabled={phase !== 'idle'}
-            aria-label={
-              busy ? 'Đang xử lý' :
-              success ? 'Thành công' :
-              mode === 'register' ? 'Đăng ký' : 'Đăng nhập'
-            }
-            className={`se062-action bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl transition-colors shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed
-              ${busy ? 'busy' : ''}
-              ${success ? 'ok' : ''}`}
-          >
-            <span>
-              {mode === 'register' ? 'Tạo tài khoản' : 'Đăng nhập'}
-            </span>
+          {!hideSubmitButton && (
+            <button
+              type="submit"
+              disabled={phase !== 'idle'}
+              aria-busy={busy}
+              aria-label={resolvedAriaLabel}
+              className={`se062-action min-h-[44px] bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-xl transition-colors shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed
+                ${busy ? 'busy' : ''}
+                ${success ? 'ok' : ''}`}
+            >
+              <span>{resolvedSubmitLabel}</span>
 
-            <i className="se062-spinner" aria-hidden="true" />
-            <Check className="se062-action-check" aria-hidden="true" />
-          </button>
+              <i className="se062-spinner" aria-hidden="true" />
+              <Check className="se062-action-check" aria-hidden="true" />
+            </button>
+          )}
 
           <div className="se062-footer">{footer}</div>
         </form>
@@ -91,6 +100,7 @@ export default function AuthCard({
         {/* Welcome chỉ xuất hiện khi API thật thành công */}
         <div
           className="se062-welcome-pane"
+          role={welcome ? 'status' : undefined}
           aria-hidden={!welcome}
           aria-live="polite"
         >
@@ -100,6 +110,7 @@ export default function AuthCard({
 
           <h2>{successTitle}</h2>
           <p>{successDescription}</p>
+          {welcomeActions && <div className="mt-5 w-full">{welcomeActions}</div>}
         </div>
       </section>
     </main>
