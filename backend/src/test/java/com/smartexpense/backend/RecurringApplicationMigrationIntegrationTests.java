@@ -285,20 +285,7 @@ class RecurringApplicationMigrationIntegrationTests {
         boolean hasD09 = entities.stream().anyMatch(type -> type.getSimpleName().equals("RecurringApplication")
                 || type.isAnnotationPresent(Table.class) && type.getAnnotation(Table.class).name().equals("recurring_applications"));
         Assumptions.assumeTrue(hasD09, "BLOCKED D09-BE: no Backend Entity mapped to recurring_applications; no substitute Entity or DDL is allowed");
-        guard(SOURCE);
-        var registry = new StandardServiceRegistryBuilder().applySettings(Map.of(
-                "hibernate.connection.url", SOURCE.getJdbcUrl(), "hibernate.connection.username", USER,
-                "hibernate.connection.password", SOURCE.getPassword(), "hibernate.connection.driver_class", "com.mysql.cj.jdbc.Driver",
-                "hibernate.hbm2ddl.auto", "validate", "hibernate.show_sql", "false")).build();
-        try {
-            var sources = new MetadataSources(registry);
-            entities.forEach(sources::addAnnotatedClass);
-            try (var factory = sources.buildMetadata().buildSessionFactory()) {
-                factory.getSchemaManager().validateMappedObjects();
-            }
-        } finally {
-            StandardServiceRegistryBuilder.destroy(registry);
-        }
+        D12MigrationTestSupport.validateCurrentMappings(entities);
     }
 
     private static void assertSchema(JdbcTemplate db) {

@@ -276,16 +276,16 @@ class RecurringApplicationIntegrationTests extends RecurringApplicationMySqlTest
     @Test
     void schemaAssertionsRejectMissingV005Check() throws Exception {
         try (var connection = jdbc.getDataSource().getConnection()) {
-            ApplicationSchemaAssertions.assertSchema(connection, true, true, true);
+            ApplicationSchemaAssertions.assertSchema(connection, true, true, true, true);
             jdbc.execute("ALTER TABLE recurring_applications DROP CHECK chk_recurring_applications_month");
             try {
                 org.assertj.core.api.Assertions.assertThatThrownBy(
-                                () -> ApplicationSchemaAssertions.assertSchema(connection, true, true, true))
+                                () -> ApplicationSchemaAssertions.assertSchema(connection, true, true, true, true))
                         .isInstanceOf(AssertionError.class).hasMessageContaining("chk_recurring_applications_month");
             } finally {
                 jdbc.execute("ALTER TABLE recurring_applications ADD CONSTRAINT chk_recurring_applications_month CHECK (month BETWEEN 1 AND 12)");
             }
-            ApplicationSchemaAssertions.assertSchema(connection, true, true, true);
+            ApplicationSchemaAssertions.assertSchema(connection, true, true, true, true);
         }
     }
 

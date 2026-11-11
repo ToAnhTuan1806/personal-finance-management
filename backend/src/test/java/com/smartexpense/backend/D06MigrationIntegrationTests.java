@@ -192,9 +192,11 @@ class D06MigrationIntegrationTests {
             assertThat(keysHash(connection)).isEqualTo(beforeKeys);
             ApplicationSchemaAssertions.assertSchema(connection, true, true);
             applyD09Migration(connection);
+            ApplicationSchemaAssertions.assertSchema(connection, true, true, true);
+            D12MigrationTestSupport.apply(connection);
             assertThat(dataHash(connection)).isEqualTo(beforeData);
             assertThat(keysHash(connection)).isEqualTo(beforeKeys);
-            ApplicationSchemaAssertions.assertSchema(connection, true, true, true);
+            ApplicationSchemaAssertions.assertSchema(connection, true, true, true, true);
         }
         initialized = true;
     }
@@ -256,7 +258,7 @@ class D06MigrationIntegrationTests {
             assertAppearanceColumns(connection);
             assertThat(dataHash(connection)).isEqualTo(beforeData);
             assertThat(keysHash(connection)).isEqualTo(beforeKeys);
-            ApplicationSchemaAssertions.assertSchema(connection, true, true, true);
+            ApplicationSchemaAssertions.assertSchema(connection, true, true, true, true);
             assertThat(rows(connection, "SELECT COUNT(*) FROM categories WHERE icon IS NULL AND color IS NULL"))
                     .containsExactly(List.of("4"));
         }
@@ -309,7 +311,7 @@ class D06MigrationIntegrationTests {
             assertAppearanceColumns(connection);
             assertThat(dataHash(connection)).isEqualTo(beforeData);
             assertThat(keysHash(connection)).isEqualTo(beforeKeys);
-            ApplicationSchemaAssertions.assertSchema(connection, true, true, true);
+            ApplicationSchemaAssertions.assertSchema(connection, true, true, true, true);
         }
     }
 
@@ -359,9 +361,11 @@ class D06MigrationIntegrationTests {
                 ApplicationSchemaAssertions.assertSchema(connection, true, true);
             }
             applyD09Migration(connection);
+            ApplicationSchemaAssertions.assertSchema(connection, true, true, true);
+            D12MigrationTestSupport.apply(connection);
             assertThat(dataHash(connection)).isEqualTo(beforeData);
             assertThat(keysHash(connection)).isEqualTo(beforeKeys);
-            ApplicationSchemaAssertions.assertSchema(connection, true, true, true);
+            ApplicationSchemaAssertions.assertSchema(connection, true, true, true, true);
         }
         try (HikariDataSource pool = pool(RESTORE)) {
             var registry = new StandardServiceRegistryBuilder()
@@ -393,7 +397,7 @@ class D06MigrationIntegrationTests {
         try (Connection connection = connect(SOURCE)) {
             connection.setAutoCommit(false);
             try {
-                ApplicationSchemaAssertions.assertSchema(connection, true, true, true);
+                ApplicationSchemaAssertions.assertSchema(connection, true, true, true, true);
                 try (var statement = connection.createStatement()) {
                     statement.executeUpdate("INSERT INTO category_budgets (user_id,category_id,year,month,amount_limit) VALUES (1,2,2026,10,100.00)");
                     assertSqlViolation(() -> statement.executeUpdate(

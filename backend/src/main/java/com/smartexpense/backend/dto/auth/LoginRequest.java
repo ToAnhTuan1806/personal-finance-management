@@ -10,6 +10,7 @@ public class LoginRequest {
 
     @NotBlank(message = "Email không được để trống")
     @Email(message = "Email không hợp lệ")
+    @ToString.Exclude
     private String email;
 
     @NotBlank(message = "Mật khẩu không được để trống")

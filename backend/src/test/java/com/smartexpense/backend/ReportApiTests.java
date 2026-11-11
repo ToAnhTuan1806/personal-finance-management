@@ -12,6 +12,7 @@ import com.smartexpense.backend.security.ApiSecurityExceptionHandler;
 import com.smartexpense.backend.security.JwtConfig;
 import com.smartexpense.backend.service.ReportService;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -51,6 +52,12 @@ class ReportApiTests {
     @Autowired JsonMapper json;
     @Autowired JwtEncoder encoder;
     @MockitoBean TransactionRepository transactions;
+    @MockitoBean com.smartexpense.backend.repository.UserRepository users;
+
+    @BeforeEach
+    void authVersion() {
+        when(users.findAuthVersionById(7L)).thenReturn(java.util.Optional.of(0L));
+    }
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {

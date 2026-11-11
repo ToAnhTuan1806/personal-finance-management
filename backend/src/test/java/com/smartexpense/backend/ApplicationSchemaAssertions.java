@@ -40,11 +40,13 @@ final class ApplicationSchemaAssertions {
         if (d08) expected.add("RecurringTemplate");
         boolean d09 = mapped.contains("RecurringApplication");
         if (d09) expected.add("RecurringApplication");
+        boolean d12 = mapped.contains("PasswordResetToken");
+        if (d12) expected.add("PasswordResetToken");
         assertThat(mapped).containsExactlyInAnyOrderElementsOf(expected);
         D08ValidationMode mode = d08 ? D08ValidationMode.HIBERNATE_MAPPED : D08ValidationMode.NONE;
         jdbc.execute((ConnectionCallback<Void>) connection -> {
             assertSchema(connection, d07, mode,
-                    d09 ? D09ValidationMode.HIBERNATE_MAPPED : D09ValidationMode.NONE);
+                    d09 ? D09ValidationMode.HIBERNATE_MAPPED : D09ValidationMode.NONE, d12);
             return null;
         });
         System.out.printf("QA SCHEMA mappedEntities=%d categoryBudgetMapped=%s recurringTemplateMapped=%s mode=%s%n",
@@ -68,8 +70,52 @@ final class ApplicationSchemaAssertions {
                 d09 ? D09ValidationMode.MIGRATION_V005 : D09ValidationMode.NONE);
     }
 
+    // Hợp nhất overload và kiểm tra SQL chính xác của Quỳnh; không áp tên FK/index SQL cho Hibernate-generated schema.
+    static void assertSchema(Connection connection, boolean d07, boolean d08, boolean d09, boolean d12) throws SQLException {
+        assertSchema(connection, d07, d08 ? D08ValidationMode.MIGRATION_V004 : D08ValidationMode.NONE,
+                d09 ? D09ValidationMode.MIGRATION_V005 : D09ValidationMode.NONE, d12);
+        if (d12) assertPasswordResetTokens(connection);
+    }
+
+    static void assertPasswordResetTokens(Connection connection) throws SQLException {
+        assertThat(values(connection, """
+                SELECT CONCAT(column_name,':',column_type,':',is_nullable) FROM information_schema.columns
+                WHERE table_schema=DATABASE() AND table_name='password_reset_tokens' ORDER BY column_name
+                """)).containsExactly(
+                "created_at:datetime(6):NO", "expires_at:datetime(6):NO", "id:bigint:NO",
+                "token_hash:char(64):NO", "used_at:datetime(6):YES", "user_id:bigint:NO");
+        assertThat(values(connection, """
+                SELECT extra FROM information_schema.columns WHERE table_schema=DATABASE()
+                AND table_name='password_reset_tokens' AND column_name='id'
+                """)).containsExactly("auto_increment");
+        assertThat(values(connection, """
+                SELECT CONCAT(index_name,':',non_unique,':',GROUP_CONCAT(column_name ORDER BY seq_in_index))
+                FROM information_schema.statistics WHERE table_schema=DATABASE() AND table_name='password_reset_tokens'
+                GROUP BY index_name,non_unique
+                """)).contains("PRIMARY:0:id", "uk_password_reset_tokens_token_hash:0:token_hash",
+                "idx_password_reset_tokens_user_id:1:user_id");
+        List<String> policies = values(connection, """
+                SELECT CONCAT(constraint_name,':',referenced_table_name,':',delete_rule,':',update_rule)
+                FROM information_schema.referential_constraints
+                WHERE constraint_schema=DATABASE() AND table_name='password_reset_tokens'
+                """);
+        assertThat(policies).hasSize(1);
+        assertThat(policies.stream().map(policy -> policy.replace("NO ACTION", "RESTRICT")).toList())
+                .containsExactly("fk_password_reset_tokens_user:users:RESTRICT:RESTRICT");
+        assertThat(values(connection, """
+                SELECT CONCAT(column_name,':',column_type,':',is_nullable,':',column_default)
+                FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='users'
+                AND column_name='auth_version'
+                """)).containsExactly("auth_version:bigint:NO:0");
+    }
+
     private static void assertSchema(Connection connection, boolean d07, D08ValidationMode d08Mode,
                                      D09ValidationMode d09Mode) throws SQLException {
+        assertSchema(connection, d07, d08Mode, d09Mode, false);
+    }
+
+    private static void assertSchema(Connection connection, boolean d07, D08ValidationMode d08Mode,
+                                     D09ValidationMode d09Mode, boolean d12) throws SQLException {
         boolean d08 = d08Mode != D08ValidationMode.NONE;
         boolean d09 = d09Mode != D09ValidationMode.NONE;
         List<String> tables = new ArrayList<>(List.of("users", "categories", "transactions", "monthly_budgets"));
@@ -89,6 +135,16 @@ final class ApplicationSchemaAssertions {
             tables.add("recurring_applications");
             foreignKeys.add("recurring_applications.template_id->recurring_templates.id");
             foreignKeys.add("recurring_applications.transaction_id->transactions.id");
+        }
+        if (d12) {
+            tables.add("password_reset_tokens");
+            foreignKeys.add("password_reset_tokens.user_id->users.id");
+            assertThat(values(connection, "SELECT column_type FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='password_reset_tokens' AND column_name='token_hash'"))
+                    .containsExactly("char(64)");
+            assertThat(values(connection, "SELECT column_type FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='users' AND column_name='auth_version' AND is_nullable='NO'"))
+                    .containsExactly("bigint");
+            assertThat(values(connection, "SELECT GROUP_CONCAT(column_name ORDER BY seq_in_index) FROM information_schema.statistics WHERE table_schema=DATABASE() AND table_name='password_reset_tokens' AND non_unique=0 GROUP BY index_name"))
+                    .contains("token_hash");
         }
         assertThat(values(connection, "SELECT table_name FROM information_schema.tables WHERE table_schema=DATABASE() AND table_type='BASE TABLE'"))
                 .containsExactlyInAnyOrderElementsOf(tables);

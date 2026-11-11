@@ -72,6 +72,7 @@ class RecurringTemplateApiTests {
     @MockitoBean CategoryBudgetRepository categoryBudgets;
     @MockitoBean RecurringTemplateRepository templates;
     @MockitoBean RecurringApplicationRepository recurringApplications;
+    @MockitoBean com.smartexpense.backend.service.PasswordResetService passwordReset;
 
     private Category category;
     private RecurringTemplate template;
@@ -83,6 +84,8 @@ class RecurringTemplateApiTests {
 
     @BeforeEach
     void fixtures() {
+        when(users.findAuthVersionById(1L)).thenReturn(Optional.of(0L));
+        when(users.findAuthVersionById(2L)).thenReturn(Optional.of(0L));
         User user = new User();
         user.setId(1L);
         category = new Category();
@@ -143,7 +146,8 @@ class RecurringTemplateApiTests {
         as(delete(BASE + "/501"), 1).andExpect(status().isNoContent()).andExpect(content().string(""));
         verify(templates).delete(template);
         verify(categories, never()).save(any());
-        verifyNoInteractions(users);
+        verify(users, times(5)).findAuthVersionById(1L);
+        verifyNoMoreInteractions(users);
     }
 
     @Test

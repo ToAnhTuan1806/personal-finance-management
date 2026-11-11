@@ -64,6 +64,7 @@ class CategoryBudgetMigrationIntegrationTests {
                 apply(connection, migrations.get(1));
                 apply(connection, migrations.get(2));
                 apply(connection, migrations.get(3));
+                D12MigrationTestSupport.apply(connection);
             }
             byte[] key = new byte[32];
             new SecureRandom().nextBytes(key);

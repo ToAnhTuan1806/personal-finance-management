@@ -428,28 +428,11 @@ public class RecurringTemplateMigrationIntegrationTests {
                     "Kiểm thử JPA validation bị tạm hoãn cho đến khi Entity được tích hợp.");
         }
 
-        // Khi Entity có mặt, bắt buộc thực thi kiểm tra tương thích JPA/Hibernate thực tế với schema V004 thật
-        Map<String, Object> settings = new HashMap<>();
-        settings.put("hibernate.connection.url", jdbcUrl);
-        settings.put("hibernate.connection.username", dbUser);
-        settings.put("hibernate.connection.password", dbPassword);
-        settings.put("hibernate.connection.driver_class", "com.mysql.cj.jdbc.Driver");
-        settings.put("hibernate.dialect", "org.hibernate.dialect.MySQLDialect");
-
-        StandardServiceRegistry registry = new StandardServiceRegistryBuilder().applySettings(settings).build();
-        try {
-            MetadataSources sources = new MetadataSources(registry);
-            sources.addAnnotatedClass(Class.forName("com.smartexpense.backend.entity.User"));
-            sources.addAnnotatedClass(Class.forName("com.smartexpense.backend.entity.Category"));
-            sources.addAnnotatedClass(entityClass);
-
-            var metadata = sources.buildMetadata();
-            var sessionFactory = metadata.buildSessionFactory();
-            sessionFactory.getSchemaManager().validateMappedObjects();
-            log.info("Hibernate validateMappedObjects() THÀNH CÔNG cho Entity RecurringTemplate trên bảng V004 thực tế!");
-        } finally {
-            StandardServiceRegistryBuilder.destroy(registry);
-        }
+        // Preserve the historical V004 DB; current User mapping requires V006 in a separate isolated container.
+        D12MigrationTestSupport.validateCurrentMappings(List.of(
+                Class.forName("com.smartexpense.backend.entity.User"),
+                Class.forName("com.smartexpense.backend.entity.Category"), entityClass));
+        log.info("Hibernate validation PASS on V002 -> V006; historical V004 schema preserved");
     }
 
     private static List<Path> approvedUpgradeMigrations() throws Exception {
