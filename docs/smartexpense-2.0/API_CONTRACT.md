@@ -49,7 +49,7 @@ Mọi đường dẫn trong bảng đều nằm dưới `/api`; Input là body, 
 | GET | `/calendar/month` | Query year,month bắt buộc | 200 CalendarMonth; Backend D04, chờ FE xác nhận | 400 kỳ sai; 401 JWT thiếu/sai/hết hạn |
 | GET | `/reports/monthly` | Query from,to bắt buộc, YYYY-MM | 200 MonthlyReport D10, chờ FE xác nhận tích hợp | 400 kỳ sai/quá 6 tháng; 401 JWT thiếu/sai/hết hạn |
 | GET | `/transactions/export` | Query Filter, không page/size/sort | 200 CSV D11, triển khai local | 400 filter sai; 422 EXPORT_LIMIT_EXCEEDED; 401 JWT |
-| POST | `/ai/chat` | `{message,month}` | 200 AiChat D11, triển khai local | 400 validation; 401 JWT; 429 rate/quota; 502/503/504 provider |
+| POST | `/ai/chat` | `{message,month,compareMonth?}` | 200 AiChat P1/P2 D11/D13, triển khai local | 400 validation; 401 JWT; 429 rate/quota; 502/503/504 provider (ADVICE) |
 
 ### DTO và validation
 
@@ -357,7 +357,7 @@ Hợp đồng Backend triển khai local theo nhiệm vụ **SE2-D11-BE** đư�
 {"message":"Tháng này tôi chi tiêu bao nhiêu?","month":"2026-11"}
 ```
 
-Hai field bắt buộc. `message` không blank, tối đa 500 ký tự theo Java String/Bean Validation; `month` chính xác `YYYY-MM`, năm 1900–2100. Không tự suy ra tháng từ câu hỏi; period luôn là `month` đã chọn. Field `userId` ngoài DTO không được dùng. Không lưu hội thoại hoặc tạo/sửa/xóa dữ liệu nghiệp vụ.
+Hai field bắt buộc. `message` không blank, tối đa 500 ký tự theo Java String/Bean Validation; `month` chính xác `YYYY-MM`, năm 1900–2100. Từ bản NLU ngày 12/11/2026, kỳ nói rõ trong câu hỏi ưu tiên hơn picker theo mục **D13 — NLU** dưới đây; `period` phản ánh tháng thực sự được tính. Field `userId` ngoài DTO không được dùng. Không lưu hội thoại hoặc tạo/sửa/xóa dữ liệu nghiệp vụ.
 
 ```text
 AiChat = { reply:string, period:string, intent:string,
@@ -379,7 +379,7 @@ Backend định tuyến câu hỏi tiếng Việt có/không dấu và một s�
 | `BUDGET` | P1-04: Monthly Budget + tất cả Category Budget trong kỳ, hạn mức/đã chi/còn lại/cảnh báo giữ DTO và logic hiện có. Reply do Backend tạo, không gọi Gemini. |
 | `UNSUPPORTED` | Yêu cầu xem tài khoản khác hoặc tạo/sửa/xóa/SQL được nhận diện: trả 200 lời từ chối, stats=null, topCategories=[], budget=null; không query hoặc gọi provider. |
 
-Bốn intent P1 thành công luôn có `stats`; `topCategories` chỉ có dữ liệu với CATEGORIES, `budget` chỉ có dữ liệu với BUDGET. Định tuyến keyword là giới hạn UX của D11, chưa phải phân loại ngôn ngữ toàn diện; câu hỏi nhiều ý chọn một intent theo ưu tiên BUDGET → CATEGORIES → SUMMARY → ADVICE. Đây không phải ranh giới bảo mật: kể cả prompt không được nhận diện, tất cả query vẫn chỉ đọc JWT owner, provider không có tools/SQL/quyền ghi. D11 không gửi nguyên văn câu hỏi để tránh chuyển secrets/PII do người dùng dán vào Gemini. Sau bản sửa độ chính xác, **chỉ ADVICE gọi Gemini**, với yêu cầu tư vấn chung cố định, không gửi context tài chính, tên danh mục, ID, note, email, JWT hoặc lịch sử giao dịch. FE tiếp tục dùng **structured fields** làm nguồn số liệu, render `reply` như text, không coi nội dung AI là dữ liệu thực thi.
+Bốn intent P1 thành công luôn có `stats`; `topCategories` chỉ có dữ liệu với CATEGORIES, `budget` chỉ có dữ liệu với BUDGET. Định tuyến keyword là giới hạn UX của D11, chưa phải phân loại ngôn ngữ toàn diện; quy tắc keyword D11 được thay bởi bộ định tuyến NLU ngày 12/11/2026; không khớp trả UNKNOWN, không tự gọi ADVICE. Đây không phải ranh giới bảo mật: kể cả prompt không được nhận diện, tất cả query vẫn chỉ đọc JWT owner, provider không có tools/SQL/quyền ghi. D11 không gửi nguyên văn câu hỏi để tránh chuyển secrets/PII do người dùng dán vào Gemini. Sau bản sửa độ chính xác, **chỉ ADVICE gọi Gemini**, với yêu cầu tư vấn chung cố định, không gửi context tài chính, tên danh mục, ID, note, email, JWT hoặc lịch sử giao dịch. FE tiếp tục dùng **structured fields** làm nguồn số liệu, render `reply` như text, không coi nội dung AI là dữ liệu thực thi.
 
 **Hybrid AI — bản sửa BUG-01/BUG-02:** SUMMARY/CATEGORIES/BUDGET dùng `AiFinancialReplyFormatter` để tạo toàn bộ reply bằng dữ liệu Backend đã xác minh; không ghép văn bản Gemini vào các kết luận tài chính và không tìm/thay số trong văn bản AI. Tiền định dạng Việt Nam chính xác 2 số thập phân từ BigDecimal, không chuyển double. Chỉ BUDGET có trạng thái đã truy vấn: thiếu field budget ở SUMMARY/CATEGORIES không có nghĩa là chưa thiết lập. Remaining âm hiển thị cả số âm và diễn đạt đã vượt hạn mức bằng số tiền dương tương ứng. ADVICE dùng provider cho gợi ý chung, không được khẳng định đã kiểm tra tài khoản. Không đổi endpoint, request/response DTO, query hoặc logic Reports/Budget. Khi báo cáo QA, ba intent thống kê là **Backend facts/API PASS**, không gọi là Gemini Live PASS.
 
@@ -420,6 +420,108 @@ Reply ví dụ là kết quả định dạng Backend, không phải bằng ch�
 | 502 | `AI_INVALID_RESPONSE` | Thiếu text, chưa completed hoặc reply quá dài |
 
 Không trả body lỗi thô của Gemini, key, token, stack trace hoặc SQL. D11 không bao gồm AI P2, Quên mật khẩu hoặc thay đổi quyền JWT hiện có. Tests tự động dùng fake provider/HTTP loopback; Gemini live và SQL/MySQL cần bằng chứng kiểm thử riêng.
+
+### D13 — AI Assistant+ P2 (SE2-D13-BE)
+
+Mở rộng theo giao việc trực tiếp ngày **11/11/2026**; chỉ chuẩn bị code, ngày commit dự kiến **12/11/2026** sau phê duyệt riêng. Phạm vi này bổ sung P2 vào P1 đã có, thay phần loại chatbot khỏi phạm vi trong lịch Sprint 3 cũ; không mở rộng gợi ý ngân sách D14. Đây là hợp đồng triển khai Backend local, chưa thay cho nghiệm thu FE/QA hoặc release.
+
+Giữ `POST /api/ai/chat`, Bearer JWT và tất cả field P1. Request có thêm `compareMonth` tùy chọn:
+
+```json
+{"message":"So sánh thu chi tháng này với tháng trước.","month":"2026-11","compareMonth":"2026-10"}
+```
+
+- `month`/`compareMonth` là kỳ đích/gốc từ picker khi câu hỏi không nói rõ kỳ. Bản NLU ngày 12/11/2026 ưu tiên kỳ trong câu hỏi theo mục dưới. P2 thiếu/null `compareMonth` dùng `month - 1 tháng`; ví dụ `2026-01` → `2025-12`. P1 không tự truy vấn kỳ so sánh.
+- Cả hai tháng đúng `YYYY-MM`, năm 1900–2100; nếu có `compareMonth` thì phải hợp lệ và khác `month` kể cả với P1. Chuỗi rỗng không đồng nghĩa thiếu. Nếu P2 dùng mặc định ở `1900-01`, trả **400 VALIDATION_ERROR**, thông báo nêu giới hạn năm 1900–2100. Có thể chọn kỳ gốc khác hợp lệ cho tháng này.
+- Hai kỳ được chọn độc lập, không giới hạn cách nhau 6 tháng. Chấp nhận `compareMonth` sau `month`: ý nghĩa target/base và dấu delta vẫn theo field, không tự đảo tháng.
+- Ưu tiên định tuyến: **UNSUPPORTED → CATEGORY_TREND → COMPARISON → BUDGET → CATEGORIES → SUMMARY → ADVICE**. `CATEGORY_TREND` nhận câu hỏi danh mục kèm tăng/giảm/xu hướng/thay đổi/so sánh/tháng trước; `COMPARISON` nhận so sánh/tháng trước/nhiều hơn/ít hơn. Hỗ trợ có/không dấu, một số keyword Anh; vẫn là định tuyến keyword, không phân tích ngôn ngữ toàn diện.
+- Ví dụ: “So sánh thu chi tháng này với tháng trước”, “Tháng này tôi chi nhiều hơn tháng trước bao nhiêu?” → COMPARISON; “Danh mục nào tăng chi tiêu nhiều nhất?”, “Xu hướng chi tiêu theo danh mục thay đổi thế nào?” → CATEGORY_TREND.
+
+Hai intent P2 có cùng dữ liệu `comparison`, khác phần diễn giải `reply` (CATEGORY_TREND liệt kê biến động danh mục):
+
+```text
+AiChatP2 = { reply, period, intent:"COMPARISON"|"CATEGORY_TREND",
+             stats:Stats, topCategories:[], budget:null, comparison:Comparison }
+Comparison = { baseMonth:string, targetMonth:string, base:Stats, target:Stats, delta:Stats,
+               expenseChangePercent:number|null, categoryTrends:CategoryTrend[] }
+CategoryTrend = { categoryId:integer, categoryName:string, baseExpense:number,
+                  targetExpense:number, delta:number, changePercent:number|null }
+```
+
+- `period=targetMonth`, `stats=target`. Response P1/UNSUPPORTED giữ nguyên sáu field; `comparison` được bỏ khỏi JSON khi không phải P2. Request P1 hai field vẫn chạy như trước.
+- Mỗi delta = target − base, gồm thu/chi/số dư và từng danh mục. Tỷ lệ = delta/base × 100, BigDecimal, làm tròn HALF_UP 2 số; base expense = 0 → **null**, kể cả hai kỳ đều 0. Không trả 0% giả hoặc vô cực.
+- Ghép **hợp các ID danh mục có chi tiêu trong ít nhất một kỳ**, không gộp theo tên. Kỳ thiếu giao dịch có expense=0; danh mục không phát sinh ở cả hai kỳ không nằm trong danh sách. Không dùng hoặc suy ra hạn mức ngân sách. Sort **delta DESC, categoryId ASC**, không cắt top 5. Chỉ kết luận “tăng nhiều nhất” khi delta lớn nhất >0; toàn bộ giảm/không đổi thì nêu không có danh mục tăng.
+- Hai tháng rỗng: base/target/delta là Stats số 0, expenseChangePercent=null, categoryTrends=[]. Không tạo danh mục/ngân sách giả.
+- Dùng hai lần `ReportService.getMonthlyReport(owner, kỳ, kỳ)` trong cùng transaction read-only REPEATABLE_READ: **4 query aggregate SQL** (2/kỳ), không tải transaction entity. JWT D12 thêm 1 query scalar xác thực owner. Không đổi Reports API hoặc query hiện có.
+- Owner chỉ từ JWT; `userId` body hoặc ID/số tiền trong prompt không quyết định dữ liệu. Thiếu/sai/hết hạn JWT vẫn 401. P2 không gọi Gemini, không gửi prompt/PII/số tiền/JWT ra provider, không INSERT/UPDATE/DELETE. Giữ rate limit 10 request/phút/owner và `Cache-Control:no-store`; lỗi SQL trả 500 INTERNAL_ERROR trung lập theo handler hiện có.
+
+Ví dụ response COMPARISON từ fixture tổng hợp của `D13IntegrationTests`: owner A có thu 100.10/200.20 và chi 10.10/20.50 ở tháng 10/11; owner B có dữ liệu riêng không xuất hiện. `categoryId=12` là ID minh họa, ID thật do database cấp. Reply dưới đây tương ứng formatter Backend:
+
+```json
+{
+  "reply":"So sánh từ tháng 2026-10 đến tháng 2026-11:\nThống kê tháng 2026-10:\nTổng thu nhập: 100,10 ₫.\nTổng chi tiêu: 10,10 ₫.\nSố dư: 90,00 ₫.\nThống kê tháng 2026-11:\nTổng thu nhập: 200,20 ₫.\nTổng chi tiêu: 20,50 ₫.\nSố dư: 179,70 ₫.\nChênh lệch tổng thu: 100,10 ₫.\nChênh lệch tổng chi: 10,40 ₫.\nChênh lệch số dư: 89,70 ₫.\nChi tiêu tăng; tỷ lệ thay đổi 102,97%.",
+  "period":"2026-11",
+  "intent":"COMPARISON",
+  "stats":{"totalIncome":200.20,"totalExpense":20.50,"balance":179.70},
+  "topCategories":[],
+  "budget":null,
+  "comparison":{
+    "baseMonth":"2026-10",
+    "targetMonth":"2026-11",
+    "base":{"totalIncome":100.10,"totalExpense":10.10,"balance":90.00},
+    "target":{"totalIncome":200.20,"totalExpense":20.50,"balance":179.70},
+    "delta":{"totalIncome":100.10,"totalExpense":10.40,"balance":89.70},
+    "expenseChangePercent":102.97,
+    "categoryTrends":[{"categoryId":12,"categoryName":"Ăn uống","baseExpense":10.10,"targetExpense":20.50,"delta":10.40,"changePercent":102.97}]
+  }
+}
+```
+
+Ví dụ request CATEGORY_TREND dùng tháng trước mặc định:
+
+```json
+{"message":"Danh mục nào tăng chi tiêu nhiều nhất?","month":"2026-11"}
+```
+
+Với cùng fixture, structured fields giữ như ví dụ trên, `intent=CATEGORY_TREND`; reply thêm `Danh mục tăng chi tiêu nhiều nhất: "Ăn uống" — tăng 10,40 ₫.` và dòng chi tiết `Danh mục "Ăn uống": 10,10 ₫ → 20,50 ₫; tăng 10,40 ₫; tỷ lệ thay đổi 102,97%.`. Ví dụ dữ liệu kỳ thiếu và sort/ID trùng tên nằm trong test `categoryUnionUsesIdsZeroExpensesStableTiesAndNoBudgetInference`.
+
+### D13 — NLU (12/11/2026)
+
+Bổ sung theo giao việc trực tiếp, thay quy tắc chọn intent/kỳ trước đây khi có khác biệt. Không đổi endpoint, schema response hiện có, aggregate SQL, BigDecimal, JWT, giới hạn 10 request/phút hoặc runtime Gemini.
+
+**Intent và chuẩn hóa:** NFKC → NFD → bỏ dấu/format Unicode → chữ thường ROOT → gộp khoảng trắng, `đ` → `d`. Hỗ trợ các typo hữu hạn `chi tiu/chi tieeu`, `ngan sac`, `dan muc`, `so san`, `bao nhiu`. `thg` chỉ mở rộng trước số tháng/nay/trước; `tháng trc` hiểu là tháng trước. So sánh nhận cả `so với/vs`. `ns/tn` chỉ mở rộng khi có ngữ cảnh thu/chi/tiền/tháng/hạn mức/vượt/còn; `dm/ss` cần từ thu/chi/tiền/danh mục/category. Không thay đại trà chữ viết tắt: `ns`, `tn`, `dm`, `ss` đứng riêng trả UNKNOWN. Đây là bộ luật có giới hạn, không phải hiểu mọi cách diễn đạt tiếng Việt.
+
+- Sáu intent nghiệp vụ giữ nguyên. Ưu tiên từ chối UNSUPPORTED trước context và thời gian; sau đó CATEGORY_TREND, COMPARISON, BUDGET, CATEGORIES, ADVICE khi có dấu hiệu tư vấn tài chính, SUMMARY khi có dấu hiệu thống kê. Không khớp → **UNKNOWN**.
+- UNKNOWN trả HTTP 200, `stats=null`, `topCategories=[]`, `budget=null`, không có comparison; reply liệt kê đúng sáu khả năng và ba câu hỏi mẫu. Không query tài chính hoặc gọi Gemini. UNKNOWN/UNSUPPORTED vẫn tính vào rate limit.
+- Từ chối yêu cầu ghi/SQL/xem tài khoản khác; từ chối keyword chỉ là UX. Owner vẫn lấy từ JWT ở mọi query; không có SQL/tool sinh từ prompt. Gemini chỉ nhận lời nhắc tư vấn chung cố định, không raw prompt/context/PII/số tiền/JWT.
+
+**Thời gian (Asia/Ho_Chi_Minh, Clock inject được trong unit tests):**
+
+| Câu/field | Cách chọn kỳ |
+| --- | --- |
+| Không có tháng trong câu | `month` picker; follow-up có context có thể dùng `context.month` |
+| `tháng N`, `tN` | Tháng N trong năm hiện tại ở Việt Nam, không lấy năm picker |
+| `tháng N/YYYY`, `tN/YYYY`, `N/YYYY`, `YYYY-MM`, `tháng N năm YYYY` | Kỳ tường minh |
+| `tháng này`, `tháng trước` | Tính theo thời điểm Việt Nam hiện tại; tháng 1 lùi về tháng 12 năm trước |
+| `so sánh với tháng trước`, `chi nhiều/ít hơn tháng trước` | Ngầm kỳ hiện tại so với tháng trước |
+| Hai tháng trong câu so sánh/trend | Kỳ muộn hơn làm target, kỳ sớm hơn làm base, ưu tiên cả hai hơn picker |
+| Một tháng tường minh trong COMPARISON/CATEGORY_TREND | Target theo câu; base giữ compareMonth/context nếu khác target, nếu không có hoặc trùng target sau override thì dùng tháng trước target |
+| `năm nay` kèm tháng N | Tháng N trong năm hiện tại |
+| `năm nay`, `cả năm`, `hàng năm`, `năm YYYY` mà không có tháng | UNKNOWN, nói rõ chưa hỗ trợ thống kê cả năm; không trả tổng của picker làm tổng năm |
+
+Năm được tính luôn 1900–2100; tháng 1–12. Tháng trong câu sai hoặc tháng trước vượt giới hạn trả 400 VALIDATION_ERROR trước query. Tháng 2/năm nhuận dùng YearMonth và query ngày nửa mở của ReportService hiện có. Hai tháng mà câu không rõ ý so sánh/trend, hoặc nhiều hơn hai kỳ, trả UNKNOWN để hỏi lại. Input picker/context vẫn phải hợp lệ dù sẽ bị kỳ trong câu override; compareMonth picker không được trùng month picker như contract D13 gốc.
+
+**Context tùy chọn:** Không lưu hội thoại trong Backend; client có thể gửi tối đa ba field dưới đây để tiếp tục câu hỏi. Chỉ các câu mở đầu `còn`, `thế`, `vậy`, `và` mới dùng fallback intent/month từ context; intent rõ trong câu vẫn thắng, kỳ rõ trong câu luôn thắng. Context không mang owner hoặc số tiền, không được dùng làm dữ liệu tài chính.
+
+```json
+{"message":"Còn tháng 2/2024?","month":"2026-11","context":{"intent":"CATEGORIES","month":"2026-10"}}
+```
+
+`context.intent` bắt buộc khi context tồn tại, thuộc sáu intent nghiệp vụ; `context.month` bắt buộc, YYYY-MM/1900–2100; `context.compareMonth` tùy chọn cùng validation. Request P1 hai field và P2 ba field vẫn được nhận. Relative `tháng trước` luôn theo Clock, không tự dịch theo context.
+
+Ví dụ picker `2026-11`, message `Tổng chi tháng 2/2024?` → SUMMARY, `period=2024-02`, reply nêu tháng 2/2024 và stats lấy SQL tháng đó. Message `So sánh danh mục tháng 12/2025 và tháng 1/2026` → CATEGORY_TREND, baseMonth=2025-12, targetMonth/period=2026-01. Message `Tổng thu năm nay` → UNKNOWN, stats=null và nêu rõ không có thống kê cả năm.
+
+**Phối hợp FE bắt buộc trước tích hợp NLU:** `frontend/src/services/aiChatService.js` hiện kiểm tra `data.period===requestedMonth` và `comparison.baseMonth===requestedCompareMonth`. Những guard này sẽ báo INVALID_API_RESPONSE khi NLU hợp lệ override picker. FE cần chấp nhận kỳ trả từ Backend sau khi validate cấu trúc/miền giá trị và quan hệ `comparison.targetMonth===period`, giữ sequence/abort/session guards để chặn response cũ. Render kỳ thực tế từ response; không gắn nhãn số liệu bằng picker. Muốn follow-up phải gửi context chủ động; Backend không tự nhớ phiên chat. Task BE này không sửa FE; không dùng lại kết quả Browser QA P2 cũ để tuyên bố NLU Live PASS.
 
 ### Reports D10 — hợp đồng triển khai theo nhiệm vụ SE2-D10-BE
 

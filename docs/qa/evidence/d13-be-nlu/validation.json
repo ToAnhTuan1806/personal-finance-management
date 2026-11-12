@@ -1,0 +1,387 @@
+{
+  "baselineHead": "c9a70b9eb62403af8ff0802b4508ff18f55e5c2c",
+  "branch": "feature/tuan",
+  "labeledVietnameseCases": 94,
+  "totals": {
+    "tests": 1218,
+    "skipped": 0,
+    "failures": 0,
+    "errors": 0
+  },
+  "suiteCount": 45,
+  "suites": [
+    {
+      "name": "com.smartexpense.backend.AiChatApiTests",
+      "timestamp": "2026-11-11T17:40:28.182Z",
+      "tests": 83,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "com.smartexpense.backend.AuthSecurityQaIntegrationTests",
+      "timestamp": "2026-11-11T17:40:33.664Z",
+      "tests": 22,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "com.smartexpense.backend.BackendApplicationTests",
+      "timestamp": "2026-11-11T17:40:56.128Z",
+      "tests": 69,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "com.smartexpense.backend.CalendarIntegrationTests",
+      "timestamp": "2026-11-11T17:41:01.492Z",
+      "tests": 33,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "com.smartexpense.backend.CalendarQueryIntegrationTests",
+      "timestamp": "2026-11-11T17:41:28.035Z",
+      "tests": 1,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "com.smartexpense.backend.CalendarServiceTests",
+      "timestamp": "2026-11-11T17:41:52.438Z",
+      "tests": 8,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "com.smartexpense.backend.CategoryAppearanceIntegrationTests",
+      "timestamp": "2026-11-11T17:41:52.506Z",
+      "tests": 49,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "com.smartexpense.backend.CategoryAppearanceTests",
+      "timestamp": "2026-11-11T17:42:18.535Z",
+      "tests": 6,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "com.smartexpense.backend.CategoryBudgetIntegrationTests",
+      "timestamp": "2026-11-11T17:42:18.553Z",
+      "tests": 42,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "com.smartexpense.backend.CategoryBudgetMigrationIntegrationTests",
+      "timestamp": "2026-11-11T17:42:49.289Z",
+      "tests": 1,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "com.smartexpense.backend.CategoryBudgetServiceTests",
+      "timestamp": "2026-11-11T17:43:08.739Z",
+      "tests": 23,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "com.smartexpense.backend.CategoryNameIntegrationTests",
+      "timestamp": "2026-11-11T17:43:08.783Z",
+      "tests": 35,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "com.smartexpense.backend.CsvExportApiTests",
+      "timestamp": "2026-11-11T17:43:34.625Z",
+      "tests": 26,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "com.smartexpense.backend.D06MigrationIntegrationTests",
+      "timestamp": "2026-11-11T17:43:35.063Z",
+      "tests": 6,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "com.smartexpense.backend.D11IntegrationTests",
+      "timestamp": "2026-11-11T17:44:16.274Z",
+      "tests": 5,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "com.smartexpense.backend.D13IntegrationTests",
+      "timestamp": "2026-11-11T17:44:38.401Z",
+      "tests": 19,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "com.smartexpense.backend.PasswordResetApiTests",
+      "timestamp": "2026-11-11T17:45:00.920Z",
+      "tests": 25,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "com.smartexpense.backend.PasswordResetBackendMigrationIntegrationTests",
+      "timestamp": "2026-11-11T17:45:01.262Z",
+      "tests": 1,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "com.smartexpense.backend.PasswordResetIntegrationTests",
+      "timestamp": "2026-11-11T17:45:20.676Z",
+      "tests": 8,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "com.smartexpense.backend.PasswordResetMigrationIntegrationTests",
+      "timestamp": "2026-11-11T17:45:45.005Z",
+      "tests": 10,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "com.smartexpense.backend.QaBaselineAuthIntegrationTests",
+      "timestamp": "2026-11-11T17:46:25.181Z",
+      "tests": 30,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "com.smartexpense.backend.QaDayCategoryIntegrationTests",
+      "timestamp": "2026-11-11T17:46:58.468Z",
+      "tests": 18,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "com.smartexpense.backend.QaTransactionCalendarIntegrationTests",
+      "timestamp": "2026-11-11T17:47:29.049Z",
+      "tests": 12,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "com.smartexpense.backend.RecurringApplicationContractTests",
+      "timestamp": "2026-11-11T17:47:57.117Z",
+      "tests": 31,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "com.smartexpense.backend.RecurringApplicationIntegrationTests",
+      "timestamp": "2026-11-11T17:47:57.315Z",
+      "tests": 48,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "com.smartexpense.backend.RecurringApplicationMigrationIntegrationTests",
+      "timestamp": "2026-11-11T17:48:24.552Z",
+      "tests": 25,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "com.smartexpense.backend.RecurringTemplateApiTests",
+      "timestamp": "2026-11-11T17:49:22.958Z",
+      "tests": 63,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "com.smartexpense.backend.RecurringTemplateContractTests",
+      "timestamp": "2026-11-11T17:49:23.340Z",
+      "tests": 98,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "com.smartexpense.backend.RecurringTemplateDatesTests",
+      "timestamp": "2026-11-11T17:49:23.579Z",
+      "tests": 11,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "com.smartexpense.backend.RecurringTemplateIntegrationTests",
+      "timestamp": "2026-11-11T17:49:23.585Z",
+      "tests": 65,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "com.smartexpense.backend.RecurringTemplateMigrationIntegrationTests",
+      "timestamp": "2026-11-11T17:49:58.926Z",
+      "tests": 12,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "com.smartexpense.backend.RegistrationCategoryIntegrationTests",
+      "timestamp": "2026-11-11T17:50:37.936Z",
+      "tests": 13,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "com.smartexpense.backend.ReportApiTests",
+      "timestamp": "2026-11-11T17:51:02.387Z",
+      "tests": 33,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "com.smartexpense.backend.ReportIntegrationTests",
+      "timestamp": "2026-11-11T17:51:02.744Z",
+      "tests": 9,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "com.smartexpense.backend.security.ApiSecurityExceptionHandlerTests",
+      "timestamp": "2026-11-11T17:52:35.769Z",
+      "tests": 2,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "com.smartexpense.backend.security.AuthVersionJwtTests",
+      "timestamp": "2026-11-11T17:52:35.771Z",
+      "tests": 16,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "com.smartexpense.backend.security.PasswordResetRateLimiterTests",
+      "timestamp": "2026-11-11T17:52:35.785Z",
+      "tests": 3,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "com.smartexpense.backend.service.AiFinancialReplyFormatterTests",
+      "timestamp": "2026-11-11T17:52:36.022Z",
+      "tests": 6,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "com.smartexpense.backend.service.AiQueryInterpreterTests",
+      "timestamp": "2026-11-11T17:52:36.025Z",
+      "tests": 106,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "com.smartexpense.backend.service.GeminiAiProviderTests",
+      "timestamp": "2026-11-11T17:52:36.055Z",
+      "tests": 17,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "com.smartexpense.backend.service.PasswordResetServiceTests",
+      "timestamp": "2026-11-11T17:52:37.153Z",
+      "tests": 21,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "com.smartexpense.backend.service.SmtpPasswordResetEmailSenderTests",
+      "timestamp": "2026-11-11T17:52:37.374Z",
+      "tests": 12,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "com.smartexpense.backend.TransactionCreateIntegrationTests",
+      "timestamp": "2026-11-11T17:51:25.742Z",
+      "tests": 55,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "com.smartexpense.backend.TransactionDateIntegrationTests",
+      "timestamp": "2026-11-11T17:51:51.700Z",
+      "tests": 16,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    },
+    {
+      "name": "com.smartexpense.backend.TransactionDayIntegrationTests",
+      "timestamp": "2026-11-11T17:52:13.643Z",
+      "tests": 24,
+      "skipped": 0,
+      "failures": 0,
+      "errors": 0
+    }
+  ],
+  "gradleTest": "PASS (12m 27s)",
+  "gradleBuild": "PASS (test UP-TO-DATE after full run)",
+  "sha256": {
+    "backend/src/main/java/com/smartexpense/backend/service/AiQueryInterpreter.java": "8cb9547d7efec83faf0252e1f98f42f120ade404a2276ba12cece763a1b2f041",
+    "backend/src/main/java/com/smartexpense/backend/service/AiChatService.java": "c74b21366dee395c852a5d25334703c237bae16d7478863d0e8c78ad60f492d7",
+    "backend/src/main/java/com/smartexpense/backend/dto/ai/AiChatRequest.java": "f2c51659290d889dca5cbcb663fcbe41975ecc92ccb129135457166c29867b07",
+    "backend/src/test/java/com/smartexpense/backend/service/AiQueryInterpreterTests.java": "6ecce79ed2aab58a6fe1644b579c26a01a90bfe5320c2a195c2155afc327eeab",
+    "backend/src/test/java/com/smartexpense/backend/AiNluTestConfiguration.java": "aa60402eb3b8087d5d8354898283ba056e7284d02c8785e45f00691cd3888b0a",
+    "backend/src/test/java/com/smartexpense/backend/AiChatApiTests.java": "417d3fba92b85d2f21ff33c9db741c405d00a4b93e50090125ec6b90e5381026",
+    "backend/src/test/java/com/smartexpense/backend/D11IntegrationTests.java": "80344fe6d524b9daf058d63a5ba22a9e24cdc5c4658c6d686dbd26a62d3956d8",
+    "backend/src/test/java/com/smartexpense/backend/D13IntegrationTests.java": "7391f7b989f030e8b25b857ef8cf85bbe4ff344269e071097a677870bd7593b2",
+    "docs/smartexpense-2.0/API_CONTRACT.md": "8155d5f98691eb8db6c2c15b0eec2fdff4b6569d051638553dad664bdaad4906"
+  }
+}
