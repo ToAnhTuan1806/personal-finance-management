@@ -1,0 +1,42 @@
+{
+  "reply": "So sánh từ tháng 2026-08 đến tháng 2026-11:\nThống kê tháng 2026-08:\nTổng thu nhập: 0,00 ₫.\nTổng chi tiêu: 0,00 ₫.\nSố dư: 0,00 ₫.\nThống kê tháng 2026-11:\nTổng thu nhập: 200,20 ₫.\nTổng chi tiêu: 20,50 ₫.\nSố dư: 179,70 ₫.\nChênh lệch tổng thu: 200,20 ₫.\nChênh lệch tổng chi: 20,50 ₫.\nChênh lệch số dư: 179,70 ₫.\nChi tiêu tăng; không tính tỷ lệ vì chi tiêu kỳ gốc bằng 0.\nDanh mục tăng chi tiêu nhiều nhất: \"Ăn uống\" — tăng 20,50 ₫.\nDanh mục \"Ăn uống\": 0,00 ₫ → 20,50 ₫; tăng 20,50 ₫; không tính tỷ lệ vì chi tiêu kỳ gốc bằng 0.",
+  "period": "2026-11",
+  "intent": "CATEGORY_TREND",
+  "stats": {
+    "totalIncome": 200.2,
+    "totalExpense": 20.5,
+    "balance": 179.7
+  },
+  "topCategories": [],
+  "budget": null,
+  "comparison": {
+    "baseMonth": "2026-08",
+    "targetMonth": "2026-11",
+    "base": {
+      "totalIncome": 0,
+      "totalExpense": 0,
+      "balance": 0
+    },
+    "target": {
+      "totalIncome": 200.2,
+      "totalExpense": 20.5,
+      "balance": 179.7
+    },
+    "delta": {
+      "totalIncome": 200.2,
+      "totalExpense": 20.5,
+      "balance": 179.7
+    },
+    "expenseChangePercent": null,
+    "categoryTrends": [
+      {
+        "categoryId": 1481,
+        "categoryName": "Ăn uống",
+        "baseExpense": 0,
+        "targetExpense": 20.5,
+        "delta": 20.5,
+        "changePercent": null
+      }
+    ]
+  }
+}

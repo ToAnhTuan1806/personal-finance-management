@@ -1,0 +1,50 @@
+{
+  "reply": "So sánh từ tháng 2024-01 đến tháng 2024-02:\nThống kê tháng 2024-01:\nTổng thu nhập: 0,00 ₫.\nTổng chi tiêu: 0,00 ₫.\nSố dư: 0,00 ₫.\nThống kê tháng 2024-02:\nTổng thu nhập: 100,10 ₫.\nTổng chi tiêu: 0,30 ₫.\nSố dư: 99,80 ₫.\nChênh lệch tổng thu: 100,10 ₫.\nChênh lệch tổng chi: 0,30 ₫.\nChênh lệch số dư: 99,80 ₫.\nChi tiêu tăng; không tính tỷ lệ vì chi tiêu kỳ gốc bằng 0.\nDanh mục tăng chi tiêu nhiều nhất: \"Chi tiêu hằng ngày\" — tăng 0,20 ₫.\nDanh mục \"Chi tiêu hằng ngày\": 0,00 ₫ → 0,20 ₫; tăng 0,20 ₫; không tính tỷ lệ vì chi tiêu kỳ gốc bằng 0.\nDanh mục \"Ăn uống\": 0,00 ₫ → 0,10 ₫; tăng 0,10 ₫; không tính tỷ lệ vì chi tiêu kỳ gốc bằng 0.",
+  "period": "2024-02",
+  "intent": "CATEGORY_TREND",
+  "stats": {
+    "totalIncome": 100.1,
+    "totalExpense": 0.3,
+    "balance": 99.8
+  },
+  "topCategories": [],
+  "budget": null,
+  "comparison": {
+    "baseMonth": "2024-01",
+    "targetMonth": "2024-02",
+    "base": {
+      "totalIncome": 0,
+      "totalExpense": 0,
+      "balance": 0
+    },
+    "target": {
+      "totalIncome": 100.1,
+      "totalExpense": 0.3,
+      "balance": 99.8
+    },
+    "delta": {
+      "totalIncome": 100.1,
+      "totalExpense": 0.3,
+      "balance": 99.8
+    },
+    "expenseChangePercent": null,
+    "categoryTrends": [
+      {
+        "categoryId": 1584,
+        "categoryName": "Chi tiêu hằng ngày",
+        "baseExpense": 0,
+        "targetExpense": 0.2,
+        "delta": 0.2,
+        "changePercent": null
+      },
+      {
+        "categoryId": 1583,
+        "categoryName": "Ăn uống",
+        "baseExpense": 0,
+        "targetExpense": 0.1,
+        "delta": 0.1,
+        "changePercent": null
+      }
+    ]
+  }
+}

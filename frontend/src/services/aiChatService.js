@@ -4,6 +4,8 @@ import { session } from '../auth/session.js'
 import {
   getCurrentVietnamMonth,
   isValidMonthString,
+  shiftMonthString,
+  formatShortMonthLabel,
 } from '../components/reports/reportUtils.js'
 
 export const AI_CHAT_TIMEOUT_MS = 35000
@@ -14,7 +16,52 @@ export const AI_SUGGESTED_QUESTIONS = [
   'Danh mục nào tôi chi nhiều nhất?',
   'Ngân sách tháng này còn bao nhiêu?',
   'Tôi nên quản lý chi tiêu như thế nào?',
+  'So sánh thu chi với tháng trước.',
+  'Danh mục nào tăng chi tiêu nhiều nhất?',
 ]
+
+export const AI_CONTEXT_INTENTS = ['SUMMARY', 'CATEGORIES', 'BUDGET', 'ADVICE', 'COMPARISON', 'CATEGORY_TREND']
+
+function isAiFollowUp(message) {
+  return /^(con|the|vay|va)\s/.test(String(message || '').normalize('NFKC').normalize('NFD').replace(/\p{M}|\p{Cf}/gu, '').toLowerCase().trim())
+}
+
+export function normalizeAiContext(context) {
+  if (!context || typeof context !== 'object' || Array.isArray(context)
+      || !AI_CONTEXT_INTENTS.includes(context.intent) || !isValidMonthString(context.month)
+      || context.month.trim() !== context.month
+      || (context.compareMonth != null && (!isValidMonthString(context.compareMonth)
+        || context.compareMonth.trim() !== context.compareMonth || context.compareMonth === context.month))) {
+    throw invalidRequest('Ngữ cảnh không hợp lệ')
+  }
+  return { intent: context.intent, month: context.month,
+    ...(context.compareMonth == null ? {} : { compareMonth: context.compareMonth }) }
+}
+
+export function getAiResponseContext(response) {
+  if (!AI_CONTEXT_INTENTS.includes(response?.intent)) return null
+  try {
+    return normalizeAiContext({ intent: response.intent, month: response.period,
+      ...(response.comparison ? { compareMonth: response.comparison.baseMonth } : {}) })
+  } catch { return null }
+}
+
+export function getAiSuggestedQuestions({ context, lastIntent } = {}) {
+  if (lastIntent === 'UNKNOWN' || lastIntent === 'UNSUPPORTED') {
+    return [AI_SUGGESTED_QUESTIONS[0], AI_SUGGESTED_QUESTIONS[4], AI_SUGGESTED_QUESTIONS[5]]
+  }
+  if (!context) return AI_SUGGESTED_QUESTIONS
+  const period = formatShortMonthLabel(context.month)
+  return [
+    'Còn tháng trước thì sao?',
+    context.intent === 'CATEGORIES' || context.intent === 'CATEGORY_TREND'
+      ? `Xu hướng chi tiêu theo danh mục ${period} thay đổi thế nào?`
+      : `Danh mục chi tiêu ${period} nào nhiều nhất?`,
+    `Tổng thu chi tháng ${period} bao nhiêu?`,
+    ...(getDefaultCompareMonth(context.month) ? [`So sánh thu chi ${period} với ${formatShortMonthLabel(getDefaultCompareMonth(context.month))}`] : []),
+    `Ngân sách tháng ${period} còn bao nhiêu?`,
+  ]
+}
 
 export const AI_ERROR_MESSAGES = {
   TIMEOUT: 'Trợ lý phản hồi quá lâu. Vui lòng thử lại sau.',
@@ -191,7 +238,64 @@ function normalizeBudget(budget) {
   }
 }
 
-export function normalizeAiChatResponse(data, requestedMonth) {
+export function getDefaultCompareMonth(month) {
+  return shiftMonthString(month, -1) || ''
+}
+
+// P2 chỉ nhận số JSON hữu hạn từ Backend; không tự tính số liệu hoặc bù field thiếu bằng 0.
+export function normalizeAiComparison(value, targetMonth) {
+  const object = (item) => item && typeof item === 'object' && !Array.isArray(item)
+  const number = (item, allowNegative = false) => {
+    if (typeof item !== 'number' || !Number.isFinite(item) || (!allowNegative && item < 0)) {
+      throw invalidResponse('Số liệu comparison không hợp lệ')
+    }
+    return Object.is(item, -0) ? 0 : item
+  }
+  const stats = (item, delta = false) => {
+    if (!object(item)) throw invalidResponse('Thiếu số liệu comparison')
+    return {
+      totalIncome: number(item.totalIncome, delta),
+      totalExpense: number(item.totalExpense, delta),
+      balance: number(item.balance, true),
+    }
+  }
+  const percent = (item, baseExpense) => {
+    if (baseExpense === 0) {
+      if (item !== null) throw invalidResponse('Tỷ lệ comparison phải null khi kỳ gốc bằng 0')
+      return null
+    }
+    return number(item, true)
+  }
+  if (!object(value) || !isValidMonthString(value.baseMonth) || !isValidMonthString(value.targetMonth)
+      || value.baseMonth.trim() !== value.baseMonth || value.targetMonth.trim() !== value.targetMonth
+      || value.baseMonth === value.targetMonth || (targetMonth && value.targetMonth !== targetMonth)
+      || !Array.isArray(value.categoryTrends)) {
+    throw invalidResponse('Kỳ hoặc cấu trúc comparison không hợp lệ')
+  }
+  const base = stats(value.base)
+  const target = stats(value.target)
+  const ids = new Set()
+  const categoryTrends = value.categoryTrends.map((item) => {
+    if (!object(item) || !Number.isSafeInteger(item.categoryId) || item.categoryId <= 0
+        || ids.has(item.categoryId) || typeof item.categoryName !== 'string' || !item.categoryName.trim()) {
+      throw invalidResponse('Danh mục comparison không hợp lệ')
+    }
+    ids.add(item.categoryId)
+    const baseExpense = number(item.baseExpense)
+    return {
+      categoryId: item.categoryId, categoryName: item.categoryName.trim(), baseExpense,
+      targetExpense: number(item.targetExpense), delta: number(item.delta, true),
+      changePercent: percent(item.changePercent, baseExpense),
+    }
+  })
+  return {
+    baseMonth: value.baseMonth, targetMonth: value.targetMonth, base, target,
+    delta: stats(value.delta, true),
+    expenseChangePercent: percent(value.expenseChangePercent, base.totalExpense), categoryTrends,
+  }
+}
+
+export function normalizeAiChatResponse(data) {
   if (!data || typeof data !== 'object' || Array.isArray(data)) {
     throw invalidResponse('Phản hồi trợ lý AI không đúng cấu trúc đối tượng')
   }
@@ -204,15 +308,24 @@ export function normalizeAiChatResponse(data, requestedMonth) {
     throw invalidResponse('Phản hồi trợ lý AI thiếu kỳ thống kê period hợp lệ')
   }
 
-  if (requestedMonth && data.period !== requestedMonth) {
-    throw invalidResponse('Kỳ thống kê phản hồi từ trợ lý AI không khớp với tháng đã chọn')
-  }
+  if (data.period.trim() !== data.period) throw invalidResponse('Kỳ thống kê phải đúng YYYY-MM')
 
   if (typeof data.intent !== 'string' || data.intent.trim() === '') {
     throw invalidResponse('Phản hồi trợ lý AI thiếu trường intent')
   }
 
+  if (![...AI_CONTEXT_INTENTS, 'UNKNOWN', 'UNSUPPORTED'].includes(data.intent.trim())) {
+    throw invalidResponse('Intent không thuộc API Contract')
+  }
+  if (['UNKNOWN', 'UNSUPPORTED'].includes(data.intent.trim())
+      && (data.stats != null || data.budget != null || data.comparison != null || data.topCategories?.length)) {
+    throw invalidResponse('Phản hồi không xác định không được chứa số liệu')
+  }
+  const comparison = ['COMPARISON', 'CATEGORY_TREND'].includes(data.intent.trim())
+    ? normalizeAiComparison(data.comparison, data.period) : null
+
   return {
+    comparison,
     reply: data.reply.trim(),
     period: data.period,
     intent: data.intent.trim(),
@@ -222,7 +335,7 @@ export function normalizeAiChatResponse(data, requestedMonth) {
   }
 }
 
-export function validateAiChatRequest({ message, month } = {}) {
+export function validateAiChatRequest({ message, month, compareMonth, context } = {}) {
   const trimmedMessage = typeof message === 'string' ? message.trim() : ''
   const trimmedMonth = typeof month === 'string' ? month.trim() : ''
 
@@ -247,12 +360,25 @@ export function validateAiChatRequest({ message, month } = {}) {
     }
   }
 
+  if (compareMonth !== undefined && compareMonth !== null
+      && (!isValidMonthString(compareMonth) || compareMonth.trim() === trimmedMonth)) {
+    return { valid: false, message: 'Tháng so sánh phải hợp lệ (1900–2100) và khác tháng đang xem.' }
+  }
+
+  let safeContext
+  if (context != null) {
+    try { safeContext = normalizeAiContext(context) } catch {
+      return { valid: false, message: 'Ngữ cảnh hội thoại không hợp lệ. Hãy xóa hội thoại và thử lại.' }
+    }
+  }
   return {
     valid: true,
     message: '',
     payload: {
       message: trimmedMessage,
       month: trimmedMonth,
+      ...(compareMonth == null ? {} : { compareMonth: compareMonth.trim() }),
+      ...(safeContext ? { context: safeContext } : {}),
     },
   }
 }
@@ -311,6 +437,9 @@ export function getAiChatErrorMessage(error) {
       if (typeof fieldErrors.message === 'string' && fieldErrors.message.trim()) {
         return fieldErrors.message.trim().slice(0, 200)
       }
+      if (typeof fieldErrors.compareMonth === 'string' && fieldErrors.compareMonth.trim()) {
+        return fieldErrors.compareMonth.trim().slice(0, 200)
+      }
       if (typeof fieldErrors.month === 'string' && fieldErrors.month.trim()) {
         return fieldErrors.month.trim().slice(0, 200)
       }
@@ -329,9 +458,9 @@ export function getAiChatErrorMessage(error) {
   return AI_ERROR_MESSAGES.UNAVAILABLE
 }
 
-export async function sendAiChatMessage({ message, month } = {}, options = {}) {
+export async function sendAiChatMessage({ message, month, compareMonth, context } = {}, options = {}) {
   const { apiClient = axiosClient, ...requestOptions } = options
-  const validation = validateAiChatRequest({ message, month })
+  const validation = validateAiChatRequest({ message, month, compareMonth, context })
   if (!validation.valid) {
     throw invalidRequest(validation.message)
   }
@@ -341,7 +470,7 @@ export async function sendAiChatMessage({ message, month } = {}, options = {}) {
     timeout: AI_CHAT_TIMEOUT_MS,
   })
 
-  return normalizeAiChatResponse(response.data, validation.payload.month)
+  return normalizeAiChatResponse(response.data)
 }
 
 export function createAiChatController({
@@ -358,15 +487,22 @@ export function createAiChatController({
   let trackedRevision = initialSession.revision
   let trackedUserId = initialSession.user?.id ?? null
 
-  let state = {
-    open: false,
-    month: getDefaultMonth(),
-    draft: '',
-    messages: [],
-    loading: false,
-    error: '',
-    lastFailedMessage: '',
+  const initialState = () => {
+    const month = getDefaultMonth()
+    return {
+      open: false,
+      month,
+      compareMonth: getDefaultCompareMonth(month),
+      draft: '',
+      messages: [],
+      loading: false,
+      error: '',
+      lastFailedMessage: '',
+      context: null,
+      lastIntent: '',
+    }
   }
+  let state = initialState()
 
   const publish = (patch) => {
     state = { ...state, ...patch }
@@ -387,15 +523,7 @@ export function createAiChatController({
 
   const resetForSessionChange = () => {
     abortActiveRequest()
-    state = {
-      open: false,
-      month: getDefaultMonth(),
-      draft: '',
-      messages: [],
-      loading: false,
-      error: '',
-      lastFailedMessage: '',
-    }
+    state = initialState()
     listeners.forEach((listener) => listener())
   }
 
@@ -420,6 +548,8 @@ export function createAiChatController({
     const validation = validateAiChatRequest({
       message: rawMessage,
       month: targetMonth,
+      compareMonth: state.context && isAiFollowUp(rawMessage) ? undefined : state.compareMonth || undefined,
+      context: state.context,
     })
     if (!validation.valid) {
       publish({
@@ -451,7 +581,7 @@ export function createAiChatController({
 
     try {
       const response = await sendChat(
-        { message: cleanMessage, month: cleanMonth },
+        validation.payload,
         { signal: controller.signal }
       )
 
@@ -474,6 +604,7 @@ export function createAiChatController({
         stats: response.stats,
         topCategories: response.topCategories,
         budget: response.budget,
+        comparison: response.comparison ?? null,
       }
 
       activeController = null
@@ -482,6 +613,8 @@ export function createAiChatController({
         error: '',
         lastFailedMessage: '',
         messages: [...state.messages, assistantMessage],
+        context: getAiResponseContext(response),
+        lastIntent: response.intent,
       })
 
       return assistantMessage
@@ -530,14 +663,21 @@ export function createAiChatController({
       })
     },
     setMonth(monthValue) {
-      publish({
-        month: typeof monthValue === 'string' ? monthValue : state.month,
-        ...(state.error ? { error: '' } : {}),
-      })
+      if (typeof monthValue !== 'string' || monthValue === state.month) return
+      abortActiveRequest()
+      publish({ month: monthValue, compareMonth: getDefaultCompareMonth(monthValue),
+        loading: false, error: '', lastFailedMessage: '' })
+    },
+    setCompareMonth(compareMonth) {
+      if (typeof compareMonth !== 'string' || compareMonth === state.compareMonth) return
+      abortActiveRequest()
+      publish({ compareMonth, loading: false, error: '', lastFailedMessage: '' })
     },
     clearConversation() {
       abortActiveRequest()
       publish({
+        context: null,
+        lastIntent: '',
         messages: [],
         loading: false,
         error: '',

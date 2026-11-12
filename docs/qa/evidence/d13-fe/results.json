@@ -1,0 +1,344 @@
+{
+  "date": "2026-11-11T15:22:40.089Z",
+  "browser": {
+    "protocolVersion": "1.3",
+    "product": "Chrome/157.0.8103.39",
+    "revision": "@9a31f0acec1854d44e49a73fbf8017598151a583",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36",
+    "jsVersion": "15.7.112.23"
+  },
+  "live": true,
+  "results": [
+    {
+      "id": "CHROME-FIXTURE-320-light",
+      "status": "PASS",
+      "detail": {
+        "width": 320,
+        "documentOverflow": false,
+        "panelOverflow": false,
+        "logOverflow": false,
+        "bottom": 824,
+        "top": 12,
+        "scrollHeight": 837,
+        "clientHeight": 554
+      }
+    },
+    {
+      "id": "CHROME-FIXTURE-320-dark",
+      "status": "PASS",
+      "detail": {
+        "width": 320,
+        "documentOverflow": false,
+        "panelOverflow": false,
+        "logOverflow": false,
+        "bottom": 824,
+        "top": 12,
+        "scrollHeight": 837,
+        "clientHeight": 554
+      }
+    },
+    {
+      "id": "CHROME-FIXTURE-375-light",
+      "status": "PASS",
+      "detail": {
+        "width": 375,
+        "documentOverflow": false,
+        "panelOverflow": false,
+        "logOverflow": false,
+        "bottom": 824,
+        "top": 12,
+        "scrollHeight": 791,
+        "clientHeight": 554
+      }
+    },
+    {
+      "id": "CHROME-FIXTURE-375-dark",
+      "status": "PASS",
+      "detail": {
+        "width": 375,
+        "documentOverflow": false,
+        "panelOverflow": false,
+        "logOverflow": false,
+        "bottom": 824,
+        "top": 12,
+        "scrollHeight": 791,
+        "clientHeight": 554
+      }
+    },
+    {
+      "id": "CHROME-FIXTURE-430-light",
+      "status": "PASS",
+      "detail": {
+        "width": 430,
+        "documentOverflow": false,
+        "panelOverflow": false,
+        "logOverflow": false,
+        "bottom": 824,
+        "top": 12,
+        "scrollHeight": 791,
+        "clientHeight": 568
+      }
+    },
+    {
+      "id": "CHROME-FIXTURE-430-dark",
+      "status": "PASS",
+      "detail": {
+        "width": 430,
+        "documentOverflow": false,
+        "panelOverflow": false,
+        "logOverflow": false,
+        "bottom": 824,
+        "top": 12,
+        "scrollHeight": 791,
+        "clientHeight": 568
+      }
+    },
+    {
+      "id": "CHROME-FIXTURE-768-light",
+      "status": "PASS",
+      "detail": {
+        "width": 768,
+        "documentOverflow": false,
+        "panelOverflow": false,
+        "logOverflow": false,
+        "bottom": 824,
+        "top": 12,
+        "scrollHeight": 739,
+        "clientHeight": 564
+      }
+    },
+    {
+      "id": "CHROME-FIXTURE-768-dark",
+      "status": "PASS",
+      "detail": {
+        "width": 768,
+        "documentOverflow": false,
+        "panelOverflow": false,
+        "logOverflow": false,
+        "bottom": 824,
+        "top": 12,
+        "scrollHeight": 739,
+        "clientHeight": 564
+      }
+    },
+    {
+      "id": "CHROME-FIXTURE-1440-light",
+      "status": "PASS",
+      "detail": {
+        "width": 1440,
+        "documentOverflow": false,
+        "panelOverflow": false,
+        "logOverflow": false,
+        "bottom": 876,
+        "top": 196,
+        "scrollHeight": 809,
+        "clientHeight": 414
+      }
+    },
+    {
+      "id": "CHROME-FIXTURE-1440-dark",
+      "status": "PASS",
+      "detail": {
+        "width": 1440,
+        "documentOverflow": false,
+        "panelOverflow": false,
+        "logOverflow": false,
+        "bottom": 876,
+        "top": 196,
+        "scrollHeight": 809,
+        "clientHeight": 414
+      }
+    },
+    {
+      "id": "CHROME-FIXTURE-empty-null",
+      "status": "PASS"
+    },
+    {
+      "id": "HTTP-COMPARISON",
+      "status": "PASS"
+    },
+    {
+      "id": "HTTP-CATEGORY_TREND",
+      "status": "PASS"
+    },
+    {
+      "id": "HTTP-EMPTY",
+      "status": "PASS"
+    },
+    {
+      "id": "HTTP-YEAR",
+      "status": "PASS"
+    },
+    {
+      "id": "HTTP-BASE-ZERO",
+      "status": "PASS"
+    },
+    {
+      "id": "HTTP-OWNER-B",
+      "status": "PASS"
+    },
+    {
+      "id": "HTTP-JWT",
+      "status": "PASS"
+    },
+    {
+      "id": "CHROME-LIVE-COMPARISON",
+      "status": "PASS"
+    },
+    {
+      "id": "CHROME-LIVE-320-light",
+      "status": "PASS",
+      "detail": {
+        "overflow": false,
+        "panelBottom": 985,
+        "navTop": 994
+      }
+    },
+    {
+      "id": "CHROME-LIVE-320-dark",
+      "status": "PASS",
+      "detail": {
+        "overflow": false,
+        "panelBottom": 824,
+        "navTop": 833
+      }
+    },
+    {
+      "id": "CHROME-LIVE-375-light",
+      "status": "PASS",
+      "detail": {
+        "overflow": false,
+        "panelBottom": 824,
+        "navTop": 833
+      }
+    },
+    {
+      "id": "CHROME-LIVE-375-dark",
+      "status": "PASS",
+      "detail": {
+        "overflow": false,
+        "panelBottom": 824,
+        "navTop": 833
+      }
+    },
+    {
+      "id": "CHROME-LIVE-430-light",
+      "status": "PASS",
+      "detail": {
+        "overflow": false,
+        "panelBottom": 824,
+        "navTop": 833
+      }
+    },
+    {
+      "id": "CHROME-LIVE-430-dark",
+      "status": "PASS",
+      "detail": {
+        "overflow": false,
+        "panelBottom": 824,
+        "navTop": 833
+      }
+    },
+    {
+      "id": "CHROME-LIVE-768-light",
+      "status": "PASS",
+      "detail": {
+        "overflow": false,
+        "panelBottom": 824,
+        "navTop": 833
+      }
+    },
+    {
+      "id": "CHROME-LIVE-768-dark",
+      "status": "PASS",
+      "detail": {
+        "overflow": false,
+        "panelBottom": 824,
+        "navTop": 833
+      }
+    },
+    {
+      "id": "CHROME-LIVE-1440-light",
+      "status": "PASS",
+      "detail": {
+        "overflow": false,
+        "panelBottom": 876,
+        "navTop": 0
+      }
+    },
+    {
+      "id": "CHROME-LIVE-1440-dark",
+      "status": "PASS",
+      "detail": {
+        "overflow": false,
+        "panelBottom": 876,
+        "navTop": 0
+      }
+    },
+    {
+      "id": "CHROME-LIVE-TREND",
+      "status": "PASS"
+    },
+    {
+      "id": "CHROME-P1-Tháng này tôi đã chi bao nhiêu?",
+      "status": "PASS"
+    },
+    {
+      "id": "CHROME-P1-Danh mục nào tôi chi nhiều nhất?",
+      "status": "PASS"
+    },
+    {
+      "id": "CHROME-P1-Ngân sách tháng này còn bao nhiêu?",
+      "status": "PASS"
+    },
+    {
+      "id": "HTTP-DECREASE",
+      "status": "PASS"
+    },
+    {
+      "id": "HTTP-TARGET-EMPTY",
+      "status": "PASS"
+    },
+    {
+      "id": "HTTP-VALIDATION",
+      "status": "PASS"
+    },
+    {
+      "id": "CHROME-FAST-PERIOD-ABORT",
+      "status": "PASS"
+    },
+    {
+      "id": "CHROME-NETWORK-RETRY",
+      "status": "PASS"
+    },
+    {
+      "id": "CHROME-EMPTY-NULL-LIVE",
+      "status": "PASS"
+    },
+    {
+      "id": "CHROME-ESCAPE",
+      "status": "PASS"
+    },
+    {
+      "id": "CHROME-LOGOUT-A-LOGIN-B",
+      "status": "PASS"
+    },
+    {
+      "id": "CHROME-P1-ADVICE",
+      "status": "PASS",
+      "detail": {
+        "retried": true
+      }
+    },
+    {
+      "id": "CHROME-JWT-401-CLEARS-SESSION",
+      "status": "PASS"
+    },
+    {
+      "id": "CHROME-JS-CONSOLE",
+      "status": "PASS",
+      "detail": "No JS exceptions or console.error in component QA; network failures reported separately"
+    }
+  ],
+  "consoleErrors": []
+}

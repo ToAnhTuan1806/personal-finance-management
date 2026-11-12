@@ -1,0 +1,54 @@
+{
+  "date": "2026-11-11T18:19:45.114Z",
+  "branch": "feature/trang",
+  "baselineHead": "c9a70b9eb62403af8ff0802b4508ff18f55e5c2c",
+  "backendNluContractSha256": "8155d5f98691eb8db6c2c15b0eec2fdff4b6569d051638553dad664bdaad4906",
+  "unitTests": {
+    "pass": 517,
+    "fail": 0,
+    "skipped": 0
+  },
+  "liveQa": {
+    "pass": 33,
+    "fail": 0,
+    "blocked": 0
+  },
+  "lint": "PASS",
+  "build": "PASS",
+  "sha256": {
+    "frontend/src/components/ai/AiAssistantWidget.jsx": "1f825d163b05631d5e7db2ebf8b6661a11fdf8e47b692060238bfb713a73a445",
+    "frontend/src/components/ai/AiComparisonCard.jsx": "7c8b71c31906751ae352e9e17376974dc5ac2e81f4d2af94baede6437332d31b",
+    "frontend/src/components/ai/AiFinancialCharts.jsx": "dd1442bd538cc674031513a1e47e4e9a99481aa99924a6f28055714ad2569e6c",
+    "frontend/src/services/aiChatService.js": "77c21b57f359a34da679208026a97e544db30d6143cfef8445d213d34757f019",
+    "frontend/tests/aiAssistant.test.js": "d0f8b547acee3abdc33057a3f1595fb329da5879597ead2578cd519971872f29",
+    "scripts/qa/d13_nlu_live_qa.mjs": "44d60adfffca8c702e79603b76eecbe08ae65dbec46bdb60fdde0cc5e5e23e55"
+  },
+  "evidenceSha256": {
+    "categories-chart.png": "ef3cc34cfc7061189c3dcb6e58f2c55a00f61e8a310f040c86d3b7f04d47dc6b",
+    "comparison-chart.png": "f7b2a6f69fbdc3e682edc7b1bd3ab14dde358f1cd506a0882ae2e236150ad8cc",
+    "HTTP-NLU-ANNUAL.json": "f43f75a94d124a2662d7968401e0565cd2453c1ec89f5a1a9675c8ba6bafe281",
+    "HTTP-NLU-CATEGORIES.json": "6fba6290bb75a33ab309c226b0e000f83c6dcf4cf78141061f2d6daf3027953f",
+    "HTTP-NLU-FOLLOWUP.json": "13f558dd99e0a94666543cf6d9e3f3b75552865cb051043e71d216b698df3135",
+    "HTTP-NLU-NULL.json": "f7cca5ca8a7dd463d6a318f790eb28ba3e4c0d3ce39fb65052d88a75510f4098",
+    "HTTP-NLU-OWNER-B.json": "3563022986893664124feb2cc7d1ad5d9aae6a71e8d64025b8fa92fe981c66be",
+    "HTTP-NLU-SUMMARY.json": "056c76c0f2971a5f9527251c9a155b028463db3bf04766bb89b9a61e713b7882",
+    "HTTP-NLU-TWO-MONTHS.json": "eebcc5f0f6578f32ef63fe4c33adc2114f4e06b927a77dfaa02b798dc5ca9286",
+    "HTTP-NLU-UNKNOWN.json": "333de0b927ae723c28d79a118a92ac5b8670fdeb974bf2108ec786d775ceaf44",
+    "HTTP-NLU-YEAR.json": "46d097bf84ea013eda3675aa416cce71fdfcaa62421b8fc86c25908f4703d0e4",
+    "live-1440-dark.png": "313705a51ede3f01869c1d37b3603d0161a25ebf2a11f7198e9842187ba89825",
+    "live-1440-light.png": "8d65c8f6118ed9b0845ce0f876138aceb77841cd738e8daaadada5dbfe7313cc",
+    "live-320-dark.png": "4d57fa8aff0ad14284a05d2a0ab01aa3637d1c8098b459bee9960a6bc8dabda8",
+    "live-320-light.png": "b732c9ab99104acdf643871decf16c6573ee613282104994b0e71ccfeb6a93c9",
+    "live-375-dark.png": "b71b32677f46154c5d44fdf07f00ee3eb33293c3cc6b9f29ec90be40b54ef400",
+    "live-375-light.png": "d3b8cc00cc7cb0d232ed93355231290c8d21ead71be37742862d0756f626b7f2",
+    "live-430-dark.png": "a65556b78e93160f795917eb8f01a45b5e97dcd8042aa44fafeeed5094f86b8e",
+    "live-430-light.png": "a68748dffe792bba1ef9903b07bb8da58bd8e89c3209672d0207a5219c46638f",
+    "live-768-dark.png": "dd2ab9886a2939b02a530792d015bdadccfa9ae244bc169d38a0e72cd95e1d02",
+    "live-768-light.png": "b1b25515619559fbd4cd1ec2298873fe49d1a7330b15c07b18e49ac8b16344e2",
+    "owner-b.png": "129d6e4850ffa13af626e1d1cb5e1e1fc941e3a964ee5291d009c679e08c48d7",
+    "results.json": "f866320c5d5a7ea9c90f28820dae54f8c1474e77b90c1c8360456fee401d96ba",
+    "summary-actual-period.png": "aa891a6cd954ff86fe088e9ea9e26fb166fc32bbd6f52dda9a104dec713c99e8",
+    "unit-tests.txt": "51337ad3640c18257f8bd39f600628fb7ad9ef6c8d947a689cd716e76c292ad2",
+    "unknown.png": "ee7f2675ba3c60123e024f62b611943e05b425d9893abd280bd5530b5eee2c60"
+  }
+}

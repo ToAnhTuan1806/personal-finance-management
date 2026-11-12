@@ -1,0 +1,25 @@
+{
+  "reply": "Thống kê tháng 2/2024:\nTổng thu nhập: 100,10 ₫.\nTổng chi tiêu: 0,30 ₫.\nSố dư: 99,80 ₫.\nDanh mục chi tiêu cao nhất: \"Chi tiêu hằng ngày\" — 0,20 ₫ (tỷ trọng 66,67%).\nDanh mục \"Ăn uống\": 0,10 ₫ (tỷ trọng 33,33%).",
+  "period": "2024-02",
+  "intent": "CATEGORIES",
+  "stats": {
+    "totalIncome": 100.1,
+    "totalExpense": 0.3,
+    "balance": 99.8
+  },
+  "topCategories": [
+    {
+      "categoryId": 1584,
+      "categoryName": "Chi tiêu hằng ngày",
+      "totalAmount": 0.2,
+      "sharePercentage": 66.67
+    },
+    {
+      "categoryId": 1583,
+      "categoryName": "Ăn uống",
+      "totalAmount": 0.1,
+      "sharePercentage": 33.33
+    }
+  ],
+  "budget": null
+}

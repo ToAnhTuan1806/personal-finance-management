@@ -1,0 +1,12 @@
+{
+  "reply": "Thống kê tháng 2/2024:\nTổng thu nhập: 0,00 ₫.\nTổng chi tiêu: 999,99 ₫.\nSố dư: -999,99 ₫.",
+  "period": "2024-02",
+  "intent": "SUMMARY",
+  "stats": {
+    "totalIncome": 0,
+    "totalExpense": 999.99,
+    "balance": -999.99
+  },
+  "topCategories": [],
+  "budget": null
+}
