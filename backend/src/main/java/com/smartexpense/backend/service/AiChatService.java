@@ -6,10 +6,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-import java.text.Normalizer;
 import java.time.YearMonth;
 import java.util.List;
-import java.util.Locale;
 
 @Service
 @RequiredArgsConstructor
@@ -18,34 +16,60 @@ public class AiChatService {
     private final AiRateLimiter limiter;
     private final AiProvider provider;
     private final AiFinancialReplyFormatter replies;
+    private final AiQueryInterpreter interpreter;
 
     public AiChatResponse chat(Long userId, AiChatRequest request) {
         if (request.message() == null || request.message().isBlank() || request.message().length() > 500
                 || request.month() == null || !request.month().matches("[0-9]{4}-(0[1-9]|1[0-2])")) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Câu hỏi hoặc tháng không hợp lệ");
         }
-        int year = YearMonth.parse(request.month()).getYear();
-        if (year < 1900 || year > 2100) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Năm phải nằm trong khoảng 1900-2100");
+        YearMonth target = validateMonth(request.month(), "month");
+        if (request.compareMonth() != null) {
+            YearMonth base = validateMonth(request.compareMonth(), "compareMonth");
+            if (base.equals(target)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "compareMonth không được trùng month");
+            }
+        }
+        if (request.context() != null) {
+            validateMonth(request.context().month(), "context.month");
+            if (request.context().compareMonth() != null) validateMonth(request.context().compareMonth(), "context.compareMonth");
+            if (request.context().intent() == null || !request.context().intent().matches("SUMMARY|CATEGORIES|BUDGET|ADVICE|COMPARISON|CATEGORY_TREND")) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "context.intent không hợp lệ");
+            }
         }
         limiter.acquire(userId);
-        String text = Normalizer.normalize(request.message(), Normalizer.Form.NFD)
-                .replaceAll("\\p{M}", "").toLowerCase(Locale.ROOT).replace('đ', 'd');
-        // Đây là định tuyến UX, không phải ranh giới phân quyền. Mọi query luôn dùng JWT owner.
-        if (text.matches("(?s).*\\b(xoa|sua|tao|delete|update|insert|create|sql)\\b.*")
-                || text.matches("(?s).*(nguoi khac|user khac|tai khoan khac|user\\s*\\d+|user\\s*id|other user).*") ) {
+        var query = interpreter.interpret(request);
+        String month = query.month();
+        String intent = query.intent();
+        if (intent.equals("UNSUPPORTED")) {
             return new AiChatResponse("Trợ lý chỉ đọc dữ liệu của bạn, không xem tài khoản khác hoặc thay đổi giao dịch/ngân sách.",
-                    request.month(), "UNSUPPORTED", null, List.of(), null);
+                    month, intent, null, List.of(), null);
         }
-        String intent = text.matches("(?s).*(ngan sach|han muc|budget|vuot).*") ? "BUDGET"
-                : text.matches("(?s).*(danh muc|category|categories|nhieu nhat|cao nhat).*") ? "CATEGORIES"
-                : text.matches("(?s).*(bao nhieu|tong thu|tong chi|so du|thu chi|income|expense|balance).*") ? "SUMMARY"
-                : "ADVICE";
-        var context = finances.load(userId, request.month(), intent);
-        // Không ghép lời provider chưa xác minh vào câu trả lời có số liệu/trạng thái tài chính.
-        String reply = intent.equals("ADVICE") ? provider.explain(intent, context)
-                : replies.format(intent, request.month(), context);
-        return new AiChatResponse(reply, request.month(), intent,
-                context.stats(), context.topCategories(), context.budget());
+        if (intent.equals("UNKNOWN")) {
+            String reason = query.annual() ? "Chưa hỗ trợ thống kê cả năm; dữ liệu một tháng không đại diện cho cả năm. " : "Mình chưa hiểu rõ yêu cầu. ";
+            return new AiChatResponse(reason + "Mình hỗ trợ 6 khả năng: tổng thu/chi/số dư (SUMMARY); danh mục chi nhiều (CATEGORIES); "
+                    + "kiểm tra ngân sách (BUDGET); tư vấn chung (ADVICE); so sánh hai tháng (COMPARISON); xu hướng danh mục (CATEGORY_TREND)."
+                    + "\nBạn có thể hỏi:\n1. Tổng chi tháng này bao nhiêu?\n2. So sánh thu chi tháng này với tháng trước."
+                    + "\n3. Danh mục nào tăng chi tiêu nhiều nhất?", month, intent, null, List.of(), null);
+        }
+        if (intent.equals("COMPARISON") || intent.equals("CATEGORY_TREND")) {
+            var result = finances.loadComparison(userId, month, query.compareMonth());
+            return new AiChatResponse(replies.formatComparison(intent, result), month, intent,
+                    result.target(), List.of(), null, result);
+        }
+        var context = finances.load(userId, month, intent);
+        String reply = intent.equals("ADVICE") ? provider.explain(intent, context) : replies.format(intent, month, context);
+        return new AiChatResponse(reply, month, intent, context.stats(), context.topCategories(), context.budget());
+    }
+
+    private YearMonth validateMonth(String month, String field) {
+        if (month == null || !month.matches("[0-9]{4}-(0[1-9]|1[0-2])")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, field + " phải có định dạng YYYY-MM");
+        }
+        YearMonth parsed = YearMonth.parse(month);
+        if (parsed.getYear() < 1900 || parsed.getYear() > 2100) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, field + ": năm phải nằm trong khoảng 1900-2100");
+        }
+        return parsed;
     }
 }
