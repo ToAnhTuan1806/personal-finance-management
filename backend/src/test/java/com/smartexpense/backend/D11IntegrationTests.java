@@ -45,7 +45,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Testcontainers
 @Transactional
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-@Import(MySqlIntegrationTestSupport.IsolatedDataSource.class)
+@Import({MySqlIntegrationTestSupport.IsolatedDataSource.class, AiNluTestConfiguration.class})
 class D11IntegrationTests extends MySqlIntegrationTestSupport {
     @Autowired MockMvc mvc;
     @Autowired JsonMapper json;

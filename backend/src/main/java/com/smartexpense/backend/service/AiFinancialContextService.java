@@ -14,6 +14,8 @@ import java.math.RoundingMode;
 import java.time.YearMonth;
 import java.util.Comparator;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +26,42 @@ public class AiFinancialContextService {
     private final MonthlyBudgetRepository budgetRepository;
 
     public record Context(Stats stats, List<TopCategory> topCategories, Budget budget) { }
+
+    // Hai kỳ dùng chung snapshot; chỉ đọc aggregate SQL, không tải entity giao dịch/ngân sách.
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
+    public Comparison loadComparison(Long userId, String targetMonth, String baseMonth) {
+        var baseReport = reports.getMonthlyReport(userId, baseMonth, baseMonth);
+        var targetReport = reports.getMonthlyReport(userId, targetMonth, targetMonth);
+        var baseSummary = baseReport.months().getFirst();
+        var targetSummary = targetReport.months().getFirst();
+        Stats base = new Stats(baseSummary.totalIncome(), baseSummary.totalExpense(), baseSummary.balance());
+        Stats target = new Stats(targetSummary.totalIncome(), targetSummary.totalExpense(), targetSummary.balance());
+        Stats delta = new Stats(target.totalIncome().subtract(base.totalIncome()),
+                target.totalExpense().subtract(base.totalExpense()), target.balance().subtract(base.balance()));
+        Map<Long, CategoryExpenseResponse> baseCategories = new HashMap<>();
+        Map<Long, CategoryExpenseResponse> targetCategories = new HashMap<>();
+        baseReport.expensesByCategory().forEach(c -> baseCategories.put(c.getCategoryId(), c));
+        targetReport.expensesByCategory().forEach(c -> targetCategories.put(c.getCategoryId(), c));
+        Map<Long, CategoryExpenseResponse> union = new HashMap<>(baseCategories);
+        union.putAll(targetCategories);
+        List<CategoryTrend> trends = union.values().stream().map(category -> {
+            var before = baseCategories.get(category.getCategoryId());
+            var after = targetCategories.get(category.getCategoryId());
+            BigDecimal baseExpense = before == null ? BigDecimal.ZERO : before.getTotalAmount();
+            BigDecimal targetExpense = after == null ? BigDecimal.ZERO : after.getTotalAmount();
+            BigDecimal change = targetExpense.subtract(baseExpense);
+            return new CategoryTrend(category.getCategoryId(), category.getCategoryName(),
+                    baseExpense, targetExpense, change, changePercent(change, baseExpense));
+        }).sorted(Comparator.comparing(CategoryTrend::delta).reversed()
+                .thenComparing(CategoryTrend::categoryId)).toList();
+        return new Comparison(baseMonth, targetMonth, base, target, delta,
+                changePercent(delta.totalExpense(), base.totalExpense()), trends);
+    }
+
+    private BigDecimal changePercent(BigDecimal delta, BigDecimal base) {
+        return base.signum() == 0 ? null
+                : delta.multiply(new BigDecimal("100")).divide(base, 2, RoundingMode.HALF_UP);
+    }
 
     // Kết thúc transaction trước khi gọi mạng tới Gemini.
     @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)

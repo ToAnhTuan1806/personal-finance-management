@@ -1,6 +1,7 @@
 package com.smartexpense.backend.service;
 
 import com.smartexpense.backend.dto.ai.AiChatResponse.Stats;
+import com.smartexpense.backend.dto.ai.AiChatResponse.Comparison;
 import com.smartexpense.backend.enums.CategoryBudgetStatus;
 import org.springframework.stereotype.Component;
 
@@ -14,6 +15,47 @@ import java.util.Locale;
 // Chỉ định dạng dữ liệu Backend đã tính; không nhận hoặc sửa văn bản do provider sinh.
 @Component
 public class AiFinancialReplyFormatter {
+    public String formatComparison(String intent, Comparison comparison) {
+        StringBuilder reply = new StringBuilder("So sánh từ tháng ").append(comparison.baseMonth())
+                .append(" đến tháng ").append(comparison.targetMonth()).append(':');
+        reply.append('\n').append(summary(comparison.baseMonth(), comparison.base()));
+        reply.append('\n').append(summary(comparison.targetMonth(), comparison.target()));
+        reply.append("\nChênh lệch tổng thu: ").append(money(comparison.delta().totalIncome()))
+                .append(".\nChênh lệch tổng chi: ").append(money(comparison.delta().totalExpense()))
+                .append(".\nChênh lệch số dư: ").append(money(comparison.delta().balance())).append('.');
+        reply.append("\nChi tiêu ").append(direction(comparison.delta().totalExpense())).append("; ")
+                .append(percent(comparison.expenseChangePercent())).append('.');
+        if (intent.equals("CATEGORY_TREND")) {
+            if (comparison.categoryTrends().isEmpty()) {
+                reply.append("\nKhông có chi tiêu theo danh mục trong cả hai tháng.");
+            } else {
+                var highest = comparison.categoryTrends().getFirst();
+                if (highest.delta().signum() > 0) {
+                    reply.append("\nDanh mục tăng chi tiêu nhiều nhất: \"").append(highest.categoryName())
+                            .append("\" — tăng ").append(money(highest.delta())).append('.');
+                } else {
+                    reply.append("\nKhông có danh mục tăng chi tiêu.");
+                }
+                for (var category : comparison.categoryTrends()) {
+                    reply.append("\nDanh mục \"").append(category.categoryName()).append("\": ")
+                            .append(money(category.baseExpense())).append(" → ").append(money(category.targetExpense()))
+                            .append("; ").append(direction(category.delta())).append(" ")
+                            .append(money(category.delta().abs())).append("; ")
+                            .append(percent(category.changePercent())).append('.');
+                }
+            }
+        }
+        return reply.toString();
+    }
+
+    private String direction(BigDecimal delta) {
+        return delta.signum() > 0 ? "tăng" : delta.signum() < 0 ? "giảm" : "không đổi";
+    }
+
+    private String percent(BigDecimal value) {
+        return value == null ? "không tính tỷ lệ vì chi tiêu kỳ gốc bằng 0" : "tỷ lệ thay đổi " + number(value) + "%";
+    }
+
     public String format(String intent, String month, AiFinancialContextService.Context context) {
         YearMonth period = YearMonth.parse(month);
         String label = period.getMonthValue() + "/" + period.getYear();
