@@ -22,8 +22,11 @@ import {
   AI_SUGGESTED_QUESTIONS,
   MAX_AI_MESSAGE_LENGTH,
   createAiChatController,
+  getAiSuggestedQuestions,
 } from '../../services/aiChatService.js'
 import MonthPickerInput from '../ui/MonthPickerInput.jsx'
+import AiComparisonCard from './AiComparisonCard.jsx'
+import { AiCategoryChart } from './AiFinancialCharts.jsx'
 
 /**
  * Logo SVG Robot AI Thân thiện kèm Ngôi sao AI Vàng kim (viewBox 0 0 24 24)
@@ -90,14 +93,15 @@ export const WalletSparkleIcon = RobotSparkleIcon
 export function AiStructuredResponseCard({ message, onQuickAdd }) {
   if (!message || message.role !== 'assistant') return null
 
-  const { reply, content, period, stats, topCategories, budget } = message
+  const { reply, content, period, stats, topCategories, budget, intent, comparison } = message
+  const isComparison = intent === 'COMPARISON' || intent === 'CATEGORY_TREND'
   const textReply = typeof reply === 'string' && reply ? reply : String(content || '')
   const hasCategories = Array.isArray(topCategories) && topCategories.length > 0
   const hasBudget = budget !== null && budget !== undefined && typeof budget === 'object'
 
   return (
     <div className="space-y-3 text-xs sm:text-sm text-slate-800 dark:text-slate-100 min-w-0">
-      {period && (
+      {period && !['UNKNOWN', 'UNSUPPORTED'].includes(intent) && (
         <div className="flex flex-wrap items-center gap-1.5">
           <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-bold text-blue-700 border border-blue-200/70 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800/70">
             <Calendar size={11} aria-hidden="true" />
@@ -106,12 +110,15 @@ export function AiStructuredResponseCard({ message, onQuickAdd }) {
         </div>
       )}
 
+      {intent === 'UNKNOWN' && <p className="rounded-xl bg-amber-50 p-2 text-xs font-semibold text-amber-800 dark:bg-amber-950/50 dark:text-amber-200">Cần làm rõ · Chọn một câu hỏi gợi ý để bắt đầu lại.</p>}
       <p className="whitespace-pre-line break-words leading-relaxed text-slate-800 dark:text-slate-100">
         {textReply}
       </p>
 
+      {isComparison && <AiComparisonCard comparison={comparison} period={period} />}
+
       {/* Bento Mini-Grid cho Thu - Chi - Số dư */}
-      {stats && typeof stats === 'object' && (
+      {!isComparison && stats && typeof stats === 'object' && (
         <div
           aria-label="Số liệu tổng hợp thu chi"
           className="grid grid-cols-3 gap-1.5 rounded-xl border border-slate-200/80 bg-slate-50/90 p-2 text-center dark:border-slate-700/80 dark:bg-slate-900/60"
@@ -161,33 +168,7 @@ export function AiStructuredResponseCard({ message, onQuickAdd }) {
           <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
             Danh mục chi tiêu
           </p>
-          <ul className="space-y-2">
-            {topCategories.map((cat) => {
-              const share = Math.min(Math.max(Number(cat.sharePercentage || 0), 0), 100)
-              return (
-                <li key={cat.categoryId} className="space-y-1">
-                  <div className="flex items-center justify-between gap-2 text-xs min-w-0">
-                    <span className="truncate font-semibold text-slate-700 dark:text-slate-200">
-                      {cat.categoryName}
-                    </span>
-                    <span className="shrink-0 font-bold text-slate-900 dark:text-slate-100">
-                      {formatReportMoney(cat.totalAmount)}{' '}
-                      <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-                        ({formatReportPercent(cat.sharePercentage)})
-                      </span>
-                    </span>
-                  </div>
-                  {/* Mini-bar tỷ trọng danh mục */}
-                  <div className="h-1 w-full overflow-hidden rounded-full bg-slate-200/80 dark:bg-slate-700/80">
-                    <div
-                      className="h-full rounded-full bg-blue-600 dark:bg-blue-400 transition-all duration-300"
-                      style={{ width: `${share}%` }}
-                    />
-                  </div>
-                </li>
-              )
-            })}
-          </ul>
+          <AiCategoryChart categories={topCategories} period={period} />
         </div>
       )}
 
@@ -365,6 +346,8 @@ export function AiStructuredResponseCard({ message, onQuickAdd }) {
 export function AiAssistantPanelView({
   open = false,
   month = '2026-11',
+  compareMonth = '',
+  context = null,
   draft = '',
   messages = [],
   loading = false,
@@ -373,6 +356,7 @@ export function AiAssistantPanelView({
   onClose,
   onClear,
   onMonthChange,
+  onCompareMonthChange,
   onDraftChange,
   onSubmit,
   onSelectQuestion,
@@ -395,7 +379,7 @@ export function AiAssistantPanelView({
       role="dialog"
       aria-modal="false"
       aria-labelledby="ai-assistant-title"
-      className="fixed inset-x-0 bottom-[calc(4.15rem+env(safe-area-inset-bottom))] z-40 flex max-h-[calc(100dvh-5rem-env(safe-area-inset-bottom))] w-full max-w-full flex-col overflow-x-hidden rounded-t-3xl border-t border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-[#182234] lg:inset-x-auto lg:right-6 lg:bottom-6 lg:w-[420px] lg:max-h-[min(680px,calc(100dvh-3rem))] lg:rounded-3xl lg:border"
+      className="fixed inset-x-0 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-40 flex max-h-[calc(100dvh-5.5rem-env(safe-area-inset-bottom))] w-full max-w-full flex-col overflow-x-hidden rounded-t-3xl border-t border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-[#182234] lg:inset-x-auto lg:right-6 lg:bottom-6 lg:w-[420px] lg:max-h-[min(680px,calc(100dvh-3rem))] lg:rounded-3xl lg:border"
     >
       {/* Header */}
       <div className="flex shrink-0 items-start justify-between gap-2 border-b border-slate-200/80 bg-gradient-to-r from-blue-600 via-indigo-600 to-indigo-700 px-4 py-3.5 text-white dark:border-slate-800">
@@ -440,26 +424,25 @@ export function AiAssistantPanelView({
         </div>
       </div>
 
-      {/* Thanh chọn kỳ thống kê */}
-      <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-slate-100 bg-slate-50/80 px-4 py-2 dark:border-slate-800 dark:bg-slate-900/60">
-        <label
-          htmlFor="ai-chat-month"
-          className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300"
-        >
-          <Calendar size={13} className="text-blue-600 dark:text-blue-400" aria-hidden="true" />
-          <span>Kỳ thống kê:</span>
-        </label>
-        <div className="w-[140px] sm:w-[150px]">
-          <MonthPickerInput
-            id="ai-chat-month"
-            min={`${MIN_REPORT_YEAR}-01`}
-            max={`${MAX_REPORT_YEAR}-12`}
-            value={month}
-            disabled={loading}
-            theme="compact"
-            onChange={(e) => onMonthChange?.(e.target.value)}
-          />
+      {/* Đổi kỳ vẫn dùng được khi đang tải; controller hủy response của lựa chọn cũ. */}
+      <div className="shrink-0 border-b border-slate-100 bg-slate-50/80 px-4 py-2 dark:border-slate-800 dark:bg-slate-900/60">
+        <div className="grid min-w-0 grid-cols-2 gap-2">
+          <div className="min-w-0 space-y-1">
+            <label htmlFor="ai-chat-month" className="block text-[11px] font-semibold text-slate-600 dark:text-slate-300">Tháng đang xem</label>
+            <MonthPickerInput id="ai-chat-month" min={`${MIN_REPORT_YEAR}-01`} max={`${MAX_REPORT_YEAR}-12`}
+              value={month} theme="compact" format="short" aria-label="Tháng đang xem"
+              onChange={(e) => onMonthChange?.(e.target.value)} />
+          </div>
+          <div className="min-w-0 space-y-1">
+            <label htmlFor="ai-chat-compare-month" className="block text-[11px] font-semibold text-slate-600 dark:text-slate-300">Tháng so sánh (kỳ gốc)</label>
+            <MonthPickerInput id="ai-chat-compare-month" min={`${MIN_REPORT_YEAR}-01`} max={`${MAX_REPORT_YEAR}-12`}
+              value={compareMonth} theme="compact" format="short" aria-label="Tháng so sánh"
+              onChange={(e) => onCompareMonthChange?.(e.target.value)} />
+          </div>
         </div>
+        <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Tháng nói rõ trong câu hỏi được ưu tiên hơn tháng bạn chọn.</p>
+        {context && <p aria-label="Ngữ cảnh hội thoại" className="mt-1 text-[11px] text-blue-700 dark:text-blue-300">Câu hỏi tiếp theo dựa trên {formatMonthLabel(context.month)}. “Tháng trước” tính theo thời điểm hiện tại.</p>}
+        {!compareMonth && <p className="mt-1 text-[11px] text-amber-700 dark:text-amber-300">Để trống: dùng tháng trước nếu nằm trong 1900–2100. Các câu hỏi P1 vẫn dùng tháng đang xem.</p>}
       </div>
 
       {/* Danh sách tin nhắn */}
@@ -513,7 +496,7 @@ export function AiAssistantPanelView({
             aria-label="Trợ lý đang xử lý"
             className="flex justify-start"
           >
-            <div className="w-[88%] rounded-2xl rounded-bl-sm border border-slate-200/80 bg-white p-3.5 shadow-2xs dark:border-slate-700 dark:bg-[#1E293B] space-y-2.5 animate-pulse">
+            <div className="w-[88%] rounded-2xl rounded-bl-sm border border-slate-200/80 bg-white p-3.5 shadow-2xs dark:border-slate-700 dark:bg-[#1E293B] space-y-2.5 animate-pulse motion-reduce:animate-none">
               <div className="flex items-center gap-2">
                 <div className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/40 shrink-0">
                   <RobotSparkleIcon className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
@@ -621,7 +604,7 @@ export function AiAssistantPanelView({
           className="inline-flex min-h-[38px] min-w-[38px] shrink-0 items-center justify-center gap-1.5 rounded-xl bg-blue-600 px-3.5 py-2 text-xs sm:text-sm font-bold text-white shadow-sm hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
         >
           {loading ? (
-            <Loader2 size={16} className="animate-spin" aria-hidden="true" />
+            <Loader2 size={16} className="animate-spin motion-reduce:animate-none" aria-hidden="true" />
           ) : (
             <Send size={16} aria-hidden="true" />
           )}
@@ -664,7 +647,8 @@ export default function AiAssistantWidget({
   useEffect(() => {
     if (!state.open) return
     if (typeof listEndRef.current?.scrollIntoView === 'function') {
-      listEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' })
+      const reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+      listEndRef.current.scrollIntoView({ behavior: reducedMotion ? 'instant' : 'smooth', block: 'end' })
     }
   }, [state.messages.length, state.loading, state.error, state.open])
 
@@ -674,7 +658,8 @@ export default function AiAssistantWidget({
       if (event.key === 'Escape') {
         event.stopPropagation()
         controller.closePanel()
-        launcherRef.current?.focus()
+        // Launcher được render lại sau khi panel đóng.
+        setTimeout(() => launcherRef.current?.focus(), 0)
       }
     }
     window.addEventListener('keydown', handleKeyDown)
@@ -701,7 +686,7 @@ export default function AiAssistantWidget({
           title="Trợ lý tài chính"
           aria-expanded={state.open}
           aria-controls="ai-assistant-dialog"
-          className="fixed right-4 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-30 flex h-[54px] w-[54px] items-center justify-center rounded-full bg-gradient-to-tr from-[#1D4ED8] via-[#4F46E5] to-[#9333EA] text-white shadow-2xl shadow-indigo-600/40 ring-6 ring-indigo-400/30 transition-all duration-300 hover:scale-110 hover:rotate-6 active:scale-95 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900 lg:right-6 lg:bottom-6 cursor-pointer"
+          className="fixed right-4 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-30 flex h-[54px] w-[54px] items-center justify-center rounded-full bg-gradient-to-tr from-[#1D4ED8] via-[#4F46E5] to-[#9333EA] text-white shadow-2xl shadow-indigo-600/40 ring-6 ring-indigo-400/30 transition-all duration-300 hover:scale-110 hover:rotate-6 active:scale-95 motion-reduce:transition-none motion-reduce:transform-none focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900 lg:right-6 lg:bottom-6 cursor-pointer"
         >
           <RobotSparkleIcon className="h-7 w-7 text-white" />
           <span className="sr-only">Trợ lý tài chính</span>
@@ -711,6 +696,9 @@ export default function AiAssistantWidget({
       <AiAssistantPanelView
         open={state.open}
         month={state.month}
+        compareMonth={state.compareMonth}
+        context={state.context}
+        suggestedQuestions={getAiSuggestedQuestions(state)}
         draft={state.draft}
         messages={state.messages}
         loading={state.loading}
@@ -718,6 +706,7 @@ export default function AiAssistantWidget({
         onClose={handleClose}
         onClear={() => controller.clearConversation()}
         onMonthChange={(val) => controller.setMonth(val)}
+        onCompareMonthChange={(val) => controller.setCompareMonth(val)}
         onDraftChange={(val) => controller.setDraft(val)}
         onSubmit={() => controller.submitDraft()}
         onSelectQuestion={(q) => controller.askQuestion(q)}

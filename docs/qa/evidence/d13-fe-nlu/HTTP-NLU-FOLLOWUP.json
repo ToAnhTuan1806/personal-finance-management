@@ -1,0 +1,19 @@
+{
+  "reply": "Thống kê tháng 10/2026:\nTổng thu nhập: 0,00 ₫.\nTổng chi tiêu: 20,50 ₫.\nSố dư: -20,50 ₫.\nDanh mục chi tiêu cao nhất: \"Ăn uống\" — 20,50 ₫ (tỷ trọng 100,00%).",
+  "period": "2026-10",
+  "intent": "CATEGORIES",
+  "stats": {
+    "totalIncome": 0,
+    "totalExpense": 20.5,
+    "balance": -20.5
+  },
+  "topCategories": [
+    {
+      "categoryId": 1583,
+      "categoryName": "Ăn uống",
+      "totalAmount": 20.5,
+      "sharePercentage": 100
+    }
+  ],
+  "budget": null
+}

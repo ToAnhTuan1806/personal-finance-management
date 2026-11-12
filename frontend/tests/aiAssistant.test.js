@@ -14,6 +14,10 @@ import {
   createAiChatController,
   getAiChatErrorMessage,
   normalizeAiChatResponse,
+  getAiSuggestedQuestions,
+  normalizeAiContext,
+  validateAiChatRequest,
+  getDefaultCompareMonth,
   sendAiChatMessage,
 } from '../src/services/aiChatService.js'
 
@@ -113,7 +117,7 @@ test('Timeout cấu hình: Axios mặc định giữ nguyên 10.000 ms, chỉ PO
 })
 
 test('Bốn câu hỏi gợi ý P1 và chuẩn hóa đầy đủ DTO từ Backend (SUMMARY, CATEGORIES, BUDGET SET/NOT_SET, ADVICE)', () => {
-  assert.deepEqual(AI_SUGGESTED_QUESTIONS, [
+  assert.deepEqual(AI_SUGGESTED_QUESTIONS.slice(0, 4), [
     'Tháng này tôi đã chi bao nhiêu?',
     'Danh mục nào tôi chi nhiều nhất?',
     'Ngân sách tháng này còn bao nhiêu?',
@@ -592,3 +596,347 @@ test('Giao diện Chatbot & XSS Safety: render đầy đủ tiêu đề, 4 câu 
   assert.match(budgetSetHtml, /Vượt ngân sách \(125%\)/)
 })
 
+
+
+const p2Response = (intent = 'COMPARISON') => ({
+  reply: 'So sánh thu chi theo dữ liệu Backend.', period: '2026-11', intent,
+  stats: { totalIncome: 200.2, totalExpense: 20.5, balance: 179.7 }, topCategories: [], budget: null,
+  comparison: {
+    baseMonth: '2026-10', targetMonth: '2026-11',
+    base: { totalIncome: 100.1, totalExpense: 10.1, balance: 90 },
+    target: { totalIncome: 200.2, totalExpense: 20.5, balance: 179.7 },
+    delta: { totalIncome: 100.1, totalExpense: 10.4, balance: 89.7 }, expenseChangePercent: 102.97,
+    categoryTrends: [
+      { categoryId: 12, categoryName: 'Ăn uống', baseExpense: 10.1, targetExpense: 20.5, delta: 10.4, changePercent: 102.97 },
+      { categoryId: 13, categoryName: 'Đi lại', baseExpense: 50, targetExpense: 0, delta: -50, changePercent: -100 },
+      { categoryId: 14, categoryName: 'Không đổi', baseExpense: 5, targetExpense: 5, delta: 0, changePercent: 0 },
+      { categoryId: 15, categoryName: 'Mới phát sinh', baseExpense: 0, targetExpense: 1, delta: 1, changePercent: null },
+    ],
+  },
+})
+
+test('D13 thêm hai câu gợi ý P2, giữ bốn câu P1', () => {
+  assert.deepEqual(AI_SUGGESTED_QUESTIONS.slice(4), [
+    'So sánh thu chi với tháng trước.', 'Danh mục nào tăng chi tiêu nhiều nhất?',
+  ])
+})
+
+for (const intent of ['COMPARISON', 'CATEGORY_TREND']) {
+  test(`D13 ${intent}: số liệu Backend và mini-card gốc/đích, tiền lẻ, tăng/giảm/không đổi`, () => {
+    const normalized = normalizeAiChatResponse(p2Response(intent), '2026-11', '2026-10')
+    assert.equal(normalized.comparison.delta.totalExpense, 10.4)
+    assert.equal(normalized.comparison.expenseChangePercent, 102.97)
+    assert.equal(normalized.comparison.categoryTrends[3].changePercent, null)
+    const html = render(AiStructuredResponseCard, { message: { ...normalized, role: 'assistant' } })
+    for (const label of ['Kỳ gốc', 'Kỳ đang xem', 'Tháng 10/2026', 'Tháng 11/2026', 'Tổng thu', 'Tổng chi', 'Số dư', '100,1 ₫', '200,2 ₫', '+10,4 ₫', '102,97%', '-100%', 'Tăng', 'Giảm', 'Không đổi']) {
+      assert.ok(html.includes(label), label)
+    }
+    assert.doesNotMatch(html, /NaN|Infinity/)
+  })
+}
+
+for (const [name, mutate] of [
+  ['thiếu comparison', r => { delete r.comparison }],
+  ['comparison rỗng', r => { r.comparison = {} }],
+  ['kỳ gốc ngoài miền', r => { r.comparison.baseMonth = '1899-12' }],
+  ['sai kỳ đích', r => { r.comparison.targetMonth = '2026-12' }],
+  ['hai kỳ trùng', r => { r.comparison.baseMonth = '2026-11' }],
+  ['thiếu stats gốc', r => { delete r.comparison.base }],
+  ['thiếu số tiền', r => { delete r.comparison.target.totalExpense }],
+  ['NaN', r => { r.comparison.delta.balance = NaN }],
+  ['Infinity', r => { r.comparison.expenseChangePercent = Infinity }],
+  ['chuỗi số giả', r => { r.comparison.base.totalIncome = '' }],
+  ['object thay số', r => { r.comparison.target.totalExpense = [] }],
+  ['thu kỳ gốc âm', r => { r.comparison.base.totalIncome = -1 }],
+  ['thiếu mảng danh mục', r => { r.comparison.categoryTrends = null }],
+  ['ID trùng', r => { r.comparison.categoryTrends.push(r.comparison.categoryTrends[0]) }],
+  ['ID sai', r => { r.comparison.categoryTrends[0].categoryId = -1 }],
+  ['tên trống', r => { r.comparison.categoryTrends[0].categoryName = ' ' }],
+  ['thiếu %', r => { delete r.comparison.categoryTrends[0].changePercent }],
+  ['% giả khi gốc 0', r => { r.comparison.categoryTrends[3].changePercent = 0 }],
+]) {
+  test(`D13 chặn response ${name} trước khi render`, () => {
+    const response = p2Response()
+    mutate(response)
+    assert.throws(() => normalizeAiChatResponse(response, '2026-11', '2026-10'), { code: 'INVALID_API_RESPONSE' })
+  })
+}
+
+test('D13 hai tháng rỗng: zero từ Backend, tỷ lệ null không thành 0%, không tạo số liệu cho response thiếu', () => {
+  const response = p2Response()
+  response.stats = { totalIncome: 0, totalExpense: 0, balance: 0 }
+  Object.assign(response.comparison, { base: response.stats, target: response.stats,
+    delta: response.stats, expenseChangePercent: null, categoryTrends: [] })
+  const normalized = normalizeAiChatResponse(response)
+  const html = render(AiStructuredResponseCard, { message: { ...normalized, role: 'assistant' } })
+  assert.match(html, /Không có giao dịch trong cả hai tháng/)
+  assert.match(html, /Không tính được % thay đổi chi tiêu vì kỳ gốc bằng 0/)
+  assert.doesNotMatch(html, /NaN|Infinity|0%/)
+  const invalid = render(AiStructuredResponseCard, { message: { role: 'assistant', intent: 'COMPARISON' } })
+  assert.match(invalid, /Chưa nhận được dữ liệu so sánh hợp lệ/)
+  assert.doesNotMatch(invalid, /0 ₫|NaN|Infinity/)
+})
+
+test('D13 kỳ đích rỗng vẫn hiển thị giảm 100%, delta thu/chi âm hợp lệ', () => {
+  const response = p2Response()
+  Object.assign(response.comparison, { target: { totalIncome: 0, totalExpense: 0, balance: 0 },
+    delta: { totalIncome: -100.1, totalExpense: -10.1, balance: -90 }, expenseChangePercent: -100, categoryTrends: [] })
+  const html = render(AiStructuredResponseCard, { message: { ...normalizeAiChatResponse(response), role: 'assistant' } })
+  assert.match(html, /-100%/)
+  assert.match(html, /-100,1 ₫/)
+  assert.match(html, /Giảm/)
+})
+
+test('D13 P1 không cần comparison; request cũ hai field vẫn hợp lệ', () => {
+  for (const intent of ['SUMMARY', 'CATEGORIES', 'BUDGET', 'ADVICE']) {
+    const response = p2Response(intent)
+    delete response.comparison
+    assert.equal(normalizeAiChatResponse(response).comparison, null)
+  }
+  assert.deepEqual(validateAiChatRequest({ message: 'Tổng chi?', month: '2026-11' }).payload,
+    { message: 'Tổng chi?', month: '2026-11' })
+})
+
+test('D13 validation hai tháng, qua năm và tháng trước ngoài 1900–2100', () => {
+  assert.equal(getDefaultCompareMonth('2026-01'), '2025-12')
+  assert.equal(getDefaultCompareMonth('2024-03'), '2024-02')
+  assert.equal(getDefaultCompareMonth('1900-01'), '')
+  assert.equal(getDefaultCompareMonth('2100-12'), '2100-11')
+  for (const compareMonth of ['', '2026-11', '1899-12', '2101-01', '2026-13', '2026-1', 202610]) {
+    assert.equal(validateAiChatRequest({ message: 'So sánh', month: '2026-11', compareMonth }).valid, false)
+  }
+  assert.equal(validateAiChatRequest({ message: 'So sánh', month: '1900-01', compareMonth: '2100-12' }).valid, true)
+})
+
+test('D13 POST gửi đúng ba field, timeout 35s và không gửi userId', async () => {
+  let payload, config
+  const result = await sendAiChatMessage({ message: 'So sánh', month: '2026-11', compareMonth: '2026-10', userId: 999 }, {
+    apiClient: { post: async (url, body, options) => {
+      assert.equal(url, '/ai/chat'); payload = body; config = options
+      return { data: p2Response() }
+    } },
+  })
+  assert.deepEqual(payload, { message: 'So sánh', month: '2026-11', compareMonth: '2026-10' })
+  assert.equal(config.timeout, 35000)
+  assert.equal(result.comparison.baseMonth, '2026-10')
+})
+
+test('D13 đổi nhanh hai kỳ: abort và loại response cũ kể cả transport bỏ qua abort', async () => {
+  const store = createSessionStore(memory()); store.authenticate(makeUser('A'), 0)
+  const pending = []
+  const controller = createAiChatController({ sessionStore: store, getDefaultMonth: () => '2026-11',
+    sendChat: (payload, { signal }) => new Promise(resolve => pending.push({ payload, signal, resolve })) })
+  const first = controller.askQuestion('So sánh')
+  controller.setMonth('2026-01')
+  assert.equal(pending[0].signal.aborted, true)
+  assert.equal(controller.getSnapshot().compareMonth, '2025-12')
+  const second = controller.askQuestion('So sánh')
+  controller.setCompareMonth('2025-11')
+  assert.equal(pending[1].signal.aborted, true)
+  const third = controller.askQuestion('So sánh')
+  assert.equal(pending[2].payload.compareMonth, '2025-11')
+  pending[0].resolve({ ...p2Response(), reply: 'STALE_FIRST' })
+  pending[1].resolve({ ...p2Response(), reply: 'STALE_SECOND' })
+  await first; await second
+  assert.equal(controller.getSnapshot().loading, true)
+  assert.ok(!JSON.stringify(controller.getSnapshot()).includes('STALE_'))
+  const latest = p2Response()
+  latest.period = '2026-01'; latest.comparison.targetMonth = '2026-01'; latest.comparison.baseMonth = '2025-11'
+  pending[2].resolve(latest)
+  await third
+  assert.equal(controller.getSnapshot().loading, false)
+  assert.ok(controller.getSnapshot().messages.at(-1).comparison)
+  controller.destroy()
+})
+
+test('D13 logout/đổi A sang B hủy P2, xóa comparison và khôi phục cặp kỳ mặc định', async () => {
+  const store = createSessionStore(memory()); store.authenticate(makeUser('A'), 0)
+  let finish, signal
+  const controller = createAiChatController({ sessionStore: store, getDefaultMonth: () => '2026-11',
+    sendChat: (_, options) => { signal = options.signal; return new Promise(resolve => { finish = resolve }) } })
+  controller.setCompareMonth('2026-09')
+  const request = controller.askQuestion('So sánh')
+  store.clear(); store.authenticate(makeUser('B'), store.getSnapshot().revision)
+  assert.equal(signal.aborted, true)
+  assert.equal(controller.getSnapshot().compareMonth, '2026-10')
+  finish(p2Response()); await request
+  assert.deepEqual(controller.getSnapshot().messages, [])
+  controller.destroy()
+})
+
+test('D13 Retry giữ cặp kỳ đã chọn và lỗi compareMonth từ API', async () => {
+  const store = createSessionStore(memory()); store.authenticate(makeUser('A'), 0)
+  const calls = []
+  const controller = createAiChatController({ sessionStore: store, getDefaultMonth: () => '2026-11',
+    sendChat: async (payload) => { calls.push(payload); if (calls.length === 1) throw { response: { status: 503 } }; return p2Response() } })
+  controller.setCompareMonth('2026-08')
+  await controller.askQuestion('So sánh')
+  await controller.retryLastMessage()
+  assert.deepEqual(calls[0], calls[1])
+  assert.equal(controller.getSnapshot().messages.length, 2)
+  assert.equal(getAiChatErrorMessage({ response: { status: 400, data: { errors: { compareMonth: 'Kỳ gốc không hợp lệ' } } } }), 'Kỳ gốc không hợp lệ')
+  controller.destroy()
+})
+
+test('D13 UI giữ hai month input, keyboard label, loading/retry và khoảng cách Bottom Navigation', () => {
+  const html = render(AiAssistantPanelView, { open: true, month: '2026-11', compareMonth: '2026-10', loading: true })
+  assert.match(html, /aria-label="Tháng đang xem"/)
+  assert.match(html, /aria-label="Tháng so sánh"/)
+  assert.match(html, /id="ai-chat-compare-month"/)
+  assert.match(html, /4.75rem/)
+  assert.match(html, /motion-reduce:animate-none/)
+  const inputs = [...html.matchAll(/<input[^>]*type="month"[^>]*>/g)].map(x => x[0])
+  assert.equal(inputs.length, 2)
+  assert.ok(inputs.every(input => !/\sdisabled(?:=|\s|>)/.test(input)))
+})
+
+test('D13 tên danh mục và reply HTML chỉ render text, không thực thi XSS', () => {
+  const response = p2Response('CATEGORY_TREND')
+  response.comparison.categoryTrends[0].categoryName = '<img src=x onerror="evil()">'
+  response.reply = '<script>evil()</script>'
+  const html = render(AiStructuredResponseCard, { message: { ...normalizeAiChatResponse(response), role: 'assistant' } })
+  assert.doesNotMatch(html, /<img src=x|<script>evil/)
+  assert.match(html, /&lt;img/)
+})
+
+
+test('D13 tháng 1900-01 vẫn cho hỏi P1 khi không có tháng trước hợp lệ', async () => {
+  const store = createSessionStore(memory()); store.authenticate(makeUser('A'), 0)
+  let sent
+  const controller = createAiChatController({ sessionStore: store, getDefaultMonth: () => '1900-01',
+    sendChat: async payload => { sent = payload; return { reply: 'Không có giao dịch.', period: '1900-01', intent: 'SUMMARY', stats: null, topCategories: [], budget: null } } })
+  await controller.askQuestion('Tổng chi?')
+  assert.equal(sent.month, '1900-01')
+  assert.equal(sent.compareMonth, undefined)
+  assert.equal(controller.getSnapshot().messages.length, 2)
+  controller.destroy()
+})
+
+
+for (const intent of ['COMPARISON', 'CATEGORY_TREND']) {
+  test(`NLU ${intent}: chấp nhận kỳ thực tế khác cả hai picker, vẫn giữ quan hệ target=period`, () => {
+    const response = p2Response(intent)
+    response.period = response.comparison.targetMonth = '2024-02'
+    response.comparison.baseMonth = '2024-01'
+    const result = normalizeAiChatResponse(response, '2026-11', '2026-10')
+    assert.equal(result.period, '2024-02')
+    assert.equal(result.comparison.baseMonth, '2024-01')
+    const html = render(AiStructuredResponseCard, { message: { ...result, role: 'assistant' } })
+    assert.match(html, /Tháng 02\/2024/)
+    assert.match(html, /Biểu đồ so sánh thu chi/)
+    response.comparison.targetMonth = '2024-03'
+    assert.throws(() => normalizeAiChatResponse(response), { code: 'INVALID_API_RESPONSE' })
+  })
+}
+
+for (const period of ['1899-12', '2101-01', '2026-13', '2026-1', '2026-11 ', '', null]) {
+  test(`NLU từ chối period không hợp lệ: ${period}`, () => {
+    assert.throws(() => normalizeAiChatResponse({ ...p2Response('SUMMARY'), period }), { code: 'INVALID_API_RESPONSE' })
+  })
+}
+
+test('NLU SUMMARY và CATEGORIES không so khớp cứng tháng picker; biểu đồ theo kỳ thật', () => {
+  const data = p2Response('CATEGORIES'); delete data.comparison; data.period = '2024-02'
+  data.topCategories = [{ categoryId: 1, categoryName: 'Ăn uống', totalAmount: 20.5, sharePercentage: 100 }]
+  const response = normalizeAiChatResponse(data, '2026-11')
+  const html = render(AiStructuredResponseCard, { message: { ...response, role: 'assistant' } })
+  assert.match(html, /Biểu đồ chi tiêu theo danh mục/)
+  assert.match(html, /Tháng 02\/2024/)
+  assert.match(html, /20,5 ₫/)
+})
+
+const unknownResponse = () => ({ reply: 'Mình hỗ trợ 6 khả năng; thử một trong 3 câu hỏi mẫu.', period: '2026-11', intent: 'UNKNOWN', stats: null, topCategories: [], budget: null })
+
+test('NLU UNKNOWN hiển thị hướng dẫn, không giả số liệu hoặc nhãn kỳ thống kê', () => {
+  const html = render(AiStructuredResponseCard, { message: { ...normalizeAiChatResponse(unknownResponse()), role: 'assistant' } })
+  assert.match(html, /Cần làm rõ/)
+  assert.doesNotMatch(html, /Kỳ thống kê|0 ₫|NaN|Infinity/)
+  assert.equal(getAiSuggestedQuestions({ lastIntent: 'UNKNOWN' }).length, 3)
+  assert.throws(() => normalizeAiChatResponse({ ...unknownResponse(), stats: { totalIncome: 123 } }), { code: 'INVALID_API_RESPONSE' })
+})
+
+test('NLU context được giới hạn ba field, không mang owner, tiền, prompt hay token', () => {
+  assert.deepEqual(normalizeAiContext({ intent: 'COMPARISON', month: '2024-02', compareMonth: '2024-01', userId: 999, totalIncome: 999, jwt: 'fake' }),
+    { intent: 'COMPARISON', month: '2024-02', compareMonth: '2024-01' })
+  for (const context of [{}, { intent: 'UNKNOWN', month: '2024-02' }, { intent: 'SUMMARY', month: '2101-01' }, { intent: 'COMPARISON', month: '2024-02', compareMonth: '2024-02' }]) {
+    assert.equal(validateAiChatRequest({ message: 'Còn kỳ đó?', month: '2026-11', context }).valid, false)
+  }
+})
+
+test('NLU service POST gửi context hợp lệ và giữ timeout/AbortSignal', async () => {
+  const abort = new AbortController(); let payload
+  await sendAiChatMessage({ message: 'Còn tháng trước thì sao?', month: '2026-11', context: { intent: 'SUMMARY', month: '2024-02' } }, {
+    signal: abort.signal,
+    apiClient: { post: async (_, body, config) => { payload = body; assert.equal(config.signal, abort.signal); assert.equal(config.timeout, 35000); return { data: { ...p2Response('SUMMARY'), period: '2026-10' } } } },
+  })
+  assert.deepEqual(payload.context, { intent: 'SUMMARY', month: '2024-02' })
+})
+
+test('NLU controller nhớ kỳ phản hồi, chips động và gửi follow-up bằng context thay vì base picker', async () => {
+  const storage = memory(); const store = createSessionStore(storage); store.authenticate(makeUser('A'), 0)
+  const calls = []
+  const controller = createAiChatController({ sessionStore: store, getDefaultMonth: () => '2026-11', sendChat: async payload => {
+    calls.push(payload)
+    return { ...p2Response('CATEGORIES'), comparison: null, period: calls.length === 1 ? '2024-02' : '2026-10' }
+  } })
+  await controller.askQuestion('Danh mục chi tháng 2/2024')
+  assert.deepEqual(controller.getSnapshot().context, { intent: 'CATEGORIES', month: '2024-02' })
+  const chips = getAiSuggestedQuestions(controller.getSnapshot())
+  assert.ok(chips.includes('Còn tháng trước thì sao?'))
+  assert.ok(chips.some(chip => chip.includes('02/2024')))
+  await controller.askQuestion('Còn tháng trước thì sao?')
+  assert.deepEqual(calls[1].context, { intent: 'CATEGORIES', month: '2024-02' })
+  assert.equal(calls[1].compareMonth, undefined)
+  assert.equal(controller.getSnapshot().context.month, '2026-10')
+  assert.deepEqual([...storage.values.keys()].sort(), ['accessToken', 'currentUser'])
+  controller.destroy()
+})
+
+test('NLU clear/logout/đổi A-B xóa context và abort không cho response cũ khôi phục', async () => {
+  const store = createSessionStore(memory()); store.authenticate(makeUser('A'), 0)
+  let finish, signal; let count = 0
+  const controller = createAiChatController({ sessionStore: store, getDefaultMonth: () => '2026-11', sendChat: (_, config) => {
+    if (++count === 1) return Promise.resolve(p2Response())
+    signal = config.signal; return new Promise(resolve => { finish = resolve })
+  } })
+  await controller.askQuestion('So sánh')
+  assert.ok(controller.getSnapshot().context.compareMonth)
+  const old = controller.askQuestion('Còn tháng trước?')
+  controller.clearConversation()
+  assert.equal(controller.getSnapshot().context, null); assert.equal(signal.aborted, true)
+  finish(p2Response()); await old
+  assert.equal(controller.getSnapshot().context, null)
+  const second = controller.askQuestion('So sánh')
+  store.clear(); store.authenticate(makeUser('B'), store.getSnapshot().revision)
+  assert.equal(signal.aborted, true); finish(p2Response()); await second
+  assert.equal(controller.getSnapshot().context, null); assert.deepEqual(controller.getSnapshot().messages, [])
+  controller.destroy()
+})
+
+test('NLU lỗi/Retry giữ context, UNKNOWN mới xóa context và trả ba gợi ý ban đầu', async () => {
+  const store = createSessionStore(memory()); store.authenticate(makeUser('A'), 0)
+  let count = 0; const calls = []
+  const controller = createAiChatController({ sessionStore: store, getDefaultMonth: () => '2026-11', sendChat: async payload => {
+    calls.push(payload); count++
+    if (count === 2) throw { response: { status: 503 } }
+    return count === 4 ? unknownResponse() : p2Response()
+  } })
+  await controller.askQuestion('So sánh')
+  const context = controller.getSnapshot().context
+  await controller.askQuestion('Còn kỳ đó?')
+  assert.deepEqual(controller.getSnapshot().context, context)
+  await controller.retryLastMessage()
+  assert.deepEqual(calls[1], calls[2])
+  await controller.askQuestion('Xin chào')
+  assert.equal(controller.getSnapshot().context, null)
+  assert.equal(getAiSuggestedQuestions(controller.getSnapshot()).length, 3)
+  controller.destroy()
+})
+
+test('NLU chart số dư âm/zero không NaN và context UI dùng kỳ thành công gần nhất', () => {
+  const data = p2Response(); data.comparison.base.balance = -10; data.comparison.target.balance = -20
+  const html = render(AiStructuredResponseCard, { message: { ...normalizeAiChatResponse(data), role: 'assistant' } })
+  assert.match(html, /Biểu đồ so sánh thu chi/); assert.doesNotMatch(html, /NaN|Infinity/)
+  const panel = render(AiAssistantPanelView, { open: true, context: { intent: 'SUMMARY', month: '2024-02' } })
+  assert.match(panel, /Ngữ cảnh hội thoại/); assert.match(panel, /Tháng 02\/2024/)
+})
