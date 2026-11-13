@@ -80,16 +80,6 @@ input:focus-visible {
   }
 }
 
-/* Custom Month Picker: mở rộng vùng click indicator và ẩn native UI để render nhãn Tiếng Việt */
-.custom-month-input::-webkit-calendar-picker-indicator {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  cursor: pointer;
-}
-
 /* Ẩn thanh cuộn cho thanh gợi ý cuộn ngang */
 .no-scrollbar::-webkit-scrollbar {
   display: none;

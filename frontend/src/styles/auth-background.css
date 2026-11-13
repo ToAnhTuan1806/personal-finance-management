@@ -26,7 +26,6 @@
 .auth-card,
 .se062-card {
   width: 100%;
-  max-width: 420px;
   background: color-mix(
     in srgb,
     var(--se062-surface, #ffffff) 94%,
@@ -38,6 +37,14 @@
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.4),
     0 24px 65px rgba(30, 41, 59, 0.16);
+}
+
+.se062-card.is-compact-flow {
+  max-width: 420px;
+}
+
+.se062-card.is-auth-flow {
+  max-width: 980px;
 }
 
 /* Đồng bộ Dark Mode */

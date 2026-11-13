@@ -3,6 +3,7 @@ import test, { before, after } from 'node:test'
 import { fileURLToPath } from 'node:url'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
+import { MemoryRouter } from 'react-router'
 import { createServer } from 'vite'
 import axios from 'axios'
 import client, { createApiClient } from '../src/api/axiosClient.js'
@@ -12,6 +13,7 @@ import {
   AI_ERROR_MESSAGES,
   AI_SUGGESTED_QUESTIONS,
   createAiChatController,
+  formatAiReplyForDisplay,
   getAiChatErrorMessage,
   normalizeAiChatResponse,
   getAiSuggestedQuestions,
@@ -27,7 +29,14 @@ let AiAssistantPanelView
 let AiStructuredResponseCard
 
 const render = (Component, props) =>
-  renderToStaticMarkup(createElement(Component, props))
+  renderToStaticMarkup(
+    createElement(MemoryRouter, null, createElement(Component, props))
+  )
+
+const elements = (element) => {
+  if (!element || typeof element !== 'object') return []
+  return [element, ...[element.props?.children].flat(Infinity).flatMap(elements)]
+}
 
 const memory = () => {
   const values = new Map()
@@ -467,10 +476,10 @@ test('Giao diện Chatbot & XSS Safety: render đầy đủ tiêu đề, 4 câu 
     error: '',
   })
   assert.match(emptyOpenHtml, /Trợ lý tài chính/)
-  assert.match(
-    emptyOpenHtml,
-    /Hỏi về thu chi, danh mục và ngân sách của bạn\./
-  )
+  assert.doesNotMatch(emptyOpenHtml, /Hỏi về thu chi, danh mục và ngân sách của bạn\./)
+  assert.match(emptyOpenHtml, /Xem câu hỏi gợi ý phía trước/)
+  assert.match(emptyOpenHtml, /Xem thêm câu hỏi gợi ý/)
+  assert.match(emptyOpenHtml, /cursor-grab/)
   assert.match(emptyOpenHtml, /Chưa có cuộc trò chuyện nào/)
   for (const question of AI_SUGGESTED_QUESTIONS) {
     assert.ok(
@@ -590,7 +599,7 @@ test('Giao diện Chatbot & XSS Safety: render đầy đủ tiêu đề, 4 câu 
       },
     },
   })
-  assert.match(budgetSetHtml, /Đã thiết lập/)
+  assert.match(budgetSetHtml, /Trong ngân sách/)
   assert.match(budgetSetHtml, /10\.000\.000 ₫/)
   assert.match(budgetSetHtml, /2\.000\.000 ₫/)
   assert.match(budgetSetHtml, /Mua sắm/)
@@ -779,16 +788,19 @@ test('D13 Retry giữ cặp kỳ đã chọn và lỗi compareMonth từ API', a
   controller.destroy()
 })
 
-test('D13 UI giữ hai month input, keyboard label, loading/retry và khoảng cách Bottom Navigation', () => {
+test('D13 UI giữ hai bộ chọn tháng tiếng Việt, keyboard label, loading/retry và khoảng cách Bottom Navigation', () => {
   const html = render(AiAssistantPanelView, { open: true, month: '2026-11', compareMonth: '2026-10', loading: true })
   assert.match(html, /aria-label="Tháng đang xem"/)
   assert.match(html, /aria-label="Tháng so sánh"/)
   assert.match(html, /id="ai-chat-compare-month"/)
   assert.match(html, /10.5rem/)
   assert.match(html, /motion-reduce:animate-none/)
-  const inputs = [...html.matchAll(/<input[^>]*type="month"[^>]*>/g)].map(x => x[0])
-  assert.equal(inputs.length, 2)
-  assert.ok(inputs.every(input => !/\sdisabled(?:=|\s|>)/.test(input)))
+  const pickers = [...html.matchAll(/<button[^>]*data-month-picker-trigger="vi"[^>]*>/g)].map(
+    (match) => match[0]
+  )
+  assert.equal(pickers.length, 2)
+  assert.ok(pickers.every((picker) => !/\sdisabled(?:=|\s|>)/.test(picker)))
+  assert.doesNotMatch(html, /type="month"/)
 })
 
 test('D13 tên danh mục và reply HTML chỉ render text, không thực thi XSS', () => {
@@ -851,9 +863,50 @@ const unknownResponse = () => ({ reply: 'Mình hỗ trợ 6 khả năng; thử m
 test('NLU UNKNOWN hiển thị hướng dẫn, không giả số liệu hoặc nhãn kỳ thống kê', () => {
   const html = render(AiStructuredResponseCard, { message: { ...normalizeAiChatResponse(unknownResponse()), role: 'assistant' } })
   assert.match(html, /Cần làm rõ/)
+  assert.match(html, /Xin chào! Mình có thể giúp bạn/)
+  assert.doesNotMatch(html, /SUMMARY|CATEGORIES|BUDGET|ADVICE|COMPARISON|CATEGORY_TREND/)
   assert.doesNotMatch(html, /Kỳ thống kê|0 ₫|NaN|Infinity/)
   assert.equal(getAiSuggestedQuestions({ lastIntent: 'UNKNOWN' }).length, 3)
   assert.throws(() => normalizeAiChatResponse({ ...unknownResponse(), stats: { totalIncome: 123 } }), { code: 'INVALID_API_RESPONSE' })
+})
+
+test('UI AI Việt hóa mã kỹ thuật trong nội dung phản hồi', () => {
+  const display = formatAiReplyForDisplay(
+    'SUMMARY, CATEGORIES, BUDGET, ADVICE, COMPARISON, CATEGORY_TREND.',
+    'ADVICE'
+  )
+  assert.equal(
+    display,
+    'tổng quan thu chi, phân tích danh mục, kiểm tra ngân sách, tư vấn quản lý chi tiêu, so sánh hai tháng, xu hướng chi tiêu theo danh mục.'
+  )
+})
+
+test('Liên kết nội bộ AI dùng React Router và chỉ đóng panel, không xóa hội thoại', () => {
+  let navigated = 0
+  const tree = AiStructuredResponseCard({
+    message: {
+      role: 'assistant',
+      reply: 'Bạn có thể xem thêm thông tin.',
+      intent: 'ADVICE',
+      period: '2026-11',
+      stats: null,
+      topCategories: [],
+      budget: null,
+    },
+    onNavigate: () => { navigated += 1 },
+  })
+  const nodes = elements(tree)
+  const budgetLink = nodes.find((node) => node.props?.to === '/budgets')
+  const reportLink = nodes.find((node) => node.props?.to === '/reports')
+
+  assert.ok(budgetLink, 'Quản lý ngân sách phải dùng Link nội bộ')
+  assert.ok(reportLink, 'Xem báo cáo chi tiết phải dùng Link nội bộ')
+  assert.equal(budgetLink.props.href, undefined)
+  assert.equal(reportLink.props.href, undefined)
+
+  budgetLink.props.onClick()
+  reportLink.props.onClick()
+  assert.equal(navigated, 2)
 })
 
 test('NLU context được giới hạn ba field, không mang owner, tiền, prompt hay token', () => {

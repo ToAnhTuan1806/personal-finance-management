@@ -259,7 +259,7 @@ export default function RecurringTemplates({
       const msg = getApiErrorMessage(
         err,
         err?.response?.status === 409
-          ? 'Không thể xóa mẫu định kỳ đã được áp dụng. Bạn có thể tắt kích hoạt mẫu này.'
+          ? 'Không thể xóa mẫu định kỳ đã có giao dịch được ghi nhận. Bạn có thể tắt mẫu này.'
           : 'Không thể xóa mẫu giao dịch định kỳ.'
       )
       toast.error(msg)
@@ -314,7 +314,7 @@ export default function RecurringTemplates({
    */
   const handleApplySuccess = ({ year, month }) => {
     toast.success(
-      `Đã áp dụng giao dịch định kỳ cho tháng ${month}/${year} thành công.`
+      `Đã ghi nhận giao dịch định kỳ cho tháng ${month}/${year}.`
     )
     setReloadKey((k) => k + 1)
   }
@@ -353,13 +353,13 @@ export default function RecurringTemplates({
       {/* Disclaimer Banner: Bắt buộc theo SRS */}
       <div
         role="status"
-        aria-label="Cảnh báo mẫu giao dịch"
+        aria-label="Hướng dẫn sử dụng mẫu giao dịch"
         className="rounded-2xl border border-blue-200/80 bg-blue-50/70 p-4 text-blue-900 shadow-xs transition-colors dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-200"
       >
         <div className="flex items-start gap-3">
           <Info className="mt-0.5 h-5 w-5 shrink-0 text-blue-600 dark:text-blue-400" />
           <div className="text-sm">
-            <span className="font-semibold">Lưu ý: </span>
+            <span className="font-semibold">Cách hoạt động: </span>
             <span>{DISCLAIMER_NOTICE}</span>
           </div>
         </div>
@@ -449,15 +449,15 @@ export default function RecurringTemplates({
                     onDelete={setConfirmDelete}
                     onToggleActive={handleToggle}
                   />
-                  {/* Nút Xem trước — nằm ngay dưới Card, không trong Card */}
+                  {/* Nút kiểm tra trước khi ghi nhận — nằm ngay dưới Card, không trong Card */}
                   <button
                     type="button"
                     onClick={() => handleOpenPreview(template)}
-                    aria-label={`Xem trước giao dịch định kỳ ${template.categoryName || 'mẫu'}`}
+                    aria-label={`Kiểm tra giao dịch định kỳ ${template.categoryName || 'mẫu'} trước khi ghi nhận`}
                     className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 dark:border-slate-700 dark:text-slate-400 dark:hover:border-blue-700/60 dark:hover:bg-blue-950/20 dark:hover:text-blue-400"
                   >
                     <Eye size={13} />
-                    <span>Xem trước</span>
+                    <span>Kiểm tra trước khi ghi nhận</span>
                   </button>
                 </div>
               )

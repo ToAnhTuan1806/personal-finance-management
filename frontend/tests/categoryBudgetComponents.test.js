@@ -6,6 +6,7 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { createServer } from 'vite'
 import {
   formatMoney,
+  getBudgetDisplayStatus,
   getBudgetStatus,
   getBudgetUsagePercentage,
   getStatusConfig,
@@ -68,18 +69,28 @@ test('categoryBudgetUtils.getBudgetUsagePercentage: tính phần trăm hoặc d�
   assert.equal(getBudgetUsagePercentage({ amountLimit: 0, spentAmount: 100 }), 0)
 })
 
+test('categoryBudgetUtils.getBudgetDisplayStatus: phân biệt dưới, bằng và vượt hạn mức', () => {
+  assert.equal(getBudgetDisplayStatus({ amountLimit: 1000000, spentAmount: 999999 }), 'WARNING')
+  assert.equal(getBudgetDisplayStatus({ amountLimit: 1000000, spentAmount: 1000000 }), 'AT_LIMIT')
+  assert.equal(getBudgetDisplayStatus({ amountLimit: 1000000, spentAmount: 1000001 }), 'OVER_BUDGET')
+})
+
 test('categoryBudgetUtils.getStatusConfig: nhãn tiếng Việt và màu sắc phù hợp', () => {
   const safe = getStatusConfig('SAFE')
-  assert.equal(safe.label, 'An toàn')
+  assert.equal(safe.label, 'Trong ngân sách')
   assert.ok(safe.barColor.includes('bg-emerald'))
 
   const warning = getStatusConfig('WARNING')
-  assert.equal(warning.label, 'Cảnh báo')
+  assert.equal(warning.label, 'Trong ngân sách')
   assert.ok(warning.barColor.includes('bg-amber'))
 
   const over = getStatusConfig('OVER_BUDGET')
   assert.equal(over.label, 'Vượt ngân sách')
   assert.ok(over.barColor.includes('bg-rose'))
+
+  const atLimit = getStatusConfig('AT_LIMIT')
+  assert.equal(atLimit.label, 'Đã sử dụng hết ngân sách')
+  assert.ok(atLimit.barColor.includes('bg-amber'))
 })
 
 test('categoryBudgetUtils.validateCategoryBudgetForm: xác thực danh mục và số tiền', () => {
@@ -138,8 +149,8 @@ test('CategoryBudgetCard: hiển thị đầy đủ thông tin danh mục, số 
 
   // Tên danh mục
   assert.ok(html.includes('Ăn uống'))
-  // Nhãn trạng thái SAFE
-  assert.ok(html.includes('An toàn'))
+  // Nhãn trạng thái dưới hạn mức
+  assert.ok(html.includes('Trong ngân sách'))
   // Số tiền định dạng VNĐ
   assert.ok(html.includes(formatMoney(1000000)))
   assert.ok(html.includes(formatMoney(600000)))
@@ -180,7 +191,7 @@ test('CategoryBudgetCard: thanh tiến độ OVER_BUDGET (>=100%) giới hạn t
   assert.ok(html.includes(formatMoney(500000)))
 })
 
-test('CategoryBudgetCard: trạng thái WARNING (80% - <100%) có badge cảnh báo', () => {
+test('CategoryBudgetCard: trạng thái WARNING (80% - <100%) vẫn hiển thị Trong ngân sách', () => {
   const budget = {
     id: 3,
     categoryId: 12,
@@ -194,7 +205,7 @@ test('CategoryBudgetCard: trạng thái WARNING (80% - <100%) có badge cảnh b
 
   const html = render(CategoryBudgetCard, { budget, onEdit: noOp, onDelete: noOp })
 
-  assert.ok(html.includes('Cảnh báo'))
+  assert.ok(html.includes('Trong ngân sách'))
   assert.ok(html.includes('85%'))
   assert.ok(html.includes('style="width:85%"'))
 })
@@ -402,7 +413,6 @@ test('CategoryBudgetSection: hiển thị danh sách các card ngân sách khi c
   // Hiển thị cả 2 danh mục
   assert.ok(html.includes('Ăn uống'))
   assert.ok(html.includes('Đi lại'))
-  // Hiển thị trạng thái tương ứng
-  assert.ok(html.includes('An toàn'))
-  assert.ok(html.includes('Cảnh báo'))
+  // Cả hai mức dưới hạn mức đều hiển thị cùng trạng thái
+  assert.equal((html.match(/Trong ngân sách/g) || []).length, 2)
 })

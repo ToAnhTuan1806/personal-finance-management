@@ -2,7 +2,7 @@ import { Pencil, Trash2 } from 'lucide-react'
 import CategoryBadge from '../category/CategoryBadge'
 import {
   formatMoney,
-  getBudgetStatus,
+  getBudgetDisplayStatus,
   getBudgetUsagePercentage,
   getStatusConfig,
 } from './categoryBudgetUtils'
@@ -24,7 +24,7 @@ export default function CategoryBudgetCard({
     color: budget.categoryColor || budget.color,
   }
 
-  const status = getBudgetStatus(budget)
+  const status = getBudgetDisplayStatus(budget)
   const config = getStatusConfig(status)
   const percentage = getBudgetUsagePercentage(budget)
   const progressWidth = Math.min(100, Math.max(0, percentage))
@@ -137,8 +137,8 @@ export default function CategoryBudgetCard({
             className={`mt-0.5 block truncate font-bold ${
               isExceeded
                 ? 'text-rose-600 dark:text-rose-400'
-                : remaining === 0 && status === 'OVER_BUDGET'
-                  ? 'text-rose-600 dark:text-rose-400'
+                : status === 'AT_LIMIT'
+                  ? 'text-amber-600 dark:text-amber-400'
                   : 'text-emerald-600 dark:text-emerald-400'
             }`}
             title={isExceeded ? `-${formatMoney(Math.abs(remaining))}` : formatMoney(remaining)}
