@@ -24,6 +24,8 @@ import {
   createAiChatController,
   getAiSuggestedQuestions,
 } from '../../services/aiChatService.js'
+import AiRobotLauncher from './AiRobotLauncher.jsx'
+import { getRobotState } from './robotState.js'
 import MonthPickerInput from '../ui/MonthPickerInput.jsx'
 import AiComparisonCard from './AiComparisonCard.jsx'
 import { AiCategoryChart } from './AiFinancialCharts.jsx'
@@ -379,7 +381,7 @@ export function AiAssistantPanelView({
       role="dialog"
       aria-modal="false"
       aria-labelledby="ai-assistant-title"
-      className="fixed inset-x-0 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-40 flex max-h-[calc(100dvh-5.5rem-env(safe-area-inset-bottom))] w-full max-w-full flex-col overflow-x-hidden rounded-t-3xl border-t border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-[#182234] lg:inset-x-auto lg:right-6 lg:bottom-6 lg:w-[420px] lg:max-h-[min(680px,calc(100dvh-3rem))] lg:rounded-3xl lg:border"
+      className="fixed inset-x-0 bottom-[calc(10.5rem+env(safe-area-inset-bottom))] z-40 flex max-h-[calc(100dvh-11.25rem-env(safe-area-inset-bottom))] w-full max-w-full flex-col overflow-x-hidden rounded-t-3xl border-t border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-[#182234] lg:inset-x-auto lg:right-6 lg:bottom-28 lg:w-[420px] lg:max-h-[min(680px,calc(100dvh-8rem))] [&_button]:min-h-11 [&_button]:min-w-11 [&_a]:min-h-11 lg:rounded-3xl lg:border"
     >
       {/* Header */}
       <div className="flex shrink-0 items-start justify-between gap-2 border-b border-slate-200/80 bg-gradient-to-r from-blue-600 via-indigo-600 to-indigo-700 px-4 py-3.5 text-white dark:border-slate-800">
@@ -658,7 +660,7 @@ export default function AiAssistantWidget({
       if (event.key === 'Escape') {
         event.stopPropagation()
         controller.closePanel()
-        // Launcher được render lại sau khi panel đóng.
+        // Launcher giữ nguyên renderer qua các lần mở/đóng panel.
         setTimeout(() => launcherRef.current?.focus(), 0)
       }
     }
@@ -675,23 +677,25 @@ export default function AiAssistantWidget({
 
   return (
     <>
-      {/* Nút Launcher Tròn (Circular FAB) kèm Icon Ví & Sao AI */}
-      {!state.open && !mobileMenuOpen && (
-        <button
-          ref={launcherRef}
-          type="button"
-          id="ai-assistant-launcher"
-          onClick={() => controller.openPanel()}
-          aria-label="Mở Trợ lý tài chính"
-          title="Trợ lý tài chính"
-          aria-expanded={state.open}
-          aria-controls="ai-assistant-dialog"
-          className="fixed right-4 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-30 flex h-[54px] w-[54px] items-center justify-center rounded-full bg-gradient-to-tr from-[#1D4ED8] via-[#4F46E5] to-[#9333EA] text-white shadow-2xl shadow-indigo-600/40 ring-6 ring-indigo-400/30 transition-all duration-300 hover:scale-110 hover:rotate-6 active:scale-95 motion-reduce:transition-none motion-reduce:transform-none focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900 lg:right-6 lg:bottom-6 cursor-pointer"
-        >
-          <RobotSparkleIcon className="h-7 w-7 text-white" />
-          <span className="sr-only">Trợ lý tài chính</span>
-        </button>
-      )}
+      {/* Giữ một launcher/renderer qua các lần mở và đóng chat. */}
+      <button
+        ref={launcherRef}
+        type="button"
+        id="ai-assistant-launcher"
+        onClick={() => controller.togglePanel()}
+        aria-label={state.open ? 'Đóng trợ lý tài chính' : 'Mở Trợ lý tài chính'}
+        title={state.open ? 'Đóng trợ lý tài chính' : 'Trợ lý tài chính'}
+        aria-expanded={state.open}
+        aria-controls="ai-assistant-dialog"
+        hidden={mobileMenuOpen}
+        style={{ display: mobileMenuOpen ? 'none' : undefined }}
+        data-robot-state={getRobotState(state)}
+        className="fixed right-4 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-30 flex h-20 w-20 items-center justify-center rounded-[28px] border border-blue-300/70 bg-gradient-to-br from-blue-50 via-white to-blue-100 text-blue-600 shadow-xl shadow-blue-900/15 transition-colors hover:border-blue-500 motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:border-blue-500/50 dark:from-slate-800 dark:via-slate-900 dark:to-blue-950 dark:text-blue-300 dark:focus-visible:ring-offset-slate-900 lg:right-6 lg:bottom-6 cursor-pointer"
+      >
+        <AiRobotLauncher state={getRobotState(state)} visible={!mobileMenuOpen}
+          fallback={<RobotSparkleIcon className="h-11 w-11" />} />
+        <span className="sr-only">Trợ lý tài chính</span>
+      </button>
 
       <AiAssistantPanelView
         open={state.open}

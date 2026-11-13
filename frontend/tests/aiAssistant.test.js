@@ -454,7 +454,8 @@ test('Giao diện Chatbot & XSS Safety: render đầy đủ tiêu đề, 4 câu 
 
   // Ẩn launcher khi Drawer menu mobile đang mở
   const hiddenWhenDrawerOpen = render(AiAssistantWidget, { mobileMenuOpen: true })
-  assert.equal(hiddenWhenDrawerOpen, '')
+  assert.match(hiddenWhenDrawerOpen, /hidden=""/)
+  assert.match(hiddenWhenDrawerOpen, /display:none/)
 
   // 2. Panel mở ở trạng thái chưa có hội thoại
   const emptyOpenHtml = render(AiAssistantPanelView, {
@@ -783,7 +784,7 @@ test('D13 UI giữ hai month input, keyboard label, loading/retry và khoảng c
   assert.match(html, /aria-label="Tháng đang xem"/)
   assert.match(html, /aria-label="Tháng so sánh"/)
   assert.match(html, /id="ai-chat-compare-month"/)
-  assert.match(html, /4.75rem/)
+  assert.match(html, /10.5rem/)
   assert.match(html, /motion-reduce:animate-none/)
   const inputs = [...html.matchAll(/<input[^>]*type="month"[^>]*>/g)].map(x => x[0])
   assert.equal(inputs.length, 2)

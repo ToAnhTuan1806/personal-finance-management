@@ -2,7 +2,6 @@ package com.smartexpense.backend.service;
 
 import com.smartexpense.backend.dto.ai.AiChatResponse.Stats;
 import com.smartexpense.backend.dto.ai.AiChatResponse.Comparison;
-import com.smartexpense.backend.enums.CategoryBudgetStatus;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -102,8 +101,11 @@ public class AiFinancialReplyFormatter {
             reply.append("\nNgân sách tổng:");
             appendAmounts(reply, monthly.getAmountLimit(), monthly.getSpentAmount(),
                     monthly.getRemainingAmount(), monthly.isExceeded());
+            appendBudgetAdvice(reply, monthly.getAmountLimit(), monthly.getSpentAmount());
         } else if ("NOT_SET".equals(budget.status())) {
             reply.append("\nChưa thiết lập ngân sách tổng cho tháng này.");
+            reply.append("\nĐã chi trong tháng: ").append(money(context.stats().totalExpense())).append('.');
+            reply.append("\nGợi ý: Xem lại chi tiêu thực tế và các khoản thiết yếu trước khi tự đặt hạn mức phù hợp.");
         } else {
             reply.append("\nChưa có thông tin ngân sách tổng được cung cấp.");
         }
@@ -114,12 +116,44 @@ public class AiFinancialReplyFormatter {
             reply.append("\nNgân sách danh mục \"").append(category.getCategoryName()).append("\":");
             appendAmounts(reply, category.getAmountLimit(), category.getSpentAmount(),
                     category.getRemainingAmount(), category.isExceeded());
-            reply.append("\nTỷ lệ sử dụng: ").append(number(category.getUsagePercentage())).append("%.");
-            if (category.getStatus() == CategoryBudgetStatus.WARNING) {
-                reply.append("\nCảnh báo: Sắp đến hạn mức ngân sách danh mục.");
+            appendBudgetAdvice(reply, category.getAmountLimit(), category.getSpentAmount());
+        }
+        if (context.stats().totalExpense().signum() == 0) {
+            reply.append("\nChưa phát sinh chi tiêu trong tháng này; chưa có cơ sở xác định danh mục cần điều chỉnh.");
+        } else if (!context.budgetSpending().isEmpty()) {
+            reply.append("\nCác danh mục chi nhiều nhất trong tháng (không đồng nghĩa với chi không cần thiết):");
+            for (var category : context.budgetSpending()) {
+                reply.append("\nDanh mục \"").append(category.categoryName()).append("\": ")
+                        .append(money(category.totalAmount())).append(" (tỷ trọng ")
+                        .append(number(category.sharePercentage())).append("%).");
             }
+            reply.append("\nGợi ý: Rà soát các khoản có thể trì hoãn trong các danh mục trên, ưu tiên khoản thiết yếu; "
+                    + "chỉ cân nhắc điều chỉnh phân bổ sau khi đối chiếu nhu cầu thực tế.");
         }
         return reply.toString();
+    }
+
+    private void appendBudgetAdvice(StringBuilder reply, BigDecimal limit, BigDecimal spent) {
+        // Không chia 0 hoặc dùng tỷ lệ đã làm tròn để phân loại ngưỡng 80%/100%.
+        if (limit.signum() <= 0) {
+            reply.append("\nKhông tính tỷ lệ sử dụng vì hạn mức không lớn hơn 0; hãy kiểm tra lại ngân sách.");
+            return;
+        }
+        BigDecimal usage = spent.multiply(new BigDecimal("100")).divide(limit, 2, RoundingMode.HALF_UP);
+        reply.append("\nTỷ lệ sử dụng: ").append(number(usage)).append("%.");
+        if (spent.signum() == 0) {
+            reply.append("\nGợi ý: Chưa phát sinh chi tiêu; hãy theo dõi các khoản sắp đến hạn trước khi quyết định chi thêm.");
+        } else if (spent.compareTo(limit) > 0) {
+            reply.append("\nGợi ý: Đã vượt hạn mức; rà soát các khoản có thể trì hoãn và ưu tiên nhu cầu thiết yếu, "
+                    + "không tăng hạn mức chỉ để bù phần vượt.");
+        } else if (spent.compareTo(limit) == 0) {
+            reply.append("\nGợi ý: Đã đạt hạn mức; cân nhắc hoãn khoản chưa cần thiết trước khi phát sinh chi thêm.");
+        } else if (spent.compareTo(limit.multiply(new BigDecimal("0.80"))) >= 0) {
+            reply.append("\nCảnh báo: Sắp đến hạn mức ngân sách.");
+            reply.append("\nGợi ý: Gần đạt hạn mức; đối chiếu phần còn lại với các khoản thiết yếu sắp tới, hạn chế khoản có thể trì hoãn.");
+        } else {
+            reply.append("\nGợi ý: Đang chi tiêu trong hạn mức; tiếp tục theo dõi phần còn lại trước các khoản chi mới.");
+        }
     }
 
     private void appendAmounts(StringBuilder reply, BigDecimal limit, BigDecimal spent,

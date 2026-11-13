@@ -61,7 +61,7 @@ class GeminiAiProviderTests {
 
     @Test
     void sendsGeneralAdviceOnlyWithoutFinancialContextOrIdentifiers() throws Exception {
-        assertThat(provider("fake-test-key", "test-model", Duration.ofSeconds(3)).explain("CATEGORIES", context()))
+        assertThat(provider("fake-test-key", "test-model", Duration.ofSeconds(3)).explain("ADVICE", context()))
                 .isEqualTo("Hãy theo dõi chi tiêu.");
         assertThat(auth.get()).isEqualTo("fake-test-key");
         var request = json.readTree(body.get());
@@ -73,6 +73,10 @@ class GeminiAiProviderTests {
         assertThat(request.has("previous_interaction_id")).isFalse();
         assertThat(request.path("input").asString()).doesNotContain("SECRET CATEGORY", "categoryId", "userId", "fake-test-key",
                 "100.10", "20.05", "80.05", "topCategories", "stats", "NOT_SET");
+        assertThat(body.get()).doesNotContain("SECRET CATEGORY", "PRIVATE_BUDGET", "private@example.test",
+                "100.10", "20.05", "80.05", "budgetSpending", "fake-test-key");
+        assertThat(request.path("system_instruction").asString()).contains(
+                "Chỉ tư vấn chung", "Không nói đã kiểm tra tài khoản", "Không nêu số tiền, tỷ lệ");
         assertThat(calls).hasValue(1);
     }
 
@@ -87,7 +91,8 @@ class GeminiAiProviderTests {
     }
 
     @ParameterizedTest
-    @CsvSource({"429,429,AI_QUOTA_EXCEEDED", "500,503,AI_UNAVAILABLE", "503,503,AI_UNAVAILABLE", "401,502,AI_PROVIDER_ERROR"})
+    @CsvSource({"429,429,AI_QUOTA_EXCEEDED", "500,503,AI_UNAVAILABLE", "503,503,AI_UNAVAILABLE",
+            "504,503,AI_UNAVAILABLE", "401,502,AI_PROVIDER_ERROR"})
     void mapsUpstreamErrorsWithoutRetryOrLeakingBody(int upstream, int status, String code) {
         responseStatus = upstream; response = "SECRET PROVIDER ERROR";
         assertThatThrownBy(() -> provider("test-key", "test-model", Duration.ofSeconds(3)).explain("SUMMARY", context()))
@@ -208,6 +213,7 @@ class GeminiAiProviderTests {
 
     private AiFinancialContextService.Context context() {
         return new AiFinancialContextService.Context(new Stats(new BigDecimal("100.10"), new BigDecimal("20.05"), new BigDecimal("80.05")),
-                List.of(new TopCategory(999L, "SECRET CATEGORY", new BigDecimal("20.05"), new BigDecimal("100.00"))), null);
+                List.of(new TopCategory(999L, "SECRET CATEGORY", new BigDecimal("20.05"), new BigDecimal("100.00"))), null,
+                List.of(new TopCategory(998L, "PRIVATE_BUDGET private@example.test", new BigDecimal("80.05"), new BigDecimal("100.00"))));
     }
 }
