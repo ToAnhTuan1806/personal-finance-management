@@ -135,6 +135,27 @@ test('1. Login.jsx hiển thị liên kết "Quên mật khẩu?" trỏ tới /f
   assert.ok(passwordIndex > 0 && forgotLinkIndex > passwordIndex && submitIndex > forgotLinkIndex)
 })
 
+test('1a. Login/Register dùng khung thương hiệu mới, tab điều hướng và khoảng cách quên mật khẩu gọn', () => {
+  const loginHtml = renderWithRouter(createElement(Login), ['/login'])
+  const registerHtml = renderWithRouter(createElement(Register), ['/register'])
+  const forgotHtml = renderWithRouter(createElement(ForgotPasswordView), ['/forgot-password'])
+
+  for (const html of [loginHtml, registerHtml]) {
+    assert.match(html, /Tài chính rõ ràng, tương lai chủ động\./)
+    assert.match(html, /aria-label="Chuyển trang xác thực"/)
+    assert.match(html, /href="\/login"/)
+    assert.match(html, /href="\/register"/)
+    assert.match(html, /Dữ liệu được tách biệt theo tài khoản của bạn/)
+  }
+
+  assert.match(loginHtml, /auth-forgot-row/)
+  assert.match(loginHtml, /auth-forgot-link/)
+  assert.match(loginHtml, /aria-current="page"[^>]*href="\/login"/)
+  assert.match(registerHtml, /aria-current="page"[^>]*href="\/register"/)
+  assert.match(registerHtml, /Tối thiểu 8 ký tự/)
+  assert.doesNotMatch(forgotHtml, /Tài chính rõ ràng, tương lai chủ động\./)
+})
+
 // 2. Route public hoạt động & không nằm trong ProtectedRoute hay Bottom Navigation
 test('2. App.jsx định tuyến công khai /forgot-password và /reset-password, hỗ trợ deep link và không thêm vào Bottom Navigation', () => {
   const forgotHtml = renderWithRouter(createElement(App), ['/forgot-password'])

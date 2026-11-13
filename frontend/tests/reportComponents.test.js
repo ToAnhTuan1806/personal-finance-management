@@ -30,6 +30,8 @@ let MonthlyComparisonChart
 let MonthlyReportTooltip
 let CategoryBreakdownSection
 let ReportsPage
+let MonthPickerInput
+let MonthPickerPanel
 
 const render = (Component, props) =>
   renderToStaticMarkup(createElement(Component, props))
@@ -51,6 +53,10 @@ before(async () => {
     '/src/components/reports/CategoryBreakdownSection.jsx'
   )
   CategoryBreakdownSection = categoryMod.default
+
+  const monthPickerMod = await server.ssrLoadModule('/src/components/ui/MonthPickerInput.jsx')
+  MonthPickerInput = monthPickerMod.default
+  MonthPickerPanel = monthPickerMod.MonthPickerPanel
 
   const reportsPageMod = await server.ssrLoadModule('/src/pages/Reports.jsx')
   ReportsPage = reportsPageMod.ReportsPage
@@ -338,6 +344,38 @@ test('ReportsPage: render đầy đủ bộ lọc (mặc định 3 tháng, tối
   assert.match(html, /\+11\.000\.000 ₫/)
   assert.match(html, /3 tháng gần nhất/)
   assert.match(html, /6 tháng gần nhất/)
+})
+
+test('MonthPickerInput: trigger hiển thị tiếng Việt và không dùng lịch tháng gốc của trình duyệt', () => {
+  const html = render(MonthPickerInput, {
+    id: 'report-month-test',
+    value: '2026-11',
+    'aria-label': 'Tháng báo cáo',
+  })
+
+  assert.match(html, /id="report-month-test"/)
+  assert.match(html, /data-month-picker-trigger="vi"/)
+  assert.match(html, /aria-haspopup="dialog"/)
+  assert.match(html, /Tháng 11\/2026/)
+  assert.doesNotMatch(html, /type="month"/)
+})
+
+test('MonthPickerPanel: toàn bộ tháng và thao tác hiển thị bằng tiếng Việt', () => {
+  const html = render(MonthPickerPanel, {
+    panelId: 'month-panel-test',
+    visibleYear: 2026,
+    value: '2026-11',
+    min: '2026-09',
+    max: '2027-02',
+  })
+
+  assert.match(html, /data-month-picker-locale="vi"/)
+  assert.match(html, /Năm 2026/)
+  assert.match(html, /Tháng 1/)
+  assert.match(html, /Tháng 12/)
+  assert.match(html, /Xóa lựa chọn/)
+  assert.match(html, /Tháng hiện tại/)
+  assert.doesNotMatch(html, />Jan<|>Feb<|>Clear<|>This month</)
 })
 
 test('ReportsPage: hiển thị cảnh báo validation và khóa nút Xem báo cáo khi khoảng tháng > 6 tháng', () => {

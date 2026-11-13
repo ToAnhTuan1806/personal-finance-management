@@ -48,10 +48,10 @@ after(async () => {
 /* 1. Unit Tests for recurringTemplateUtils                                   */
 /* ========================================================================== */
 
-test('recurringTemplateUtils: constants chính xác theo SRS', () => {
+test('recurringTemplateUtils: nội dung hướng dẫn và cảnh báo ngày cuối tháng chính xác', () => {
   assert.equal(
     DISCLAIMER_NOTICE,
-    'Đây chỉ là mẫu giao dịch định kỳ. Hệ thống chưa tự động ghi nhận thu hoặc chi.'
+    'Mẫu giúp bạn lưu sẵn các khoản thu, chi lặp lại. Khi cần, hãy chọn “Kiểm tra trước khi ghi nhận” để xem lại thông tin trước khi thêm giao dịch vào sổ thu chi.'
   )
   assert.equal(
     DAY_31_NOTICE,
@@ -291,6 +291,8 @@ test('RecurringTemplateModal: render form thêm mới với tiêu đề và các
   assert.match(html, /Ghi chú \(tùy chọn\)/)
   assert.match(html, /Kích hoạt mẫu này/)
   assert.match(html, /Lưu mẫu/)
+  assert.match(html, /inputMode="numeric"/)
+  assert.doesNotMatch(html, /lucide-calendar/)
 })
 
 test('RecurringTemplateModal: render form chỉnh sửa với dữ liệu mẫu đã có', () => {

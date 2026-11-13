@@ -22,6 +22,39 @@ export const AI_SUGGESTED_QUESTIONS = [
 
 export const AI_CONTEXT_INTENTS = ['SUMMARY', 'CATEGORIES', 'BUDGET', 'ADVICE', 'COMPARISON', 'CATEGORY_TREND']
 
+export const AI_UNKNOWN_DISPLAY_REPLY =
+  'Xin chào! Mình có thể giúp bạn xem tổng thu chi, phân tích danh mục, kiểm tra ngân sách, so sánh các tháng và gợi ý quản lý chi tiêu. Bạn hãy chọn một câu hỏi gợi ý bên dưới nhé.'
+
+export const AI_UNSUPPORTED_DISPLAY_REPLY =
+  'Yêu cầu này chưa nằm trong phạm vi trợ lý tài chính. Bạn có thể hỏi về thu chi, danh mục, ngân sách hoặc so sánh các tháng.'
+
+const AI_TECHNICAL_LABELS = {
+  CATEGORY_TREND: 'xu hướng chi tiêu theo danh mục',
+  OVER_BUDGET: 'vượt ngân sách',
+  COMPARISON: 'so sánh hai tháng',
+  CATEGORIES: 'phân tích danh mục',
+  NOT_SET: 'chưa thiết lập',
+  SUMMARY: 'tổng quan thu chi',
+  BUDGET: 'kiểm tra ngân sách',
+  ADVICE: 'tư vấn quản lý chi tiêu',
+  WARNING: 'sắp chạm hạn mức',
+  SAFE: 'trong ngân sách',
+  SET: 'đã thiết lập',
+  UNKNOWN: 'chưa xác định yêu cầu',
+  UNSUPPORTED: 'chưa được hỗ trợ',
+}
+
+export function formatAiReplyForDisplay(reply, intent) {
+  if (intent === 'UNKNOWN') return AI_UNKNOWN_DISPLAY_REPLY
+  if (intent === 'UNSUPPORTED') return AI_UNSUPPORTED_DISPLAY_REPLY
+
+  return Object.entries(AI_TECHNICAL_LABELS).reduce(
+    (text, [technicalName, vietnameseLabel]) =>
+      text.replace(new RegExp(`\\b${technicalName}\\b`, 'g'), vietnameseLabel),
+    String(reply || '')
+  )
+}
+
 function isAiFollowUp(message) {
   return /^(con|the|vay|va)\s/.test(String(message || '').normalize('NFKC').normalize('NFD').replace(/\p{M}|\p{Cf}/gu, '').toLowerCase().trim())
 }
@@ -716,6 +749,7 @@ export const aiChatService = {
   AI_ERROR_MESSAGES,
   sendAiChatMessage,
   normalizeAiChatResponse,
+  formatAiReplyForDisplay,
   validateAiChatRequest,
   getAiChatErrorMessage,
   createAiChatController,

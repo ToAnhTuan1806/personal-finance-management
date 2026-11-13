@@ -64,12 +64,12 @@ after(async () => {
 /* QA TEST SUITE: SMARTEXPENSE 2.0 - D08-FE (FR-08 & FR-11)                   */
 /* ========================================================================== */
 
-test('QA-D08-01: Disclaimer Banner phải luôn hiển thị và đúng nội dung SRS', () => {
+test('QA-D08-01: Hướng dẫn sử dụng mẫu phải luôn hiển thị', () => {
   const html = render(RecurringTemplatesPage, {})
-  assert.match(html, /Lưu ý:/)
+  assert.match(html, /Cách hoạt động:/)
   assert.match(html, new RegExp(DISCLAIMER_NOTICE))
   assert.match(html, /role="status"/)
-  assert.match(html, /aria-label="Cảnh báo mẫu giao dịch"/)
+  assert.match(html, /aria-label="Hướng dẫn sử dụng mẫu giao dịch"/)
 })
 
 test('QA-D08-02: Ràng buộc tuyệt đối - KHÔNG có bất kỳ nút hoặc nhãn "Áp dụng" trong D08', () => {

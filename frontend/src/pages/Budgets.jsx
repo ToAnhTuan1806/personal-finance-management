@@ -14,6 +14,7 @@ import {
 
 import BudgetModal from '../components/BudgetModal'
 import { CategoryBudgetSection, CategoryBudgetModal } from '../components/budget'
+import { getBudgetDisplayStatus } from '../components/budget/categoryBudgetUtils'
 import AsyncState from '../components/ui/AsyncState'
 import MonthPickerInput from '../components/ui/MonthPickerInput'
 import { useToast } from '../contexts/ToastContext'
@@ -332,13 +333,11 @@ export default function Budgets() {
     100
   )
 
-  const isExceeded = Boolean(
-    budget && (budget.exceeded === true || percentage >= 100 || remaining < 0)
-  )
-  const isWarning = Boolean(
-    budget && !isExceeded && percentage >= 80 && percentage < 100
-  )
-  const isSafe = Boolean(budget && !isExceeded && !isWarning)
+  const displayStatus = budget ? getBudgetDisplayStatus(budget) : null
+  const isExceeded = displayStatus === 'OVER_BUDGET'
+  const isAtLimit = displayStatus === 'AT_LIMIT'
+  const isWarning = displayStatus === 'WARNING'
+  const isSafe = displayStatus === 'SAFE'
 
   return (
     <div className="space-y-6">
@@ -494,20 +493,30 @@ export default function Budgets() {
                 </p>
                 <p
                   className={`mt-2 text-2xl font-black ${
-                    remaining < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'
+                    remaining < 0
+                      ? 'text-rose-600 dark:text-rose-400'
+                      : remaining === 0
+                        ? 'text-amber-600 dark:text-amber-400'
+                        : 'text-emerald-600 dark:text-emerald-400'
                   }`}
                 >
                   {formatMoney(remaining)}
                 </p>
                 <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">
-                  {remaining < 0 ? 'Đã chi vượt hạn mức' : 'Hạn mức khả dụng'}
+                  {remaining < 0
+                    ? 'Đã chi vượt hạn mức'
+                    : remaining === 0
+                      ? 'Đã sử dụng hết hạn mức'
+                      : 'Hạn mức khả dụng'}
                 </p>
               </div>
               <div
                 className={`flex h-12 w-12 items-center justify-center rounded-2xl shrink-0 ${
                   remaining < 0
                     ? 'bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400'
-                    : 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400'
+                    : remaining === 0
+                      ? 'bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400'
+                      : 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400'
                 }`}
               >
                 <TrendingUp size={24} />
@@ -529,9 +538,9 @@ export default function Budgets() {
 
               <span
                 className={`text-xl font-black ${
-                  isExceeded
+                   isExceeded
                     ? 'text-rose-600 dark:text-rose-400'
-                    : isWarning
+                    : isAtLimit || isWarning
                       ? 'text-amber-600 dark:text-amber-400'
                       : 'text-emerald-600 dark:text-emerald-400'
                 }`}
@@ -552,7 +561,7 @@ export default function Budgets() {
                 className={`h-full rounded-full transition-all duration-500 ${
                   isExceeded
                     ? 'bg-rose-500'
-                    : isWarning
+                    : isAtLimit || isWarning
                       ? 'bg-amber-500'
                       : 'bg-emerald-600'
                 }`}
@@ -565,7 +574,7 @@ export default function Budgets() {
               <strong className="text-slate-800 dark:text-slate-200">{formatMoney(limit)}</strong>.
             </p>
 
-            {/* Ba trạng thái: Safe (< 80%), Warning (80% - 99%), Exceeded (>= 100%) */}
+            {/* Trạng thái hiển thị: dưới hạn mức, bằng hạn mức và vượt hạn mức */}
             {isExceeded ? (
               <div
                 role="alert"
@@ -574,10 +583,25 @@ export default function Budgets() {
                 <AlertTriangle className="shrink-0 text-rose-600 dark:text-rose-400 mt-0.5" size={20} />
                 <div>
                   <p className="font-bold text-sm">
-                    Cảnh báo vượt ngân sách! (Đã dùng &ge; 100%)
+                    Vượt ngân sách
                   </p>
                   <p className="mt-1 text-xs leading-relaxed">
                     Bạn đã chi vượt {formatMoney(Math.abs(remaining))} trong {monthLabel}. Hãy hạn chế các khoản chi không cần thiết.
+                  </p>
+                </div>
+              </div>
+            ) : isAtLimit ? (
+              <div
+                role="status"
+                className="mt-5 flex items-start gap-3 rounded-xl bg-amber-50 border border-amber-200/80 dark:bg-amber-950/40 dark:border-amber-900/60 p-4 text-amber-800 dark:text-amber-300 shadow-xs"
+              >
+                <AlertCircle size={20} className="shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
+                <div>
+                  <p className="font-bold text-sm">
+                    Đã sử dụng hết ngân sách
+                  </p>
+                  <p className="mt-1 text-xs leading-relaxed">
+                    Bạn đã sử dụng toàn bộ {formatMoney(limit)} trong {monthLabel}. Hiện không còn ngân sách khả dụng.
                   </p>
                 </div>
               </div>
@@ -589,7 +613,7 @@ export default function Budgets() {
                 <AlertCircle size={20} className="shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
                 <div>
                   <p className="font-bold text-sm">
-                    Cảnh báo tiếp cận hạn mức (Đã dùng 80% - 99%)
+                    Trong ngân sách
                   </p>
                   <p className="mt-1 text-xs leading-relaxed">
                     Bạn đã sử dụng {percentage.toLocaleString('vi-VN', { maximumFractionDigits: 1 })}% ngân sách tháng này. Chỉ còn {formatMoney(remaining)} khả dụng.
@@ -604,7 +628,7 @@ export default function Budgets() {
                 <CheckCircle2 size={20} className="shrink-0 text-emerald-600 dark:text-emerald-400 mt-0.5" />
                 <div>
                   <p className="font-bold text-sm">
-                    Chi tiêu an toàn (Dưới 80%)
+                    Trong ngân sách
                   </p>
                   <p className="mt-1 text-xs leading-relaxed">
                     Chi tiêu đang trong hạn mức kiểm soát tốt. Còn {formatMoney(remaining)} có thể sử dụng.

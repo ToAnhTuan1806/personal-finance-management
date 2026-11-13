@@ -25,7 +25,11 @@ import client from '../src/api/axiosClient.js'
 import * as recurringService from '../src/services/recurringTemplateService.js'
 import {
   formatDisplayDate,
+  getCurrentRecurringPeriod,
+  getRecurringPreviewMonthOptions,
+  getRecurringPreviewYearOptions,
   isDayClampedToMonthEnd,
+  isRecurringPreviewPeriodAllowed,
   resolveTransactionDate,
 } from '../src/components/recurring/recurringTemplateUtils.js'
 
@@ -393,29 +397,43 @@ test('D09-16: RecurringPreviewModal không render khi template=null', () => {
 
 test('D09-17: RecurringPreviewModal render tiêu đề và hướng dẫn ban đầu', () => {
   const html = render(RecurringPreviewModal, { isOpen: true, template: sampleTemplate })
-  assert.match(html, /Xem trước giao dịch định kỳ/)
+  assert.match(html, /Kiểm tra trước khi ghi nhận/)
   assert.match(html, /Ăn uống/)
-  assert.match(html, /Chọn tháng.*Xem/)
+  assert.match(html, /Chọn kỳ muốn ghi nhận/)
+  assert.match(html, />Kiểm tra</)
   assert.match(html, /role="dialog"/)
   assert.match(html, /aria-modal="true"/)
 })
 
 test('D09-18: RecurringPreviewModal có select tháng và năm', () => {
   const html = render(RecurringPreviewModal, { isOpen: true, template: sampleTemplate })
-  assert.match(html, /Tháng 1/)
+  const { year, month } = getCurrentRecurringPeriod()
+  assert.match(html, new RegExp(`Tháng ${month}`))
   assert.match(html, /Tháng 12/)
-  const year = new Date().getFullYear()
   assert.match(html, new RegExp(String(year)))
+  assert.match(html, new RegExp(`có thể chọn tháng.*${month}/${year}.*trong tương lai`))
+  if (month > 1) assert.doesNotMatch(html, /<option value="1">Tháng 1<\/option>/)
 })
 
-test('D09-19: RecurringPreviewModal có nút Xem với aria-label đúng', () => {
+test('D09-18a: kỳ xem trước chỉ nhận tháng hiện tại đến tương lai', () => {
+  assert.deepEqual(getRecurringPreviewMonthOptions(2026, 2026, 11), [11, 12])
+  assert.deepEqual(getRecurringPreviewMonthOptions(2027, 2026, 11), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
+  assert.deepEqual(getRecurringPreviewMonthOptions(2025, 2026, 11), [])
+  assert.equal(isRecurringPreviewPeriodAllowed(2026, 10, 2026, 11), false)
+  assert.equal(isRecurringPreviewPeriodAllowed(2026, 11, 2026, 11), true)
+  assert.equal(isRecurringPreviewPeriodAllowed(2027, 1, 2026, 11), true)
+  assert.equal(isRecurringPreviewPeriodAllowed(2101, 1, 2026, 11), false)
+  assert.deepEqual(getRecurringPreviewYearOptions(2099), [2099, 2100])
+})
+
+test('D09-19: RecurringPreviewModal có nút Kiểm tra với aria-label đúng', () => {
   const html = render(RecurringPreviewModal, { isOpen: true, template: sampleTemplate })
-  assert.match(html, /aria-label="Tải xem trước giao dịch định kỳ"/)
+  assert.match(html, /aria-label="Kiểm tra giao dịch trước khi ghi nhận"/)
 })
 
 test('D09-20: RecurringPreviewModal có nút đóng với aria-label', () => {
   const html = render(RecurringPreviewModal, { isOpen: true, template: sampleTemplate })
-  assert.match(html, /aria-label="Đóng modal xem trước"/)
+  assert.match(html, /aria-label="Đóng cửa sổ kiểm tra giao dịch"/)
 })
 
 /* ════════════════════════════════════════════════════════════════
