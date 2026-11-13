@@ -100,7 +100,8 @@ abstract class RecurringApplicationMySqlTestSupport {
             var before = snapshot(jdbc);
             apply(connection, migrations.get(3));
             assertThat(snapshot(jdbc)).isEqualTo(before);
-            legacyRows = before;
+            D12MigrationTestSupport.apply(connection);
+            legacyRows = snapshot(jdbc);
         }
     }
 

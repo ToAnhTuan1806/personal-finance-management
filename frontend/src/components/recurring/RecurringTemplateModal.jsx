@@ -3,7 +3,6 @@ import {
   AlertCircle,
   ArrowDownRight,
   ArrowUpRight,
-  Calendar,
   FileText,
   Info,
   Loader2,
@@ -298,7 +297,7 @@ function RecurringTemplateModalContent({
             <div>
               <label
                 htmlFor="template-day-of-month"
-                className="mb-1.5 flex items-center justify-between text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400"
+                className="mb-1.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400"
               >
                 <span>
                   Ngày lặp hằng tháng (1 - 31) <span className="text-rose-500">*</span>
@@ -313,25 +312,34 @@ function RecurringTemplateModalContent({
                   min="1"
                   max="31"
                   step="1"
+                  inputMode="numeric"
                   value={form.dayOfMonth}
                   onChange={handleChange}
                   placeholder="Nhập ngày (1 - 31)"
+                  aria-invalid={Boolean(errors.dayOfMonth)}
+                  aria-describedby={[
+                    errors.dayOfMonth ? 'template-day-of-month-error' : '',
+                    is31 ? 'template-day-of-month-notice' : '',
+                  ].filter(Boolean).join(' ') || undefined}
                   className={inputClass('dayOfMonth')}
-                />
-                <Calendar
-                  size={16}
-                  className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400"
                 />
               </div>
               {errors.dayOfMonth && (
-                <p role="alert" className="mt-1 text-xs text-rose-600 dark:text-rose-400">
+                <p
+                  id="template-day-of-month-error"
+                  role="alert"
+                  className="mt-1 text-xs text-rose-600 dark:text-rose-400"
+                >
                   {errors.dayOfMonth}
                 </p>
               )}
 
               {/* Day 31 Notice */}
               {is31 && (
-                <div className="mt-2 flex items-start gap-1.5 rounded-xl border border-amber-200/80 bg-amber-50/70 p-2.5 text-xs text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-300">
+                <div
+                  id="template-day-of-month-notice"
+                  className="mt-2 flex items-start gap-1.5 rounded-xl border border-amber-200/80 bg-amber-50/70 p-2.5 text-xs text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-300"
+                >
                   <Info size={14} className="mt-0.5 shrink-0 text-amber-600 dark:text-amber-400" />
                   <span className="leading-snug">{DAY_31_NOTICE}</span>
                 </div>

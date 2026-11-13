@@ -160,12 +160,6 @@ export default function Login() {
       serverError={serverError}
       successTitle={`Xin chào, ${user?.fullName || 'bạn'}!`}
       successDescription="Đang chuyển đến Dashboard..."
-      footer={
-        <p>
-          Chưa có tài khoản?{' '}
-          <Link to="/register">Đăng ký ngay</Link>
-        </p>
-      }
     >
       {location.state?.message && (
         <p
@@ -190,6 +184,7 @@ export default function Login() {
         name="email"
         type="email"
         label="Địa chỉ email"
+        placeholder="name@example.com"
         autoComplete="email"
         value={form.email}
         onChange={handleChange}
@@ -203,6 +198,7 @@ export default function Login() {
         name="password"
         type="password"
         label="Mật khẩu"
+        placeholder="••••••••"
         autoComplete="current-password"
         value={form.password}
         onChange={handleChange}
@@ -210,6 +206,15 @@ export default function Login() {
         error={errors.password}
         disabled={phase !== 'idle'}
       />
+
+      <div className="auth-forgot-row -mt-2 flex justify-end">
+        <Link
+          to="/forgot-password"
+          className="auth-forgot-link inline-flex min-h-9 items-center rounded-lg px-1.5 text-xs font-semibold text-blue-600 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-blue-400"
+        >
+          Quên mật khẩu?
+        </Link>
+      </div>
     </AuthCard>
   )
 }

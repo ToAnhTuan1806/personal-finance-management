@@ -4,7 +4,7 @@ Nguồn: [SRS 2.2 ngày 27/10/2026](../SmartExpense_SRS_v2.docx), [Master Plan](
 
 ## 1. Quy ước chung
 
-- Base path `/api`. JSON request/response, trừ CSV; không thêm envelope vào response thành công cũ. Gửi `Authorization: Bearer <ACCESS_TOKEN>`; chỉ POST register/login công khai.
+- Base path `/api`. JSON request/response, trừ CSV; không thêm envelope vào response thành công cũ. Gửi `Authorization: Bearer <ACCESS_TOKEN>` cho API bảo vệ; chỉ POST register/login/forgot-password/reset-password công khai.
 - Owner luôn từ JWT, không lấy userId client. List/thống kê/export chỉ lấy dữ liệu owner; lookup ID không tồn tại/khác owner trả 404. Ngoại lệ hiện có: POST/PUT transactions trả **400** cho category sai/khác owner.
 - ID là integer/Java Long; type là INCOME/EXPENSE. Tiền JSON number, BE BigDecimal; input 0.01–9999999999999.99, tối đa 2 số thập phân. FE lưu ý sai số JavaScript ở số lớn; giữ nguyên tên/kiểu field cũ.
 - Ngày YYYY-MM-DD, tháng YYYY-MM; không chuyển DATE qua UTC. API mới đề xuất năm 1900–2100, tháng 1–12, giờ nghiệp vụ UTC+07:00. Validation năm của giao dịch cũ chưa thống nhất với Budget/Dashboard.
@@ -23,6 +23,8 @@ Mọi đường dẫn trong bảng đều nằm dưới `/api`; Input là body, 
 | --- | --- | --- | --- | --- |
 | POST | `/auth/register` | `{fullName,email,password}` | 201 User | 400 validation; 409 email trùng |
 | POST | `/auth/login` | `{email,password}` | 200 `{accessToken,tokenType:"Bearer",user:User}` | 400 validation; 401 sai tài khoản/mật khẩu |
+| POST | `/auth/forgot-password` | `{email}` | 200 `{message}` chung, không cần JWT; D12 local | 400 validation; 429 AUTH_RATE_LIMITED theo IP |
+| POST | `/auth/reset-password` | `{token,newPassword}` | 200 `{message}`, không cấp JWT; D12 local | 400 INVALID_RESET_TOKEN/PASSWORD_REUSE/VALIDATION_ERROR; 429 AUTH_RATE_LIMITED |
 | GET | `/users/me` | Không body | 200 User | 401 user không tồn tại |
 | GET | `/categories` | Query type? | 200 Category[] | 400 enum sai |
 | GET | `/categories/{id}` | Path id | 200 Category | 404 owner |
@@ -45,6 +47,9 @@ Mọi đường dẫn trong bảng đều nằm dưới `/api`; Input là body, 
 | GET | `/dashboard/summary` | Query month bắt buộc | 200 `{year,month,totalIncome,totalExpense,balance}` | 400 tháng sai |
 | GET | `/dashboard/expenses-by-category` | Query month bắt buộc | 200 `[{categoryId,categoryName,totalAmount}]` | 400 tháng sai |
 | GET | `/calendar/month` | Query year,month bắt buộc | 200 CalendarMonth; Backend D04, chờ FE xác nhận | 400 kỳ sai; 401 JWT thiếu/sai/hết hạn |
+| GET | `/reports/monthly` | Query from,to bắt buộc, YYYY-MM | 200 MonthlyReport D10, chờ FE xác nhận tích hợp | 400 kỳ sai/quá 6 tháng; 401 JWT thiếu/sai/hết hạn |
+| GET | `/transactions/export` | Query Filter, không page/size/sort | 200 CSV D11, triển khai local | 400 filter sai; 422 EXPORT_LIMIT_EXCEEDED; 401 JWT |
+| POST | `/ai/chat` | `{message,month,compareMonth?}` | 200 AiChat P1/P2 D11/D13, triển khai local | 400 validation; 401 JWT; 429 rate/quota; 502/503/504 provider (ADVICE) |
 
 ### DTO và validation
 
@@ -63,7 +68,7 @@ CalendarMonth = { year, month, incomeTotal, expenseTotal,
   days:[{date,incomeTotal,expenseTotal}] }
 ```
 
-- Register: fullName không blank/≤100, email hợp lệ, password≥8; email trim/lowercase, tên trim. Register trả User, **không cấp JWT**. Login chỉ yêu cầu password không blank. Không có refresh/revoke/logout server; logout xóa phiên client.
+- Register: fullName không blank/≤100, email hợp lệ, password≥8 và tối đa 72 bytes UTF-8 (giới hạn BCrypt); email trim/lowercase, tên trim. Register trả User, **không cấp JWT**. Login yêu cầu password không blank; quá 72 bytes trả 401 như sai thông tin đăng nhập. Không có refresh/logout server; logout xóa phiên client. D12 vô hiệu JWT cũ sau reset qua `auth_version` như bên dưới.
 - Category: name không blank/≤100, type bắt buộc; icon/color theo mục D06 bên dưới. Precheck tên trùng cùng owner/type trả 409 theo quy tắc bên dưới. Bản sửa ngày 08/11/2026 khóa owner trong MySQL trước precheck để bảo vệ POST/PUT đồng thời qua API; không thêm UNIQUE constraint.
 - Transaction: mọi field bắt buộc trừ note (null hoặc ≤500); category cùng owner/type, tiền theo mục 1. FE mặc định ngày hôm nay.
 - Filter: month **hoặc** đủ startDate/endDate, không gửi cả hai; start≤end, inclusive hai đầu. keyword trim, tìm note không phân biệt hoa/thường; `%`/`_` hiện là wildcard LIKE. categoryId khác owner trong filter trả danh sách rỗng.
@@ -280,7 +285,7 @@ Quick Add (FR-03) dùng POST `/transactions`, không thêm `/quick-add`. Khóa s
 
 ### Ngân sách danh mục — D07-BE Commit 2 (04/11/2026, chờ review/tích hợp FE và D07-DB)
 
-Phần này mô tả mã Backend tại local, chưa xác nhận triển khai hoặc migration trên DB thật. **Bộ endpoint D07 đã được chốt theo Phương án 1 — CRUD theo ID:** POST upsert, GET danh sách theo query year/month, GET/PUT/DELETE theo `/{id}` như bảng ở mục 2. Không triển khai thêm route `/{year}/{month}/{categoryId}`. Quyết định này giữ nguyên UNIQUE `(user_id, category_id, year, month)` và owner từ JWT; không đổi endpoint ngân sách tổng. API định kỳ/báo cáo/CSV bên dưới vẫn là đề xuất riêng.
+Phần này mô tả mã Backend tại local, chưa xác nhận triển khai hoặc migration trên DB thật. **Bộ endpoint D07 đã được chốt theo Phương án 1 — CRUD theo ID:** POST upsert, GET danh sách theo query year/month, GET/PUT/DELETE theo `/{id}` như bảng ở mục 2. Không triển khai thêm route `/{year}/{month}/{categoryId}`. Quyết định này giữ nguyên UNIQUE `(user_id, category_id, year, month)` và owner từ JWT; không đổi endpoint ngân sách tổng. Trạng thái API định kỳ/báo cáo/CSV được ghi riêng trong các mục D08–D11 bên dưới.
 
 - Mọi endpoint `/api/category-budgets` yêu cầu JWT. Owner chỉ lấy từ subject JWT; `userId` client không quyết định quyền sở hữu. Không trả Entity JPA, thông tin user hoặc mật khẩu trong response.
 - Ngân sách danh mục độc lập với ngân sách tổng tháng; không cấm tổng hạn mức danh mục vượt hạn mức tháng và không sửa dữ liệu MonthlyBudget.
@@ -329,6 +334,285 @@ Chỉ duplicate key MySQL **1062 / SQLSTATE 23000** mới được chuyển sang
 
 **Phụ thuộc D07-DB/Commit 3:** migration chưa có trong nhánh tại thời điểm triển khai; chưa xác nhận concurrency, FK và kết quả MySQL thực. DB cần khớp bảng/cột/nullable/DECIMAL của Entity, FK users/categories và UNIQUE bốn cột. Không dùng khởi động ứng dụng với `ddl-auto=update` thay migration được duyệt. D07 không đổi CategoryService hoặc tự thêm cascade; chính sách chặn xóa/đổi loại category đang có budget phải phối hợp DB/FE, chưa coi FK riêng lẻ là bằng chứng category cùng owner. Không đổi schema, runner hoặc cấu hình trong Commit 2.
 
+### D11 — CSV và AI Assistant+ P1
+
+Hợp đồng Backend triển khai local theo nhiệm vụ **SE2-D11-BE** được giao ngày **09/11/2026**, hạn **10/11/2026**. Đây là bàn giao DTO để FE tích hợp; chưa xác nhận nghiệm thu FE/QA, MySQL hoặc Gemini live. Bản giao việc D11 thay thế header CSV đề xuất cũ; không sửa API giao dịch/báo cáo/ngân sách hiện có, schema, JWT hoặc CORS.
+
+#### CSV
+
+`GET /api/transactions/export` yêu cầu Bearer JWT. Nhận `month`, `startDate`, `endDate`, `type`, `categoryId`, `keyword` tùy chọn, **cùng validation và quy tắc lọc của GET transactions** (bao gồm keyword LIKE wildcard hiện có). Không nhận `page/size/sort`: gửi bất kỳ tham số nào trong ba tham số này trả **400 VALIDATION_ERROR**, kể cả giá trị trống. `userId` gửi thêm không quyết định owner.
+
+- Month hoặc đủ startDate/endDate, không kết hợp; hai đầu ngày inclusive. Sort ngày DESC, id DESC. Lọc categoryId khác owner trả CSV chỉ có header.
+- Xuất toàn bộ kết quả, tối đa **10.000 dòng dữ liệu**; đúng 10.000 được chấp nhận. Vượt trả **422 EXPORT_LIMIT_EXCEEDED** dạng ApiError, trước khi gửi file, không cắt cụt. Query batch 100 qua TransactionService trong transaction MySQL REPEATABLE_READ; count/các batch cùng snapshot. File dựng trong bộ nhớ có giới hạn số dòng, không tạo file tạm, không giữ transaction trong lúc truyền HTTP.
+- UTF-8 BOM (`EF BB BF`), dấu phẩy, kết thúc record CRLF, quote mọi cell và nhân đôi nháy kép. Header chính xác (sau khi parse CSV): `Mã giao dịch,Ngày giao dịch,Loại,Danh mục,Số tiền,Ghi chú`. Không có dữ liệu vẫn trả BOM + header.
+- ID là số dạng text, ngày `YYYY-MM-DD`, loại `INCOME/EXPENSE`, tiền từ BigDecimal `toPlainString()` (dấu chấm, không phân cách nghìn/không double). Danh mục/note null thành cell rỗng.
+- Với **hai trường văn bản danh mục và ghi chú**: thêm `'` ở đầu cell nếu chứa ký tự control/format, hoặc ký tự đầu sau khoảng trắng/Unicode space là `= + - @` sau NFKC (bao gồm fullwidth). Sau đó escape CSV; giữ nguyên phần văn bản gốc. Vì vậy note multiline cũng có tiền tố `'`. Tiền không qua xử lý văn bản này.
+- Headers: `Content-Type: text/csv; charset=UTF-8`, `Content-Disposition: attachment; filename="smart-expense-YYYYMMDD.csv"` (ngày UTC+07), `Cache-Control: no-store`. Không xuất owner/email/JWT. CORS hiện chưa expose Content-Disposition: FE khác origin dùng tên fallback; chưa thay security config.
+
+#### AI Assistant+ P1
+
+`POST /api/ai/chat`, Bearer JWT, JSON body:
+
+```json
+{"message":"Tháng này tôi chi tiêu bao nhiêu?","month":"2026-11"}
+```
+
+Hai field bắt buộc. `message` không blank, tối đa 500 ký tự theo Java String/Bean Validation; `month` chính xác `YYYY-MM`, năm 1900–2100. Từ bản NLU ngày 12/11/2026, kỳ nói rõ trong câu hỏi ưu tiên hơn picker theo mục **D13 — NLU** dưới đây; `period` phản ánh tháng thực sự được tính. Field `userId` ngoài DTO không được dùng. Không lưu hội thoại hoặc tạo/sửa/xóa dữ liệu nghiệp vụ.
+
+```text
+AiChat = { reply:string, period:string, intent:string,
+           stats:Stats|null, topCategories:TopCategory[], budget:AiBudget|null }
+Stats = { totalIncome:number, totalExpense:number, balance:number }
+TopCategory = { categoryId:integer, categoryName:string, totalAmount:number, sharePercentage:number }
+AiBudget = { status:"SET"|"NOT_SET", monthly:Budget|null, categories:CategoryBudget[] }
+```
+
+`Budget` và `CategoryBudget` dùng đúng DTO hiện có ở các mục ngân sách trong tài liệu. `AiBudget.status` chỉ mô tả **ngân sách tháng**; `monthly=null/status=NOT_SET` nghĩa là "Chưa thiết lập", `categories=[]` nghĩa là chưa đặt ngân sách danh mục. Hai loại ngân sách độc lập, có thể chỉ đặt một loại. Không thay missing budget bằng hạn mức 0. `exceeded` giữ quy tắc **spentAmount > amountLimit**; status danh mục vẫn `OVER_BUDGET` khi bằng hạn mức như D07.
+
+Backend định tuyến câu hỏi tiếng Việt có/không dấu và một số keyword tiếng Anh theo ưu tiên:
+
+| intent | Khả năng / dữ liệu |
+| --- | --- |
+| `ADVICE` | P1-01: lời khuyên chung về chi tiêu, lập kế hoạch, tiết kiệm; không cam kết lợi nhuận. Không gửi số liệu tài chính đến Gemini cho intent này. |
+| `SUMMARY` | P1-02: tổng thu/chi/số dư từ ReportService đúng kỳ; tháng rỗng trả 0. Reply do Backend tạo, không gọi Gemini. |
+| `CATEGORIES` | P1-03: tối đa 5 danh mục, sort totalAmount DESC/categoryId ASC; Backend tính % bằng BigDecimal HALF_UP 2 số; tổng chi 0 thì % = 0, không chia 0. Reply do Backend tạo, không gọi Gemini. |
+| `BUDGET` | P1-04: Monthly Budget + tất cả Category Budget trong kỳ, hạn mức/đã chi/còn lại/cảnh báo giữ DTO và logic hiện có. Reply do Backend tạo, không gọi Gemini. |
+| `UNSUPPORTED` | Yêu cầu xem tài khoản khác hoặc tạo/sửa/xóa/SQL được nhận diện: trả 200 lời từ chối, stats=null, topCategories=[], budget=null; không query hoặc gọi provider. |
+
+Bốn intent P1 thành công luôn có `stats`; `topCategories` chỉ có dữ liệu với CATEGORIES, `budget` chỉ có dữ liệu với BUDGET. Định tuyến keyword là giới hạn UX của D11, chưa phải phân loại ngôn ngữ toàn diện; quy tắc keyword D11 được thay bởi bộ định tuyến NLU ngày 12/11/2026; không khớp trả UNKNOWN, không tự gọi ADVICE. Đây không phải ranh giới bảo mật: kể cả prompt không được nhận diện, tất cả query vẫn chỉ đọc JWT owner, provider không có tools/SQL/quyền ghi. D11 không gửi nguyên văn câu hỏi để tránh chuyển secrets/PII do người dùng dán vào Gemini. Sau bản sửa độ chính xác, **chỉ ADVICE gọi Gemini**, với yêu cầu tư vấn chung cố định, không gửi context tài chính, tên danh mục, ID, note, email, JWT hoặc lịch sử giao dịch. FE tiếp tục dùng **structured fields** làm nguồn số liệu, render `reply` như text, không coi nội dung AI là dữ liệu thực thi.
+
+**Hybrid AI — bản sửa BUG-01/BUG-02:** SUMMARY/CATEGORIES/BUDGET dùng `AiFinancialReplyFormatter` để tạo toàn bộ reply bằng dữ liệu Backend đã xác minh; không ghép văn bản Gemini vào các kết luận tài chính và không tìm/thay số trong văn bản AI. Tiền định dạng Việt Nam chính xác 2 số thập phân từ BigDecimal, không chuyển double. Chỉ BUDGET có trạng thái đã truy vấn: thiếu field budget ở SUMMARY/CATEGORIES không có nghĩa là chưa thiết lập. Remaining âm hiển thị cả số âm và diễn đạt đã vượt hạn mức bằng số tiền dương tương ứng. ADVICE dùng provider cho gợi ý chung, không được khẳng định đã kiểm tra tài khoản. Không đổi endpoint, request/response DTO, query hoặc logic Reports/Budget. Khi báo cáo QA, ba intent thống kê là **Backend facts/API PASS**, không gọi là Gemini Live PASS.
+
+Ví dụ response SUMMARY tháng trống:
+
+```json
+{
+  "reply":"Thống kê tháng 11/2026:\nTổng thu nhập: 0,00 ₫.\nTổng chi tiêu: 0,00 ₫.\nSố dư: 0,00 ₫.",
+  "period":"2026-11",
+  "intent":"SUMMARY",
+  "stats":{"totalIncome":0,"totalExpense":0,"balance":0},
+  "topCategories":[],
+  "budget":null
+}
+```
+
+Reply ví dụ là kết quả định dạng Backend, không phải bằng chứng gọi Gemini. Chỉ ADVICE cần reply thực từ provider: thiếu key/model hoặc provider lỗi **không trả thành công giả**. Ba intent thống kê vẫn trả dữ liệu/reply Backend khi Gemini chưa cấu hình hoặc không khả dụng, không giả vờ có nội dung AI.
+
+#### Runtime Gemini, giới hạn và lỗi D11
+
+- Dùng Java HttpClient có sẵn, **Interactions REST v1** `https://generativelanguage.googleapis.com/v1/interactions`, `store=false`, không previous_interaction_id, không tools/background. Đọc `steps[type=model_output].content[type=text]` khi status=completed. Model bắt buộc do người chạy chọn qua **GEMINI_MODEL**, không đặt tên mặc định dễ lỗi thời; key chỉ từ **GEMINI_API_KEY** ở môi trường tiến trình Backend. Không thêm dependency hoặc sửa cấu hình production.
+- Tham khảo chính thức đã đối chiếu: [Interactions overview](https://ai.google.dev/gemini-api/docs/interactions-overview), [REST v1 schema](https://ai.google.dev/api/interactions-api-v1). Bản sửa Hybrid chỉ gửi yêu cầu tư vấn chung, không gửi số liệu/context tài chính; không lưu hội thoại trong DB hoặc chủ động log request/response/key. DTO Chat che nội dung trong `toString()` để Spring MVC DEBUG không ghi prompt/phản hồi; CSV trả Resource với mô tả trung lập để tránh log byte payload.
+- Local: truyền hai biến vào terminal/Run Configuration của Backend qua cơ chế secret của máy, không đặt trong React/Git. Script `scripts/start-backend.ps1` đọc các biến DB/JWT/SMTP từ file env, **không nạp GEMINI_* từ file**; phải cung cấp chúng sẵn trong môi trường tiến trình cha/IDE. Compose hiện chưa cấu hình truyền hai biến này; cần người quản lý duyệt riêng trước khi chạy AI bằng container. API vẫn khởi động bình thường khi chưa có cấu hình Gemini.
+- Connect timeout 3 giây, nằm trong deadline toàn request/body **25 giây**. `generation_config` gửi `thinking_level="low"` và `max_output_tokens=1024`; không dùng minimal, không đổi model từ GEMINI_MODEL. Không tự retry. Tối đa 8 request provider đồng thời/instance, body provider ≤65.536 byte, nội dung provider ≤4.000 ký tự; quá giới hạn trả lỗi an toàn. Các lỗi provider chỉ phát sinh trên ADVICE: HTTP 503 → 503 AI_UNAVAILABLE, 429 → 429 AI_QUOTA_EXCEEDED; chỉ timeout mới trả 504 AI_TIMEOUT.
+- Bàn giao FE: timeout riêng cho Chat cần lớn hơn 25 giây và có khoảng đệm cho DB/network. Axios mặc định 10 giây trong worktree hiện tại chưa được đổi trong bản sửa BE này; không đổi JSON response thành công.
+- **10 câu hỏi/phút/JWT owner/instance**, cửa sổ 60 giây tính từ request đầu; tính cả từ chối và provider lỗi. Hết hạn mức trả 429/Retry-After:60, không query/call provider thêm. Bộ nhớ limiter tối đa 10.000 owner còn hiệu lực; quá dung lượng trả 503. Restart làm mất bộ đếm; nhiều instance chưa có shared limiter. Khi scale phải review limiter dùng chung trước.
+- Thành công/lỗi D11 đặc thù có `Cache-Control:no-store`. Giữ schema ApiError `{status,code,message}`; 400/401 dùng quy tắc D02, không đổi mã lỗi API cũ. Các code riêng chỉ áp dụng CSV/Chat:
+
+| HTTP | code | Ý nghĩa |
+| --- | --- | --- |
+| 422 | `EXPORT_LIMIT_EXCEEDED` | Trên 10.000 giao dịch, thu hẹp bộ lọc |
+| 429 | `AI_RATE_LIMITED` | Quá 10 câu/phút/owner/instance |
+| 429 | `AI_QUOTA_EXCEEDED` | Provider trả 429, không tự retry |
+| 503 | `AI_NOT_CONFIGURED` | Thiếu GEMINI_API_KEY hoặc GEMINI_MODEL |
+| 503 | `AI_UNAVAILABLE` | Provider 5xx, request bị gián đoạn hoặc quá dung lượng/concurrency |
+| 504 | `AI_TIMEOUT` | Quá deadline provider |
+| 502 | `AI_PROVIDER_ERROR` | Lỗi mạng/provider khác hoặc body lỗi/quá lớn |
+| 502 | `AI_INVALID_RESPONSE` | Thiếu text, chưa completed hoặc reply quá dài |
+
+Không trả body lỗi thô của Gemini, key, token, stack trace hoặc SQL. D11 không bao gồm AI P2, Quên mật khẩu hoặc thay đổi quyền JWT hiện có. Tests tự động dùng fake provider/HTTP loopback; Gemini live và SQL/MySQL cần bằng chứng kiểm thử riêng.
+
+### D13 — AI Assistant+ P2 (SE2-D13-BE)
+
+Mở rộng theo giao việc trực tiếp ngày **11/11/2026**; chỉ chuẩn bị code, ngày commit dự kiến **12/11/2026** sau phê duyệt riêng. Phạm vi này bổ sung P2 vào P1 đã có, thay phần loại chatbot khỏi phạm vi trong lịch Sprint 3 cũ; không mở rộng gợi ý ngân sách D14. Đây là hợp đồng triển khai Backend local, chưa thay cho nghiệm thu FE/QA hoặc release.
+
+Giữ `POST /api/ai/chat`, Bearer JWT và tất cả field P1. Request có thêm `compareMonth` tùy chọn:
+
+```json
+{"message":"So sánh thu chi tháng này với tháng trước.","month":"2026-11","compareMonth":"2026-10"}
+```
+
+- `month`/`compareMonth` là kỳ đích/gốc từ picker khi câu hỏi không nói rõ kỳ. Bản NLU ngày 12/11/2026 ưu tiên kỳ trong câu hỏi theo mục dưới. P2 thiếu/null `compareMonth` dùng `month - 1 tháng`; ví dụ `2026-01` → `2025-12`. P1 không tự truy vấn kỳ so sánh.
+- Cả hai tháng đúng `YYYY-MM`, năm 1900–2100; nếu có `compareMonth` thì phải hợp lệ và khác `month` kể cả với P1. Chuỗi rỗng không đồng nghĩa thiếu. Nếu P2 dùng mặc định ở `1900-01`, trả **400 VALIDATION_ERROR**, thông báo nêu giới hạn năm 1900–2100. Có thể chọn kỳ gốc khác hợp lệ cho tháng này.
+- Hai kỳ được chọn độc lập, không giới hạn cách nhau 6 tháng. Chấp nhận `compareMonth` sau `month`: ý nghĩa target/base và dấu delta vẫn theo field, không tự đảo tháng.
+- Ưu tiên định tuyến: **UNSUPPORTED → CATEGORY_TREND → COMPARISON → BUDGET → CATEGORIES → SUMMARY → ADVICE**. `CATEGORY_TREND` nhận câu hỏi danh mục kèm tăng/giảm/xu hướng/thay đổi/so sánh/tháng trước; `COMPARISON` nhận so sánh/tháng trước/nhiều hơn/ít hơn. Hỗ trợ có/không dấu, một số keyword Anh; vẫn là định tuyến keyword, không phân tích ngôn ngữ toàn diện.
+- Ví dụ: “So sánh thu chi tháng này với tháng trước”, “Tháng này tôi chi nhiều hơn tháng trước bao nhiêu?” → COMPARISON; “Danh mục nào tăng chi tiêu nhiều nhất?”, “Xu hướng chi tiêu theo danh mục thay đổi thế nào?” → CATEGORY_TREND.
+
+Hai intent P2 có cùng dữ liệu `comparison`, khác phần diễn giải `reply` (CATEGORY_TREND liệt kê biến động danh mục):
+
+```text
+AiChatP2 = { reply, period, intent:"COMPARISON"|"CATEGORY_TREND",
+             stats:Stats, topCategories:[], budget:null, comparison:Comparison }
+Comparison = { baseMonth:string, targetMonth:string, base:Stats, target:Stats, delta:Stats,
+               expenseChangePercent:number|null, categoryTrends:CategoryTrend[] }
+CategoryTrend = { categoryId:integer, categoryName:string, baseExpense:number,
+                  targetExpense:number, delta:number, changePercent:number|null }
+```
+
+- `period=targetMonth`, `stats=target`. Response P1/UNSUPPORTED giữ nguyên sáu field; `comparison` được bỏ khỏi JSON khi không phải P2. Request P1 hai field vẫn chạy như trước.
+- Mỗi delta = target − base, gồm thu/chi/số dư và từng danh mục. Tỷ lệ = delta/base × 100, BigDecimal, làm tròn HALF_UP 2 số; base expense = 0 → **null**, kể cả hai kỳ đều 0. Không trả 0% giả hoặc vô cực.
+- Ghép **hợp các ID danh mục có chi tiêu trong ít nhất một kỳ**, không gộp theo tên. Kỳ thiếu giao dịch có expense=0; danh mục không phát sinh ở cả hai kỳ không nằm trong danh sách. Không dùng hoặc suy ra hạn mức ngân sách. Sort **delta DESC, categoryId ASC**, không cắt top 5. Chỉ kết luận “tăng nhiều nhất” khi delta lớn nhất >0; toàn bộ giảm/không đổi thì nêu không có danh mục tăng.
+- Hai tháng rỗng: base/target/delta là Stats số 0, expenseChangePercent=null, categoryTrends=[]. Không tạo danh mục/ngân sách giả.
+- Dùng hai lần `ReportService.getMonthlyReport(owner, kỳ, kỳ)` trong cùng transaction read-only REPEATABLE_READ: **4 query aggregate SQL** (2/kỳ), không tải transaction entity. JWT D12 thêm 1 query scalar xác thực owner. Không đổi Reports API hoặc query hiện có.
+- Owner chỉ từ JWT; `userId` body hoặc ID/số tiền trong prompt không quyết định dữ liệu. Thiếu/sai/hết hạn JWT vẫn 401. P2 không gọi Gemini, không gửi prompt/PII/số tiền/JWT ra provider, không INSERT/UPDATE/DELETE. Giữ rate limit 10 request/phút/owner và `Cache-Control:no-store`; lỗi SQL trả 500 INTERNAL_ERROR trung lập theo handler hiện có.
+
+Ví dụ response COMPARISON từ fixture tổng hợp của `D13IntegrationTests`: owner A có thu 100.10/200.20 và chi 10.10/20.50 ở tháng 10/11; owner B có dữ liệu riêng không xuất hiện. `categoryId=12` là ID minh họa, ID thật do database cấp. Reply dưới đây tương ứng formatter Backend:
+
+```json
+{
+  "reply":"So sánh từ tháng 2026-10 đến tháng 2026-11:\nThống kê tháng 2026-10:\nTổng thu nhập: 100,10 ₫.\nTổng chi tiêu: 10,10 ₫.\nSố dư: 90,00 ₫.\nThống kê tháng 2026-11:\nTổng thu nhập: 200,20 ₫.\nTổng chi tiêu: 20,50 ₫.\nSố dư: 179,70 ₫.\nChênh lệch tổng thu: 100,10 ₫.\nChênh lệch tổng chi: 10,40 ₫.\nChênh lệch số dư: 89,70 ₫.\nChi tiêu tăng; tỷ lệ thay đổi 102,97%.",
+  "period":"2026-11",
+  "intent":"COMPARISON",
+  "stats":{"totalIncome":200.20,"totalExpense":20.50,"balance":179.70},
+  "topCategories":[],
+  "budget":null,
+  "comparison":{
+    "baseMonth":"2026-10",
+    "targetMonth":"2026-11",
+    "base":{"totalIncome":100.10,"totalExpense":10.10,"balance":90.00},
+    "target":{"totalIncome":200.20,"totalExpense":20.50,"balance":179.70},
+    "delta":{"totalIncome":100.10,"totalExpense":10.40,"balance":89.70},
+    "expenseChangePercent":102.97,
+    "categoryTrends":[{"categoryId":12,"categoryName":"Ăn uống","baseExpense":10.10,"targetExpense":20.50,"delta":10.40,"changePercent":102.97}]
+  }
+}
+```
+
+Ví dụ request CATEGORY_TREND dùng tháng trước mặc định:
+
+```json
+{"message":"Danh mục nào tăng chi tiêu nhiều nhất?","month":"2026-11"}
+```
+
+Với cùng fixture, structured fields giữ như ví dụ trên, `intent=CATEGORY_TREND`; reply thêm `Danh mục tăng chi tiêu nhiều nhất: "Ăn uống" — tăng 10,40 ₫.` và dòng chi tiết `Danh mục "Ăn uống": 10,10 ₫ → 20,50 ₫; tăng 10,40 ₫; tỷ lệ thay đổi 102,97%.`. Ví dụ dữ liệu kỳ thiếu và sort/ID trùng tên nằm trong test `categoryUnionUsesIdsZeroExpensesStableTiesAndNoBudgetInference`.
+
+### D13 — NLU (12/11/2026)
+
+Bổ sung theo giao việc trực tiếp, thay quy tắc chọn intent/kỳ trước đây khi có khác biệt. Không đổi endpoint, schema response hiện có, aggregate SQL, BigDecimal, JWT, giới hạn 10 request/phút hoặc runtime Gemini.
+
+**Intent và chuẩn hóa:** NFKC → NFD → bỏ dấu/format Unicode → chữ thường ROOT → gộp khoảng trắng, `đ` → `d`. Hỗ trợ các typo hữu hạn `chi tiu/chi tieeu`, `ngan sac`, `dan muc`, `so san`, `bao nhiu`. `thg` chỉ mở rộng trước số tháng/nay/trước; `tháng trc` hiểu là tháng trước. So sánh nhận cả `so với/vs`. `ns/tn` chỉ mở rộng khi có ngữ cảnh thu/chi/tiền/tháng/hạn mức/vượt/còn; `dm/ss` cần từ thu/chi/tiền/danh mục/category. Không thay đại trà chữ viết tắt: `ns`, `tn`, `dm`, `ss` đứng riêng trả UNKNOWN. Đây là bộ luật có giới hạn, không phải hiểu mọi cách diễn đạt tiếng Việt.
+
+- Sáu intent nghiệp vụ giữ nguyên. Ưu tiên từ chối UNSUPPORTED trước context và thời gian; sau đó CATEGORY_TREND, COMPARISON, BUDGET, CATEGORIES, ADVICE khi có dấu hiệu tư vấn tài chính, SUMMARY khi có dấu hiệu thống kê. Không khớp → **UNKNOWN**.
+- UNKNOWN trả HTTP 200, `stats=null`, `topCategories=[]`, `budget=null`, không có comparison; reply liệt kê đúng sáu khả năng và ba câu hỏi mẫu. Không query tài chính hoặc gọi Gemini. UNKNOWN/UNSUPPORTED vẫn tính vào rate limit.
+- Từ chối yêu cầu ghi/SQL/xem tài khoản khác; từ chối keyword chỉ là UX. Owner vẫn lấy từ JWT ở mọi query; không có SQL/tool sinh từ prompt. Gemini chỉ nhận lời nhắc tư vấn chung cố định, không raw prompt/context/PII/số tiền/JWT.
+
+**Thời gian (Asia/Ho_Chi_Minh, Clock inject được trong unit tests):**
+
+| Câu/field | Cách chọn kỳ |
+| --- | --- |
+| Không có tháng trong câu | `month` picker; follow-up có context có thể dùng `context.month` |
+| `tháng N`, `tN` | Tháng N trong năm hiện tại ở Việt Nam, không lấy năm picker |
+| `tháng N/YYYY`, `tN/YYYY`, `N/YYYY`, `YYYY-MM`, `tháng N năm YYYY` | Kỳ tường minh |
+| `tháng này`, `tháng trước` | Tính theo thời điểm Việt Nam hiện tại; tháng 1 lùi về tháng 12 năm trước |
+| `so sánh với tháng trước`, `chi nhiều/ít hơn tháng trước` | Ngầm kỳ hiện tại so với tháng trước |
+| Hai tháng trong câu so sánh/trend | Kỳ muộn hơn làm target, kỳ sớm hơn làm base, ưu tiên cả hai hơn picker |
+| Một tháng tường minh trong COMPARISON/CATEGORY_TREND | Target theo câu; base giữ compareMonth/context nếu khác target, nếu không có hoặc trùng target sau override thì dùng tháng trước target |
+| `năm nay` kèm tháng N | Tháng N trong năm hiện tại |
+| `năm nay`, `cả năm`, `hàng năm`, `năm YYYY` mà không có tháng | UNKNOWN, nói rõ chưa hỗ trợ thống kê cả năm; không trả tổng của picker làm tổng năm |
+
+Năm được tính luôn 1900–2100; tháng 1–12. Tháng trong câu sai hoặc tháng trước vượt giới hạn trả 400 VALIDATION_ERROR trước query. Tháng 2/năm nhuận dùng YearMonth và query ngày nửa mở của ReportService hiện có. Hai tháng mà câu không rõ ý so sánh/trend, hoặc nhiều hơn hai kỳ, trả UNKNOWN để hỏi lại. Input picker/context vẫn phải hợp lệ dù sẽ bị kỳ trong câu override; compareMonth picker không được trùng month picker như contract D13 gốc.
+
+**Context tùy chọn:** Không lưu hội thoại trong Backend; client có thể gửi tối đa ba field dưới đây để tiếp tục câu hỏi. Chỉ các câu mở đầu `còn`, `thế`, `vậy`, `và` mới dùng fallback intent/month từ context; intent rõ trong câu vẫn thắng, kỳ rõ trong câu luôn thắng. Context không mang owner hoặc số tiền, không được dùng làm dữ liệu tài chính.
+
+```json
+{"message":"Còn tháng 2/2024?","month":"2026-11","context":{"intent":"CATEGORIES","month":"2026-10"}}
+```
+
+`context.intent` bắt buộc khi context tồn tại, thuộc sáu intent nghiệp vụ; `context.month` bắt buộc, YYYY-MM/1900–2100; `context.compareMonth` tùy chọn cùng validation. Request P1 hai field và P2 ba field vẫn được nhận. Relative `tháng trước` luôn theo Clock, không tự dịch theo context.
+
+Ví dụ picker `2026-11`, message `Tổng chi tháng 2/2024?` → SUMMARY, `period=2024-02`, reply nêu tháng 2/2024 và stats lấy SQL tháng đó. Message `So sánh danh mục tháng 12/2025 và tháng 1/2026` → CATEGORY_TREND, baseMonth=2025-12, targetMonth/period=2026-01. Message `Tổng thu năm nay` → UNKNOWN, stats=null và nêu rõ không có thống kê cả năm.
+
+**Phối hợp FE bắt buộc trước tích hợp NLU:** `frontend/src/services/aiChatService.js` hiện kiểm tra `data.period===requestedMonth` và `comparison.baseMonth===requestedCompareMonth`. Những guard này sẽ báo INVALID_API_RESPONSE khi NLU hợp lệ override picker. FE cần chấp nhận kỳ trả từ Backend sau khi validate cấu trúc/miền giá trị và quan hệ `comparison.targetMonth===period`, giữ sequence/abort/session guards để chặn response cũ. Render kỳ thực tế từ response; không gắn nhãn số liệu bằng picker. Muốn follow-up phải gửi context chủ động; Backend không tự nhớ phiên chat. Task BE này không sửa FE; không dùng lại kết quả Browser QA P2 cũ để tuyên bố NLU Live PASS.
+
+### Reports D10 — hợp đồng triển khai theo nhiệm vụ SE2-D10-BE
+
+Nhiệm vụ D10-BE được cung cấp trong phiên làm việc ngày **08/11/2026**, hạn task **09/11/2026**, thay thế đề xuất Reports cũ (`fromMonth/toMonth`, tối đa 12 tháng, DTO `income/expense`). Phần Reports trong SRS vẫn ghi đề xuất cũ; cần đồng bộ khi nhóm chốt tài liệu. Đây là hợp đồng Backend đã triển khai trong working tree, **chưa xác nhận FE tích hợp hoặc nghiệm thu**.
+
+- `GET /api/reports/monthly?from=YYYY-MM&to=YYYY-MM`: hai tham số bắt buộc, đúng định dạng, năm **1900–2100**. Khoảng bao gồm cả hai tháng, cho phép **1–6 tháng liên tiếp**; thiếu/rỗng/sai định dạng, `from > to` hoặc trên 6 tháng trả **400 VALIDATION_ERROR** theo ApiError hiện có.
+- JWT bắt buộc; owner chỉ lấy từ subject đã xác thực. Query `userId` không thay owner; JWT thiếu/sai/hết hạn trả **401 UNAUTHORIZED** theo Security hiện có.
+- `months` tăng dần và có đủ mọi tháng trong khoảng; tháng trống có `totalIncome=totalExpense=balance=0`. Tổng theo `Transaction.type`; `balance=totalIncome-totalExpense`, có thể âm.
+- `expensesByCategory` chỉ gồm EXPENSE trong **toàn bộ khoảng**, nhóm theo `categoryId` và tên danh mục, sắp `totalAmount DESC`; không có chi tiêu trả `[]`. Thứ tự danh mục có tổng bằng nhau không được bảo đảm. Không trả giao dịch riêng lẻ hoặc thông tin tài khoản.
+- DB dùng `[ngày đầu from, ngày đầu tháng sau to)`, kể cả tháng 12 sang tháng 1. Hai truy vấn tổng hợp trong transaction `readOnly`, không tải Entity để cộng tiền hoặc query từng tháng/danh mục.
+- Tiền là JSON number/Backend BigDecimal, không làm tròn trung gian; `0` và `0.00` tương đương. Tổng có thể vượt giới hạn một giao dịch; FE lưu ý độ chính xác JavaScript Number. DTO/service có thể dùng lại cho AI D11; D10 chưa có Chat/Gemini hoặc trường ngân sách/phần trăm.
+
+Ví dụ cấu trúc response **200 OK** (dữ liệu minh họa, không phải bằng chứng chạy thật):
+
+```json
+{
+  "from": "2026-09",
+  "to": "2026-11",
+  "months": [
+    {"month":"2026-09","totalIncome":100.10,"totalExpense":20.05,"balance":80.05},
+    {"month":"2026-10","totalIncome":0,"totalExpense":0,"balance":0},
+    {"month":"2026-11","totalIncome":0,"totalExpense":30.15,"balance":-30.15}
+  ],
+  "expensesByCategory": [
+    {"categoryId":1,"categoryName":"Ăn uống","totalAmount":50.20}
+  ]
+}
+```
+
+### D12 — Quên mật khẩu, SMTP và phiên bản JWT
+
+Phạm vi được giao SE2-D12-BE, hạn **11/11/2026 UTC+07**. Đây là hợp đồng source local cho Trang tích hợp và Quỳnh review DB; không xác nhận đã có migration hoặc triển khai production.
+
+`POST /api/auth/forgot-password`, không cần Bearer, JSON:
+
+```json
+{"email":"user@example.com"}
+```
+
+Email bắt buộc, hợp lệ, tối đa 255 ký tự; Backend chuẩn hóa trim/lowercase như login/register. HTTP **200**, `Cache-Control: no-store`, giống hệt cho email có/không tồn tại và email bị giới hạn gửi:
+
+```json
+{"message":"Nếu email tồn tại trong hệ thống, chúng tôi sẽ gửi hướng dẫn đặt lại mật khẩu."}
+```
+
+Response chỉ xác nhận tiếp nhận yêu cầu chung, **không xác nhận email đã giao**. HTTP thread không query tài khoản/DB hoặc chờ SMTP; task được xử lý bởi 2 worker, hàng đợi tối đa 100. Khi đầy hàng đợi vẫn trả thông báo chung và ghi event vận hành `password_reset_queue_full`, không chạy SMTP trên HTTP thread. Không đổi mật khẩu/version khi yêu cầu gửi link. Hàng đợi nằm trong bộ nhớ, không đảm bảo giao mail sau khi tiến trình bị dừng đột ngột; không có retry tự động/outbox ở D12.
+
+`POST /api/auth/reset-password`, không cần Bearer, JSON:
+
+```json
+{"token":"RESET_TOKEN","newPassword":"NewPassword123!"}
+```
+
+Mật khẩu không blank, tối thiểu 8 ký tự, tối đa **72 bytes UTF-8**, không trim mật khẩu. Mật khẩu trùng hiện tại trả **400 PASSWORD_REUSE** (`Mật khẩu mới phải khác mật khẩu hiện tại.`), không tiêu thụ token. Lỗi validation trả ApiError `VALIDATION_ERROR` và `errors.newPassword` nếu do Bean Validation. Thành công HTTP **200**, `Cache-Control: no-store`:
+
+```json
+{"message":"Mật khẩu đã được đặt lại thành công. Vui lòng đăng nhập."}
+```
+
+Token thiếu, sai định dạng/không tồn tại, hết hạn, đã dùng hoặc bị thay thế đều trả HTTP **400**:
+
+```json
+{"status":400,"code":"INVALID_RESET_TOKEN","message":"Liên kết đặt lại mật khẩu không hợp lệ hoặc đã hết hạn."}
+```
+
+Không trả token/JWT/user/email/ID trong hai response. FE gọi hai API này không kèm Authorization (Bearer sai/hết hạn vẫn bị bộ lọc từ chối); giữ token từ query chỉ để gửi reset, không log link/token, không tự đăng nhập; thành công chuyển về Login và xóa phiên cũ. Security chỉ permitAll **POST** register/login/forgot-password/reset-password; không mở `/api/auth/**`.
+
+**Token và transaction:** SecureRandom 32 bytes → Base64 URL-safe không padding (43 ký tự); DB chỉ lưu SHA-256 lowercase hex 64 ký tự. Thời hạn đúng 30 phút từ thời điểm cấp; `now >= expires_at` bị từ chối. Clock được inject, DATETIME(6) lưu giờ UTC (không theo múi giờ mặc định của server). Mọi đường cấp/reset khóa hàng User trước rồi mới khóa/ghi token. Reset đọc lại token bằng `SELECT ... FOR UPDATE` sau khóa User, cập nhật password/version/used_at trong cùng transaction; hai request cùng token chỉ một thành công, lỗi DB rollback toàn bộ. Cấp token mới vô hiệu các token chưa dùng trước đó; `used_at` được dùng chung để đánh dấu tiêu thụ hoặc vô hiệu, không phải lịch sử xác nhận người dùng đã reset.
+
+**Handoff D12-DB — Quỳnh sở hữu duy nhất** `database/migrations/V006__create_password_reset_tokens.sql`, Backend không tạo SQL thay thế. Contract: `password_reset_tokens(id BIGINT PK AUTO_INCREMENT, user_id BIGINT NOT NULL FK users(id), token_hash CHAR(64) NOT NULL UNIQUE, expires_at DATETIME(6) NOT NULL, created_at DATETIME(6) NOT NULL, used_at DATETIME(6) NULL)` và `users.auth_version BIGINT NOT NULL DEFAULT 0`. V006 dùng FK RESTRICT và index `user_id`, giữ dữ liệu users hiện có. Trước khi hợp nhất branch có thể kiểm thử bằng snapshot SQL nguyên bản trong thư mục build cô lập. `PasswordResetBackendMigrationIntegrationTests` bắt buộc SQL thật từ schema MVP → V002–V006 trên MySQL 8, validate mapping và test reset; thiếu SQL phải FAIL, không skip hoặc thay bằng Hibernate DDL. Harness D06–D09 áp V006 trước khi khởi động Backend hiện tại; test schema lịch sử giữ nguyên kiểm tra từng version, phần validate Entity hiện tại dùng schema V002–V006 cô lập riêng. Bộ test DB `PasswordResetMigrationIntegrationTests` thuộc Quỳnh được giữ riêng để tránh trùng tên với bộ BE. Không xác nhận migration đã được áp dụng production từ kết quả kiểm thử local.
+
+**JWT:** login phát thêm claim số nguyên `auth_version`. JWT trước D12 thiếu claim được coi là 0; chỉ dùng được khi version DB còn 0. Reset thành công tăng version; JWT cũ ở mọi session bị trả **401 UNAUTHORIZED**, JWT mới sau login bằng mật khẩu mới hoạt động. User bị xóa bị từ chối. Giữ HS256, subject user ID dương và validator thời hạn mặc định. Sau các bước này, decoder chạy đúng **một scalar SELECT auth_version theo PK User/request JWT hợp lệ**, không fetch dữ liệu tài chính hoặc cache version; token sai chữ ký/thời hạn/claim không query DB. Đây là chi phí bổ sung có giới hạn để vô hiệu ngay sau commit; cần đo latency/pool trên môi trường tích hợp trước khi scale. Không thêm session/refresh token.
+
+**Rate limit mỗi instance:** cửa sổ 15 phút từ request đầu; forgot tối đa **10 request/IP**, gửi tối đa **3/email chuẩn hóa**, reset tối đa **30 lần/IP** (tính cả token sai). Email bị chặn vẫn 200 chung. Vượt IP trả HTTP **429**, `Retry-After: 900`, ApiError `AUTH_RATE_LIMITED`, message `Quá nhiều yêu cầu. Vui lòng thử lại sau.` Bộ đếm tối đa 10.000 key (email chỉ lưu hash), đầy thì từ chối tương ứng thay vì bỏ giới hạn đang hoạt động. IP lấy từ socket `remoteAddr`, không tự đọc X-Forwarded-For; không cấu hình trusted proxy trong D12. Đằng sau proxy, nhiều client có thể cùng quota IP. Restart xóa bộ đếm; nhiều instance chưa dùng limiter chung. Không khóa tài khoản do forgot/reset thất bại.
+
+**SMTP — Spring Mail/JavaMailSender**, hoàn toàn từ môi trường. Compose truyền đủ tám biến bên dưới; script local đọc file env được chọn hoặc kế thừa biến SMTP của tiến trình cha khi file không khai báo. Script khôi phục môi trường khi kết thúc, không in secret và không thay biến Gemini của tiến trình cha.
+
+| Biến | Ý nghĩa / mặc định |
+| --- | --- |
+| `SMTP_HOST` | Host SMTP, mặc định rỗng; không chọn provider |
+| `SMTP_PORT` | Port SMTP, mặc định 587 |
+| `SMTP_USERNAME`, `SMTP_PASSWORD` | Credential provider cấp; không lưu vào Git |
+| `SMTP_FROM` | Địa chỉ gửi được provider cho phép, mặc định rỗng |
+| `APP_FRONTEND_URL` | Origin FE tin cậy, ví dụ `https://finance.example`; không có path/query/fragment/userinfo |
+| `SMTP_AUTH` | Mặc định true; false chỉ cho SMTP sandbox không auth |
+| `SMTP_STARTTLS` | Mặc định true, enable và required; false chỉ cho sandbox cô lập |
+
+Link duy nhất: `APP_FRONTEND_URL/reset-password?token=<raw-token>`; không dùng Host/Origin client. HTTPS bắt buộc cho host ngoài loopback; HTTP localhost/127.0.0.1/[::1] chỉ trong development, profile `prod`/`production` vẫn bắt buộc HTTPS. Subject `Đặt lại mật khẩu SmartExpense`, nội dung thông báo link, hạn 30 phút, chỉ dùng một lần và bỏ qua nếu không yêu cầu. Không gửi password. Connect/read/write timeout đều 5000 ms, mail debug tắt. Không cấu hình implicit TLS/port 465 trong D12; cần cấu hình STARTTLS phù hợp provider thực tế.
+
+Khi thiếu SMTP/from/FE URL, Auth khác vẫn chạy; worker không tạo token và ghi `password_reset_email_not_configured`. Mail chỉ gửi sau commit token. Gửi lỗi/timeout ghi `password_reset_email_delivery_failed`, vô hiệu đúng hash của token không giao được bằng transaction riêng; nếu DB lỗi khi cleanup ghi `password_reset_processing_failed`, token vẫn có TTL 30 phút. Log chỉ có event cố định, không exception/raw SMTP/link/email/secret. Hai response vẫn trung lập, không có trạng thái “đã giao”. DTO Auth loại email/password/token khỏi toString. Test mail dùng mock và SMTP stub loopback; **không coi là Email Live PASS**.
+
 ## 3. API dự kiến — cần review trước triển khai
 
 API mới yêu cầu JWT, ID dương, input hợp lệ; lỗi chung theo mục 1. Category/template khác owner trả 404; category thuộc owner nhưng sai type trả 400.
@@ -344,9 +628,7 @@ API mới yêu cầu JWT, ID dương, input hợp lệ; lỗi chung theo mục 1
 | DELETE | `/recurring-templates/{id}` | Path id | 204; 409 TEMPLATE_IN_USE nếu đã áp dụng |
 | GET | `/recurring-templates/{id}/preview` | Query year,month bắt buộc | 200 Preview, không ghi dữ liệu |
 | POST | `/recurring-templates/{id}/apply` | `{year,month}` | 201 Application; 409 TEMPLATE_INACTIVE/ALREADY_APPLIED |
-| GET | `/reports/monthly` | Query fromMonth,toMonth bắt buộc | 200 MonthlyReport; 400 kỳ sai/quá giới hạn |
 | GET | `/reports/categories` | Query fromMonth,toMonth bắt buộc | 200 CategoryReport; 400 kỳ sai/quá giới hạn |
-| GET | `/transactions/export` | Query Filter, không page/size/sort | 200 CSV; 400 filter sai; 422 EXPORT_LIMIT_EXCEEDED |
 
 ### DTO và hành vi dự kiến
 
@@ -358,8 +640,6 @@ Template = { id, categoryName, ...TemplateInput }
 Preview = { templateId, year, month, transactionDate, categoryId, categoryName,
   type, amount, note, alreadyApplied, canApply, reasonCode }
 Application = { id, templateId, year, month, transactionId, transaction:Transaction }
-MonthlyReport = { fromMonth, toMonth, totalIncome, totalExpense, balance,
-  months:[{month,income,expense,balance}] }
 CategoryReport = { fromMonth, toMonth, totalExpense,
   categories:[{categoryId,categoryName,totalAmount,categoryShare}] }
 ```
@@ -370,14 +650,13 @@ CategoryReport = { fromMonth, toMonth, totalExpense,
 
 **Phân loại lỗi ghi D09:** chỉ MySQL **1062 / SQLSTATE 23000** là duplicate trả **409 CONFLICT**. FK, CHECK, NOT NULL hoặc lỗi toàn vẹn khác trả **500 INTERNAL_ERROR** trung lập, không lộ SQL/constraint. Chỉ áp dụng đường ghi Apply D09; D01–D08 giữ handler hiện tại. Lỗi ghi luôn rollback cả transaction và marker, không retry trong transaction đã lỗi.
 
-- **Báo cáo (FR-09):** from/to inclusive, đề xuất tối đa 12 tháng; months ASC, tháng trống 0; tổng/balance khớp Dashboard/SQL. Category chỉ EXPENSE, sort totalAmount DESC/categoryId ASC, categoryShare là % round HALF_UP 2 số (tổng làm tròn có thể khác 100); rỗng trả categories=[]. Drilldown dùng filter giao dịch.
-- **CSV (FR-10):** xuất toàn bộ filter/owner, sort ngày DESC/id DESC; đề xuất tối đa 10.000 dòng, vượt trả 422 trước khi gửi file, không cắt cụt; count/export nhất quán. UTF-8 BOM, comma/CRLF, quote cell và nhân đôi nháy kép. Header `ID,Ngày giao dịch,Loại,Danh mục,Số tiền (VND),Ghi chú`; tiền dot/2 số, không phân cách nghìn. Rỗng chỉ BOM+header. Với category/note, nếu ký tự đầu sau khoảng trắng/tab/CR/LF là `=,+,-,@`, thêm nháy đơn trước cell rồi escape để chặn formula injection. Không xuất userId/email/password/token.
-- CSV headers: `Content-Type: text/csv; charset=UTF-8`, `Content-Disposition: attachment; filename="smart-expense-YYYYMMDD.csv"`, `Cache-Control: no-store`; tên theo ngày UTC+07:00. FE tải blob, phân biệt JSON lỗi; page/size/sort gửi lên trả 400. Report chuyển khoảng tháng thành range ngày khi export. Cross-origin đọc filename cần review expose header CORS; chưa đổi cấu hình.
+- **Báo cáo (FR-09):** MonthlyReport đã triển khai theo mục Reports D10 ở trên, tối đa 6 tháng. `/reports/categories` riêng và `categoryShare` vẫn là đề xuất, chưa triển khai trong D10; đề xuất sort totalAmount DESC/categoryId ASC, categoryShare là % round HALF_UP 2 số (tổng làm tròn có thể khác 100); rỗng trả categories=[]. Drilldown dùng filter giao dịch.
+- **CSV (FR-10):** đã có hợp đồng triển khai local tại mục **D11 — CSV và AI Assistant+ P1** ở trên, thay thế đề xuất CSV cũ. FE tải blob, phân biệt JSON lỗi; Report chuyển khoảng tháng thành range ngày khi export. Cross-origin đọc filename vẫn cần review expose header CORS.
 
 ## 4. Những điểm cần chốt
 
 - **FE — Q01/Q04/Q13:** endpoint/DTO mới, lịch, submit và UX timeout. Idempotency-Key nếu cần phải có thiết kế cả nhóm duyệt, chưa có storage/TTL/replay.
-- **Cả nhóm — Q02/Q03/Q05–Q09/Q11:** mã lỗi nghiệp vụ 2.0, metadata/default, rule ngân sách/xóa/định kỳ, report 12 tháng, CSV 10.000; thống nhất email≤255, miền năm/ngày, keyword≤500 tìm literal và tiền JSON number. Các giới hạn mới vẫn là đề xuất.
+- **Cả nhóm — Q02/Q03/Q05–Q09/Q11:** mã lỗi nghiệp vụ 2.0, metadata/default, rule ngân sách/xóa/định kỳ, Reports D10 và CSV/AI D11 chờ FE xác nhận tích hợp; thống nhất email≤255, miền năm/ngày, keyword≤500 tìm literal và tiền JSON number. Ngoài các hợp đồng triển khai D10/D11 đã ghi riêng ở trên, các giới hạn mới vẫn là đề xuất.
 - **DB/QA — Q10/Q14:** version migration/runner/FK/ddl-auto, backup/rollback, CI gate/pin SHA; xem [README](../../README.md#migration-backup-và-rollback).
 - **Q12:** nguồn kế hoạch đã xác nhận: 12 FR, 45 task, 27/10–16/11/2026, ba owner/nhánh theo README; không phải duyệt API/schema hoặc ký thay thành viên.
 

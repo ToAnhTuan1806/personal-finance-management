@@ -975,7 +975,7 @@ function GuestDashboard() {
   return (
     <div className="space-y-10 animate-fade-in">
       {/* 1. Hero Banner 2 cột trực quan */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-700 via-indigo-700 to-slate-900 p-8 sm:p-12 text-white shadow-xl shadow-blue-600/15">
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-700 via-indigo-700 to-slate-900 p-5 sm:p-8 lg:p-12 text-white shadow-xl shadow-blue-600/15">
         <div className="pointer-events-none absolute -right-16 -top-16 h-80 w-80 rounded-full bg-cyan-400/20 blur-3xl" />
         <div className="pointer-events-none absolute -left-16 -bottom-16 h-80 w-80 rounded-full bg-indigo-500/25 blur-3xl" />
 
@@ -984,7 +984,7 @@ function GuestDashboard() {
           <div className="lg:col-span-7 space-y-5">
             <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3.5 py-1.5 text-xs font-bold backdrop-blur-md">
               <Sparkles size={14} className="text-amber-300" />
-              <span>Quản lý tài chính cá nhân</span>
+              <span>Theo dõi thu chi mỗi ngày</span>
             </div>
 
             <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight leading-snug">
@@ -1015,10 +1015,10 @@ function GuestDashboard() {
 
           {/* Cột phải: Mockup Dashboard mini lấp đầy khoảng trống */}
           <div className="lg:col-span-5 flex justify-center">
-            <div className="w-full max-w-sm rounded-2xl border border-white/20 bg-white/10 p-5 backdrop-blur-xl shadow-2xl space-y-4">
-              <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                <div className="flex items-center gap-2.5">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/20 overflow-hidden p-1">
+            <div className="w-full max-w-sm rounded-2xl border border-white/20 bg-white/10 p-3.5 sm:p-5 backdrop-blur-xl shadow-2xl space-y-4">
+              <div className="flex items-center justify-between gap-1.5 border-b border-white/10 pb-3">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/20 overflow-hidden p-1">
                     <img
                       src={walletLogo}
                       alt="SmartExpense"
@@ -1029,15 +1029,16 @@ function GuestDashboard() {
                       }}
                     />
                   </div>
-                  <div>
-                    <p className="text-xs font-bold text-white leading-tight">SmartExpense</p>
-                    <p className="text-[10px] text-blue-200">Tổng quan tháng 10</p>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-white leading-tight truncate">SmartExpense</p>
+                    <p className="text-[10px] text-blue-200 truncate">Tổng quan tháng 11</p>
                   </div>
                 </div>
-                <span className="rounded-full bg-emerald-400/20 px-2.5 py-0.5 text-[10px] font-bold text-emerald-300">
+                <span className="shrink-0 rounded-full bg-emerald-400/20 px-2 py-0.5 text-[9px] sm:text-[10px] font-bold text-emerald-300">
                   +67,7% tiết kiệm
                 </span>
               </div>
+              <p className="-mt-1 text-[10px] font-semibold text-blue-200/90">Dữ liệu minh họa</p>
 
               <div>
                 <p className="text-[11px] font-medium text-blue-200 uppercase tracking-wider">Số dư khả dụng</p>
@@ -1128,7 +1129,7 @@ function GuestDashboard() {
                 Biểu đồ chi tiêu
               </h3>
               <p className="mt-1.5 text-xs sm:text-[13px] text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
-                Biểu đồ tròn cho thấy mỗi danh mục chiếm bao nhiêu phần trăm chi tiêu.
+                Theo dõi tỷ trọng chi tiêu theo danh mục và dòng tiền theo thời gian qua các biểu đồ trực quan.
               </p>
             </div>
           </div>
@@ -1143,7 +1144,7 @@ function GuestDashboard() {
               Xem thử giao diện
             </h2>
             <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-[11px] font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-              Dữ liệu mẫu
+              Dữ liệu minh họa
             </span>
           </div>
           <p className="mt-0.5 text-xs sm:text-[13px] text-slate-600 dark:text-slate-300 font-medium">
@@ -1195,8 +1196,8 @@ function GuestDashboard() {
 
         {/* Bảng giao dịch mẫu & Card bảo mật */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 rounded-2xl border border-slate-200/90 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-[#182234]">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4 dark:border-slate-800">
+          <div className="lg:col-span-2 rounded-2xl border border-slate-200/90 bg-white p-3.5 sm:p-6 shadow-sm dark:border-slate-800 dark:bg-[#182234]">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4 dark:border-slate-800">
               <div>
                 <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
                   Giao dịch gần đây
@@ -1214,43 +1215,43 @@ function GuestDashboard() {
             </div>
 
             <div className="divide-y divide-slate-100 dark:divide-slate-800/80">
-              <div className="flex items-center justify-between py-3.5">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400">
+              <div className="flex items-center justify-between gap-2 py-3.5">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400">
                     <ArrowDownRight size={18} />
                   </div>
-                  <div>
-                    <p className="text-sm font-bold text-slate-800 dark:text-slate-200">Lương tháng 10</p>
-                    <p className="text-xs sm:text-[13px] text-slate-600 dark:text-slate-300 font-medium">Thu nhập · 01/10/2026</p>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-slate-800 dark:text-slate-200 truncate">Lương tháng 11</p>
+                    <p className="text-xs sm:text-[13px] text-slate-600 dark:text-slate-300 font-medium truncate">Thu nhập · 01/11/2026</p>
                   </div>
                 </div>
-                <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">+15.000.000 ₫</span>
+                <span className="shrink-0 whitespace-nowrap text-xs sm:text-sm font-bold text-emerald-600 dark:text-emerald-400">+15.000.000 ₫</span>
               </div>
 
-              <div className="flex items-center justify-between py-3.5">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400">
+              <div className="flex items-center justify-between gap-2 py-3.5">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400">
                     <ArrowUpRight size={18} />
                   </div>
-                  <div>
-                    <p className="text-sm font-bold text-slate-800 dark:text-slate-200">Đi chợ</p>
-                    <p className="text-xs sm:text-[13px] text-slate-600 dark:text-slate-300 font-medium">Ăn uống · 03/10/2026</p>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-slate-800 dark:text-slate-200 truncate">Đi chợ</p>
+                    <p className="text-xs sm:text-[13px] text-slate-600 dark:text-slate-300 font-medium truncate">Ăn uống · 03/11/2026</p>
                   </div>
                 </div>
-                <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">-450.000 ₫</span>
+                <span className="shrink-0 whitespace-nowrap text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200">-450.000 ₫</span>
               </div>
 
-              <div className="flex items-center justify-between py-3.5">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400">
+              <div className="flex items-center justify-between gap-2 py-3.5">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400">
                     <ArrowUpRight size={18} />
                   </div>
-                  <div>
-                    <p className="text-sm font-bold text-slate-800 dark:text-slate-200">Tiền điện & Internet</p>
-                    <p className="text-xs sm:text-[13px] text-slate-600 dark:text-slate-300 font-medium">Hóa đơn · 05/10/2026</p>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-slate-800 dark:text-slate-200 truncate">Tiền điện & Internet</p>
+                    <p className="text-xs sm:text-[13px] text-slate-600 dark:text-slate-300 font-medium truncate">Hóa đơn · 05/11/2026</p>
                   </div>
                 </div>
-                <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">-820.000 ₫</span>
+                <span className="shrink-0 whitespace-nowrap text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200">-820.000 ₫</span>
               </div>
             </div>
           </div>
@@ -1262,10 +1263,10 @@ function GuestDashboard() {
                 <ShieldCheck size={26} />
               </div>
               <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
-                Dữ liệu của riêng bạn
+                Bảo vệ dữ liệu tài chính của bạn
               </h3>
               <p className="text-xs sm:text-[13px] text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
-                Dữ liệu của mỗi tài khoản được tách biệt và chỉ bạn xem được sau khi đăng nhập.
+                SmartExpense sử dụng xác thực đăng nhập và phân quyền tài khoản để bảo vệ thông tin thu chi cá nhân.
               </p>
             </div>
 

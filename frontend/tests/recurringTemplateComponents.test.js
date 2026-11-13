@@ -48,10 +48,10 @@ after(async () => {
 /* 1. Unit Tests for recurringTemplateUtils                                   */
 /* ========================================================================== */
 
-test('recurringTemplateUtils: constants chính xác theo SRS', () => {
+test('recurringTemplateUtils: nội dung hướng dẫn và cảnh báo ngày cuối tháng chính xác', () => {
   assert.equal(
     DISCLAIMER_NOTICE,
-    'Đây chỉ là mẫu giao dịch định kỳ. Hệ thống chưa tự động ghi nhận thu hoặc chi.'
+    'Mẫu giúp bạn lưu sẵn các khoản thu, chi lặp lại. Khi cần, hãy chọn “Kiểm tra trước khi ghi nhận” để xem lại thông tin trước khi thêm giao dịch vào sổ thu chi.'
   )
   assert.equal(
     DAY_31_NOTICE,
@@ -291,6 +291,8 @@ test('RecurringTemplateModal: render form thêm mới với tiêu đề và các
   assert.match(html, /Ghi chú \(tùy chọn\)/)
   assert.match(html, /Kích hoạt mẫu này/)
   assert.match(html, /Lưu mẫu/)
+  assert.match(html, /inputMode="numeric"/)
+  assert.doesNotMatch(html, /lucide-calendar/)
 })
 
 test('RecurringTemplateModal: render form chỉnh sửa với dữ liệu mẫu đã có', () => {
@@ -377,7 +379,8 @@ test('RecurringTemplates: render danh sách các card mẫu khi có dữ liệu'
 test('navigation: cấu hình đúng route /recurring-templates cho giao dịch định kỳ', () => {
   const recurringNav = navigation.find((item) => item.path === '/recurring-templates')
   assert.ok(recurringNav, 'Phải có mục navigation /recurring-templates')
-  assert.equal(recurringNav.label, 'Định kỳ')
+  assert.equal(recurringNav.label, 'Giao dịch định kỳ')
+  assert.equal(recurringNav.mobileLabel, 'Định kỳ')
   assert.equal(recurringNav.authRequired, true)
   assert.ok(recurringNav.icon, 'Phải có Icon lucide')
 })

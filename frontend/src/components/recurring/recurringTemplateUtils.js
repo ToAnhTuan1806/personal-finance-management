@@ -5,10 +5,70 @@
  */
 
 export const DISCLAIMER_NOTICE =
-  'Đây chỉ là mẫu giao dịch định kỳ. Hệ thống chưa tự động ghi nhận thu hoặc chi.'
+  'Mẫu giúp bạn lưu sẵn các khoản thu, chi lặp lại. Khi cần, hãy chọn “Kiểm tra trước khi ghi nhận” để xem lại thông tin trước khi thêm giao dịch vào sổ thu chi.'
 
 export const DAY_31_NOTICE =
   'Nếu tháng không có ngày 31, hệ thống sẽ dùng ngày cuối tháng.'
+
+export const RECURRING_PREVIEW_TIME_ZONE = 'Asia/Ho_Chi_Minh'
+export const MAX_RECURRING_PREVIEW_YEAR = 2100
+
+export function getCurrentRecurringPeriod(
+  date = new Date(),
+  timeZone = RECURRING_PREVIEW_TIME_ZONE
+) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    year: 'numeric',
+    month: 'numeric',
+  }).formatToParts(date)
+
+  return {
+    year: Number(parts.find((part) => part.type === 'year')?.value),
+    month: Number(parts.find((part) => part.type === 'month')?.value),
+  }
+}
+
+export function getRecurringPreviewYearOptions(
+  currentYear,
+  maxYear = MAX_RECURRING_PREVIEW_YEAR
+) {
+  if (!Number.isInteger(currentYear) || currentYear > maxYear) return []
+  return Array.from({ length: maxYear - currentYear + 1 }, (_, index) => currentYear + index)
+}
+
+export function getRecurringPreviewMonthOptions(year, currentYear, currentMonth) {
+  if (
+    !Number.isInteger(year) ||
+    !Number.isInteger(currentYear) ||
+    !Number.isInteger(currentMonth) ||
+    currentMonth < 1 ||
+    currentMonth > 12 ||
+    year < currentYear ||
+    year > MAX_RECURRING_PREVIEW_YEAR
+  ) {
+    return []
+  }
+
+  const firstMonth = year === currentYear ? currentMonth : 1
+  return Array.from({ length: 13 - firstMonth }, (_, index) => firstMonth + index)
+}
+
+export function isRecurringPreviewPeriodAllowed(year, month, currentYear, currentMonth) {
+  if (
+    !Number.isInteger(year) ||
+    !Number.isInteger(month) ||
+    !Number.isInteger(currentYear) ||
+    !Number.isInteger(currentMonth) ||
+    month < 1 ||
+    month > 12 ||
+    year > MAX_RECURRING_PREVIEW_YEAR
+  ) {
+    return false
+  }
+
+  return year > currentYear || (year === currentYear && month >= currentMonth)
+}
 
 /**
  * Định dạng số tiền sang định dạng tiền tệ Việt Nam (VNĐ)

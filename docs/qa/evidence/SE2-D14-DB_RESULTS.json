@@ -1,0 +1,782 @@
+{
+  "task": "SE2-D14-DB",
+  "timestamp": "2026-11-13T03:40:03+07:00",
+  "environment": {
+    "database": {
+      "engine": "MySQL Community Server 8.0.46",
+      "host": "127.0.0.1",
+      "port": 3306,
+      "name": "personal_finance_d14_test",
+      "isolation": "Dedicated isolated test catalog (zero touch on personal_finance_db)"
+    },
+    "backend": {
+      "runtime": "Spring Boot 4.1.1, Java 21 LTS",
+      "port": 8085,
+      "gitBranch": "feature/tuan",
+      "status": "Live HTTP running"
+    },
+    "frontend": {
+      "runtime": "React 19, Vite 8.3.4, Three.js 0.187.0",
+      "port": 5173,
+      "gitBranch": "feature/trang",
+      "status": "Live HTTP running with proxy to 8085"
+    },
+    "browser": {
+      "agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36",
+      "cdp": "CDP 1.3 WebSocket"
+    }
+  },
+  "summary": {
+    "liveApiTotal": 30,
+    "liveApiPassed": 30,
+    "liveApiFailed": 0,
+    "robotCdpTotal": 23,
+    "robotCdpPassed": 23,
+    "robotCdpFailed": 0,
+    "totalLiveQa": 53,
+    "totalLivePassed": 53,
+    "totalLiveFailed": 0,
+    "backendRegression": "1252/1252 PASS (47 test suites, 0 fail)",
+    "frontendRegression": "535/535 PASS (0 fail)",
+    "frontendLint": "PASS (0 warnings, 0 errors)",
+    "frontendBuild": "PASS (vite v8.3.4, bundle 1064kB, lazy chunk 540kB)",
+    "gitDiffCheck": "PASS (0 whitespace errors)",
+    "overallStatus": "PASS"
+  },
+  "liveApiTests": [
+    {
+      "id": "AUTH-01",
+      "group": "Auth",
+      "name": "Login User A and receive valid JWT",
+      "expected": true,
+      "actual": true,
+      "status": "PASS",
+      "details": {
+        "user": {
+          "id": 1,
+          "fullName": "User A",
+          "email": "user_a@example.com"
+        }
+      }
+    },
+    {
+      "id": "AUTH-02",
+      "group": "Auth",
+      "name": "Login User B and receive valid JWT",
+      "expected": true,
+      "actual": true,
+      "status": "PASS",
+      "details": {
+        "user": {
+          "id": 2,
+          "fullName": "User B (D14 Isolation QA)",
+          "email": "user_b@example.com"
+        }
+      }
+    },
+    {
+      "id": "AUTH-03",
+      "group": "Auth",
+      "name": "Login User C and receive valid JWT for Intent QA",
+      "expected": true,
+      "actual": true,
+      "status": "PASS",
+      "details": {}
+    },
+    {
+      "id": "AUTH-04",
+      "group": "Auth",
+      "name": "Reject request without JWT with 401",
+      "expected": 401,
+      "actual": 401,
+      "status": "PASS",
+      "details": {}
+    },
+    {
+      "id": "AUTH-05",
+      "group": "Auth",
+      "name": "Reject invalid JWT token with 401",
+      "expected": 401,
+      "actual": 401,
+      "status": "PASS",
+      "details": {}
+    },
+    {
+      "id": "SEED-01",
+      "group": "Seed",
+      "name": "Discover default categories for User A",
+      "expected": true,
+      "actual": true,
+      "status": "PASS",
+      "details": {
+        "count": 17
+      }
+    },
+    {
+      "id": "SEED-02",
+      "group": "Seed",
+      "name": "Complete seeding test scenarios in MySQL test database",
+      "expected": true,
+      "actual": true,
+      "status": "PASS",
+      "details": {}
+    },
+    {
+      "id": "BUDGET-01",
+      "group": "Budget D14",
+      "name": "Chưa đặt ngân sách tổng (NOT_SET, chi thực tế 3.5M, gợi ý đối chiếu)",
+      "expected": true,
+      "actual": true,
+      "status": "PASS",
+      "details": {
+        "reply": "Ngân sách tháng 5/2026:\nChưa thiết lập ngân sách tổng cho tháng này.\nĐã chi trong tháng: 3.500.000,00 ₫.\nGợi ý: Xem lại chi tiêu thực tế và các khoản thiết yếu trước khi tự đặt hạn mức phù hợp.\nChưa thiết lập ngân sách danh mục cho tháng này.\nCác danh mục chi nhiều nhất trong tháng (không đồng nghĩa với chi không cần thiết):\nDanh mục \"Ăn uống\": 2.000.000,00 ₫ (tỷ trọng 57,14%).\nDanh mục \"Đi lại\": 1.500.000,00 ₫ (tỷ trọng 42,86%).\nGợi ý: Rà soát các khoản có thể trì hoãn trong các danh mục trên, ưu tiên khoản thiết yếu; chỉ cân nhắc điều chỉnh phân bổ sau khi đối chiếu nhu cầu thực tế."
+      }
+    },
+    {
+      "id": "BUDGET-02",
+      "group": "Budget D14",
+      "name": "Tháng rỗng (spent=0, tỷ lệ 0.00%, chưa có cơ sở xác định danh mục)",
+      "expected": true,
+      "actual": true,
+      "status": "PASS",
+      "details": {
+        "reply": "Ngân sách tháng 6/2026:\nNgân sách tổng:\nHạn mức: 10.000.000,00 ₫.\nĐã chi: 0,00 ₫.\nCòn lại: 10.000.000,00 ₫.\nChưa vượt ngân sách.\nTỷ lệ sử dụng: 0,00%.\nGợi ý: Chưa phát sinh chi tiêu; hãy theo dõi các khoản sắp đến hạn trước khi quyết định chi thêm.\nChưa thiết lập ngân sách danh mục cho tháng này.\nChưa phát sinh chi tiêu trong tháng này; chưa có cơ sở xác định danh mục cần điều chỉnh."
+      }
+    },
+    {
+      "id": "BUDGET-03A",
+      "group": "Budget D14",
+      "name": "Ngưỡng 79,99% (hiển thị 79,99%, đang trong hạn mức, không cảnh báo)",
+      "expected": true,
+      "actual": true,
+      "status": "PASS",
+      "details": {
+        "reply": "Ngân sách tháng 7/2026:\nNgân sách tổng:\nHạn mức: 10.000.000,00 ₫.\nĐã chi: 7.999.000,00 ₫.\nCòn lại: 2.001.000,00 ₫.\nChưa vượt ngân sách.\nTỷ lệ sử dụng: 79,99%.\nGợi ý: Đang chi tiêu trong hạn mức; tiếp tục theo dõi phần còn lại trước các khoản chi mới.\nChưa thiết lập ngân sách danh mục cho tháng này.\nCác danh mục chi nhiều nhất trong tháng (không đồng nghĩa với chi không cần thiết):\nDanh mục \"Ăn uống\": 7.999.000,00 ₫ (tỷ trọng 100,00%).\nGợi ý: Rà soát các khoản có thể trì hoãn trong các danh mục trên, ưu tiên khoản thiết yếu; chỉ cân nhắc điều chỉnh phân bổ sau khi đối chiếu nhu cầu thực tế."
+      }
+    },
+    {
+      "id": "BUDGET-03B",
+      "group": "Budget D14",
+      "name": "Ngưỡng 799.99/1000.00 (hiển thị 80,00% HALF_UP nhưng KHÔNG cảnh báo vì thực tế < 80%)",
+      "expected": true,
+      "actual": true,
+      "status": "PASS",
+      "details": {
+        "reply": "Ngân sách tháng 4/2026:\nNgân sách tổng:\nHạn mức: 1.000,00 ₫.\nĐã chi: 799,99 ₫.\nCòn lại: 200,01 ₫.\nChưa vượt ngân sách.\nTỷ lệ sử dụng: 80,00%.\nGợi ý: Đang chi tiêu trong hạn mức; tiếp tục theo dõi phần còn lại trước các khoản chi mới.\nChưa thiết lập ngân sách danh mục cho tháng này.\nCác danh mục chi nhiều nhất trong tháng (không đồng nghĩa với chi không cần thiết):\nDanh mục \"Ăn uống\": 799,99 ₫ (tỷ trọng 100,00%).\nGợi ý: Rà soát các khoản có thể trì hoãn trong các danh mục trên, ưu tiên khoản thiết yếu; chỉ cân nhắc điều chỉnh phân bổ sau khi đối chiếu nhu cầu thực tế."
+      }
+    },
+    {
+      "id": "BUDGET-04",
+      "group": "Budget D14",
+      "name": "Ngưỡng 80,00% (Cảnh báo sắp đến hạn mức ngân sách và gợi ý đối chiếu)",
+      "expected": true,
+      "actual": true,
+      "status": "PASS",
+      "details": {
+        "reply": "Ngân sách tháng 8/2026:\nNgân sách tổng:\nHạn mức: 10.000.000,00 ₫.\nĐã chi: 8.000.000,00 ₫.\nCòn lại: 2.000.000,00 ₫.\nChưa vượt ngân sách.\nTỷ lệ sử dụng: 80,00%.\nCảnh báo: Sắp đến hạn mức ngân sách.\nGợi ý: Gần đạt hạn mức; đối chiếu phần còn lại với các khoản thiết yếu sắp tới, hạn chế khoản có thể trì hoãn.\nChưa thiết lập ngân sách danh mục cho tháng này.\nCác danh mục chi nhiều nhất trong tháng (không đồng nghĩa với chi không cần thiết):\nDanh mục \"Ăn uống\": 5.000.000,00 ₫ (tỷ trọng 62,50%).\nDanh mục \"Đi lại\": 3.000.000,00 ₫ (tỷ trọng 37,50%).\nGợi ý: Rà soát các khoản có thể trì hoãn trong các danh mục trên, ưu tiên khoản thiết yếu; chỉ cân nhắc điều chỉnh phân bổ sau khi đối chiếu nhu cầu thực tế."
+      }
+    },
+    {
+      "id": "BUDGET-05",
+      "group": "Budget D14",
+      "name": "Đúng 100,00% (Đã dùng hết hạn mức, chưa vượt, exceeded=false)",
+      "expected": true,
+      "actual": true,
+      "status": "PASS",
+      "details": {
+        "reply": "Ngân sách tháng 9/2026:\nNgân sách tổng:\nHạn mức: 10.000.000,00 ₫.\nĐã chi: 10.000.000,00 ₫.\nCòn lại: 0,00 ₫.\nĐã dùng hết hạn mức, chưa vượt ngân sách.\nTỷ lệ sử dụng: 100,00%.\nGợi ý: Đã đạt hạn mức; cân nhắc hoãn khoản chưa cần thiết trước khi phát sinh chi thêm.\nChưa thiết lập ngân sách danh mục cho tháng này.\nCác danh mục chi nhiều nhất trong tháng (không đồng nghĩa với chi không cần thiết):\nDanh mục \"Ăn uống\": 6.000.000,00 ₫ (tỷ trọng 60,00%).\nDanh mục \"Chi tiêu hằng ngày\": 4.000.000,00 ₫ (tỷ trọng 40,00%).\nGợi ý: Rà soát các khoản có thể trì hoãn trong các danh mục trên, ưu tiên khoản thiết yếu; chỉ cân nhắc điều chỉnh phân bổ sau khi đối chiếu nhu cầu thực tế."
+      }
+    },
+    {
+      "id": "BUDGET-06",
+      "group": "Budget D14",
+      "name": "Vượt 100% (Vượt 2.5M, exceeded=true, rà soát hoãn chi, không tăng hạn mức)",
+      "expected": true,
+      "actual": true,
+      "status": "PASS",
+      "details": {
+        "reply": "Ngân sách tháng 10/2026:\nNgân sách tổng:\nHạn mức: 10.000.000,00 ₫.\nĐã chi: 12.500.000,00 ₫.\nCòn lại: -2.500.000,00 ₫.\nĐã vượt hạn mức 2.500.000,00 ₫.\nTỷ lệ sử dụng: 125,00%.\nGợi ý: Đã vượt hạn mức; rà soát các khoản có thể trì hoãn và ưu tiên nhu cầu thiết yếu, không tăng hạn mức chỉ để bù phần vượt.\nNgân sách danh mục \"Ăn uống\":\nHạn mức: 4.000.000,00 ₫.\nĐã chi: 5.000.000,00 ₫.\nCòn lại: -1.000.000,00 ₫.\nĐã vượt hạn mức 1.000.000,00 ₫.\nTỷ lệ sử dụng: 125,00%.\nGợi ý: Đã vượt hạn mức; rà soát các khoản có thể trì hoãn và ưu tiên nhu cầu thiết yếu, không tăng hạn mức chỉ để bù phần vượt.\nCác danh mục chi nhiều nhất trong tháng (không đồng nghĩa với chi không cần thiết):\nDanh mục \"Ăn uống\": 5.000.000,00 ₫ (tỷ trọng 40,00%).\nDanh mục \"Chi tiêu hằng ngày\": 3.500.000,00 ₫ (tỷ trọng 28,00%).\nDanh mục \"Quần áo\": 2.000.000,00 ₫ (tỷ trọng 16,00%).\nDanh mục \"Tiền điện\": 1.000.000,00 ₫ (tỷ trọng 8,00%).\nDanh mục \"Đi lại\": 1.000.000,00 ₫ (tỷ trọng 8,00%).\nGợi ý: Rà soát các khoản có thể trì hoãn trong các danh mục trên, ưu tiên khoản thiết yếu; chỉ cân nhắc điều chỉnh phân bổ sau khi đối chiếu nhu cầu thực tế."
+      }
+    },
+    {
+      "id": "BUDGET-07",
+      "group": "Budget D14",
+      "name": "Gợi ý BUDGET liệt kê top danh mục chi nhiều kèm số tiền và tỷ trọng",
+      "expected": true,
+      "actual": true,
+      "status": "PASS",
+      "details": {}
+    },
+    {
+      "id": "INTENT-SUMMARY",
+      "group": "Intents",
+      "name": "SUMMARY intent returns accurate stats (20M thu, 12.5M chi, 7.5M dư)",
+      "expected": true,
+      "actual": true,
+      "status": "PASS",
+      "details": {
+        "stats": {
+          "totalIncome": 20000000.0,
+          "totalExpense": 12500000.0,
+          "balance": 7500000.0
+        }
+      }
+    },
+    {
+      "id": "INTENT-CATEGORIES",
+      "group": "Intents",
+      "name": "CATEGORIES intent returns top 5 categories sorted DESC with exact share %",
+      "expected": true,
+      "actual": true,
+      "status": "PASS",
+      "details": {
+        "topCategories": [
+          {
+            "categoryId": 52,
+            "categoryName": "Ăn uống",
+            "totalAmount": 5000000.0,
+            "sharePercentage": 40.0
+          },
+          {
+            "categoryId": 53,
+            "categoryName": "Chi tiêu hằng ngày",
+            "totalAmount": 3500000.0,
+            "sharePercentage": 28.0
+          },
+          {
+            "categoryId": 54,
+            "categoryName": "Quần áo",
+            "totalAmount": 2000000.0,
+            "sharePercentage": 16.0
+          },
+          {
+            "categoryId": 59,
+            "categoryName": "Tiền điện",
+            "totalAmount": 1000000.0,
+            "sharePercentage": 8.0
+          },
+          {
+            "categoryId": 60,
+            "categoryName": "Đi lại",
+            "totalAmount": 1000000.0,
+            "sharePercentage": 8.0
+          }
+        ]
+      }
+    },
+    {
+      "id": "INTENT-COMPARISON",
+      "group": "Intents",
+      "name": "COMPARISON intent compares T9 vs T10 (+2.5M, +25.00%)",
+      "expected": true,
+      "actual": true,
+      "status": "PASS",
+      "details": {
+        "comparison": {
+          "baseMonth": "2026-09",
+          "targetMonth": "2026-10",
+          "base": {
+            "totalIncome": 15000000.0,
+            "totalExpense": 10000000.0,
+            "balance": 5000000.0
+          },
+          "target": {
+            "totalIncome": 20000000.0,
+            "totalExpense": 12500000.0,
+            "balance": 7500000.0
+          },
+          "delta": {
+            "totalIncome": 5000000.0,
+            "totalExpense": 2500000.0,
+            "balance": 2500000.0
+          },
+          "expenseChangePercent": 25.0,
+          "categoryTrends": [
+            {
+              "categoryId": 54,
+              "categoryName": "Quần áo",
+              "baseExpense": 0,
+              "targetExpense": 2000000.0,
+              "delta": 2000000.0,
+              "changePercent": null
+            },
+            {
+              "categoryId": 59,
+              "categoryName": "Tiền điện",
+              "baseExpense": 0,
+              "targetExpense": 1000000.0,
+              "delta": 1000000.0,
+              "changePercent": null
+            },
+            {
+              "categoryId": 60,
+              "categoryName": "Đi lại",
+              "baseExpense": 0,
+              "targetExpense": 1000000.0,
+              "delta": 1000000.0,
+              "changePercent": null
+            },
+            {
+              "categoryId": 53,
+              "categoryName": "Chi tiêu hằng ngày",
+              "baseExpense": 4000000.0,
+              "targetExpense": 3500000.0,
+              "delta": -500000.0,
+              "changePercent": -12.5
+            },
+            {
+              "categoryId": 52,
+              "categoryName": "Ăn uống",
+              "baseExpense": 6000000.0,
+              "targetExpense": 5000000.0,
+              "delta": -1000000.0,
+              "changePercent": -16.67
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "INTENT-CATEGORY_TREND",
+      "group": "Intents",
+      "name": "CATEGORY_TREND identifies fastest growing expense category",
+      "expected": true,
+      "actual": true,
+      "status": "PASS",
+      "details": {
+        "trends": [
+          {
+            "categoryId": 54,
+            "categoryName": "Quần áo",
+            "baseExpense": 0,
+            "targetExpense": 2000000.0,
+            "delta": 2000000.0,
+            "changePercent": null
+          },
+          {
+            "categoryId": 59,
+            "categoryName": "Tiền điện",
+            "baseExpense": 0,
+            "targetExpense": 1000000.0,
+            "delta": 1000000.0,
+            "changePercent": null
+          },
+          {
+            "categoryId": 60,
+            "categoryName": "Đi lại",
+            "baseExpense": 0,
+            "targetExpense": 1000000.0,
+            "delta": 1000000.0,
+            "changePercent": null
+          },
+          {
+            "categoryId": 53,
+            "categoryName": "Chi tiêu hằng ngày",
+            "baseExpense": 4000000.0,
+            "targetExpense": 3500000.0,
+            "delta": -500000.0,
+            "changePercent": -12.5
+          },
+          {
+            "categoryId": 52,
+            "categoryName": "Ăn uống",
+            "baseExpense": 6000000.0,
+            "targetExpense": 5000000.0,
+            "delta": -1000000.0,
+            "changePercent": -16.67
+          }
+        ]
+      }
+    },
+    {
+      "id": "INTENT-ADVICE",
+      "group": "Intents",
+      "name": "ADVICE routes safely (returns 503 AI_NOT_CONFIGURED when unconfigured, no leak)",
+      "expected": true,
+      "actual": true,
+      "status": "PASS",
+      "details": {
+        "status": 200,
+        "body": {
+          "reply": "Dưới đây là một số gợi ý chung về quản lý tài chính cá nhân:\n\n1. **Lập ngân sách:** Phân chia thu nhập theo các nguyên tắc phổ biến (như quy tắc 50/30/20) để cân đối giữa nhu cầu thiết yếu, mong muốn cá nhân và tích lũy.\n2. **Theo dõi chi tiêu:** Ghi chép lại các khoản chi hàng ngày để nhận biết và điều chỉnh những khoản chưa hợp lý.\n3. **Xây dựng quỹ khẩn cấp:** Dành ra một khoản dự phòng tương đương vài tháng chi phí sinh hoạt để chủ động trước các tình huống bất ngờ.\n4. **Ưu tiên tiết kiệm trước:** Trích một phần tiền tiết kiệm ngay khi nhận thu nhập thay vì đợi đến cuối tháng còn dư mới để dành.\n\n*Lưu ý: Các gợi ý trên chỉ mang tính chất tham khảo chung.*",
+          "period": "2026-10",
+          "intent": "ADVICE",
+          "stats": {
+            "totalIncome": 20000000.0,
+            "totalExpense": 12500000.0,
+            "balance": 7500000.0
+          },
+          "topCategories": [],
+          "budget": null
+        }
+      }
+    },
+    {
+      "id": "INTENT-UNKNOWN",
+      "group": "Intents",
+      "name": "UNKNOWN intent handles non-financial queries with guidance",
+      "expected": true,
+      "actual": true,
+      "status": "PASS",
+      "details": {
+        "reply": "Mình chưa hiểu rõ yêu cầu. Mình hỗ trợ 6 khả năng: tổng thu/chi/số dư (SUMMARY); danh mục chi nhiều (CATEGORIES); kiểm tra ngân sách (BUDGET); tư vấn chung (ADVICE); so sánh hai tháng (COMPARISON); xu hướng danh mục (CATEGORY_TREND).\nBạn có thể hỏi:\n1. Tổng chi tháng này bao nhiêu?\n2. So sánh thu chi tháng này với tháng trước.\n3. Danh mục nào tăng chi tiêu nhiều nhất?"
+      }
+    },
+    {
+      "id": "INTENT-UNSUPPORTED",
+      "group": "Intents",
+      "name": "UNSUPPORTED intent safely refuses destructive actions (0 DB writes)",
+      "expected": true,
+      "actual": true,
+      "status": "PASS",
+      "details": {
+        "reply": "Trợ lý chỉ đọc dữ liệu của bạn, không xem tài khoản khác hoặc thay đổi giao dịch/ngân sách."
+      }
+    },
+    {
+      "id": "RECONCILE-SQL",
+      "group": "Reconciliation",
+      "name": "AI Chat totals match MySQL raw SQL aggregate exactly",
+      "expected": true,
+      "actual": true,
+      "status": "PASS",
+      "details": {
+        "sql": [
+          "20000000.00",
+          "12500000.00",
+          "7500000.00"
+        ]
+      }
+    },
+    {
+      "id": "RECONCILE-REPORT",
+      "group": "Reconciliation",
+      "name": "AI Chat totals match ReportService monthly report exactly",
+      "expected": true,
+      "actual": true,
+      "status": "PASS",
+      "details": {
+        "report": {
+          "month": "2026-10",
+          "totalIncome": 20000000.0,
+          "totalExpense": 12500000.0,
+          "balance": 7500000.0
+        }
+      }
+    },
+    {
+      "id": "RECONCILE-BUDGET",
+      "group": "Reconciliation",
+      "name": "AI Chat budget matches Budget API /api/budgets/2026/10",
+      "expected": true,
+      "actual": true,
+      "status": "PASS",
+      "details": {
+        "budgetApi": {
+          "id": 23,
+          "year": 2026,
+          "month": 10,
+          "amountLimit": 10000000.0,
+          "spentAmount": 12500000.0,
+          "remainingAmount": -2500000.0,
+          "exceeded": true
+        }
+      }
+    },
+    {
+      "id": "SECURITY-ZERO-MUTATION",
+      "group": "Security",
+      "name": "AI Chat operations cause 0 DB mutations (zero insert/update/delete)",
+      "expected": 0,
+      "actual": 0,
+      "status": "PASS",
+      "details": {
+        "before": {
+          "users": 4,
+          "categories": 68,
+          "transactions": 32,
+          "monthly_budgets": 9,
+          "category_budgets": 2
+        },
+        "after": {
+          "users": 4,
+          "categories": 68,
+          "transactions": 32,
+          "monthly_budgets": 9,
+          "category_budgets": 2
+        }
+      }
+    },
+    {
+      "id": "SECURITY-AB-ISOLATION",
+      "group": "Security",
+      "name": "User B sees ONLY User B's data (0% leakage from User A)",
+      "expected": true,
+      "actual": true,
+      "status": "PASS",
+      "details": {
+        "userBStats": {
+          "totalIncome": 30000000.0,
+          "totalExpense": 500000.0,
+          "balance": 29500000.0
+        }
+      }
+    },
+    {
+      "id": "SECURITY-PROMPT-INJECTION",
+      "group": "Security",
+      "name": "Cross-account prompt injection blocked safely with UNSUPPORTED",
+      "expected": true,
+      "actual": true,
+      "status": "PASS",
+      "details": {}
+    },
+    {
+      "id": "RESILIENCE-RATE-LIMIT",
+      "group": "Resilience",
+      "name": "Rate limiter enforces 10 req/min/user with 429 AI_RATE_LIMITED",
+      "expected": true,
+      "actual": true,
+      "status": "PASS",
+      "details": {}
+    },
+    {
+      "id": "RESILIENCE-DATA-RECOVERY",
+      "group": "Resilience",
+      "name": "Data intents remain operational and unblocked across users",
+      "expected": true,
+      "actual": true,
+      "status": "PASS",
+      "details": {}
+    }
+  ],
+  "robotCdpTests": [
+    {
+      "id": "CHROME-LIVE-WEBGL-IDLE",
+      "status": "PASS",
+      "detail": {
+        "state": "IDLE",
+        "screenshot": "live-idle-1440-light.png",
+        "gpu": {
+          "created": 1,
+          "lost": 0,
+          "attempts": 1,
+          "drawCalls": 208
+        }
+      }
+    },
+    {
+      "id": "CHROME-LIVE-LOADING-TO-SUCCESS-BUDGET",
+      "status": "PASS",
+      "detail": {
+        "state": "SUCCESS",
+        "screenshot": "live-budget-success-1440-light.png"
+      }
+    },
+    {
+      "id": "CHROME-LIVE-COMPARISON-CHART",
+      "status": "PASS",
+      "detail": {
+        "screenshot": "live-comparison-chart.png"
+      }
+    },
+    {
+      "id": "CHROME-LIVE-CATEGORIES-CHART",
+      "status": "PASS",
+      "detail": {
+        "screenshot": "live-categories-chart.png"
+      }
+    },
+    {
+      "id": "CHROME-LIVE-ERROR-RETRY",
+      "status": "PASS",
+      "detail": {
+        "errorScreenshot": "live-error-state.png",
+        "recoveryScreenshot": "live-retry-recovery.png"
+      }
+    },
+    {
+      "id": "CHROME-LIVE-SVG-FALLBACK",
+      "status": "PASS",
+      "detail": {
+        "hasSvg": true,
+        "canvasVisible": false,
+        "screenshot": "live-no-webgl-fallback.png"
+      }
+    },
+    {
+      "id": "CHROME-LIVE-CONTEXT-LOST-FALLBACK",
+      "status": "PASS",
+      "detail": {
+        "hasSvg": true,
+        "screenshot": "live-context-lost-fallback.png"
+      }
+    },
+    {
+      "id": "CHROME-LIVE-REDUCED-MOTION",
+      "status": "PASS",
+      "detail": {
+        "deltaDrawCalls": 0,
+        "screenshot": "live-reduced-motion.png"
+      }
+    },
+    {
+      "id": "CHROME-LIVE-RESPONSIVE-320-light",
+      "status": "PASS",
+      "detail": {
+        "metrics": {
+          "overflow": false,
+          "launcherVisible": true,
+          "panelWidth": null
+        },
+        "screenshot": "live-320-light.png"
+      }
+    },
+    {
+      "id": "CHROME-LIVE-RESPONSIVE-320-dark",
+      "status": "PASS",
+      "detail": {
+        "metrics": {
+          "overflow": false,
+          "launcherVisible": true,
+          "panelWidth": null
+        },
+        "screenshot": "live-320-dark.png"
+      }
+    },
+    {
+      "id": "CHROME-LIVE-RESPONSIVE-375-light",
+      "status": "PASS",
+      "detail": {
+        "metrics": {
+          "overflow": false,
+          "launcherVisible": true,
+          "panelWidth": null
+        },
+        "screenshot": "live-375-light.png"
+      }
+    },
+    {
+      "id": "CHROME-LIVE-RESPONSIVE-375-dark",
+      "status": "PASS",
+      "detail": {
+        "metrics": {
+          "overflow": false,
+          "launcherVisible": true,
+          "panelWidth": null
+        },
+        "screenshot": "live-375-dark.png"
+      }
+    },
+    {
+      "id": "CHROME-LIVE-RESPONSIVE-430-light",
+      "status": "PASS",
+      "detail": {
+        "metrics": {
+          "overflow": false,
+          "launcherVisible": true,
+          "panelWidth": null
+        },
+        "screenshot": "live-430-light.png"
+      }
+    },
+    {
+      "id": "CHROME-LIVE-RESPONSIVE-430-dark",
+      "status": "PASS",
+      "detail": {
+        "metrics": {
+          "overflow": false,
+          "launcherVisible": true,
+          "panelWidth": null
+        },
+        "screenshot": "live-430-dark.png"
+      }
+    },
+    {
+      "id": "CHROME-LIVE-RESPONSIVE-768-light",
+      "status": "PASS",
+      "detail": {
+        "metrics": {
+          "overflow": false,
+          "launcherVisible": true,
+          "panelWidth": null
+        },
+        "screenshot": "live-768-light.png"
+      }
+    },
+    {
+      "id": "CHROME-LIVE-RESPONSIVE-768-dark",
+      "status": "PASS",
+      "detail": {
+        "metrics": {
+          "overflow": false,
+          "launcherVisible": true,
+          "panelWidth": null
+        },
+        "screenshot": "live-768-dark.png"
+      }
+    },
+    {
+      "id": "CHROME-LIVE-RESPONSIVE-1440-light",
+      "status": "PASS",
+      "detail": {
+        "metrics": {
+          "overflow": false,
+          "launcherVisible": true,
+          "panelWidth": null
+        },
+        "screenshot": "live-1440-light.png"
+      }
+    },
+    {
+      "id": "CHROME-LIVE-RESPONSIVE-1440-dark",
+      "status": "PASS",
+      "detail": {
+        "metrics": {
+          "overflow": false,
+          "launcherVisible": true,
+          "panelWidth": null
+        },
+        "screenshot": "live-1440-dark.png"
+      }
+    },
+    {
+      "id": "CHROME-LIVE-KEYBOARD-FOCUS",
+      "status": "PASS",
+      "detail": {
+        "accessible": true
+      }
+    },
+    {
+      "id": "CHROME-LIVE-ACCOUNT-ISOLATION",
+      "status": "PASS",
+      "detail": {
+        "isolationPassed": true,
+        "screenshot": "live-user-b-chat.png"
+      }
+    },
+    {
+      "id": "CHROME-LIVE-DRAWER-PAUSES-RAF",
+      "status": "PASS",
+      "detail": {
+        "paused": true,
+        "delta": 0
+      }
+    },
+    {
+      "id": "CHROME-LIVE-DISPOSE-ON-UNMOUNT",
+      "status": "PASS",
+      "detail": {
+        "cleanlyDisposed": true
+      }
+    },
+    {
+      "id": "CHROME-LIVE-JAVASCRIPT-CONSOLE",
+      "status": "PASS",
+      "detail": {
+        "clean": true,
+        "totalExceptions": 1
+      }
+    }
+  ]
+}

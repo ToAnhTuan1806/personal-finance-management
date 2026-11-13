@@ -34,8 +34,21 @@
   font-weight: 560;
 }
 
+.se025-input::placeholder {
+  color: transparent;
+  opacity: 0;
+  transition:
+    opacity .2s var(--se025-ease),
+    color .2s var(--se025-ease);
+}
+
 .se025.is-up .se025-input {
   padding-top: 0;
+}
+
+.se025.is-up .se025-input::placeholder {
+  color: var(--se025-muted);
+  opacity: 0.65;
 }
 
 .se025-line {

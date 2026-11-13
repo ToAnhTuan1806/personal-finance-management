@@ -1,0 +1,8 @@
+{
+  "reply": "Mình chưa hiểu rõ yêu cầu. Mình hỗ trợ 6 khả năng: tổng thu/chi/số dư (SUMMARY); danh mục chi nhiều (CATEGORIES); kiểm tra ngân sách (BUDGET); tư vấn chung (ADVICE); so sánh hai tháng (COMPARISON); xu hướng danh mục (CATEGORY_TREND).\nBạn có thể hỏi:\n1. Tổng chi tháng này bao nhiêu?\n2. So sánh thu chi tháng này với tháng trước.\n3. Danh mục nào tăng chi tiêu nhiều nhất?",
+  "period": "2025-05",
+  "intent": "UNKNOWN",
+  "stats": null,
+  "topCategories": [],
+  "budget": null
+}

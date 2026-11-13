@@ -11,6 +11,17 @@ import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
 
+    @Query("select u.authVersion from User u where u.id = :userId")
+    Optional<Long> findAuthVersionById(@Param("userId") Long userId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select u from User u where u.email = :email")
+    Optional<User> findByEmailForPasswordReset(@Param("email") String email);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select u from User u where u.id = :userId")
+    Optional<User> findByIdForPasswordReset(@Param("userId") Long userId);
+
     // Khóa owner cả khi chưa có Category; giữ khóa đến hết transaction ghi danh mục.
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select u from User u where u.id = :userId")

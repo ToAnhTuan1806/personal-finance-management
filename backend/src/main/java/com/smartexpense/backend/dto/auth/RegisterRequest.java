@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.ToString;
+import com.smartexpense.backend.validation.BcryptLength;
 
 @Data
 public class RegisterRequest {
@@ -15,10 +16,12 @@ public class RegisterRequest {
 
     @NotBlank(message = "Email không được để trống")
     @Email(message = "Email không hợp lệ")
+    @ToString.Exclude
     private String email;
 
     @NotBlank(message = "Mật khẩu không được để trống")
     @Size(min = 8, message = "Mật khẩu tối thiểu 8 ký tự")
+    @BcryptLength
     // Không để log DTO làm lộ mật khẩu khi đăng ký hoặc validation thất bại.
     @ToString.Exclude
     private String password;

@@ -1,0 +1,42 @@
+{
+  "reply": "So sánh từ tháng 2025-12 đến tháng 2026-01:\nThống kê tháng 2025-12:\nTổng thu nhập: 0,00 ₫.\nTổng chi tiêu: 0,10 ₫.\nSố dư: -0,10 ₫.\nThống kê tháng 2026-01:\nTổng thu nhập: 0,00 ₫.\nTổng chi tiêu: 0,30 ₫.\nSố dư: -0,30 ₫.\nChênh lệch tổng thu: 0,00 ₫.\nChênh lệch tổng chi: 0,20 ₫.\nChênh lệch số dư: -0,20 ₫.\nChi tiêu tăng; tỷ lệ thay đổi 200,00%.",
+  "period": "2026-01",
+  "intent": "COMPARISON",
+  "stats": {
+    "totalIncome": 0,
+    "totalExpense": 0.3,
+    "balance": -0.3
+  },
+  "topCategories": [],
+  "budget": null,
+  "comparison": {
+    "baseMonth": "2025-12",
+    "targetMonth": "2026-01",
+    "base": {
+      "totalIncome": 0,
+      "totalExpense": 0.1,
+      "balance": -0.1
+    },
+    "target": {
+      "totalIncome": 0,
+      "totalExpense": 0.3,
+      "balance": -0.3
+    },
+    "delta": {
+      "totalIncome": 0,
+      "totalExpense": 0.2,
+      "balance": -0.2
+    },
+    "expenseChangePercent": 200,
+    "categoryTrends": [
+      {
+        "categoryId": 1583,
+        "categoryName": "Ăn uống",
+        "baseExpense": 0.1,
+        "targetExpense": 0.3,
+        "delta": 0.2,
+        "changePercent": 200
+      }
+    ]
+  }
+}

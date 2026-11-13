@@ -4,17 +4,36 @@ Mỗi ngày có một báo cáo chung cho **Backend (BE), Frontend (FE) và dữ
 
 ## Mục lục
 
+### Sprint 1 — D01–D04
+
 | Ngày | Ngày trong kế hoạch | Nội dung chính | Báo cáo |
 | --- | --- | --- | --- |
 | D01 | 27/10/2026 | Baseline, tài liệu, dữ liệu và nền tảng giao diện | [D01](D01.md) |
 | D02 | 28/10/2026 | Đăng ký/đăng nhập, JWT, phiên và lỗi API | [D02](D02.md) |
 | D03 | 29/10/2026 | Quick Add, tạo/sửa/xóa và lọc giao dịch | [D03](D03.md) |
 | D04 | 30/10/2026 | Calendar tháng, tổng ngày/tháng và biên ngày | [D04](D04.md) |
+
+### Sprint 2 — D05–D09
+
+| Ngày | Ngày trong kế hoạch | Nội dung chính | Báo cáo |
+| --- | --- | --- | --- |
 | D05 | 02/11/2026 | Chi tiết ngày, phân trang và rà soát Calendar API | [D05](D05.md) |
 | D06 | 03/11/2026 | Icon/màu, tên danh mục trùng và migration tương thích | [D06](D06.md) |
 | D07 | 04/11/2026 | Ngân sách danh mục, API/MySQL và migration V003 | [D07](D07.md) |
 | D08 | 05/11/2026 | Mẫu định kỳ, migration V004, ràng buộc DB và backup/restore | [D08](D08.md) |
 | D09 | 06/11/2026 | Preview/Apply, concurrency, marker, migration V005 và Chrome | [D09](D09.md) |
+
+### Sprint 3 — D10–D14
+
+| Ngày | Ngày trong kế hoạch | Nội dung chính | Báo cáo |
+| --- | --- | --- | --- |
+| D10 | 09/11/2026 | Báo cáo đa tháng, biểu đồ và QA tích hợp | [D10](D10.md) |
+| D11 | 10/11/2026 | Xuất CSV và AI Assistant+ P1 | [D11](D11.md) |
+| D12 | 11/11/2026 | Auth, Password Reset, migration V006 và bảo mật | [D12](D12.md) |
+| D13 | 12/11/2026 | NLU tiếng Việt, AI P2 và biểu đồ phân tích | [D13](D13.md) |
+| D14 | 13/11/2026 | Gợi ý ngân sách, robot 3D và Live QA cuối | [D14](D14.md) |
+
+**Sprint 3 hoàn thành: 15/15 task BE/FE/DB-QA.** Trên Trello, 12 task D10–D13 nằm trong danh sách Done; ba task D14 mới nằm trong danh sách Rebuild and Test và đều đã được đánh dấu complete. Ba task D14 cũ đang archived trong Backlog là lịch sử đã được thay thế, không tính vào 15 task Sprint 3. Các task Quên mật khẩu thuộc D12 đã hoàn thành và nằm trong Done. PR #49–#65 đã được đối chiếu trên GitHub; riêng D14 được hợp nhất qua PR #63–#65 và commit tích hợp cuối trên dev là ca969fa475c58583e69e71ff6e412e9abe91441f. Tài liệu này không tự thay đổi trạng thái thẻ Trello.
 
 Nguồn kế hoạch: [SRS 2.3](../SmartExpense_SRS_v2.docx), [Master Plan](../SmartExpense_QuanTriDuAn.xlsx), [lịch Sprint 3 ngày 09–12/11/2026](../smartexpense-2.0/SPRINT_3_PLAN.md). Quy tắc API hiện có nằm trong [API Contract](../smartexpense-2.0/API_CONTRACT.md).
 
@@ -88,6 +107,6 @@ Bộ tài liệu QA gồm mục lục này và D01–D09, cùng báo cáo Date V
 - Browser UI D01–D06 hiện PASS theo xác nhận tự kiểm thử của người dùng. Test local và xác nhận UI không thay cho kiểm tra trạng thái VPS.
 - Bản sửa D06 ngày 08/11 khóa owner trước kiểm tra/lưu Category qua API. Không tự gộp/xóa dữ liệu trùng cũ và không bảo đảm uniqueness cho writer SQL trực tiếp bỏ qua Service. Chi tiết tại [D06](D06.md).
 - Master Plan còn nội dung backfill metadata, trong khi API hiện hành giữ NULL và dùng fallback; cần nhóm chốt tài liệu riêng, không tự backfill.
-- FR-07 và FR-08 có hồ sơ riêng tại D07–D09. FR-09/FR-10 thuộc Sprint 3; các mục chưa chạy vẫn là NOT_RUN, không được coi hoàn thành.
+- FR-07 và FR-08 có hồ sơ riêng tại D07–D09. FR-09/FR-10 và phần mở rộng AI/Auth của Sprint 3 có hồ sơ D10–D14; phạm vi production/Gemini Live chưa được coi là PASS nếu báo cáo ngày không có bằng chứng.
 
 Lượt cập nhật ngày 08/11 chỉ sửa tài liệu và lịch kế hoạch; không sửa code, migration, workflow, lịch sử Git hoặc trạng thái thẻ Trello. Không thay cho review và ký nghiệm thu của nhóm.

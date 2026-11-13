@@ -1,0 +1,16 @@
+{
+  "date": "2026-11-11T15:20:48.732Z",
+  "status": 200,
+  "data": {
+    "reply": "Dưới đây là một số gợi ý chung về quản lý tài chính cá nhân:\n\n*   **Lập ngân sách:** Phân chia thu nhập theo các nguyên tắc phổ biến (như quy tắc 50/30/20) để cân đối giữa nhu cầu thiết yếu, mong muốn cá nhân và tích lũy.\n*   **Theo dõi chi tiêu:** Ghi chép lại mọi khoản chi hàng ngày để nhận diện và cắt giảm những khoản không cần thiết.\n*   **Xây dựng quỹ khẩn cấp:** Dành ra một khoản dự phòng tương đương từ 3 đến 6 tháng chi phí sinh hoạt để chủ động trước các tình huống bất ngờ.\n*   **Thói quen tiết kiệm:** Đưa việc tiết kiệm thành một khoản chi phí cố định ưu tiên trả cho bản thân trước mỗi khi nhận thu nhập. \n\n*Lưu ý: Các gợi ý trên chỉ mang tính tham khảo.*",
+    "period": "2026-11",
+    "intent": "ADVICE",
+    "stats": {
+      "totalIncome": 0,
+      "totalExpense": 0,
+      "balance": 0
+    },
+    "topCategories": [],
+    "budget": null
+  }
+}

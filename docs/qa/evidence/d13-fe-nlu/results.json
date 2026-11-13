@@ -1,0 +1,326 @@
+{
+  "date": "2026-11-11T18:19:45.114Z",
+  "browser": {
+    "protocolVersion": "1.3",
+    "product": "Chrome/157.0.8103.39",
+    "revision": "@9a31f0acec1854d44e49a73fbf8017598151a583",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36",
+    "jsVersion": "15.7.112.23"
+  },
+  "results": [
+    {
+      "id": "HTTP-NLU-SUMMARY",
+      "status": "PASS"
+    },
+    {
+      "id": "HTTP-NLU-CATEGORIES",
+      "status": "PASS"
+    },
+    {
+      "id": "HTTP-NLU-TWO-MONTHS",
+      "status": "PASS"
+    },
+    {
+      "id": "HTTP-NLU-FOLLOWUP",
+      "status": "PASS"
+    },
+    {
+      "id": "HTTP-NLU-UNKNOWN",
+      "status": "PASS"
+    },
+    {
+      "id": "HTTP-NLU-ANNUAL",
+      "status": "PASS"
+    },
+    {
+      "id": "HTTP-NLU-NULL",
+      "status": "PASS"
+    },
+    {
+      "id": "HTTP-NLU-YEAR",
+      "status": "PASS"
+    },
+    {
+      "id": "HTTP-NLU-OWNER-B",
+      "status": "PASS"
+    },
+    {
+      "id": "CHROME-NLU-PICKER-OVERRIDE",
+      "status": "PASS"
+    },
+    {
+      "id": "CHROME-NLU-CATEGORIES-CHIPS",
+      "status": "PASS"
+    },
+    {
+      "id": "CHROME-NLU-FOLLOWUP",
+      "status": "PASS"
+    },
+    {
+      "id": "CHROME-NLU-TWO-MONTHS",
+      "status": "PASS"
+    },
+    {
+      "id": "CHROME-NLU-320-light",
+      "status": "PASS",
+      "detail": {
+        "documentOverflow": false,
+        "panelOverflow": false,
+        "logOverflow": false,
+        "panelBottom": 824,
+        "navTop": 833
+      }
+    },
+    {
+      "id": "CHROME-NLU-320-dark",
+      "status": "PASS",
+      "detail": {
+        "documentOverflow": false,
+        "panelOverflow": false,
+        "logOverflow": false,
+        "panelBottom": 824,
+        "navTop": 833
+      }
+    },
+    {
+      "id": "CHROME-NLU-375-light",
+      "status": "PASS",
+      "detail": {
+        "documentOverflow": false,
+        "panelOverflow": false,
+        "logOverflow": false,
+        "panelBottom": 824,
+        "navTop": 833
+      }
+    },
+    {
+      "id": "CHROME-NLU-375-dark",
+      "status": "PASS",
+      "detail": {
+        "documentOverflow": false,
+        "panelOverflow": false,
+        "logOverflow": false,
+        "panelBottom": 824,
+        "navTop": 833
+      }
+    },
+    {
+      "id": "CHROME-NLU-430-light",
+      "status": "PASS",
+      "detail": {
+        "documentOverflow": false,
+        "panelOverflow": false,
+        "logOverflow": false,
+        "panelBottom": 824,
+        "navTop": 833
+      }
+    },
+    {
+      "id": "CHROME-NLU-430-dark",
+      "status": "PASS",
+      "detail": {
+        "documentOverflow": false,
+        "panelOverflow": false,
+        "logOverflow": false,
+        "panelBottom": 824,
+        "navTop": 833
+      }
+    },
+    {
+      "id": "CHROME-NLU-768-light",
+      "status": "PASS",
+      "detail": {
+        "documentOverflow": false,
+        "panelOverflow": false,
+        "logOverflow": false,
+        "panelBottom": 824,
+        "navTop": 833
+      }
+    },
+    {
+      "id": "CHROME-NLU-768-dark",
+      "status": "PASS",
+      "detail": {
+        "documentOverflow": false,
+        "panelOverflow": false,
+        "logOverflow": false,
+        "panelBottom": 824,
+        "navTop": 833
+      }
+    },
+    {
+      "id": "CHROME-NLU-1440-light",
+      "status": "PASS",
+      "detail": {
+        "documentOverflow": false,
+        "panelOverflow": false,
+        "logOverflow": false,
+        "panelBottom": 876,
+        "navTop": 0
+      }
+    },
+    {
+      "id": "CHROME-NLU-1440-dark",
+      "status": "PASS",
+      "detail": {
+        "documentOverflow": false,
+        "panelOverflow": false,
+        "logOverflow": false,
+        "panelBottom": 876,
+        "navTop": 0
+      }
+    },
+    {
+      "id": "CHROME-NLU-UNKNOWN-CLEARS-CONTEXT",
+      "status": "PASS"
+    },
+    {
+      "id": "CHROME-NLU-CLEAR-FOLLOWUP",
+      "status": "PASS"
+    },
+    {
+      "id": "CHROME-NLU-NETWORK-RETRY",
+      "status": "PASS"
+    },
+    {
+      "id": "CHROME-NLU-ABORT-STALE-CONTEXT",
+      "status": "PASS"
+    },
+    {
+      "id": "CHROME-NLU-ESCAPE",
+      "status": "PASS"
+    },
+    {
+      "id": "CHROME-NLU-LOGOUT-A-B",
+      "status": "PASS"
+    },
+    {
+      "id": "CHROME-NLU-P1-BUDGET",
+      "status": "PASS"
+    },
+    {
+      "id": "CHROME-NLU-P1-ADVICE",
+      "status": "PASS",
+      "detail": {
+        "retried": true
+      }
+    },
+    {
+      "id": "CHROME-NLU-JWT-CLEARS-CONTEXT",
+      "status": "PASS"
+    },
+    {
+      "id": "CHROME-NLU-CONSOLE",
+      "status": "PASS"
+    }
+  ],
+  "requests": [
+    {
+      "message": "Tổng chi tháng 2/2024?",
+      "month": "2025-05",
+      "compareMonth": "2025-04"
+    },
+    {
+      "message": "Danh mục chi tháng 2/2024",
+      "month": "2025-05",
+      "compareMonth": "2025-04",
+      "context": {
+        "intent": "SUMMARY",
+        "month": "2024-02"
+      }
+    },
+    {
+      "message": "Còn tháng trước thì sao?",
+      "month": "2025-05",
+      "context": {
+        "intent": "CATEGORIES",
+        "month": "2024-02"
+      }
+    },
+    {
+      "message": "So sánh thu chi tháng 2/2024 và tháng 3/2024",
+      "month": "2025-05",
+      "compareMonth": "2025-04",
+      "context": {
+        "intent": "CATEGORIES",
+        "month": "2026-10"
+      }
+    },
+    {
+      "message": "Xin chào",
+      "month": "2025-05",
+      "compareMonth": "2025-04",
+      "context": {
+        "intent": "COMPARISON",
+        "month": "2024-03",
+        "compareMonth": "2024-02"
+      }
+    },
+    {
+      "message": "Còn tháng trước thì sao?",
+      "month": "2025-05",
+      "compareMonth": "2025-04"
+    },
+    {
+      "message": "Tổng chi tháng 2/2024?",
+      "month": "2025-05",
+      "compareMonth": "2025-04"
+    },
+    {
+      "message": "Tổng chi tháng 2/2024?",
+      "month": "2025-05",
+      "compareMonth": "2025-04"
+    },
+    {
+      "message": "Tổng chi tháng 3/2024",
+      "month": "2025-05",
+      "compareMonth": "2025-04",
+      "context": {
+        "intent": "SUMMARY",
+        "month": "2024-02"
+      }
+    },
+    {
+      "message": "Tổng chi tháng 2/2024",
+      "month": "2026-11",
+      "compareMonth": "2026-10"
+    },
+    {
+      "message": "Ngân sách tháng này còn bao nhiêu?",
+      "month": "2026-11",
+      "compareMonth": "2026-10",
+      "context": {
+        "intent": "SUMMARY",
+        "month": "2024-02"
+      }
+    },
+    {
+      "message": "Tôi nên quản lý chi tiêu như thế nào?",
+      "month": "2026-11",
+      "compareMonth": "2026-10",
+      "context": {
+        "intent": "BUDGET",
+        "month": "2026-11"
+      }
+    },
+    {
+      "message": "Tôi nên quản lý chi tiêu như thế nào?",
+      "month": "2026-11",
+      "compareMonth": "2026-10",
+      "context": {
+        "intent": "BUDGET",
+        "month": "2026-11"
+      }
+    },
+    {
+      "message": "Tổng chi?",
+      "month": "2026-11",
+      "compareMonth": "2026-10",
+      "context": {
+        "intent": "ADVICE",
+        "month": "2026-11"
+      }
+    }
+  ],
+  "consoleErrors": []
+}

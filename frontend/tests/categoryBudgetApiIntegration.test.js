@@ -323,6 +323,8 @@ test('CategoryBudgetCard tại đúng 100%: hiển thị nhãn "Còn lại", s�
   assert.ok(!html.includes('>-0'), 'Tại 100% không có tiền âm')
   // Phải hiển thị "Còn lại" và "0 ₫"
   assert.ok(html.includes('Còn lại'), 'Tại 100% hiển thị nhãn Còn lại')
+  assert.ok(html.includes('Đã sử dụng hết ngân sách'), 'Tại 100% hiển thị đúng trạng thái đã dùng hết')
+  assert.ok(!html.includes('Vượt ngân sách'), 'Tại 100% không được hiển thị trạng thái vượt ngân sách')
   assert.ok(html.includes(formatMoney(0)), 'Hiển thị đúng 0 ₫')
   // ARIA chuẩn
   assert.ok(html.includes('aria-valuenow="100"'))
@@ -387,7 +389,7 @@ test('CategoryBudgetCard: giữ nguyên precision tiền lẻ trong định dạ
   assert.ok(html.includes(formatMoney(500000.25)))
 })
 
-test('CategoryBudgetCard: ưu tiên status từ Backend response, không tự tính lại nếu Backend đã trả', () => {
+test('CategoryBudgetCard: trạng thái hiển thị dựa trên số đã chi và hạn mức', () => {
   // Backend có logic so sánh BigDecimal riêng
   const budgetFromBackend = {
     id: 13,
@@ -406,8 +408,7 @@ test('CategoryBudgetCard: ưu tiên status từ Backend response, không tự t�
     })
   )
 
-  // Hiển thị nhãn Cảnh báo theo status của backend
-  assert.ok(html.includes('Cảnh báo'))
+  assert.ok(html.includes('Trong ngân sách'))
 })
 
 /* ========================================================================== */
@@ -443,7 +444,7 @@ test('CategoryBudgetSection: hiển thị đầy đủ danh sách card ngân sá
   assert.ok(html.includes(formatMoney(2000000)))
   assert.ok(html.includes(formatMoney(500000)))
   assert.ok(html.includes(formatMoney(1500000)))
-  assert.ok(html.includes('An toàn'))
+  assert.ok(html.includes('Trong ngân sách'))
 })
 
 test('CategoryBudgetModal: giữ nguyên dữ liệu đã nhập và hiển thị lỗi cụ thể khi API thất bại', () => {
@@ -498,7 +499,7 @@ test('createCategoryBudget: gọi POST /category-budgets thực hiện upsert ch
   assert.equal(second.amountLimit, 3000000)
 })
 
-test('BudgetsPage: bộ chọn tháng có id="budget-month" và type="month"', async () => {
+test('BudgetsPage: bộ chọn tháng dùng giao diện tiếng Việt thay cho lịch gốc', async () => {
   const { ToastProvider } = await server.ssrLoadModule('/src/contexts/ToastContext.jsx')
   const { QuickAddProvider } = await server.ssrLoadModule('/src/contexts/QuickAddContext.jsx')
 
@@ -515,5 +516,7 @@ test('BudgetsPage: bộ chọn tháng có id="budget-month" và type="month"', a
   )
 
   assert.ok(html.includes('id="budget-month"'))
-  assert.ok(html.includes('type="month"'))
+  assert.ok(html.includes('data-month-picker-trigger="vi"'))
+  assert.ok(html.includes('aria-haspopup="dialog"'))
+  assert.ok(!html.includes('type="month"'))
 })

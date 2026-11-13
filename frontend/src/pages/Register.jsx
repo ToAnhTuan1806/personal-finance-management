@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, Navigate, useNavigate } from 'react-router'
+import { CheckCircle2, Circle, XCircle } from 'lucide-react'
+import { Navigate, useNavigate } from 'react-router'
 
 import { useAuth } from '../contexts/AuthContext'
 import { register } from '../services/authService'
@@ -27,6 +28,9 @@ export default function Register() {
   const [serverError, setServerError] = useState('')
   const [phase, setPhase] = useState('idle')
   const [shake, setShake] = useState(false)
+  const passwordReady = form.password.length >= 8
+  const confirmStarted = form.confirmPassword.length > 0
+  const passwordsMatch = confirmStarted && form.confirmPassword === form.password
 
   useEffect(() => {
     const activeTimers = timers.current
@@ -196,17 +200,12 @@ export default function Register() {
       serverError={serverError}
       successTitle="Tạo tài khoản thành công!"
       successDescription="Đang chuyển đến trang đăng nhập..."
-      footer={
-        <p>
-          Đã có tài khoản?{' '}
-          <Link to="/login">Đăng nhập</Link>
-        </p>
-      }
     >
       <FloatingInput
         id="register-name"
         name="fullName"
         label="Họ và tên"
+        placeholder="Nguyễn Văn A"
         autoComplete="name"
         value={form.fullName}
         onChange={handleChange}
@@ -220,6 +219,7 @@ export default function Register() {
         name="email"
         type="email"
         label="Địa chỉ email"
+        placeholder="name@example.com"
         autoComplete="email"
         value={form.email}
         onChange={handleChange}
@@ -228,31 +228,62 @@ export default function Register() {
         disabled={phase !== 'idle'}
       />
 
-      <FloatingInput
-        id="register-password"
-        name="password"
-        type="password"
-        label="Mật khẩu (ít nhất 8 ký tự)"
-        autoComplete="new-password"
-        value={form.password}
-        onChange={handleChange}
-        onBlur={() => handleBlur('password')}
-        error={errors.password}
-        disabled={phase !== 'idle'}
-      />
+      <div className="auth-password-group">
+        <FloatingInput
+          id="register-password"
+          name="password"
+          type="password"
+          label="Mật khẩu"
+          placeholder="••••••••"
+          autoComplete="new-password"
+          value={form.password}
+          onChange={handleChange}
+          onBlur={() => handleBlur('password')}
+          error={errors.password}
+          disabled={phase !== 'idle'}
+        />
+        <p
+          className={`auth-password-hint ${passwordReady ? 'is-valid' : ''}`}
+          aria-live="polite"
+        >
+          {passwordReady ? (
+            <CheckCircle2 size={14} aria-hidden="true" />
+          ) : (
+            <Circle size={14} aria-hidden="true" />
+          )}
+          <span>{passwordReady ? 'Mật khẩu đã đủ 8 ký tự' : 'Tối thiểu 8 ký tự'}</span>
+        </p>
+      </div>
 
-      <FloatingInput
-        id="register-confirm"
-        name="confirmPassword"
-        type="password"
-        label="Xác nhận mật khẩu"
-        autoComplete="new-password"
-        value={form.confirmPassword}
-        onChange={handleChange}
-        onBlur={() => handleBlur('confirmPassword')}
-        error={errors.confirmPassword}
-        disabled={phase !== 'idle'}
-      />
+      <div className="auth-password-group">
+        <FloatingInput
+          id="register-confirm"
+          name="confirmPassword"
+          type="password"
+          label="Xác nhận mật khẩu"
+          placeholder="••••••••"
+          autoComplete="new-password"
+          value={form.confirmPassword}
+          onChange={handleChange}
+          onBlur={() => handleBlur('confirmPassword')}
+          error={errors.confirmPassword}
+          disabled={phase !== 'idle'}
+        />
+        {confirmStarted && (
+          <p
+            className={`auth-password-hint ${passwordsMatch ? 'is-valid' : 'is-invalid'}`}
+            role="status"
+            aria-live="polite"
+          >
+            {passwordsMatch ? (
+              <CheckCircle2 size={14} aria-hidden="true" />
+            ) : (
+              <XCircle size={14} aria-hidden="true" />
+            )}
+            <span>{passwordsMatch ? 'Mật khẩu xác nhận đã khớp' : 'Mật khẩu xác nhận chưa khớp'}</span>
+          </p>
+        )}
+      </div>
     </AuthCard>
   )
 }

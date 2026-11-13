@@ -193,7 +193,8 @@ class RecurringTemplateIntegrationTests extends RecurringTemplateMySqlTestSuppor
         var content = json.readTree(response).get("content");
         assertThat(content.get(0).get("id").asLong()).isEqualTo(filtered.get(0));
         assertThat(content.get(1).get("id").asLong()).isEqualTo(filtered.get(1));
-        assertThat(SqlCapture.selects).hasSize(2); // SELECT có JOIN Category + COUNT phân trang.
+        assertThat(SqlCapture.selects).hasSize(3); // JOIN Category + COUNT phân trang + scalar auth_version D12.
+        assertThat(SqlCapture.selects.stream().filter(sql -> sql.contains("auth_version"))).hasSize(1);
         assertThat(SqlCapture.selects.stream().filter(sql -> sql.contains(" join categories "))).hasSize(1);
         call(userA, HttpMethod.GET, url + "&page=1", null).andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].id").value(filtered.get(2)));
@@ -318,10 +319,10 @@ class RecurringTemplateIntegrationTests extends RecurringTemplateMySqlTestSuppor
     void migrationTypesConstraintsAndHibernateValidationMatchRealMysql() throws Exception {
         factory.unwrap(SessionFactory.class).getSchemaManager().validateMappedObjects();
         assertThat(jdbc.queryForList("SELECT table_name FROM information_schema.tables WHERE table_schema=DATABASE() AND table_type='BASE TABLE'", String.class))
-                .containsExactlyInAnyOrder("users", "categories", "transactions", "monthly_budgets", "category_budgets", "recurring_templates", "recurring_applications");
-        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.referential_constraints WHERE constraint_schema=DATABASE()", Integer.class)).isEqualTo(10);
+                .containsExactlyInAnyOrder("users", "categories", "transactions", "monthly_budgets", "category_budgets", "recurring_templates", "recurring_applications", "password_reset_tokens");
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.referential_constraints WHERE constraint_schema=DATABASE()", Integer.class)).isEqualTo(11);
         try (var connection = jdbc.getDataSource().getConnection()) {
-            ApplicationSchemaAssertions.assertSchema(connection, true, true, true);
+            ApplicationSchemaAssertions.assertSchema(connection, true, true, true, true);
         }
         assertThat(jdbc.queryForList("SELECT CONCAT(column_name,':',column_type,':',is_nullable) FROM information_schema.columns "
                 + "WHERE table_schema=DATABASE() AND table_name='recurring_templates'", String.class))

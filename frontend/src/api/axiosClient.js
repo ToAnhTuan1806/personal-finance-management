@@ -1,14 +1,21 @@
 import axios from 'axios'
 import { session } from '../auth/session.js'
 
-const publicAuth = (config) => /\/auth\/(login|register)(?:\?|$)/.test(config?.url || '')
+export const isPublicAuthUrl = (url = '') =>
+  /\/auth\/(login|register|forgot-password|reset-password)(?:\?|$)/.test(String(url || ''))
+
+const publicAuth = (config) => isPublicAuthUrl(config?.url)
 
 export function createApiClient(store, baseURL = import.meta.env?.VITE_API_URL || 'http://localhost:8080/api') {
   const client = axios.create({ baseURL, timeout: 10000, headers: { 'Content-Type': 'application/json' } })
   client.interceptors.request.use((config) => {
     config.sessionRevision = store.getSnapshot().revision
     const token = store.getToken()
-    if (token && !publicAuth(config)) config.headers.Authorization = 'Bearer ' + token
+    if (publicAuth(config)) {
+      if (config.headers) delete config.headers.Authorization
+    } else if (token) {
+      config.headers.Authorization = 'Bearer ' + token
+    }
     return config
   })
 

@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   Plus,
+  Download,
   Pencil,
   Trash2,
   ChevronLeft,
@@ -11,7 +12,6 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Wallet,
-  Calendar,
   CalendarRange,
   Filter,
   Loader2,
@@ -21,6 +21,7 @@ import {
 import TransactionModal from '../components/TransactionModal'
 import PillTabs from '../components/ui/PillTabs'
 import DateRangePicker from '../components/ui/DateRangePicker'
+import MonthPickerInput from '../components/ui/MonthPickerInput'
 import AsyncState from '../components/ui/AsyncState'
 import { useToast } from '../contexts/ToastContext'
 import { useQuickAdd } from '../contexts/QuickAddContext'
@@ -33,6 +34,11 @@ import {
   updateTransaction,
   deleteTransaction,
 } from '../services/transactionService'
+import {
+  buildTransactionExportParams,
+  exportTransactionsCsv,
+  getCsvExportErrorMessage,
+} from '../services/csvExportService'
 
 const transactionTypeOptions = [
   { value: '', label: 'Tất cả' },
@@ -78,13 +84,31 @@ const formatDisplayDate = (value) => {
   return value
 }
 
-export default function Transactions() {
-  const toast = useToast()
-  const { mutationVersion } = useQuickAdd()
-  const [transactions, setTransactions] = useState([])
+export function TransactionsPage({
+  initialTransactions = [],
+  initialLoading = true,
+  initialError = '',
+  initialExporting = false,
+  initialExportError = '',
+  onExportCsv = exportTransactionsCsv,
+  toast = null,
+  mutationVersion: propMutationVersion,
+} = {}) {
+  let mutationVersion
+  try {
+    const quickAdd = useQuickAdd()
+    mutationVersion = propMutationVersion ?? quickAdd?.mutationVersion ?? 0
+  } catch {
+    mutationVersion = propMutationVersion ?? 0
+  }
+
+  const [transactions, setTransactions] = useState(initialTransactions)
   const [categories, setCategories] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(initialLoading)
+  const [error, setError] = useState(initialError)
+  const [exporting, setExporting] = useState(initialExporting)
+  const [exportError, setExportError] = useState(initialExportError)
+  const exportingRef = useRef(false)
   const [categoryError, setCategoryError] = useState('')
   const [categoryAttempt, setCategoryAttempt] = useState(0)
   const [categoryLoading, setCategoryLoading] = useState(true)
@@ -182,6 +206,7 @@ export default function Transactions() {
     }
     setPage(0)
     setError('')
+    setExportError('')
   }
 
   const handleResetFilters = () => {
@@ -197,6 +222,7 @@ export default function Transactions() {
     setSearchKeyword('')
     setPage(0)
     setError('')
+    setExportError('')
   }
 
   const handleSearch = (event) => {
@@ -205,6 +231,35 @@ export default function Transactions() {
     setLoading(true)
     setPage(0)
     setSearchKeyword(keyword.trim())
+    setExportError('')
+  }
+
+  const handleExportCsv = async () => {
+    if (exportingRef.current || exporting) return
+    exportingRef.current = true
+    setExporting(true)
+    setExportError('')
+
+    try {
+      const exportParams = buildTransactionExportParams({
+        filters,
+        dateRange,
+        searchKeyword,
+      })
+      await onExportCsv(exportParams)
+      toast?.success('Đã tải xuống file CSV giao dịch.')
+    } catch (err) {
+      if (!isRequestCancelled(err)) {
+        const msg = getCsvExportErrorMessage(err)
+        if (msg) {
+          setExportError(msg)
+          toast?.error(msg)
+        }
+      }
+    } finally {
+      exportingRef.current = false
+      setExporting(false)
+    }
   }
 
   const handleAdd = () => {
@@ -222,58 +277,58 @@ export default function Transactions() {
   const handleSave = async (data) => {
     setSaving(true)
 
-    try {
-      if (editing) {
-        await updateTransaction(editing.id, data)
-        toast.success('Cập nhật giao dịch thành công.')
-      } else {
-        await createTransaction(data)
-        toast.success('Thêm giao dịch thành công.')
-      }
+      try {
+        if (editing) {
+          await updateTransaction(editing.id, data)
+          toast?.success('Cập nhật giao dịch thành công.')
+        } else {
+          await createTransaction(data)
+          toast?.success('Thêm giao dịch thành công.')
+        }
 
-      setModalOpen(false)
-      setEditing(null)
+        setModalOpen(false)
+        setEditing(null)
+        setError('')
+
+        setPage(0)
+        setReloadKey((prev) => prev + 1)
+      } catch (err) {
+        if (!isRequestCancelled(err)) toast?.error(getApiErrorMessage(err))
+        throw err
+      } finally {
+        setSaving(false)
+      }
+    }
+
+    const handleDeleteClick = (transaction) => {
+      setConfirmDelete(transaction)
+      setError('')
+    }
+
+    const executeDelete = async (transaction) => {
+      if (!transaction) return
+
+      setDeletingId(transaction.id)
       setError('')
 
-      setPage(0)
-      setReloadKey((prev) => prev + 1)
-    } catch (err) {
-      if (!isRequestCancelled(err)) toast.error(getApiErrorMessage(err))
-      throw err
-    } finally {
-      setSaving(false)
-    }
-  }
+      try {
+        await deleteTransaction(transaction.id)
+        toast?.success('Xóa giao dịch thành công.')
+        setConfirmDelete(null)
 
-  const handleDeleteClick = (transaction) => {
-    setConfirmDelete(transaction)
-    setError('')
-  }
-
-  const executeDelete = async (transaction) => {
-    if (!transaction) return
-
-    setDeletingId(transaction.id)
-    setError('')
-
-    try {
-      await deleteTransaction(transaction.id)
-      toast.success('Xóa giao dịch thành công.')
-      setConfirmDelete(null)
-
-      if (transactions.length === 1 && page > 0) {
-        setPage((prev) => Math.max(0, prev - 1))
+        if (transactions.length === 1 && page > 0) {
+          setPage((prev) => Math.max(0, prev - 1))
+        }
+        setReloadKey((prev) => prev + 1)
+      } catch (error) {
+        const msg = getApiErrorMessage(error)
+        setError(msg)
+        if (msg) toast?.error(msg)
+        setConfirmDelete(null)
+      } finally {
+        setDeletingId(null)
       }
-      setReloadKey((prev) => prev + 1)
-    } catch (error) {
-      const msg = getApiErrorMessage(error)
-      setError(msg)
-      if (msg) toast.error(msg)
-      setConfirmDelete(null)
-    } finally {
-      setDeletingId(null)
     }
-  }
 
   const filteredCategories = categories.filter(
     (c) => !filters.type || c.type === filters.type
@@ -294,7 +349,7 @@ export default function Transactions() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
+        <div className="min-w-0">
           <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100">
             Quản lý giao dịch
           </h1>
@@ -303,13 +358,32 @@ export default function Transactions() {
           </p>
         </div>
 
-        <button
-          onClick={handleAdd}
-          className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 shadow-md shadow-blue-500/20 active:scale-95 transition-all"
-        >
-          <Plus size={18} />
-          <span>Thêm giao dịch</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            type="button"
+            id="transactions-export-csv-btn"
+            onClick={handleExportCsv}
+            disabled={exporting}
+            aria-busy={exporting}
+            className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-xs transition-all hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-[#182234] dark:text-slate-200 dark:hover:bg-slate-800"
+          >
+            {exporting ? (
+              <Loader2 size={18} className="animate-spin text-blue-600 dark:text-blue-400" aria-hidden="true" />
+            ) : (
+              <Download size={18} className="text-blue-600 dark:text-blue-400" aria-hidden="true" />
+            )}
+            <span>Tải CSV</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleAdd}
+            className="flex min-h-10 items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 shadow-md shadow-blue-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 active:scale-95 transition-all"
+          >
+            <Plus size={18} aria-hidden="true" />
+            <span>Thêm giao dịch</span>
+          </button>
+        </div>
       </div>
 
       {/* Summary Stat Cards */}
@@ -360,6 +434,16 @@ export default function Transactions() {
       </div>
 
       {/* Thông báo lỗi */}
+      {exportError && (
+        <div
+          role="alert"
+          className="rounded-xl bg-rose-50 border border-rose-200/80 dark:bg-rose-950/30 dark:border-rose-900/50 p-3.5 text-sm text-rose-800 dark:text-rose-300 flex items-center gap-2.5 shadow-xs"
+        >
+          <AlertCircle className="h-5 w-5 text-rose-600 shrink-0" />
+          <span>{exportError}</span>
+        </div>
+      )}
+
       {error && (
         <div
           role="alert"
@@ -403,16 +487,11 @@ export default function Transactions() {
             <label htmlFor="filter-month" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
               Tháng
             </label>
-            <div className="relative">
-              <input
-                id="filter-month"
-                type="month"
-                value={filters.month}
-                onChange={(e) => changeFilter('month', e.target.value)}
-                className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#1E293B] p-2.5 text-sm text-slate-800 dark:text-slate-100 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900/40 transition-all"
-              />
-              <Calendar size={16} className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-            </div>
+            <MonthPickerInput
+              id="filter-month"
+              value={filters.month}
+              onChange={(e) => changeFilter('month', e.target.value)}
+            />
           </div>
 
           <div>
@@ -711,7 +790,8 @@ export default function Transactions() {
           </>
         )}
 
-        {/* Phân trang */}
+        {/* Phân trang: chỉ ẩn khi đã tải thành công và thực sự không có giao dịch */}
+        {(loading || error || totalElements > 0) && (
         <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 px-6 py-4 bg-slate-50/50 dark:bg-[#1E293B]/30">
           <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
             Trang {totalPages === 0 ? 0 : page + 1} / {totalPages} (Tổng {totalElements} giao dịch)
@@ -738,6 +818,7 @@ export default function Transactions() {
             </button>
           </div>
         </div>
+        )}
       </div>
 
       {/* Modal Thêm / Sửa giao dịch */}
@@ -818,5 +899,10 @@ export default function Transactions() {
       )}
     </div>
   )
+}
+
+export default function Transactions(props) {
+  const toast = useToast()
+  return <TransactionsPage toast={toast} {...props} />
 }
 

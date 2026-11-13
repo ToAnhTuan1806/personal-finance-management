@@ -4,11 +4,20 @@
 )
 
 $ErrorActionPreference = 'Stop'
-$backendEnvKeys = @('DB_URL', 'DB_USERNAME', 'DB_PASSWORD', 'JWT_SECRET', 'JWT_EXPIRATION')
+$smtpEnvKeys = @('SMTP_HOST', 'SMTP_PORT', 'SMTP_USERNAME', 'SMTP_PASSWORD', 'SMTP_FROM',
+        'APP_FRONTEND_URL', 'SMTP_AUTH', 'SMTP_STARTTLS')
+$backendEnvKeys = @('DB_URL', 'DB_USERNAME', 'DB_PASSWORD', 'JWT_SECRET', 'JWT_EXPIRATION') + $smtpEnvKeys
 
 . (Join-Path $PSScriptRoot 'Read-LocalEnvironment.ps1')
 
 $configuration = Read-SmartExpenseEnvironment -Path $EnvFile -AllowedKeys $backendEnvKeys
+# SMTP có thể được cấp qua secret môi trường; file được chọn vẫn có ưu tiên khi khai báo rõ.
+foreach ($key in $smtpEnvKeys) {
+    if (-not $configuration.ContainsKey($key)) {
+        $inheritedValue = [Environment]::GetEnvironmentVariable($key, 'Process')
+        if ($null -ne $inheritedValue) { $configuration[$key] = $inheritedValue }
+    }
+}
 foreach ($key in @('DB_URL', 'DB_USERNAME', 'DB_PASSWORD', 'JWT_SECRET')) {
     if (-not $configuration.ContainsKey($key) -or [string]::IsNullOrWhiteSpace($configuration[$key]) -or
             $configuration[$key] -match '^<.*>$') {
@@ -25,11 +34,24 @@ if ($configuration.ContainsKey('JWT_EXPIRATION')) {
         throw 'JWT_EXPIRATION phải là số giây lớn hơn 0.'
     }
 }
+if ($configuration.ContainsKey('SMTP_PORT') -and -not [string]::IsNullOrWhiteSpace($configuration.SMTP_PORT)) {
+    $smtpPort = 0
+    if (-not [int]::TryParse($configuration.SMTP_PORT, [ref]$smtpPort) -or $smtpPort -lt 1 -or $smtpPort -gt 65535) {
+        throw 'SMTP_PORT phải là số từ 1 đến 65535.'
+    }
+}
+foreach ($key in @('SMTP_AUTH', 'SMTP_STARTTLS')) {
+    if ($configuration.ContainsKey($key) -and -not [string]::IsNullOrWhiteSpace($configuration[$key])) {
+        $smtpFlag = $false
+        if (-not [bool]::TryParse($configuration[$key], [ref]$smtpFlag)) { throw "$key phải là true hoặc false." }
+    }
+}
 
 # Biến chỉ có hiệu lực cho tiến trình hiện tại và Gradle con; không ghi vào cấu hình hệ điều hành.
 $previousValues = @{}
 $managedEnvKeys = $backendEnvKeys + @('SPRING_DATASOURCE_URL', 'SPRING_DATASOURCE_USERNAME',
-        'SPRING_DATASOURCE_PASSWORD', 'APP_JWT_SECRET', 'APP_JWT_EXPIRATION')
+        'SPRING_DATASOURCE_PASSWORD', 'APP_JWT_SECRET', 'APP_JWT_EXPIRATION',
+        'SPRING_MAIL_HOST', 'SPRING_MAIL_PORT', 'SPRING_MAIL_USERNAME', 'SPRING_MAIL_PASSWORD', 'APP_MAIL_FROM')
 try {
     foreach ($key in $managedEnvKeys) {
         $previousValues[$key] = [Environment]::GetEnvironmentVariable($key, 'Process')

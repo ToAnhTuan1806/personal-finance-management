@@ -1,5 +1,6 @@
 import axiosClient from '../api/axiosClient.js'
 import { loadMonthlyTransactions } from '../utils/cashFlow.js'
+import { exportTransactionsCsv } from './csvExportService.js'
 
 // Chỉ trả kết quả từ Backend; lỗi mạng/timeout được chuyển về giao diện.
 export const getTransactions = async (params = {}, options = {}) => (await axiosClient.get('/transactions', { ...options, params })).data
@@ -8,7 +9,8 @@ export const getTransactionById = async (id) => (await axiosClient.get('/transac
 export const createTransaction = async (data) => (await axiosClient.post('/transactions', data)).data
 export const updateTransaction = async (id, data) => (await axiosClient.put('/transactions/' + id, data)).data
 export const deleteTransaction = async (id) => { await axiosClient.delete('/transactions/' + id) }
+export { exportTransactionsCsv }
 
 export const transactionService = { getTransactions, getMonthlyTransactions, getTransactionById,
-  createTransaction, updateTransaction, deleteTransaction }
+  createTransaction, updateTransaction, deleteTransaction, exportTransactionsCsv }
 export default transactionService

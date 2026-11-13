@@ -37,6 +37,14 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD must be provided}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be provided}
       JWT_EXPIRATION: ${JWT_EXPIRATION:-86400}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      APP_FRONTEND_URL: ${APP_FRONTEND_URL:-}
+      SMTP_AUTH: ${SMTP_AUTH:-true}
+      SMTP_STARTTLS: ${SMTP_STARTTLS:-true}
       JAVA_OPTS: "-Xms128m -Xmx320m -XX:+UseSerialGC -Djava.security.egd=file:/dev/./urandom"
     depends_on:
       mysql:

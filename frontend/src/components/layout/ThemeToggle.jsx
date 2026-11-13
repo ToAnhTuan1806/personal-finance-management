@@ -8,6 +8,37 @@ const themeOptions = [
   { value: 'system', label: 'Hệ thống', icon: Monitor },
 ]
 
+// Bộ chọn giao diện dạng hàng nút, dùng trong Drawer mobile (nền tối cố định).
+export function ThemeSegmented() {
+  const { theme, setTheme } = useTheme()
+
+  return (
+    <div role="group" aria-label="Chế độ giao diện" className="grid grid-cols-3 gap-1">
+      {themeOptions.map(({ value, label, icon: Icon }) => {
+        const isSelected = theme === value
+
+        return (
+          <button
+            key={value}
+            type="button"
+            id={`drawer-theme-${value}`}
+            aria-pressed={isSelected}
+            onClick={() => setTheme(value)}
+            className={`flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-[11px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 motion-reduce:transition-none ${
+              isSelected
+                ? 'bg-white/20 text-white ring-1 ring-white/40'
+                : 'text-slate-300 hover:bg-white/10 hover:text-white'
+            }`}
+          >
+            <Icon size={16} aria-hidden="true" />
+            <span>{label}</span>
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
 export default function ThemeToggle() {
   const { theme, resolvedTheme, setTheme } = useTheme()
   const [isOpen, setIsOpen] = useState(false)
@@ -71,7 +102,7 @@ export default function ThemeToggle() {
         aria-haspopup="menu"
         aria-expanded={isOpen}
         onClick={() => setIsOpen((prev) => !prev)}
-        className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 transition-colors hover:bg-slate-100 hover:text-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-slate-800 dark:bg-[#182234] dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-blue-400"
+        className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 transition-colors hover:bg-slate-100 hover:text-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800 dark:hover:text-blue-400"
       >
         <ActiveIcon size={18} className="transition-transform duration-200" />
       </button>

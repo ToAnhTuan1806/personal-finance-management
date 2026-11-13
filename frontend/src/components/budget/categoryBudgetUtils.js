@@ -29,6 +29,21 @@ export function getBudgetStatus(budget) {
 }
 
 /**
+ * Trạng thái hiển thị theo quan hệ chính xác giữa số đã chi và hạn mức.
+ * Giữ riêng với enum Backend vì contract hiện trả OVER_BUDGET tại đúng 100%.
+ */
+export function getBudgetDisplayStatus(budget) {
+  const limit = Number(budget?.amountLimit || 0)
+  const spent = Number(budget?.spentAmount || 0)
+
+  if (limit <= 0) return 'SAFE'
+  if (spent > limit) return 'OVER_BUDGET'
+  if (spent === limit) return 'AT_LIMIT'
+  if (spent >= limit * 0.8) return 'WARNING'
+  return 'SAFE'
+}
+
+/**
  * Get usage percentage (can exceed 100%)
  */
 export function getBudgetUsagePercentage(budget) {
@@ -59,8 +74,17 @@ export function getStatusConfig(status) {
       }
     case 'WARNING':
       return {
-        label: 'Cảnh báo',
+        label: 'Trong ngân sách',
         statusKey: 'WARNING',
+        barColor: 'bg-amber-500 dark:bg-amber-400',
+        textColor: 'text-amber-700 dark:text-amber-300',
+        badgeClass:
+          'bg-amber-50 text-amber-700 border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/60',
+      }
+    case 'AT_LIMIT':
+      return {
+        label: 'Đã sử dụng hết ngân sách',
+        statusKey: 'AT_LIMIT',
         barColor: 'bg-amber-500 dark:bg-amber-400',
         textColor: 'text-amber-700 dark:text-amber-300',
         badgeClass:
@@ -69,7 +93,7 @@ export function getStatusConfig(status) {
     case 'SAFE':
     default:
       return {
-        label: 'An toàn',
+        label: 'Trong ngân sách',
         statusKey: 'SAFE',
         barColor: 'bg-emerald-500 dark:bg-emerald-400',
         textColor: 'text-emerald-700 dark:text-emerald-300',

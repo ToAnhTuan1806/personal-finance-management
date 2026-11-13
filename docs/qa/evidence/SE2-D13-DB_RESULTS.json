@@ -1,0 +1,542 @@
+{
+  "timestamp": "2026-11-12T10:52:34+07:00",
+  "database": {
+    "host": "127.0.0.1",
+    "port": 3307,
+    "database": "personal_finance_d13_test",
+    "user": "d12_test_user"
+  },
+  "summary": {
+    "total": 19,
+    "passed": 19,
+    "failed": 0,
+    "status": "PASS"
+  },
+  "tests": [
+    {
+      "id": "DB-01",
+      "group": "SCHEMA",
+      "name": "Verify all baseline & V002-V006 tables exist",
+      "expected": [
+        "categories",
+        "category_budgets",
+        "monthly_budgets",
+        "password_reset_tokens",
+        "recurring_applications",
+        "recurring_templates",
+        "transactions",
+        "users"
+      ],
+      "actual": [
+        "categories",
+        "category_budgets",
+        "monthly_budgets",
+        "password_reset_tokens",
+        "recurring_applications",
+        "recurring_templates",
+        "transactions",
+        "users"
+      ],
+      "status": "PASS",
+      "details": {
+        "found_tables": [
+          "categories",
+          "category_budgets",
+          "monthly_budgets",
+          "password_reset_tokens",
+          "recurring_applications",
+          "recurring_templates",
+          "transactions",
+          "users"
+        ]
+      }
+    },
+    {
+      "id": "DB-02",
+      "group": "SCHEMA",
+      "name": "Verify password_reset_tokens table structure (V006)",
+      "expected": {
+        "id": [
+          "bigint",
+          "NO"
+        ],
+        "user_id": [
+          "bigint",
+          "NO"
+        ],
+        "token_hash": [
+          "char(64)",
+          "NO"
+        ],
+        "created_at": [
+          "datetime(6)",
+          "NO"
+        ],
+        "expires_at": [
+          "datetime(6)",
+          "NO"
+        ],
+        "used_at": [
+          "datetime(6)",
+          "YES"
+        ]
+      },
+      "actual": {
+        "created_at": [
+          "datetime(6)",
+          "NO"
+        ],
+        "expires_at": [
+          "datetime(6)",
+          "NO"
+        ],
+        "id": [
+          "bigint",
+          "NO"
+        ],
+        "token_hash": [
+          "char(64)",
+          "NO"
+        ],
+        "used_at": [
+          "datetime(6)",
+          "YES"
+        ],
+        "user_id": [
+          "bigint",
+          "NO"
+        ]
+      },
+      "status": "PASS",
+      "details": {
+        "columns": {
+          "created_at": [
+            "datetime(6)",
+            "NO"
+          ],
+          "expires_at": [
+            "datetime(6)",
+            "NO"
+          ],
+          "id": [
+            "bigint",
+            "NO"
+          ],
+          "token_hash": [
+            "char(64)",
+            "NO"
+          ],
+          "used_at": [
+            "datetime(6)",
+            "YES"
+          ],
+          "user_id": [
+            "bigint",
+            "NO"
+          ]
+        }
+      }
+    },
+    {
+      "id": "DB-03",
+      "group": "SCHEMA",
+      "name": "Verify users.auth_version column (V006)",
+      "expected": [
+        "auth_version",
+        "bigint",
+        "NO",
+        "0"
+      ],
+      "actual": [
+        "auth_version",
+        "bigint",
+        "NO",
+        "0"
+      ],
+      "status": "PASS",
+      "details": {
+        "auth_version_def": [
+          [
+            "auth_version",
+            "bigint",
+            "NO",
+            "0"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "DB-04",
+      "group": "SCHEMA",
+      "name": "Verify transactions composite index idx_transactions_user_date",
+      "expected": [
+        [
+          "idx_transactions_user_date",
+          "user_id",
+          "1"
+        ],
+        [
+          "idx_transactions_user_date",
+          "transaction_date",
+          "2"
+        ]
+      ],
+      "actual": [
+        [
+          "idx_transactions_user_date",
+          "user_id",
+          "1"
+        ],
+        [
+          "idx_transactions_user_date",
+          "transaction_date",
+          "2"
+        ]
+      ],
+      "status": "PASS",
+      "details": {
+        "index_info": [
+          [
+            "idx_transactions_user_date",
+            "user_id",
+            "1"
+          ],
+          [
+            "idx_transactions_user_date",
+            "transaction_date",
+            "2"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "DB-05",
+      "group": "SCHEMA",
+      "name": "Confirm D13 requires NO new migration (stateless chat, no AI table)",
+      "expected": [],
+      "actual": [],
+      "status": "PASS",
+      "details": {
+        "ai_tables": []
+      }
+    },
+    {
+      "id": "DATA-01",
+      "group": "SETUP",
+      "name": "Seed isolated test dataset (User A, User B, 2 periods, decimal precision)",
+      "expected": 15,
+      "actual": 15,
+      "status": "PASS",
+      "details": {
+        "transactions_count": "15"
+      }
+    },
+    {
+      "id": "SQL-01",
+      "group": "AGGREGATION",
+      "name": "Base period 2025-12 totals match exact Decimal",
+      "expected": {
+        "income": "15000000.50",
+        "expense": "10900001.00",
+        "balance": "4099999.50"
+      },
+      "actual": {
+        "income": "15000000.50",
+        "expense": "10900001.00",
+        "balance": "4099999.50"
+      },
+      "status": "PASS",
+      "details": {
+        "base_income": "15000000.50",
+        "base_expense": "10900001.00",
+        "base_balance": "4099999.50"
+      }
+    },
+    {
+      "id": "SQL-02",
+      "group": "AGGREGATION",
+      "name": "Target period 2026-01 totals match exact Decimal",
+      "expected": {
+        "income": "20500000.50",
+        "expense": "12300000.75",
+        "balance": "8199999.75"
+      },
+      "actual": {
+        "income": "20500000.50",
+        "expense": "12300000.75",
+        "balance": "8199999.75"
+      },
+      "status": "PASS",
+      "details": {
+        "target_income": "20500000.50",
+        "target_expense": "12300000.75",
+        "target_balance": "8199999.75"
+      }
+    },
+    {
+      "id": "SQL-03",
+      "group": "PRECISION",
+      "name": "Delta calculation target - base matches exact BigDecimal math",
+      "expected": {
+        "delta_income": "5500000.00",
+        "delta_expense": "1399999.75",
+        "delta_balance": "4100000.25"
+      },
+      "actual": {
+        "delta_income": "5500000.00",
+        "delta_expense": "1399999.75",
+        "delta_balance": "4100000.25"
+      },
+      "status": "PASS",
+      "details": {
+        "delta_income": "5500000.00",
+        "delta_expense": "1399999.75",
+        "delta_balance": "4100000.25"
+      }
+    },
+    {
+      "id": "SQL-04",
+      "group": "PRECISION",
+      "name": "Overall expense change percentage correctly rounded HALF_UP",
+      "expected": "12.84",
+      "actual": "12.84",
+      "status": "PASS",
+      "details": {
+        "calculated": "12.84",
+        "raw": "12.84403322531805272311442907"
+      }
+    },
+    {
+      "id": "SQL-05",
+      "group": "TRENDS",
+      "name": "Category trends union, stable tie-break (delta DESC, categoryId ASC)",
+      "expected": [
+        "Mới phát sinh",
+        "Ăn uống",
+        "Nhà ở",
+        "Mua sắm",
+        "Ngừng chi"
+      ],
+      "actual": [
+        "Mới phát sinh",
+        "Ăn uống",
+        "Nhà ở",
+        "Mua sắm",
+        "Ngừng chi"
+      ],
+      "status": "PASS",
+      "details": {
+        "trends": [
+          {
+            "categoryId": "204",
+            "categoryName": "Mới phát sinh",
+            "baseExpense": "0.00",
+            "targetExpense": "2000000.00",
+            "delta": "2000000.00",
+            "changePercent": "None"
+          },
+          {
+            "categoryId": "201",
+            "categoryName": "Ăn uống",
+            "baseExpense": "3200000.25",
+            "targetExpense": "4800000.75",
+            "delta": "1600000.50",
+            "changePercent": "50.00"
+          },
+          {
+            "categoryId": "203",
+            "categoryName": "Nhà ở",
+            "baseExpense": "4000000.00",
+            "targetExpense": "4000000.00",
+            "delta": "0.00",
+            "changePercent": "0.00"
+          },
+          {
+            "categoryId": "202",
+            "categoryName": "Mua sắm",
+            "baseExpense": "2500000.00",
+            "targetExpense": "1500000.00",
+            "delta": "-1000000.00",
+            "changePercent": "-40.00"
+          },
+          {
+            "categoryId": "205",
+            "categoryName": "Ngừng chi",
+            "baseExpense": "1200000.75",
+            "targetExpense": "0.00",
+            "delta": "-1200000.75",
+            "changePercent": "-100.00"
+          }
+        ]
+      }
+    },
+    {
+      "id": "SQL-06",
+      "group": "PRECISION",
+      "name": "Division by zero prevented when baseExpense=0 (changePercent is null)",
+      "expected": {
+        "baseExpense": "0",
+        "changePercent": null,
+        "delta": "2000000.00"
+      },
+      "actual": {
+        "baseExpense": "0.00",
+        "changePercent": null,
+        "delta": "2000000.00"
+      },
+      "status": "PASS",
+      "details": {
+        "trend": {
+          "categoryId": "204",
+          "categoryName": "Mới phát sinh",
+          "baseExpense": "0.00",
+          "targetExpense": "2000000.00",
+          "delta": "2000000.00",
+          "changePercent": "None"
+        }
+      }
+    },
+    {
+      "id": "SQL-07",
+      "group": "TRENDS",
+      "name": "Unspent categories (base=0 and target=0) strictly excluded from trends",
+      "expected": true,
+      "actual": true,
+      "status": "PASS",
+      "details": {
+        "actual_names": [
+          "Mới phát sinh",
+          "Ăn uống",
+          "Nhà ở",
+          "Mua sắm",
+          "Ngừng chi"
+        ]
+      }
+    },
+    {
+      "id": "SQL-08",
+      "group": "AGGREGATION",
+      "name": "Empty month (2026-02) returns exact 0 income, 0 expense",
+      "expected": {
+        "income": "0",
+        "expense": "0"
+      },
+      "actual": {
+        "income": "0.00",
+        "expense": "0.00"
+      },
+      "status": "PASS",
+      "details": {
+        "income": "0.00",
+        "expense": "0.00"
+      }
+    },
+    {
+      "id": "SEC-01",
+      "group": "ISOLATION",
+      "name": "Account A and Account B data strictly isolated at SQL level",
+      "expected": {
+        "user_a_saw_b": 0,
+        "user_b_saw_a": 0
+      },
+      "actual": {
+        "user_a_saw_b": 0,
+        "user_b_saw_a": 0
+      },
+      "status": "PASS",
+      "details": {
+        "user_a_saw_b": "0",
+        "user_b_saw_a": "0"
+      }
+    },
+    {
+      "id": "SEC-02",
+      "group": "INJECTION",
+      "name": "Zero database mutations under prompt/SQL injection simulation",
+      "expected": {
+        "tx": 15,
+        "budgets": 1,
+        "users": 2
+      },
+      "actual": {
+        "tx": 15,
+        "budgets": 1,
+        "users": 2
+      },
+      "status": "PASS",
+      "details": {
+        "tx_count": 15,
+        "budget_count": 1
+      }
+    },
+    {
+      "id": "SEC-03",
+      "group": "SAFETY",
+      "name": "AI operations confirmed 100% read-only (0 INSERT, 0 UPDATE, 0 DELETE)",
+      "expected": {
+        "inserts": 0,
+        "updates": 0,
+        "deletes": 0
+      },
+      "actual": {
+        "inserts": 0,
+        "updates": 0,
+        "deletes": 0
+      },
+      "status": "PASS",
+      "details": {
+        "read_only_verified": true
+      }
+    },
+    {
+      "id": "REPORT-01",
+      "group": "CROSS_CHECK",
+      "name": "AI Comparison figures 100% match Reports API aggregation logic",
+      "expected": {
+        "2025-12_inc": "15000000.50",
+        "2025-12_exp": "10900001.00",
+        "2026-01_inc": "20500000.50",
+        "2026-01_exp": "12300000.75"
+      },
+      "actual": {
+        "2025-12_inc": "15000000.50",
+        "2025-12_exp": "10900001.00",
+        "2026-01_inc": "20500000.50",
+        "2026-01_exp": "12300000.75"
+      },
+      "status": "PASS",
+      "details": {
+        "report_totals": {
+          "2025-12_EXPENSE": "10900001.00",
+          "2025-12_INCOME": "15000000.50",
+          "2026-01_EXPENSE": "12300000.75",
+          "2026-01_INCOME": "20500000.50"
+        }
+      }
+    },
+    {
+      "id": "REPORT-02",
+      "group": "P1_REGRESSION",
+      "name": "P1 Budget calculations preserved without regression",
+      "expected": {
+        "limit": "20000000.00",
+        "spent": "12300000.75",
+        "remaining": "7699999.25",
+        "exceeded": false
+      },
+      "actual": {
+        "limit": "20000000.00",
+        "spent": "12300000.75",
+        "remaining": "7699999.25",
+        "exceeded": false
+      },
+      "status": "PASS",
+      "details": {
+        "budget_info": {
+          "limit": "20000000.00",
+          "spent": "12300000.75"
+        }
+      }
+    }
+  ]
+}

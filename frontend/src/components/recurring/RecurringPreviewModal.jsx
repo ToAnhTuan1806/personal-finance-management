@@ -37,19 +37,14 @@ import useModalFocus from '../../hooks/useModalFocus'
 import {
   formatDisplayDate,
   formatMoney,
+  getCurrentRecurringPeriod,
+  getRecurringPreviewMonthOptions,
+  getRecurringPreviewYearOptions,
   isDayClampedToMonthEnd,
+  isRecurringPreviewPeriodAllowed,
 } from './recurringTemplateUtils'
 
 /* ─── Hằng số ────────────────────────────────────────────────── */
-const CURRENT_YEAR = new Date().getFullYear()
-const CURRENT_MONTH = new Date().getMonth() + 1
-
-/** Danh sách tháng (1–12) */
-const MONTH_OPTIONS = Array.from({ length: 12 }, (_, i) => i + 1)
-
-/** Danh sách năm: 5 năm trước → 5 năm sau */
-const YEAR_OPTIONS = Array.from({ length: 11 }, (_, i) => CURRENT_YEAR - 5 + i)
-
 /* ─── Helpers ────────────────────────────────────────────────── */
 /**
  * Xác định trạng thái nghiệp vụ từ Preview DTO.
@@ -68,7 +63,7 @@ function resolveStatus(preview) {
 function StatusBadge({ status }) {
   const map = {
     ALREADY_APPLIED: {
-      label: 'Đã áp dụng tháng này',
+      label: 'Đã ghi nhận tháng này',
       icon: <CheckCircle2 size={14} />,
       cls: 'bg-emerald-50 text-emerald-700 border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-900/50',
     },
@@ -78,12 +73,12 @@ function StatusBadge({ status }) {
       cls: 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700',
     },
     FUTURE_DATE: {
-      label: 'Chưa đến ngày áp dụng',
+      label: 'Chưa đến ngày ghi nhận',
       icon: <Clock size={14} />,
       cls: 'bg-amber-50 text-amber-700 border-amber-200/80 dark:bg-amber-950/30 dark:text-amber-300 dark:border-amber-900/50',
     },
     READY: {
-      label: 'Chưa áp dụng',
+      label: 'Sẵn sàng ghi nhận',
       icon: <Info size={14} />,
       cls: 'bg-blue-50 text-blue-700 border-blue-200/80 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-900/50',
     },
@@ -107,8 +102,11 @@ function RecurringPreviewModalContent({
   onApply,
   onApplySuccess,
 }) {
-  const [year, setYear] = useState(CURRENT_YEAR)
-  const [month, setMonth] = useState(CURRENT_MONTH)
+  const [{ year: currentYear, month: currentMonth }] = useState(getCurrentRecurringPeriod)
+  const [year, setYear] = useState(currentYear)
+  const [month, setMonth] = useState(currentMonth)
+  const yearOptions = getRecurringPreviewYearOptions(currentYear)
+  const monthOptions = getRecurringPreviewMonthOptions(year, currentYear, currentMonth)
 
   /* Preview state */
   const [preview, setPreview] = useState(null)
@@ -139,7 +137,13 @@ function RecurringPreviewModalContent({
 
   const handleYearChange = (e) => {
     previewSeqRef.current += 1
-    setYear(Number(e.target.value))
+    const nextYear = Number(e.target.value)
+    setYear(nextYear)
+    setMonth((previousMonth) =>
+      nextYear === currentYear && previousMonth < currentMonth
+        ? currentMonth
+        : previousMonth
+    )
     setPreview(null)
     setPreviewError('')
     setApplyError('')
@@ -149,6 +153,13 @@ function RecurringPreviewModalContent({
   /* ── Tải Preview ── */
   const handlePreview = async () => {
     if (previewLoading || applying) return
+    if (!isRecurringPreviewPeriodAllowed(year, month, currentYear, currentMonth)) {
+      setPreview(null)
+      setPreviewError(
+        `Bạn chỉ có thể kiểm tra giao dịch từ tháng ${currentMonth}/${currentYear} đến tháng 12/2100.`
+      )
+      return
+    }
     const currentSeq = ++previewSeqRef.current
     const requestedYear = year
     const requestedMonth = month
@@ -168,7 +179,7 @@ function RecurringPreviewModalContent({
         data &&
         (Number(data.year) !== requestedYear || Number(data.month) !== requestedMonth)
       ) {
-        setPreviewError('Dữ liệu xem trước không khớp kỳ đã chọn. Vui lòng thử lại.')
+        setPreviewError('Thông tin giao dịch không khớp kỳ đã chọn. Vui lòng kiểm tra lại.')
         return
       }
       setPreview(data)
@@ -185,7 +196,7 @@ function RecurringPreviewModalContent({
       } else if (status === 400) {
         setPreviewError(serverMsg || 'Tháng/năm không hợp lệ. Vui lòng kiểm tra lại.')
       } else {
-        setPreviewError('Không thể xem trước. Vui lòng thử lại sau.')
+        setPreviewError('Chưa thể kiểm tra giao dịch. Vui lòng thử lại sau.')
       }
     } finally {
       if (currentSeq === previewSeqRef.current) {
@@ -206,7 +217,7 @@ function RecurringPreviewModalContent({
 
     /* Không cho Apply khi dữ liệu chưa được Preview cho đúng kỳ */
     if (!isPreviewMatchingPeriod || !preview?.canApply) {
-      setApplyError('Dữ liệu chưa được xem trước cho đúng kỳ hoặc không thể áp dụng.')
+      setApplyError('Giao dịch chưa được kiểm tra cho đúng kỳ hoặc chưa thể ghi nhận.')
       setShowConfirm(false)
       return
     }
@@ -237,7 +248,7 @@ function RecurringPreviewModalContent({
       if (!httpStatus) {
         setShowConfirm(false)
         setApplyError(
-          'Không thể xác định kết quả từ máy chủ do lỗi kết nối hoặc quá thời gian chờ. Vui lòng bấm "Xem" lại để kiểm tra trạng thái giao dịch trước khi thử lại.'
+          'Chưa thể xác định giao dịch đã được ghi nhận hay chưa do mất kết nối hoặc quá thời gian chờ. Vui lòng bấm “Kiểm tra” lại trước khi thử tiếp.'
         )
       } else if (httpStatus === 401) {
         setApplyError('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.')
@@ -257,12 +268,12 @@ function RecurringPreviewModalContent({
 
         if (isAlreadyApplied) {
           setApplyError(
-            'Giao dịch định kỳ này đã được áp dụng cho tháng/năm đã chọn. Không thể áp dụng lần nữa.'
+            'Giao dịch định kỳ này đã được ghi nhận cho tháng/năm đã chọn và không thể ghi nhận lần nữa.'
           )
         } else if (isTemplateInactive) {
-          setApplyError('Mẫu định kỳ đã bị tắt. Vui lòng bật lại trước khi áp dụng.')
+          setApplyError('Mẫu định kỳ đã bị tắt. Vui lòng bật lại trước khi ghi nhận.')
         } else {
-          setApplyError(serverMsg || 'Dữ liệu đang bị xung đột. Vui lòng xem trước lại.')
+          setApplyError(serverMsg || 'Dữ liệu đang bị xung đột. Vui lòng kiểm tra lại.')
         }
         // Cập nhật ngầm preview mới nhất từ server nhưng GIỮ NGUYÊN applyError cho người dùng đọc
         onPreview(template.id, year, month)
@@ -275,7 +286,7 @@ function RecurringPreviewModalContent({
       } else if (httpStatus >= 500) {
         setApplyError('Máy chủ đang gặp sự cố. Vui lòng thử lại sau.')
       } else {
-        setApplyError(serverMsg || 'Không thể áp dụng. Vui lòng thử lại.')
+        setApplyError(serverMsg || 'Chưa thể ghi nhận giao dịch. Vui lòng thử lại.')
       }
     }
   }
@@ -323,7 +334,7 @@ function RecurringPreviewModalContent({
                 id="preview-modal-title"
                 className="text-base font-bold text-slate-800 dark:text-slate-100"
               >
-                Xem trước giao dịch định kỳ
+                Kiểm tra trước khi ghi nhận
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 {template.categoryName || 'Mẫu định kỳ'}
@@ -334,7 +345,7 @@ function RecurringPreviewModalContent({
             type="button"
             onClick={() => !applying && onClose?.()}
             disabled={applying}
-            aria-label="Đóng modal xem trước"
+            aria-label="Đóng cửa sổ kiểm tra giao dịch"
             className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 disabled:opacity-50 dark:hover:bg-slate-800 dark:hover:text-slate-300"
           >
             <X size={18} />
@@ -346,11 +357,11 @@ function RecurringPreviewModalContent({
           {/* Chọn tháng/năm */}
           <div>
             <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              Chọn tháng / năm áp dụng
+              Chọn kỳ muốn ghi nhận
             </p>
-            <div className="flex gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
               {/* Tháng */}
-              <div className="flex-1">
+              <div className="min-w-0">
                 <label
                   htmlFor="preview-month"
                   className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300"
@@ -362,9 +373,10 @@ function RecurringPreviewModalContent({
                   value={month}
                   onChange={handleMonthChange}
                   disabled={applying || previewLoading}
+                  aria-describedby="preview-period-help"
                   className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-xs transition focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400/20 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                 >
-                  {MONTH_OPTIONS.map((m) => (
+                  {monthOptions.map((m) => (
                     <option key={m} value={m}>
                       Tháng {m}
                     </option>
@@ -373,7 +385,7 @@ function RecurringPreviewModalContent({
               </div>
 
               {/* Năm */}
-              <div className="flex-1">
+              <div className="min-w-0">
                 <label
                   htmlFor="preview-year"
                   className="mb-1 block text-xs font-medium text-slate-600 dark:text-slate-300"
@@ -385,9 +397,10 @@ function RecurringPreviewModalContent({
                   value={year}
                   onChange={handleYearChange}
                   disabled={applying || previewLoading}
+                  aria-describedby="preview-period-help"
                   className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-800 shadow-xs transition focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400/20 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                 >
-                  {YEAR_OPTIONS.map((y) => (
+                  {yearOptions.map((y) => (
                     <option key={y} value={y}>
                       {y}
                     </option>
@@ -395,24 +408,34 @@ function RecurringPreviewModalContent({
                 </select>
               </div>
 
-              {/* Nút Xem trước */}
-              <div className="flex items-end">
+              {/* Nút kiểm tra */}
+              <div className="col-span-2 flex items-end sm:col-span-1">
                 <button
                   type="button"
                   onClick={handlePreview}
                   disabled={previewLoading || applying}
-                  aria-label="Tải xem trước giao dịch định kỳ"
-                  className="flex h-[38px] items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-3 text-sm font-semibold text-blue-700 transition hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-300 dark:hover:bg-blue-950/50"
+                  aria-label="Kiểm tra giao dịch trước khi ghi nhận"
+                  className="flex h-10 w-full items-center justify-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-3 text-sm font-semibold text-blue-700 transition hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-300 dark:hover:bg-blue-950/50 sm:w-auto"
                 >
                   {previewLoading ? (
                     <Loader2 size={15} className="animate-spin" />
                   ) : (
                     <RefreshCw size={15} />
                   )}
-                  <span>Xem</span>
+                  <span>Kiểm tra</span>
                 </button>
               </div>
             </div>
+            <p
+              id="preview-period-help"
+              className="mt-2 text-xs text-slate-500 dark:text-slate-400"
+            >
+              Bạn có thể chọn tháng{' '}
+              <span className="tabular-nums font-medium text-slate-700 dark:text-slate-300">
+                {currentMonth}/{currentYear}
+              </span>{' '}
+              hoặc một tháng trong tương lai.
+            </p>
           </div>
 
           {/* Lỗi Preview */}
@@ -532,7 +555,7 @@ function RecurringPreviewModalContent({
                   onClick={() => setShowConfirm(true)}
                   className="w-full rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-blue-500/20 transition hover:bg-blue-700 active:scale-95"
                 >
-                  Áp dụng tháng {month}/{year}
+                  Ghi nhận giao dịch tháng {month}/{year}
                 </button>
               )}
             </div>
@@ -555,8 +578,8 @@ function RecurringPreviewModalContent({
               <RefreshCw size={22} className="text-slate-300 dark:text-slate-600" />
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 Chọn tháng/năm rồi bấm{' '}
-                <strong className="font-semibold text-blue-600 dark:text-blue-400">Xem</strong> để
-                tải thông tin giao dịch dự kiến.
+                <strong className="font-semibold text-blue-600 dark:text-blue-400">Kiểm tra</strong>{' '}
+                để xem ngày, danh mục và số tiền trước khi ghi nhận.
               </p>
             </div>
           )}
@@ -601,7 +624,7 @@ function RecurringPreviewModalContent({
                     <span>Đang xử lý...</span>
                   </>
                 ) : (
-                  <span>Xác nhận áp dụng</span>
+                  <span>Xác nhận ghi nhận</span>
                 )}
               </button>
             </div>
