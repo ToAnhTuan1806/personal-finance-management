@@ -30,4 +30,5 @@ Thumbs.db
 # Database backups
 database/backups/
 backups/
-*.dump
+*.dump
+/docs/qa/evidence/**/*.png
