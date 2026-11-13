@@ -220,6 +220,22 @@ class AiChatApiTests {
                 .andExpect(header().string("Cache-Control", "no-store"));
     }
 
+    @ParameterizedTest
+    @CsvSource({"503,AI_NOT_CONFIGURED", "429,AI_QUOTA_EXCEEDED", "504,AI_TIMEOUT", "503,AI_UNAVAILABLE"})
+    void dataIntentsStillWorkAfterAdviceProviderFailure(int statusCode, String code) throws Exception {
+        accuracyFixture();
+        when(provider.explain(anyString(), any())).thenThrow(new D11Exception(HttpStatus.valueOf(statusCode), code, "Dịch vụ AI chưa sẵn sàng"));
+        mvc.perform(post(ENDPOINT).header(HttpHeaders.AUTHORIZATION, token).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"message\":\"Tư vấn quản lý chi tiêu\",\"month\":\"2026-11\"}"))
+                .andExpect(status().is(statusCode)).andExpect(jsonPath("$.code").value(code))
+                .andExpect(jsonPath("$.stackTrace").doesNotExist()).andExpect(jsonPath("$.reply").doesNotExist());
+        for (String question : List.of("Tổng thu chi?", "Danh mục cao nhất?", "Gợi ý ngân sách",
+                "So sánh thu chi", "Xu hướng danh mục")) {
+            assertThat(ask(question).stats().totalExpense()).isEqualByComparingTo("2800000.35");
+        }
+        verify(provider, times(1)).explain(eq("ADVICE"), any());
+    }
+
     @Test
     void summaryReplyHasExactCentsAndNeverInfersUnsetBudgetFromAbsentContext() throws Exception {
         accuracyFixture();
