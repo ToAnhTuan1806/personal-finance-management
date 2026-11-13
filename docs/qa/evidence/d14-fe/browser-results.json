@@ -1,0 +1,1404 @@
+{
+  "timestamp": "2026-11-12T17:50:13.633Z",
+  "mode": "real Chrome headless, CDP, isolated profile, production components; synthetic session/local HTTP fixture; not live Backend/Gemini",
+  "browser": {
+    "protocolVersion": "1.3",
+    "product": "Chrome/157.0.8103.78",
+    "revision": "@4b3d0dabb8250b6f152d2d85d79e7706e309d087",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36",
+    "jsVersion": "15.7.112.43"
+  },
+  "summary": {
+    "pass": 23,
+    "fail": 0,
+    "blocked": 0
+  },
+  "results": [
+    {
+      "id": "CHROME-WEBGL-IDLE",
+      "status": "PASS",
+      "detail": {
+        "gpu": {
+          "created": 1,
+          "lost": 0,
+          "drawCalls": 78,
+          "attempts": 2
+        },
+        "renderer": "WebKit WebGL"
+      }
+    },
+    {
+      "id": "CHROME-LOADING-SUCCESS-REAL-CONTROLLER",
+      "status": "PASS",
+      "detail": {
+        "screenshot": "success-1440-light.png",
+        "localHttpRequests": 1
+      }
+    },
+    {
+      "id": "CHROME-ERROR-RETRY",
+      "status": "PASS"
+    },
+    {
+      "id": "CHROME-NLU-PERIOD-FROM-RESPONSE",
+      "status": "PASS"
+    },
+    {
+      "id": "CHROME-COMPARISON-CHARTS",
+      "status": "PASS",
+      "detail": {
+        "screenshot": "comparison-chart.png"
+      }
+    },
+    {
+      "id": "CHROME-RESPONSIVE-320-light",
+      "status": "PASS",
+      "detail": {
+        "width": 320,
+        "overflow": false,
+        "launcher": {
+          "top": 744,
+          "right": 304,
+          "bottom": 824,
+          "left": 224,
+          "width": 80,
+          "height": 80
+        },
+        "panel": {
+          "top": 12,
+          "right": 320,
+          "bottom": 732,
+          "left": 0,
+          "width": 320,
+          "height": 720
+        },
+        "nav": {
+          "top": 833,
+          "right": 320,
+          "bottom": 900,
+          "left": 0,
+          "width": 320,
+          "height": 67
+        },
+        "targets": [
+          {
+            "width": 44,
+            "height": 44
+          },
+          {
+            "width": 44,
+            "height": 44
+          },
+          {
+            "width": 124.71875,
+            "height": 44
+          },
+          {
+            "width": 125.703125,
+            "height": 44
+          },
+          {
+            "width": 135.90625,
+            "height": 44
+          },
+          {
+            "width": 124.71875,
+            "height": 44
+          },
+          {
+            "width": 125.703125,
+            "height": 44
+          },
+          {
+            "width": 135.90625,
+            "height": 44
+          },
+          {
+            "width": 124.71875,
+            "height": 44
+          },
+          {
+            "width": 125.703125,
+            "height": 44
+          },
+          {
+            "width": 135.90625,
+            "height": 44
+          },
+          {
+            "width": 124.71875,
+            "height": 44
+          },
+          {
+            "width": 125.703125,
+            "height": 44
+          },
+          {
+            "width": 135.90625,
+            "height": 44
+          },
+          {
+            "width": 149.09375,
+            "height": 44
+          },
+          {
+            "width": 323.953125,
+            "height": 44
+          },
+          {
+            "width": 219.75,
+            "height": 44
+          },
+          {
+            "width": 203.84375,
+            "height": 44
+          },
+          {
+            "width": 230.265625,
+            "height": 44
+          },
+          {
+            "width": 44,
+            "height": 44
+          }
+        ],
+        "canvasVisible": "visible",
+        "screenshot": "320-light.png"
+      }
+    },
+    {
+      "id": "CHROME-RESPONSIVE-320-dark",
+      "status": "PASS",
+      "detail": {
+        "width": 320,
+        "overflow": false,
+        "launcher": {
+          "top": 744,
+          "right": 304,
+          "bottom": 824,
+          "left": 224,
+          "width": 80,
+          "height": 80
+        },
+        "panel": {
+          "top": 12,
+          "right": 320,
+          "bottom": 732,
+          "left": 0,
+          "width": 320,
+          "height": 720
+        },
+        "nav": {
+          "top": 833,
+          "right": 320,
+          "bottom": 900,
+          "left": 0,
+          "width": 320,
+          "height": 67
+        },
+        "targets": [
+          {
+            "width": 44,
+            "height": 44
+          },
+          {
+            "width": 44,
+            "height": 44
+          },
+          {
+            "width": 124.71875,
+            "height": 44
+          },
+          {
+            "width": 125.703125,
+            "height": 44
+          },
+          {
+            "width": 135.90625,
+            "height": 44
+          },
+          {
+            "width": 124.71875,
+            "height": 44
+          },
+          {
+            "width": 125.703125,
+            "height": 44
+          },
+          {
+            "width": 135.90625,
+            "height": 44
+          },
+          {
+            "width": 124.71875,
+            "height": 44
+          },
+          {
+            "width": 125.703125,
+            "height": 44
+          },
+          {
+            "width": 135.90625,
+            "height": 44
+          },
+          {
+            "width": 124.71875,
+            "height": 44
+          },
+          {
+            "width": 125.703125,
+            "height": 44
+          },
+          {
+            "width": 135.90625,
+            "height": 44
+          },
+          {
+            "width": 149.09375,
+            "height": 44
+          },
+          {
+            "width": 323.953125,
+            "height": 44
+          },
+          {
+            "width": 219.75,
+            "height": 44
+          },
+          {
+            "width": 203.84375,
+            "height": 44
+          },
+          {
+            "width": 230.265625,
+            "height": 44
+          },
+          {
+            "width": 44,
+            "height": 44
+          }
+        ],
+        "canvasVisible": "visible",
+        "screenshot": "320-dark.png"
+      }
+    },
+    {
+      "id": "CHROME-RESPONSIVE-375-light",
+      "status": "PASS",
+      "detail": {
+        "width": 375,
+        "overflow": false,
+        "launcher": {
+          "top": 744,
+          "right": 359,
+          "bottom": 824,
+          "left": 279,
+          "width": 80,
+          "height": 80
+        },
+        "panel": {
+          "top": 12,
+          "right": 375,
+          "bottom": 732,
+          "left": 0,
+          "width": 375,
+          "height": 720
+        },
+        "nav": {
+          "top": 833,
+          "right": 375,
+          "bottom": 900,
+          "left": 0,
+          "width": 375,
+          "height": 67
+        },
+        "targets": [
+          {
+            "width": 44,
+            "height": 44
+          },
+          {
+            "width": 44,
+            "height": 44
+          },
+          {
+            "width": 124.71875,
+            "height": 44
+          },
+          {
+            "width": 125.703125,
+            "height": 44
+          },
+          {
+            "width": 135.90625,
+            "height": 44
+          },
+          {
+            "width": 124.71875,
+            "height": 44
+          },
+          {
+            "width": 125.703125,
+            "height": 44
+          },
+          {
+            "width": 135.90625,
+            "height": 44
+          },
+          {
+            "width": 124.71875,
+            "height": 44
+          },
+          {
+            "width": 125.703125,
+            "height": 44
+          },
+          {
+            "width": 135.90625,
+            "height": 44
+          },
+          {
+            "width": 124.71875,
+            "height": 44
+          },
+          {
+            "width": 125.703125,
+            "height": 44
+          },
+          {
+            "width": 135.90625,
+            "height": 44
+          },
+          {
+            "width": 149.09375,
+            "height": 44
+          },
+          {
+            "width": 323.953125,
+            "height": 44
+          },
+          {
+            "width": 219.75,
+            "height": 44
+          },
+          {
+            "width": 203.84375,
+            "height": 44
+          },
+          {
+            "width": 230.265625,
+            "height": 44
+          },
+          {
+            "width": 44,
+            "height": 44
+          }
+        ],
+        "canvasVisible": "visible",
+        "screenshot": "375-light.png"
+      }
+    },
+    {
+      "id": "CHROME-RESPONSIVE-375-dark",
+      "status": "PASS",
+      "detail": {
+        "width": 375,
+        "overflow": false,
+        "launcher": {
+          "top": 744,
+          "right": 359,
+          "bottom": 824,
+          "left": 279,
+          "width": 80,
+          "height": 80
+        },
+        "panel": {
+          "top": 12,
+          "right": 375,
+          "bottom": 732,
+          "left": 0,
+          "width": 375,
+          "height": 720
+        },
+        "nav": {
+          "top": 833,
+          "right": 375,
+          "bottom": 900,
+          "left": 0,
+          "width": 375,
+          "height": 67
+        },
+        "targets": [
+          {
+            "width": 44,
+            "height": 44
+          },
+          {
+            "width": 44,
+            "height": 44
+          },
+          {
+            "width": 124.71875,
+            "height": 44
+          },
+          {
+            "width": 125.703125,
+            "height": 44
+          },
+          {
+            "width": 135.90625,
+            "height": 44
+          },
+          {
+            "width": 124.71875,
+            "height": 44
+          },
+          {
+            "width": 125.703125,
+            "height": 44
+          },
+          {
+            "width": 135.90625,
+            "height": 44
+          },
+          {
+            "width": 124.71875,
+            "height": 44
+          },
+          {
+            "width": 125.703125,
+            "height": 44
+          },
+          {
+            "width": 135.90625,
+            "height": 44
+          },
+          {
+            "width": 124.71875,
+            "height": 44
+          },
+          {
+            "width": 125.703125,
+            "height": 44
+          },
+          {
+            "width": 135.90625,
+            "height": 44
+          },
+          {
+            "width": 149.09375,
+            "height": 44
+          },
+          {
+            "width": 323.953125,
+            "height": 44
+          },
+          {
+            "width": 219.75,
+            "height": 44
+          },
+          {
+            "width": 203.84375,
+            "height": 44
+          },
+          {
+            "width": 230.265625,
+            "height": 44
+          },
+          {
+            "width": 44,
+            "height": 44
+          }
+        ],
+        "canvasVisible": "visible",
+        "screenshot": "375-dark.png"
+      }
+    },
+    {
+      "id": "CHROME-RESPONSIVE-430-light",
+      "status": "PASS",
+      "detail": {
+        "width": 430,
+        "overflow": false,
+        "launcher": {
+          "top": 744,
+          "right": 414,
+          "bottom": 824,
+          "left": 334,
+          "width": 80,
+          "height": 80
+        },
+        "panel": {
+          "top": 12,
+          "right": 430,
+          "bottom": 732,
+          "left": 0,
+          "width": 430,
+          "height": 720
+        },
+        "nav": {
+          "top": 833,
+          "right": 430,
+          "bottom": 900,
+          "left": 0,
+          "width": 430,
+          "height": 67
+        },
+        "targets": [
+          {
+            "width": 44,
+            "height": 44
+          },
+          {
+            "width": 44,
+            "height": 44
+          },
+          {
+            "width": 124.71875,
+            "height": 44
+          },
+          {
+            "width": 125.703125,
+            "height": 44
+          },
+          {
+            "width": 135.90625,
+            "height": 44
+          },
+          {
+            "width": 124.71875,
+            "height": 44
+          },
+          {
+            "width": 125.703125,
+            "height": 44
+          },
+          {
+            "width": 135.90625,
+            "height": 44
+          },
+          {
+            "width": 124.71875,
+            "height": 44
+          },
+          {
+            "width": 125.703125,
+            "height": 44
+          },
+          {
+            "width": 135.90625,
+            "height": 44
+          },
+          {
+            "width": 124.71875,
+            "height": 44
+          },
+          {
+            "width": 125.703125,
+            "height": 44
+          },
+          {
+            "width": 135.90625,
+            "height": 44
+          },
+          {
+            "width": 149.09375,
+            "height": 44
+          },
+          {
+            "width": 323.953125,
+            "height": 44
+          },
+          {
+            "width": 219.75,
+            "height": 44
+          },
+          {
+            "width": 203.84375,
+            "height": 44
+          },
+          {
+            "width": 230.265625,
+            "height": 44
+          },
+          {
+            "width": 44,
+            "height": 44
+          }
+        ],
+        "canvasVisible": "visible",
+        "screenshot": "430-light.png"
+      }
+    },
+    {
+      "id": "CHROME-RESPONSIVE-430-dark",
+      "status": "PASS",
+      "detail": {
+        "width": 430,
+        "overflow": false,
+        "launcher": {
+          "top": 744,
+          "right": 414,
+          "bottom": 824,
+          "left": 334,
+          "width": 80,
+          "height": 80
+        },
+        "panel": {
+          "top": 12,
+          "right": 430,
+          "bottom": 732,
+          "left": 0,
+          "width": 430,
+          "height": 720
+        },
+        "nav": {
+          "top": 833,
+          "right": 430,
+          "bottom": 900,
+          "left": 0,
+          "width": 430,
+          "height": 67
+        },
+        "targets": [
+          {
+            "width": 44,
+            "height": 44
+          },
+          {
+            "width": 44,
+            "height": 44
+          },
+          {
+            "width": 124.71875,
+            "height": 44
+          },
+          {
+            "width": 125.703125,
+            "height": 44
+          },
+          {
+            "width": 135.90625,
+            "height": 44
+          },
+          {
+            "width": 124.71875,
+            "height": 44
+          },
+          {
+            "width": 125.703125,
+            "height": 44
+          },
+          {
+            "width": 135.90625,
+            "height": 44
+          },
+          {
+            "width": 124.71875,
+            "height": 44
+          },
+          {
+            "width": 125.703125,
+            "height": 44
+          },
+          {
+            "width": 135.90625,
+            "height": 44
+          },
+          {
+            "width": 124.71875,
+            "height": 44
+          },
+          {
+            "width": 125.703125,
+            "height": 44
+          },
+          {
+            "width": 135.90625,
+            "height": 44
+          },
+          {
+            "width": 149.09375,
+            "height": 44
+          },
+          {
+            "width": 323.953125,
+            "height": 44
+          },
+          {
+            "width": 219.75,
+            "height": 44
+          },
+          {
+            "width": 203.84375,
+            "height": 44
+          },
+          {
+            "width": 230.265625,
+            "height": 44
+          },
+          {
+            "width": 44,
+            "height": 44
+          }
+        ],
+        "canvasVisible": "visible",
+        "screenshot": "430-dark.png"
+      }
+    },
+    {
+      "id": "CHROME-RESPONSIVE-768-light",
+      "status": "PASS",
+      "detail": {
+        "width": 768,
+        "overflow": false,
+        "launcher": {
+          "top": 744,
+          "right": 752,
+          "bottom": 824,
+          "left": 672,
+          "width": 80,
+          "height": 80
+        },
+        "panel": {
+          "top": 12,
+          "right": 768,
+          "bottom": 732,
+          "left": 0,
+          "width": 768,
+          "height": 720
+        },
+        "nav": {
+          "top": 833,
+          "right": 768,
+          "bottom": 900,
+          "left": 0,
+          "width": 768,
+          "height": 67
+        },
+        "targets": [
+          {
+            "width": 110.5,
+            "height": 44
+          },
+          {
+            "width": 44,
+            "height": 44
+          },
+          {
+            "width": 124.71875,
+            "height": 44
+          },
+          {
+            "width": 125.703125,
+            "height": 44
+          },
+          {
+            "width": 135.90625,
+            "height": 44
+          },
+          {
+            "width": 124.71875,
+            "height": 44
+          },
+          {
+            "width": 125.703125,
+            "height": 44
+          },
+          {
+            "width": 135.90625,
+            "height": 44
+          },
+          {
+            "width": 124.71875,
+            "height": 44
+          },
+          {
+            "width": 125.703125,
+            "height": 44
+          },
+          {
+            "width": 135.90625,
+            "height": 44
+          },
+          {
+            "width": 124.71875,
+            "height": 44
+          },
+          {
+            "width": 125.703125,
+            "height": 44
+          },
+          {
+            "width": 135.90625,
+            "height": 44
+          },
+          {
+            "width": 149.09375,
+            "height": 44
+          },
+          {
+            "width": 323.953125,
+            "height": 44
+          },
+          {
+            "width": 219.75,
+            "height": 44
+          },
+          {
+            "width": 203.84375,
+            "height": 44
+          },
+          {
+            "width": 230.265625,
+            "height": 44
+          },
+          {
+            "width": 73.296875,
+            "height": 44
+          }
+        ],
+        "canvasVisible": "visible",
+        "screenshot": "768-light.png"
+      }
+    },
+    {
+      "id": "CHROME-RESPONSIVE-768-dark",
+      "status": "PASS",
+      "detail": {
+        "width": 768,
+        "overflow": false,
+        "launcher": {
+          "top": 744,
+          "right": 752,
+          "bottom": 824,
+          "left": 672,
+          "width": 80,
+          "height": 80
+        },
+        "panel": {
+          "top": 12,
+          "right": 768,
+          "bottom": 732,
+          "left": 0,
+          "width": 768,
+          "height": 720
+        },
+        "nav": {
+          "top": 833,
+          "right": 768,
+          "bottom": 900,
+          "left": 0,
+          "width": 768,
+          "height": 67
+        },
+        "targets": [
+          {
+            "width": 110.5,
+            "height": 44
+          },
+          {
+            "width": 44,
+            "height": 44
+          },
+          {
+            "width": 124.71875,
+            "height": 44
+          },
+          {
+            "width": 125.703125,
+            "height": 44
+          },
+          {
+            "width": 135.90625,
+            "height": 44
+          },
+          {
+            "width": 124.71875,
+            "height": 44
+          },
+          {
+            "width": 125.703125,
+            "height": 44
+          },
+          {
+            "width": 135.90625,
+            "height": 44
+          },
+          {
+            "width": 124.71875,
+            "height": 44
+          },
+          {
+            "width": 125.703125,
+            "height": 44
+          },
+          {
+            "width": 135.90625,
+            "height": 44
+          },
+          {
+            "width": 124.71875,
+            "height": 44
+          },
+          {
+            "width": 125.703125,
+            "height": 44
+          },
+          {
+            "width": 135.90625,
+            "height": 44
+          },
+          {
+            "width": 149.09375,
+            "height": 44
+          },
+          {
+            "width": 323.953125,
+            "height": 44
+          },
+          {
+            "width": 219.75,
+            "height": 44
+          },
+          {
+            "width": 203.84375,
+            "height": 44
+          },
+          {
+            "width": 230.265625,
+            "height": 44
+          },
+          {
+            "width": 73.296875,
+            "height": 44
+          }
+        ],
+        "canvasVisible": "visible",
+        "screenshot": "768-dark.png"
+      }
+    },
+    {
+      "id": "CHROME-RESPONSIVE-1440-light",
+      "status": "PASS",
+      "detail": {
+        "width": 1440,
+        "overflow": false,
+        "launcher": {
+          "top": 796,
+          "right": 1416,
+          "bottom": 876,
+          "left": 1336,
+          "width": 80,
+          "height": 80
+        },
+        "panel": {
+          "top": 108,
+          "right": 1416,
+          "bottom": 788,
+          "left": 996,
+          "width": 420,
+          "height": 680
+        },
+        "nav": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0,
+          "width": 0,
+          "height": 0
+        },
+        "targets": [
+          {
+            "width": 110.5,
+            "height": 44
+          },
+          {
+            "width": 44,
+            "height": 44
+          },
+          {
+            "width": 124.71875,
+            "height": 44
+          },
+          {
+            "width": 125.703125,
+            "height": 44
+          },
+          {
+            "width": 135.90625,
+            "height": 44
+          },
+          {
+            "width": 124.71875,
+            "height": 44
+          },
+          {
+            "width": 125.703125,
+            "height": 44
+          },
+          {
+            "width": 135.90625,
+            "height": 44
+          },
+          {
+            "width": 124.71875,
+            "height": 44
+          },
+          {
+            "width": 125.703125,
+            "height": 44
+          },
+          {
+            "width": 135.90625,
+            "height": 44
+          },
+          {
+            "width": 124.71875,
+            "height": 44
+          },
+          {
+            "width": 125.703125,
+            "height": 44
+          },
+          {
+            "width": 135.90625,
+            "height": 44
+          },
+          {
+            "width": 149.09375,
+            "height": 44
+          },
+          {
+            "width": 323.953125,
+            "height": 44
+          },
+          {
+            "width": 219.75,
+            "height": 44
+          },
+          {
+            "width": 203.84375,
+            "height": 44
+          },
+          {
+            "width": 230.265625,
+            "height": 44
+          },
+          {
+            "width": 73.296875,
+            "height": 44
+          }
+        ],
+        "canvasVisible": "visible",
+        "screenshot": "1440-light.png"
+      }
+    },
+    {
+      "id": "CHROME-RESPONSIVE-1440-dark",
+      "status": "PASS",
+      "detail": {
+        "width": 1440,
+        "overflow": false,
+        "launcher": {
+          "top": 796,
+          "right": 1416,
+          "bottom": 876,
+          "left": 1336,
+          "width": 80,
+          "height": 80
+        },
+        "panel": {
+          "top": 108,
+          "right": 1416,
+          "bottom": 788,
+          "left": 996,
+          "width": 420,
+          "height": 680
+        },
+        "nav": {
+          "top": 0,
+          "right": 0,
+          "bottom": 0,
+          "left": 0,
+          "width": 0,
+          "height": 0
+        },
+        "targets": [
+          {
+            "width": 110.5,
+            "height": 44
+          },
+          {
+            "width": 44,
+            "height": 44
+          },
+          {
+            "width": 124.71875,
+            "height": 44
+          },
+          {
+            "width": 125.703125,
+            "height": 44
+          },
+          {
+            "width": 135.90625,
+            "height": 44
+          },
+          {
+            "width": 124.71875,
+            "height": 44
+          },
+          {
+            "width": 125.703125,
+            "height": 44
+          },
+          {
+            "width": 135.90625,
+            "height": 44
+          },
+          {
+            "width": 124.71875,
+            "height": 44
+          },
+          {
+            "width": 125.703125,
+            "height": 44
+          },
+          {
+            "width": 135.90625,
+            "height": 44
+          },
+          {
+            "width": 124.71875,
+            "height": 44
+          },
+          {
+            "width": 125.703125,
+            "height": 44
+          },
+          {
+            "width": 135.90625,
+            "height": 44
+          },
+          {
+            "width": 149.09375,
+            "height": 44
+          },
+          {
+            "width": 323.953125,
+            "height": 44
+          },
+          {
+            "width": 219.75,
+            "height": 44
+          },
+          {
+            "width": 203.84375,
+            "height": 44
+          },
+          {
+            "width": 230.265625,
+            "height": 44
+          },
+          {
+            "width": 73.296875,
+            "height": 44
+          }
+        ],
+        "canvasVisible": "visible",
+        "screenshot": "1440-dark.png"
+      }
+    },
+    {
+      "id": "CHROME-ENTER-SPACE-ESCAPE-FOCUS",
+      "status": "PASS",
+      "detail": {
+        "stages": [
+          "Enter opens panel",
+          "Escape closes and restores focus",
+          "Space opens panel"
+        ],
+        "keyEvents": [
+          {
+            "type": "keydown",
+            "key": "Enter",
+            "code": "Enter",
+            "target": "ai-assistant-launcher",
+            "trusted": true
+          },
+          {
+            "type": "keypress",
+            "key": "Enter",
+            "code": "Enter",
+            "target": "ai-assistant-launcher",
+            "trusted": true
+          },
+          {
+            "type": "keyup",
+            "key": "Enter",
+            "code": "Enter",
+            "target": "ai-chat-input",
+            "trusted": true
+          },
+          {
+            "type": "keydown",
+            "key": "Escape",
+            "code": "Escape",
+            "target": "ai-chat-input",
+            "trusted": true
+          },
+          {
+            "type": "keyup",
+            "key": "Escape",
+            "code": "Escape",
+            "target": "",
+            "trusted": true
+          },
+          {
+            "type": "keydown",
+            "key": " ",
+            "code": "Space",
+            "target": "ai-assistant-launcher",
+            "trusted": true
+          },
+          {
+            "type": "keypress",
+            "key": " ",
+            "code": "Space",
+            "target": "ai-assistant-launcher",
+            "trusted": true
+          },
+          {
+            "type": "keyup",
+            "key": " ",
+            "code": "Space",
+            "target": "ai-assistant-launcher",
+            "trusted": true
+          }
+        ]
+      }
+    },
+    {
+      "id": "CHROME-ONE-CONTEXT-AFTER-20-TOGGLES",
+      "status": "PASS",
+      "detail": {
+        "created": 1,
+        "lost": 0,
+        "drawCalls": 3653,
+        "attempts": 2
+      }
+    },
+    {
+      "id": "CHROME-DRAWER-PAUSES-ANIMATION",
+      "status": "PASS",
+      "detail": {
+        "drawCallsWhileHidden": 0
+      }
+    },
+    {
+      "id": "CHROME-REDUCED-MOTION",
+      "status": "PASS",
+      "detail": {
+        "continuousDrawCalls": 0,
+        "screenshot": "reduced-motion.png"
+      }
+    },
+    {
+      "id": "CHROME-DISPOSE-ON-REAL-UNMOUNT",
+      "status": "PASS",
+      "detail": {
+        "created": 1,
+        "lost": 1,
+        "drawCalls": 3757,
+        "attempts": 2
+      }
+    },
+    {
+      "id": "CHROME-CONTEXT-LOST-SVG-FALLBACK",
+      "status": "PASS",
+      "detail": {
+        "screenshot": "context-lost-fallback.png",
+        "gpu": {
+          "created": 1,
+          "lost": 1,
+          "drawCalls": 26,
+          "attempts": 2
+        }
+      }
+    },
+    {
+      "id": "CHROME-NO-WEBGL-SVG-FALLBACK",
+      "status": "PASS",
+      "detail": {
+        "screenshot": "no-webgl-fallback.png"
+      }
+    },
+    {
+      "id": "CHROME-JAVASCRIPT-CONSOLE",
+      "status": "PASS",
+      "detail": {
+        "expectedErrors": 1
+      }
+    }
+  ],
+  "requests": [
+    {
+      "method": "POST",
+      "route": "/__d14mock/api/ai/chat",
+      "keys": [
+        "message",
+        "month",
+        "compareMonth"
+      ],
+      "outcome": "success"
+    },
+    {
+      "method": "POST",
+      "route": "/__d14mock/api/ai/chat",
+      "keys": [
+        "message",
+        "month",
+        "compareMonth",
+        "context"
+      ],
+      "outcome": "error"
+    },
+    {
+      "method": "POST",
+      "route": "/__d14mock/api/ai/chat",
+      "keys": [
+        "message",
+        "month",
+        "compareMonth",
+        "context"
+      ],
+      "outcome": "success"
+    },
+    {
+      "method": "POST",
+      "route": "/__d14mock/api/ai/chat",
+      "keys": [
+        "message",
+        "month",
+        "compareMonth",
+        "context"
+      ],
+      "outcome": "success"
+    },
+    {
+      "method": "POST",
+      "route": "/__d14mock/api/ai/chat",
+      "keys": [
+        "message",
+        "month",
+        "compareMonth",
+        "context"
+      ],
+      "outcome": "success"
+    }
+  ],
+  "consoleErrors": [
+    "THREE.WebGLRenderer: THREE.WebGLRenderer: Error creating WebGL context."
+  ]
+}

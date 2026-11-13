@@ -1,0 +1,15 @@
+{
+  "frontend/package.json": "466ac7c0cb5ba4b12f159fd6722645dedc840928f252fd5ec8de93d4cce168dc",
+  "frontend/package-lock.json": "206e3b4fbc52c24849cc171996f50035bd9d6ebe033751d2e4f593e8e4c274df",
+  "frontend/src/components/ai/AiAssistantWidget.jsx": "ce66969a3d4aa581a4def24cc9e3903b5d791fe39d1349ff7221e0d06698ed35",
+  "frontend/src/components/ai/AiRobotLauncher.jsx": "389b9c0c2159e3dfaca47fc119390d2f42311c1b2b3dc6e53dd5462b3f355066",
+  "frontend/src/components/ai/AiRobotCanvas.jsx": "9b495f62f8ccfd7bb4691714d9452bf6cb164e356fb4a691e2ecbb907e746b8d",
+  "frontend/src/components/ai/robotScene.js": "9d5708a080a5e94bc697996d5b718468a47313aa0febba64ac8629e0a3196ead",
+  "frontend/src/components/ai/robotState.js": "ef405eb1578754acfb8340f010c4fd0c6251f8e07656a660aabe8ab86b177df2",
+  "frontend/tests/aiAssistant.test.js": "02e46a8571b278a5736707f93cbee78a2ae4c6474b29f72612aadfdbbbb336e8",
+  "frontend/tests/robotLauncher.test.js": "c753c3d2f411ebcc7368633038240f00dad5444ec67954a759b94983c34da2ba",
+  "frontend/tests/robotScene.test.js": "19d78250cbb243df66d69da37de9c96e6db0f866ff8e7c3b0f31b3bb33f111c0",
+  "scripts/qa/d14_robot_qa.mjs": "19b9cc48b13c30c293f86ddb778024c4aa245a65943d4018707238c91b2a3435",
+  "scripts/qa/d14_robot_fixture.jsx": "daa2be96b3007d7613bc09f7d4d058a4310bba62b8e2b560da0182e542d22395",
+  "docs/qa/SE2_D14_FE_REPORT.md": "25478ee4d583165c8a6b215900e21e05f4c8099a53d68cef5bd7018dfefd15f2"
+}
