@@ -25,7 +25,12 @@ public class AiFinancialContextService {
     private final CategoryBudgetService categoryBudgets;
     private final MonthlyBudgetRepository budgetRepository;
 
-    public record Context(Stats stats, List<TopCategory> topCategories, Budget budget) { }
+    public record Context(Stats stats, List<TopCategory> topCategories, Budget budget,
+                          List<TopCategory> budgetSpending) {
+        public Context(Stats stats, List<TopCategory> topCategories, Budget budget) {
+            this(stats, topCategories, budget, List.of());
+        }
+    }
 
     // Hai kỳ dùng chung snapshot; chỉ đọc aggregate SQL, không tải entity giao dịch/ngân sách.
     @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
@@ -70,7 +75,7 @@ public class AiFinancialContextService {
         var summary = report.months().getFirst();
         Stats stats = new Stats(summary.totalIncome(), summary.totalExpense(), summary.balance());
         List<TopCategory> categories = List.of();
-        if (intent.equals("CATEGORIES")) {
+        if (intent.equals("CATEGORIES") || intent.equals("BUDGET")) {
             categories = report.expensesByCategory().stream()
                     .sorted(Comparator.comparing(CategoryExpenseResponse::getTotalAmount).reversed()
                             .thenComparing(CategoryExpenseResponse::getCategoryId))
@@ -90,6 +95,8 @@ public class AiFinancialContextService {
             budget = new Budget(monthly == null ? "NOT_SET" : "SET", monthly,
                     categoryBudgets.getAll(userId, period.getYear(), period.getMonthValue()));
         }
-        return new Context(stats, categories, budget);
+        // BUDGET dùng phân bổ SQL nội bộ; topCategories trong response vẫn chỉ dành cho CATEGORIES.
+        return new Context(stats, intent.equals("CATEGORIES") ? categories : List.of(), budget,
+                intent.equals("BUDGET") ? categories : List.of());
     }
 }
