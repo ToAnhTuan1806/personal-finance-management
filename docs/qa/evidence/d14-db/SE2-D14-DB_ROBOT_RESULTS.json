@@ -1,0 +1,239 @@
+{
+  "timestamp": "2026-11-12T20:38:40.358Z",
+  "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/157.0.0.0 Safari/537.36",
+  "backendUrl": "http://127.0.0.1:8085",
+  "mode": "Real Google Chrome headless + CDP + Live Spring Boot Backend + isolated MySQL",
+  "total": 23,
+  "passed": 23,
+  "failed": 0,
+  "status": "PASS",
+  "results": [
+    {
+      "id": "CHROME-LIVE-WEBGL-IDLE",
+      "status": "PASS",
+      "detail": {
+        "state": "IDLE",
+        "screenshot": "live-idle-1440-light.png",
+        "gpu": {
+          "created": 1,
+          "lost": 0,
+          "attempts": 1,
+          "drawCalls": 208
+        }
+      }
+    },
+    {
+      "id": "CHROME-LIVE-LOADING-TO-SUCCESS-BUDGET",
+      "status": "PASS",
+      "detail": {
+        "state": "SUCCESS",
+        "screenshot": "live-budget-success-1440-light.png"
+      }
+    },
+    {
+      "id": "CHROME-LIVE-COMPARISON-CHART",
+      "status": "PASS",
+      "detail": {
+        "screenshot": "live-comparison-chart.png"
+      }
+    },
+    {
+      "id": "CHROME-LIVE-CATEGORIES-CHART",
+      "status": "PASS",
+      "detail": {
+        "screenshot": "live-categories-chart.png"
+      }
+    },
+    {
+      "id": "CHROME-LIVE-ERROR-RETRY",
+      "status": "PASS",
+      "detail": {
+        "errorScreenshot": "live-error-state.png",
+        "recoveryScreenshot": "live-retry-recovery.png"
+      }
+    },
+    {
+      "id": "CHROME-LIVE-SVG-FALLBACK",
+      "status": "PASS",
+      "detail": {
+        "hasSvg": true,
+        "canvasVisible": false,
+        "screenshot": "live-no-webgl-fallback.png"
+      }
+    },
+    {
+      "id": "CHROME-LIVE-CONTEXT-LOST-FALLBACK",
+      "status": "PASS",
+      "detail": {
+        "hasSvg": true,
+        "screenshot": "live-context-lost-fallback.png"
+      }
+    },
+    {
+      "id": "CHROME-LIVE-REDUCED-MOTION",
+      "status": "PASS",
+      "detail": {
+        "deltaDrawCalls": 0,
+        "screenshot": "live-reduced-motion.png"
+      }
+    },
+    {
+      "id": "CHROME-LIVE-RESPONSIVE-320-light",
+      "status": "PASS",
+      "detail": {
+        "metrics": {
+          "overflow": false,
+          "launcherVisible": true,
+          "panelWidth": null
+        },
+        "screenshot": "live-320-light.png"
+      }
+    },
+    {
+      "id": "CHROME-LIVE-RESPONSIVE-320-dark",
+      "status": "PASS",
+      "detail": {
+        "metrics": {
+          "overflow": false,
+          "launcherVisible": true,
+          "panelWidth": null
+        },
+        "screenshot": "live-320-dark.png"
+      }
+    },
+    {
+      "id": "CHROME-LIVE-RESPONSIVE-375-light",
+      "status": "PASS",
+      "detail": {
+        "metrics": {
+          "overflow": false,
+          "launcherVisible": true,
+          "panelWidth": null
+        },
+        "screenshot": "live-375-light.png"
+      }
+    },
+    {
+      "id": "CHROME-LIVE-RESPONSIVE-375-dark",
+      "status": "PASS",
+      "detail": {
+        "metrics": {
+          "overflow": false,
+          "launcherVisible": true,
+          "panelWidth": null
+        },
+        "screenshot": "live-375-dark.png"
+      }
+    },
+    {
+      "id": "CHROME-LIVE-RESPONSIVE-430-light",
+      "status": "PASS",
+      "detail": {
+        "metrics": {
+          "overflow": false,
+          "launcherVisible": true,
+          "panelWidth": null
+        },
+        "screenshot": "live-430-light.png"
+      }
+    },
+    {
+      "id": "CHROME-LIVE-RESPONSIVE-430-dark",
+      "status": "PASS",
+      "detail": {
+        "metrics": {
+          "overflow": false,
+          "launcherVisible": true,
+          "panelWidth": null
+        },
+        "screenshot": "live-430-dark.png"
+      }
+    },
+    {
+      "id": "CHROME-LIVE-RESPONSIVE-768-light",
+      "status": "PASS",
+      "detail": {
+        "metrics": {
+          "overflow": false,
+          "launcherVisible": true,
+          "panelWidth": null
+        },
+        "screenshot": "live-768-light.png"
+      }
+    },
+    {
+      "id": "CHROME-LIVE-RESPONSIVE-768-dark",
+      "status": "PASS",
+      "detail": {
+        "metrics": {
+          "overflow": false,
+          "launcherVisible": true,
+          "panelWidth": null
+        },
+        "screenshot": "live-768-dark.png"
+      }
+    },
+    {
+      "id": "CHROME-LIVE-RESPONSIVE-1440-light",
+      "status": "PASS",
+      "detail": {
+        "metrics": {
+          "overflow": false,
+          "launcherVisible": true,
+          "panelWidth": null
+        },
+        "screenshot": "live-1440-light.png"
+      }
+    },
+    {
+      "id": "CHROME-LIVE-RESPONSIVE-1440-dark",
+      "status": "PASS",
+      "detail": {
+        "metrics": {
+          "overflow": false,
+          "launcherVisible": true,
+          "panelWidth": null
+        },
+        "screenshot": "live-1440-dark.png"
+      }
+    },
+    {
+      "id": "CHROME-LIVE-KEYBOARD-FOCUS",
+      "status": "PASS",
+      "detail": {
+        "accessible": true
+      }
+    },
+    {
+      "id": "CHROME-LIVE-ACCOUNT-ISOLATION",
+      "status": "PASS",
+      "detail": {
+        "isolationPassed": true,
+        "screenshot": "live-user-b-chat.png"
+      }
+    },
+    {
+      "id": "CHROME-LIVE-DRAWER-PAUSES-RAF",
+      "status": "PASS",
+      "detail": {
+        "paused": true,
+        "delta": 0
+      }
+    },
+    {
+      "id": "CHROME-LIVE-DISPOSE-ON-UNMOUNT",
+      "status": "PASS",
+      "detail": {
+        "cleanlyDisposed": true
+      }
+    },
+    {
+      "id": "CHROME-LIVE-JAVASCRIPT-CONSOLE",
+      "status": "PASS",
+      "detail": {
+        "clean": true,
+        "totalExceptions": 1
+      }
+    }
+  ]
+}
