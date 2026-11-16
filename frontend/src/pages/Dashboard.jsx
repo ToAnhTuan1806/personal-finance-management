@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router'
 import {
   PlusCircle,
-  Calendar,
   AlertCircle,
   ArrowUpRight,
   ArrowDownRight,
@@ -33,6 +32,8 @@ import { useAuth } from '../contexts/AuthContext'
 import { landingPreview } from '../components/dashboard/landingPreview.js'
 import RollingNumber from '../components/dashboard/RollingNumber'
 import ExpenseDonutChart from '../components/dashboard/ExpenseDonutChart'
+import MonthPickerInput from '../components/ui/MonthPickerInput.jsx'
+import { MIN_REPORT_YEAR, shiftMonthString } from '../components/reports/reportUtils.js'
 import dashboardService from '../services/dashboardService'
 import useDashboardMonths from '../components/dashboard/useDashboardMonths.js'
 import MonthlyDelta from '../components/dashboard/MonthlyDelta.jsx'
@@ -119,41 +120,22 @@ function AuthenticatedDashboard() {
   const { current, previous, summary } = useDashboardMonths(selectedMonth, reloadKey, mutationVersion)
   const summaryError = current.status === 'error' ? getApiErrorMessage(current.error) : ''
 
-  // 12 kỳ tháng gần nhất
-  const monthOptions = useMemo(() => {
-    const options = []
-    const today = new Date()
-
-    for (let index = 0; index < 12; index++) {
-      const date = new Date(today.getFullYear(), today.getMonth() - index, 1)
-      const value = [
-        date.getFullYear(),
-        String(date.getMonth() + 1).padStart(2, '0'),
-      ].join('-')
-
-      options.push({
-        value,
-        label: `Tháng ${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`,
-      })
-    }
-
-    return options
-  }, [])
-
-  const currentMonthIndex = monthOptions.findIndex((o) => o.value === selectedMonth)
-  const canGoPrevious = currentMonthIndex < monthOptions.length - 1
-  const canGoNext = currentMonthIndex > 0
+  const latestMonth = getCurrentMonth()
+  const previousMonth = shiftMonthString(selectedMonth, -1)
+  const nextMonth = shiftMonthString(selectedMonth, 1)
+  const canGoPrevious = Boolean(previousMonth)
+  const canGoNext = Boolean(nextMonth && nextMonth <= latestMonth)
 
   const handlePrevMonth = () => {
     if (canGoPrevious) {
-      setSelectedMonth(monthOptions[currentMonthIndex + 1].value)
+      setSelectedMonth(previousMonth)
       setLoading(true)
     }
   }
 
   const handleNextMonth = () => {
     if (canGoNext) {
-      setSelectedMonth(monthOptions[currentMonthIndex - 1].value)
+      setSelectedMonth(nextMonth)
       setLoading(true)
     }
   }
@@ -352,28 +334,14 @@ function AuthenticatedDashboard() {
                 <ChevronLeft size={16} />
               </button>
 
-              <div className="flex items-center gap-1.5 px-2.5">
-                <Calendar size={14} className="text-blue-300 shrink-0" />
-                <select
-                  value={selectedMonth}
-                  aria-label="Chọn tháng thống kê"
-                  onChange={(event) => {
-                    setSelectedMonth(event.target.value)
-                    setLoading(true)
-                  }}
-                  className="cursor-pointer bg-transparent text-xs font-bold text-white outline-none"
-                >
-                  {monthOptions.map((option) => (
-                    <option
-                      key={option.value}
-                      value={option.value}
-                      className="text-slate-900 bg-white"
-                    >
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <MonthPickerInput id="dashboard-month-picker" value={selectedMonth}
+                min={`${MIN_REPORT_YEAR}-01`} max={latestMonth} theme="dark-panel" panelTheme="default"
+                allowClear={false} aria-label="Chọn tháng và năm thống kê"
+                onChange={(event) => {
+                  if (!event.target.value) return
+                  setSelectedMonth(event.target.value)
+                  setLoading(true)
+                }} className="min-w-32 border-0 bg-transparent shadow-none" />
 
               <button
                 type="button"

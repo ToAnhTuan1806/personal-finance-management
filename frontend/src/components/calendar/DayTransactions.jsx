@@ -7,12 +7,18 @@ import { getCategories } from '../../services/categoryService'
 import { getApiErrorMessage, isRequestCancelled } from '../../api/errors'
 import { formatCalendarMoney } from '../../utils/calendar'
 
-export function DayTransactionsContent({ date, page, result, onPage, onRetry, onAdd }) {
+export function DayTransactionsContent({ date, daySummary, page, result, onPage, onRetry, onAdd }) {
   const data = result?.data
   const buttonClass = 'min-h-11 rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-800 disabled:opacity-40 dark:border-slate-600 dark:text-slate-100'
   return <section id="calendar-day-details" aria-labelledby="day-transactions-title" aria-busy={!result} className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-[#182234] sm:p-6">
     <div className="flex flex-wrap items-center justify-between gap-3">
-      <h2 id="day-transactions-title" aria-live="polite" className="font-bold text-slate-900 dark:text-slate-100">Giao dịch ngày {date.split('-').reverse().join('/')}</h2>
+      <div className="min-w-0" aria-live="polite" aria-atomic="true">
+        <h2 id="day-transactions-title" className="font-bold text-slate-900 dark:text-slate-100">Giao dịch ngày {date.split('-').reverse().join('/')}</h2>
+        {daySummary?.date === date && <p className="mt-1 break-words text-sm text-slate-700 dark:text-slate-200">
+          Thu: <span className="font-semibold text-emerald-700 dark:text-emerald-300">{formatCalendarMoney(daySummary.incomeTotal)}</span>
+          {' · '}Chi: <span className="font-semibold text-rose-700 dark:text-rose-300">{formatCalendarMoney(daySummary.expenseTotal)}</span>
+        </p>}
+      </div>
       <div className="flex flex-wrap gap-2">
         <button type="button" onClick={() => onAdd('EXPENSE', date)} className={buttonClass}>Thêm giao dịch chi</button>
         <button type="button" onClick={() => onAdd('INCOME', date)} className={buttonClass}>Thêm giao dịch thu</button>
@@ -32,19 +38,19 @@ export function DayTransactionsContent({ date, page, result, onPage, onRetry, on
               {row.type === 'INCOME' ? '+' : '−'}{formatCalendarMoney(row.amount)}
             </p>
           </li>)}</ul>}
-        <nav aria-label="Phân trang giao dịch trong ngày" className="flex flex-wrap items-center justify-between gap-3">
+        {data.totalElements > 0 && <nav aria-label="Phân trang giao dịch trong ngày" className="flex flex-wrap items-center justify-between gap-3">
           <p role="status" className="text-sm text-slate-600 dark:text-slate-300">{data.totalElements} giao dịch · Trang {data.totalPages ? page + 1 : 0}/{data.totalPages}</p>
           <div className="flex gap-2">
             {page > 0 && <button type="button" className={buttonClass} onClick={() => onPage(0)}>Trang đầu</button>}
             <button type="button" className={buttonClass} disabled={page === 0} onClick={() => onPage(page - 1)}>Trước</button>
             <button type="button" className={buttonClass} disabled={page + 1 >= data.totalPages} onClick={() => onPage(page + 1)}>Sau</button>
           </div>
-        </nav>
+        </nav>}
       </>}
   </section>
 }
 
-export default function DayTransactions({ date, page, onPage }) {
+export default function DayTransactions({ date, daySummary, page, onPage }) {
   const { openQuickAdd, mutationVersion } = useQuickAdd()
   const [attempt, setAttempt] = useState(0)
   const [result, setResult] = useState(null)
@@ -62,6 +68,6 @@ export default function DayTransactions({ date, page, onPage }) {
     // Không để response ngày/trang cũ đè dữ liệu của lựa chọn mới.
     return () => controller.abort()
   }, [date, page, key])
-  return <DayTransactionsContent date={date} page={page} result={result?.key === key ? result : null}
+  return <DayTransactionsContent date={date} daySummary={daySummary} page={page} result={result?.key === key ? result : null}
     onPage={onPage} onRetry={() => setAttempt((value) => value + 1)} onAdd={openQuickAdd} />
 }

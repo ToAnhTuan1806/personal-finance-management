@@ -3,7 +3,7 @@ import test, { before, after } from 'node:test'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { createServer } from 'vite'
-import { monthDates } from '../src/utils/calendar.js'
+import { compactCalendarMoney, monthDates } from '../src/utils/calendar.js'
 
 let server, MonthCalendar, CalendarMonthContent
 const dataFor = (year, month) => ({ year, month, incomeTotal: 0, expenseTotal: 0,
@@ -24,6 +24,26 @@ test('Calendar có 7 tiêu đề T2–CN và đủ nút ngày ở tháng trống
   assert.equal((html.match(/<button /g) || []).length, 28)
   assert.ok(html.includes('2026-02-01: Thu 0 ₫, Chi 0 ₫'))
   assert.ok(html.includes('2026-02-28: Thu 0 ₫, Chi 0 ₫'))
+  assert.doesNotMatch(html, />[+−-]0<\/span>/)
+})
+
+test('ô ngày chỉ hiện dòng thu/chi có phát sinh, giữ số tiền nhỏ và tên truy cập đầy đủ', () => {
+  const data = dataFor(2026, 11)
+  data.days[0].incomeTotal = 1250.25
+  data.days[1].expenseTotal = 0.1
+  data.days[2].incomeTotal = 100
+  data.days[2].expenseTotal = 200
+  const html = render(data)
+  const cell = (date) => html.match(new RegExp(`<button[^>]*aria-label="${date}[^>]*>[\\s\\S]*?<\\/button>`))[0]
+  const income = cell('2026-11-01'), expense = cell('2026-11-02'), both = cell('2026-11-03'), empty = cell('2026-11-04')
+  assert.ok(income.includes(`>+${compactCalendarMoney(1250.25)}</span>`))
+  assert.doesNotMatch(income, />−/)
+  assert.match(expense, />−0,1<\/span>/)
+  assert.doesNotMatch(expense, />\+/)
+  assert.match(both, />\+100<\/span>/)
+  assert.match(both, />−200<\/span>/)
+  assert.doesNotMatch(empty, />[+−-]/)
+  assert.match(income, /Thu 1\.250,25 ₫, Chi 0 ₫/)
 })
 
 test('năm nhuận render 29 ngày, lựa chọn và hôm nay có trạng thái accessible', () => {
@@ -73,7 +93,7 @@ test('tháng trống hiển thị thông báo thật và vẫn giữ đầy đ�
   assert.equal((html.match(/aria-pressed=/g) || []).length, 29)
 })
 
-test('hiển thị tổng tháng từ DTO và tổng đầy đủ của ngày đã chọn', () => {
+test('giữ tổng tháng từ DTO, bỏ khung tổng ngày lặp bên dưới lịch', () => {
   const data = dataFor(2028, 2)
   data.incomeTotal = 1234567.89
   data.expenseTotal = 0.01
@@ -81,6 +101,6 @@ test('hiển thị tổng tháng từ DTO và tổng đầy đủ của ngày đ
   data.days[28].expenseTotal = 0.01
   const html = renderContent({ result: { data }, selectedDate: '2028-02-29' })
   assert.ok(html.includes('1.234.567,89 ₫') && html.includes('0,01 ₫'))
-  assert.ok(html.includes('Ngày 29/02/2028'))
+  assert.ok(!html.includes('Ngày 29/02/2028') && !html.includes('Thu:'))
   assert.ok(!html.includes('chưa có giao dịch'))
 })

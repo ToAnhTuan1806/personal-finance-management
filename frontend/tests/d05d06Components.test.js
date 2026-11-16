@@ -26,11 +26,38 @@ test('chi tiết ngày loading/error tách biệt empty, có retry và nút thê
   assert.ok(error.includes('role="alert"') && error.includes('Thử lại'))
   for (const html of [loading, error]) assert.ok(html.includes('Thêm giao dịch thu') && html.includes('Thêm giao dịch chi'))
 })
-test('ngày trống không tạo dòng giả; tổng và pager bằng 0', () => {
-  const html = renderDay(dayResult())
-  assert.ok(html.includes('Ngày này chưa có giao dịch.') && html.includes('0 giao dịch'))
-  assert.ok(html.includes('Trang 0/0'))
-  assert.equal((html.match(/<li /g) || []).length, 0)
+test('ngày trống giữ empty state và nút thêm, ẩn hoàn toàn pager kể cả URL trang cũ', () => {
+  for (const page of [0, 2]) {
+    const html = renderDay(dayResult([], 0, page), page)
+    assert.match(html, /Ngày này chưa có giao dịch\./)
+    for (const hidden of ['Trang 0/0', 'Phân trang giao dịch trong ngày', '>Trước<', '>Sau<', '>Trang đầu<']) assert.ok(!html.includes(hidden), hidden)
+    assert.match(html, /Thêm giao dịch thu/)
+    assert.match(html, /Thêm giao dịch chi/)
+    assert.equal((html.match(/<li /g) || []).length, 0)
+  }
+})
+
+test('tổng ngày trong header lấy từ Calendar DTO, độc lập trang giao dịch và không dùng tổng cũ', () => {
+  const props = { date: '2028-02-29', page: 1, result: dayResult([], 11, 1), onPage: noOp, onRetry: noOp, onAdd: noOp,
+    daySummary: { date: '2028-02-29', incomeTotal: 1234567.89, expenseTotal: 0.01 } }
+  const html = render(DayContent, props)
+  const header = html.slice(0, html.indexOf('Thêm giao dịch chi'))
+  assert.match(header, /Giao dịch ngày 29\/02\/2028/)
+  assert.match(header, /Thu:.*1\.234\.567,89 ₫.*Chi:.*0,01 ₫/)
+  assert.match(html, /11 giao dịch · Trang 2\/2/)
+  const stale = render(DayContent, { ...props, date: '2028-03-01' })
+  assert.doesNotMatch(stale, /1\.234\.567,89 ₫/)
+  const unavailable = render(DayContent, { ...props, daySummary: undefined })
+  assert.doesNotMatch(unavailable, /Thu:|Chi:/)
+})
+
+test('ngày có giao dịch vẫn hiện số trang và nút điều hướng', () => {
+  const html = renderDay(dayResult([{ id: 1, categoryId: 1, categoryName: 'TEST', type: 'EXPENSE', amount: 1, transactionDate: '2028-02-29' }], 11))
+  assert.match(html, /11 giao dịch · Trang 1\/2/)
+  assert.match(html, /Phân trang giao dịch trong ngày/)
+  assert.match(html, /<button[^>]*disabled=""[^>]*>Trước<\/button>/)
+  const nextButton = html.match(/<button[^>]*>Sau<\/button>/)[0]
+  assert.doesNotMatch(nextButton, / disabled=""/)
 })
 test('dòng ngày hiển thị đủ DTO, phần lẻ và escape ghi chú', () => {
   const html = renderDay(dayResult([{ id: 1, categoryId: 1, categoryName: 'TEST_CATEGORY', type: 'INCOME', amount: 0.01, note: '<script>TEST</script>', transactionDate: '2028-02-29' }]))

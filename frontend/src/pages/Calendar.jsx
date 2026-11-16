@@ -3,10 +3,11 @@ import { ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react'
 import { useSearchParams } from 'react-router'
 import { CalendarMonthContent } from '../components/calendar/MonthCalendar'
 import DayTransactions from '../components/calendar/DayTransactions'
+import MonthPickerInput from '../components/ui/MonthPickerInput.jsx'
 import { useQuickAdd } from '../contexts/QuickAddContext'
 import { getCalendarMonth } from '../services/calendarService'
 import { getApiErrorMessage, isRequestCancelled } from '../api/errors'
-import { isCalendarPeriod, shiftMonth } from '../utils/calendar'
+import { isCalendarPeriod, shiftMonth, MIN_CALENDAR_YEAR, MAX_CALENDAR_YEAR } from '../utils/calendar'
 import { localToday } from '../utils/transactionForm'
 import { calendarParams, calendarSelection, dateInMonth } from '../utils/calendarSelection'
 
@@ -21,6 +22,7 @@ export default function Calendar() {
   const [result, setResult] = useState(null)
   const { mutationVersion } = useQuickAdd()
   const { year, month } = period
+  const selectedMonth = `${year}-${String(month).padStart(2, '0')}`
   const key = `${year}-${month}-${attempt}-${mutationVersion}`
   const current = result?.key === key ? result : null
   const previous = shiftMonth(period, -1), next = shiftMonth(period, 1)
@@ -44,6 +46,11 @@ export default function Calendar() {
     if (!value) return
     setParams(calendarParams(value, dateInMonth(value, selectedDate)))
   }
+  const selectMonth = (value) => {
+    if (!value) return
+    const [selectedYear, selectedMonthNumber] = value.split('-').map(Number)
+    changeMonth({ year: selectedYear, month: selectedMonthNumber })
+  }
   const controlClass = 'flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-slate-300 px-3 text-sm font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800'
 
   return (
@@ -59,14 +66,19 @@ export default function Calendar() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <button type="button" className={controlClass} disabled={!previous} onClick={() => changeMonth(previous)} aria-label="Tháng trước"><ChevronLeft size={18} aria-hidden="true" /></button>
-          <h2 aria-live="polite" aria-atomic="true" className="min-w-32 text-center font-bold text-slate-900 dark:text-slate-100">Tháng {month}/{year}</h2>
+          <MonthPickerInput id="calendar-month-picker" value={selectedMonth}
+            min={`${MIN_CALENDAR_YEAR}-01`} max={`${MAX_CALENDAR_YEAR}-12`}
+            onChange={(event) => selectMonth(event.target.value)} allowClear={false}
+            aria-label="Chọn tháng và năm cho lịch thu chi"
+            className="min-w-36" />
           <button type="button" className={controlClass} disabled={!next} onClick={() => changeMonth(next)} aria-label="Tháng sau"><ChevronRight size={18} aria-hidden="true" /></button>
         </div>
         <button type="button" className={controlClass} disabled={!isCalendarPeriod(todayYear, todayMonth)} onClick={() => setParams(calendarParams({ year: todayYear, month: todayMonth }, today))}>Tháng hiện tại</button>
       </div>
       <CalendarMonthContent result={current} year={year} month={month} selectedDate={selectedDate} today={today}
         onSelect={(date) => setParams(calendarParams(period, date))} onRetry={() => setAttempt((value) => value + 1)} />
-      <DayTransactions date={selectedDate} page={page} onPage={(value) => setParams(calendarParams(period, selectedDate, value))} />
+      <DayTransactions date={selectedDate} daySummary={current?.data?.days.find((day) => day.date === selectedDate)}
+        page={page} onPage={(value) => setParams(calendarParams(period, selectedDate, value))} />
     </section>
   )
 }

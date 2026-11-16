@@ -138,6 +138,7 @@ export default function CategoryBreakdownSection({
               data={expensesByCategory}
               title="Chi tiêu theo danh mục"
               subtitle={subtitle}
+              showLegend={false}
             />
           </div>
 

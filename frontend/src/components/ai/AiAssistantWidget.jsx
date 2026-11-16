@@ -439,14 +439,16 @@ export function AiAssistantPanelView({
       startScrollLeft: scroller.scrollLeft,
       moved: false,
     };
-    scroller.setPointerCapture?.(event.pointerId);
   };
 
   const handleSuggestionPointerMove = (event) => {
     const drag = suggestionDragRef.current;
     if (drag.pointerId !== event.pointerId) return;
     const delta = event.clientX - drag.startX;
-    if (Math.abs(delta) > 4) drag.moved = true;
+    if (Math.abs(delta) > 4 && !drag.moved) {
+      drag.moved = true;
+      suggestionsRef.current?.setPointerCapture?.(event.pointerId);
+    }
     if (!drag.moved) return;
     event.preventDefault();
     suggestionsRef.current.scrollLeft = drag.startScrollLeft - delta;
@@ -456,7 +458,9 @@ export function AiAssistantPanelView({
     const drag = suggestionDragRef.current;
     if (drag.pointerId !== event.pointerId) return;
     suppressSuggestionClickRef.current = drag.moved;
-    suggestionsRef.current?.releasePointerCapture?.(event.pointerId);
+    if (suggestionsRef.current?.hasPointerCapture?.(event.pointerId)) {
+      suggestionsRef.current.releasePointerCapture(event.pointerId);
+    }
     suggestionDragRef.current.pointerId = null;
     if (drag.moved) {
       window.setTimeout(() => {

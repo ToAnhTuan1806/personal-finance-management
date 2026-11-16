@@ -24,6 +24,7 @@ export default function ExpenseDonutChart({
   data = EMPTY_DATA,
   title = 'Chi tiêu theo danh mục',
   subtitle,
+  showLegend = true,
 }) {
   const [excluded, setExcluded] = useState(() => new Set())
   const [hoveredId, setHoveredId] = useState(null)
@@ -52,7 +53,7 @@ export default function ExpenseDonutChart({
   }
 
   const enabledCategories = categories.filter(
-    (item) => !excluded.has(item.id)
+    (item) => !showLegend || !excluded.has(item.id)
   )
 
   const total = enabledCategories.reduce(
@@ -138,7 +139,11 @@ export default function ExpenseDonutChart({
             <svg
               className="se097-svg"
               viewBox="0 0 220 220"
-              aria-hidden="true"
+              aria-hidden={showLegend ? true : undefined}
+              role={showLegend ? undefined : 'img'}
+              aria-label={showLegend ? undefined : `${title}: ${categories.map((item) =>
+                `${item.name}: ${new Intl.NumberFormat('vi-VN').format(item.amount)} đồng, ${total > 0 ? (item.amount / total * 100).toFixed(1).replace('.', ',') : '0'}%`
+              ).join('; ')}`}
             >
               <circle
                 className="se097-track"
@@ -178,7 +183,7 @@ export default function ExpenseDonutChart({
                     }
                     onMouseEnter={() => setHoveredId(item.id)}
                     onMouseLeave={() => setHoveredId(null)}
-                    onClick={() => toggleCategory(item.id)}
+                    onClick={showLegend ? () => toggleCategory(item.id) : undefined}
                   />
                 )
               })}
@@ -196,7 +201,7 @@ export default function ExpenseDonutChart({
             </div>
           </div>
 
-          <div
+          {showLegend && <div
             className="se097-legend"
             role="group"
             aria-label="Bật hoặc tắt danh mục chi tiêu"
@@ -243,7 +248,7 @@ export default function ExpenseDonutChart({
                 </button>
               )
             })}
-          </div>
+          </div>}
         </>
       )}
     </section>

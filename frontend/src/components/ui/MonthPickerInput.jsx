@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Calendar, Check, ChevronLeft, ChevronRight, X } from 'lucide-react'
 import {
@@ -46,6 +46,48 @@ function isAllowedMonth(value, minValue, maxValue) {
   return Boolean(parseMonthString(value)) && value >= minValue && value <= maxValue
 }
 
+function YearField({ id, year, minYear, maxYear, onYearChange, className }) {
+  const [draft, setDraft] = useState(null)
+  const displayYear = draft?.year === year ? draft.value : String(year)
+
+  const updateDraft = (nextDraft) => {
+    if (!/^\d{0,4}$/.test(nextDraft)) return
+    setDraft({ year, value: nextDraft })
+    const nextYear = Number(nextDraft)
+    if (nextDraft.length === 4 && nextYear >= minYear && nextYear <= maxYear) {
+      onYearChange?.(nextYear)
+    }
+  }
+
+  return (
+    <div className={`flex h-9 min-w-0 flex-1 items-center justify-center gap-1 rounded-lg border px-2 focus-within:ring-2 focus-within:ring-blue-500/30 ${className}`}>
+      <label htmlFor={id} className="text-sm font-bold">Năm</label>
+      <input
+        id={id}
+        type="text"
+        inputMode="numeric"
+        pattern="[0-9]{4}"
+        maxLength={4}
+        value={displayYear}
+        onChange={(event) => updateDraft(event.target.value)}
+        onBlur={() => setDraft(null)}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') {
+            event.preventDefault()
+            event.currentTarget.blur()
+          } else if (event.key === 'Escape') {
+            setDraft(null)
+            event.currentTarget.blur()
+          }
+        }}
+        aria-label={`Nhập năm từ ${minYear} đến ${maxYear}`}
+        aria-invalid={displayYear.length === 4 && (Number(displayYear) < minYear || Number(displayYear) > maxYear)}
+        className="w-12 bg-transparent text-center text-sm font-bold outline-none"
+      />
+    </div>
+  )
+}
+
 export function MonthPickerPanel({
   panelId,
   visibleYear,
@@ -66,10 +108,6 @@ export function MonthPickerPanel({
   const currentMonth = getCurrentVietnamMonth()
   const current = parseMonthString(currentMonth)
   const selected = parseMonthString(value)
-  const yearOptions = useMemo(
-    () => Array.from({ length: maxYear - minYear + 1 }, (_, index) => minYear + index),
-    [minYear, maxYear]
-  )
   const focusValue =
     selected?.year === safeYear && isAllowedMonth(value, minValue, maxValue)
       ? value
@@ -119,21 +157,14 @@ export function MonthPickerPanel({
           <ChevronLeft size={17} aria-hidden="true" />
         </button>
 
-        <label htmlFor={`${panelId}-year`} className="sr-only">
-          Chọn năm
-        </label>
-        <select
+        <YearField
           id={`${panelId}-year`}
-          value={safeYear}
-          onChange={(event) => onYearChange?.(Number(event.target.value))}
-          className={`h-9 min-w-0 flex-1 rounded-lg border px-2 text-center text-sm font-bold focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30 ${selectClass}`}
-        >
-          {yearOptions.map((year) => (
-            <option key={year} value={year}>
-              Năm {year}
-            </option>
-          ))}
-        </select>
+          year={safeYear}
+          minYear={minYear}
+          maxYear={maxYear}
+          onYearChange={onYearChange}
+          className={selectClass}
+        />
 
         <button
           type="button"
@@ -192,23 +223,25 @@ export function MonthPickerPanel({
       </div>
 
       <div className={`mt-3 flex items-center justify-between border-t pt-3 ${dividerClass}`}>
-        <button
-          type="button"
-          onClick={onClear}
-          disabled={!value}
-          className={`rounded-lg px-2 py-1.5 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
-            isDarkPanel
-              ? 'text-slate-300 hover:bg-white/10 hover:text-white'
-              : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200'
-          }`}
-        >
-          Xóa lựa chọn
-        </button>
+        {onClear && (
+          <button
+            type="button"
+            onClick={onClear}
+            disabled={!value}
+            className={`rounded-lg px-2 py-1.5 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+              isDarkPanel
+                ? 'text-slate-300 hover:bg-white/10 hover:text-white'
+                : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200'
+            }`}
+          >
+            Xóa lựa chọn
+          </button>
+        )}
         <button
           type="button"
           onClick={() => onSelect?.(currentMonth)}
           disabled={!isAllowedMonth(currentMonth, minValue, maxValue)}
-          className={`rounded-lg px-2 py-1.5 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+          className={`ml-auto rounded-lg px-2 py-1.5 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
             isDarkPanel
               ? 'text-blue-300 hover:bg-blue-950/60'
               : 'text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950/40'
@@ -231,6 +264,8 @@ export default function MonthPickerInput({
   disabled = false,
   format = 'full', // 'full': "Tháng 11/2026", 'short': "11/2026"
   theme = 'default', // 'default' | 'dark-panel' | 'compact'
+  panelTheme = theme,
+  allowClear = true,
   className = '',
   'aria-label': ariaLabel,
 }) {
@@ -381,13 +416,13 @@ export default function MonthPickerInput({
             value={value}
             min={min}
             max={max}
-            theme={theme}
+            theme={panelTheme}
             onYearChange={setVisibleYear}
             onSelect={handleSelect}
-            onClear={() => {
+            onClear={allowClear ? () => {
               emitChange('')
               closePicker(true)
-            }}
+            } : undefined}
             onClose={() => closePicker(true)}
             panelRef={panelRef}
             activeMonthRef={activeMonthRef}
