@@ -1,0 +1,102 @@
+[
+  {
+    "file": "accessibility-headless-2026-10.json",
+    "sha256": "5296865e451ba9762497e799260e49e4451b953ff745b207520484940872c340",
+    "bytes": 33387
+  },
+  {
+    "file": "accessibility-headless-2026-11.json",
+    "sha256": "5cf9725716e7ec89360e4a9fa9a3d3bf6a085f9934fbed297c86eb39585b6c6e",
+    "bytes": 33371
+  },
+  {
+    "file": "browser-targeted-results.json",
+    "sha256": "68cd0803f0bb0edea21de3e49147b200fb99f8dd920985029608041a32395db5",
+    "bytes": 29352
+  },
+  {
+    "file": "browser-targeted.log",
+    "sha256": "821a05d077867d95c09c1f39b1cf3c0d6d2a395c5b72e444fb9e961593f04109",
+    "bytes": 617
+  },
+  {
+    "file": "console-headless-disabled-1280.json",
+    "sha256": "31e3a77c27df9f8768c95b790ce72ace61e3a78f762eed80afece15dc15d8758",
+    "bytes": 4399
+  },
+  {
+    "file": "console-headless-disabled-390.json",
+    "sha256": "31e3a77c27df9f8768c95b790ce72ace61e3a78f762eed80afece15dc15d8758",
+    "bytes": 4399
+  },
+  {
+    "file": "console-headless-normal.json",
+    "sha256": "791df63db069d03f75dba50c580767ea7ffb0b50fa46cc27b9759d29d42b2a5d",
+    "bytes": 5092
+  },
+  {
+    "file": "fallback-1280-light.png",
+    "sha256": "15563d31a1cb0bad9ba706aa5bff6b82007c588263a3f521da37edc0dc5a1e4c",
+    "bytes": 253016
+  },
+  {
+    "file": "fallback-390-dark.png",
+    "sha256": "14aec9fbfb2a1c824331b5b3a98bc610fab7029f23dbf813a53e0ff2f7a05dfb",
+    "bytes": 130440
+  },
+  {
+    "file": "git-after.json",
+    "sha256": "d7fa16aeb0062957b61d373961f60e82ee73f67365f5518a33f13add7c0c1aed",
+    "bytes": 16523
+  },
+  {
+    "file": "git-after.log",
+    "sha256": "d863ddf6e5bc04d4ff58842fbb4ddf85a3241d52ed6a26bd95e4bfabc1f0a466",
+    "bytes": 369
+  },
+  {
+    "file": "git-before.json",
+    "sha256": "d7fa16aeb0062957b61d373961f60e82ee73f67365f5518a33f13add7c0c1aed",
+    "bytes": 16523
+  },
+  {
+    "file": "git-before.log",
+    "sha256": "d863ddf6e5bc04d4ff58842fbb4ddf85a3241d52ed6a26bd95e4bfabc1f0a466",
+    "bytes": 369
+  },
+  {
+    "file": "kpi-headless-2026-10.png",
+    "sha256": "51da6ad7ce7ca9c3c2fefd169c90e3e5fcb68dc0efa5029978dee7126ab23b14",
+    "bytes": 39105
+  },
+  {
+    "file": "kpi-headless-2026-11.png",
+    "sha256": "820e6564d1e20cd8fbae1464753f7e15bef9f64c3be2d0053f63a43887e58aa2",
+    "bytes": 39210
+  },
+  {
+    "file": "live-backend.log",
+    "sha256": "46c447d4432b97ea14514016bb0c14c2c0f4e3de07f4ab4b2012ef7d7526ae02",
+    "bytes": 878
+  },
+  {
+    "file": "session-headed-normal.json",
+    "sha256": "e4ccdd54c9642ee642b368814d134c7f4f454f413498051ec04a5eb04473e779",
+    "bytes": 1389
+  },
+  {
+    "file": "session-headless-disabled-1280.json",
+    "sha256": "df13dcd9964bf43acb181ceaead1c8e34957515bd406e4f1aa09ed71836dcc5c",
+    "bytes": 6552
+  },
+  {
+    "file": "session-headless-disabled-390.json",
+    "sha256": "8a25807aae782e53423d4899fc1e501bf5b6723a026481a60688fc538f5c67ae",
+    "bytes": 6345
+  },
+  {
+    "file": "session-headless-normal.json",
+    "sha256": "e6aad62a60a93bbbcf07ff0c207f269aa42c286efa6f49556042014f53a1e627",
+    "bytes": 7246
+  }
+]

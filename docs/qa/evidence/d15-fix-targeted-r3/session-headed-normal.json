@@ -1,0 +1,34 @@
+{
+  "config": {
+    "mode": "headed",
+    "disabled": false,
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    },
+    "theme": "dark"
+  },
+  "diagnostics": {
+    "route": "/login",
+    "readyState": "complete",
+    "visibility": "hidden",
+    "hasFocus": true,
+    "bodyText": "SmartExpense\nQuản lý tài chính cá nhân\n\nTÀI CHÍNH THÔNG MINH HƠN\n\nTài chính rõ ràng, tương lai chủ động.\n\nGom thu chi, ngân sách và báo cáo vào một nơi để bạn luôn biết tiền của mình đang đi đâu.\n\nTổng quan tháng\n11/2026\nSố dư dự kiến\n+8.450.000 ₫\nThu nhập\nChi tiêu\nTheo dõi thu chi mỗi ngày\nKiểm soát ngân sách rõ ràng\nBáo cáo trực quan, dễ hiểu\n\nDữ liệu được tách biệt theo tài khoản của bạn\n\nĐăng nhập\nĐăng ký\nChào mừng trở lại\n\nĐăng nhập vào tài khoản SmartExpense\n\nĐịa chỉ email\nMật khẩu\nQuên mật khẩu?\nĐăng nhập\nXin chào, bạn!\n\nĐang chuyển đến Dashboard..."
+  },
+  "errors": [],
+  "warnings": [],
+  "pageErrors": [],
+  "networkErrors": [],
+  "canceledNavigationRequests": [],
+  "apiRequests": [
+    {
+      "url": "http://127.0.0.1:60657/src/api/errors.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:60657/src/api/axiosClient.js",
+      "method": "GET"
+    }
+  ],
+  "chatAttempts": []
+}

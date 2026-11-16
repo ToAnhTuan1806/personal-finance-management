@@ -1,0 +1,59 @@
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>setlocal EnableExtensions 
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>goto afterSafetyNet 
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>set DIRNAME=F:\RikkeiEdu\personal-finance-management-DB\backend\ 
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>if "F:\RikkeiEdu\personal-finance-management-DB\backend\" == "" set DIRNAME=. 
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>set APP_BASE_NAME=gradlew 
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>set APP_HOME=F:\RikkeiEdu\personal-finance-management-DB\backend\ 
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>for %i in ("F:\RikkeiEdu\personal-finance-management-DB\backend\") do set APP_HOME=%~fi 
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>set APP_HOME=F:\RikkeiEdu\personal-finance-management-DB\backend\ 
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>set DEFAULT_JVM_OPTS="-Xmx64m" "-Xms64m" 
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>if defined JAVA_HOME goto findJavaFromJavaHome 
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>set JAVA_EXE=java.exe 
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>java.exe -version  1>NUL 2>&1 
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>if 0 EQU 0 goto execute 
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>endlocal   & "java.exe" "-Xmx64m" "-Xms64m"   "-Dorg.gradle.appname=gradlew" -jar "F:\RikkeiEdu\personal-finance-management-DB\backend\\gradle\wrapper\gradle-wrapper.jar" --offline test verifyD03IntegrationTests --console=plain --rerun-tasks   & call :exitWithErrorLevel   & goto exitWithErrorLevel 
+
+> Task :compileJava
+Note: F:\RikkeiEdu\personal-finance-management-DB\backend\src\main\java\com\smartexpense\backend\service\TransactionExportService.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+
+> Task :processResources
+> Task :classes
+
+> Task :compileTestJava
+Note: F:\RikkeiEdu\personal-finance-management-DB\backend\src\test\java\com\smartexpense\backend\PasswordResetApiTests.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Note: Some input files use unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+
+> Task :processTestResources
+> Task :testClasses
+Java HotSpot(TM) 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+> Task :test
+
+> Task :verifyD03IntegrationTests
+D03 MySQL PASS: executed=55, skipped=0, failures=0, errors=0 (JUnit XML verified).
+
+[Incubating] Problems report is available at: file:///F:/RikkeiEdu/personal-finance-management-DB/backend/build/reports/problems/problems-report.html
+
+BUILD SUCCESSFUL in 13m 14s
+6 actionable tasks: 6 executed
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.8.1/userguide/configuration_cache_enabling.html
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>"C:\WINDOWS\system32\cmd.exe" /c exit 0 
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>"C:\WINDOWS\system32\cmd.exe" /c exit 0 

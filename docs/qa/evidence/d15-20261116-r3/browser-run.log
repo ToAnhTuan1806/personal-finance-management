@@ -1,0 +1,38 @@
+UI-DASHBOARD-CURRENT-DELTA PASS
+UI-DASHBOARD-CENTS FAIL
+3:25:00 PM [vite] (client) [console.error] THREE.WebGLRenderer: Cannot read properties of null (reading 'precision')
+UI-DASHBOARD-BASE-ZERO PASS
+UI-DASHBOARD-EMPTY-MONTH PASS
+UI-DASHBOARD-RAPID-MONTH PASS
+UI-DASHBOARD-LOADING-ERROR-RETRY PASS
+UI-BUDGET-SAFE-2026-09 PASS
+3:25:03 PM [vite] (client) [console.error] THREE.WebGLRenderer: Cannot read properties of null (reading 'precision')
+UI-BUDGET-SAFE-2026-10 PASS
+UI-BUDGET-WARNING-2026-11 PASS
+UI-BUDGET-AT_LIMIT-2026-12 PASS
+UI-BUDGET-OVER_BUDGET-2027-01 PASS
+UI-BUDGET-NOT_SET-2027-02 PASS
+UI-REPORTS-YEAR-CHART-TABLE-CSV PASS
+3:25:08 PM [vite] (client) [console.error] THREE.WebGLRenderer: Cannot read properties of null (reading 'precision')
+UI-REPORTS-EMPTY-MONTH PASS
+UI-LAYOUT-dashboard-360-light PASS
+UI-LAYOUT-reports-360-light PASS
+UI-LAYOUT-budgets-360-light PASS
+UI-LAYOUT-dashboard-360-dark PASS
+UI-LAYOUT-reports-360-dark PASS
+UI-LAYOUT-budgets-360-dark PASS
+UI-LAYOUT-dashboard-390-light PASS
+UI-LAYOUT-reports-390-light PASS
+UI-LAYOUT-budgets-390-light PASS
+UI-LAYOUT-dashboard-390-dark PASS
+UI-LAYOUT-reports-390-dark PASS
+UI-LAYOUT-budgets-390-dark PASS
+UI-LAYOUT-dashboard-1280-light PASS
+UI-LAYOUT-reports-1280-light PASS
+UI-LAYOUT-budgets-1280-light PASS
+UI-LAYOUT-dashboard-1280-dark PASS
+UI-LAYOUT-reports-1280-dark PASS
+UI-LAYOUT-budgets-1280-dark PASS
+UI-KEYBOARD-FOCUS-PICKER PASS
+UI-OWNER-B-THEN-A PASS
+UI-CONSOLE-UNEXPECTED-ERRORS FAIL

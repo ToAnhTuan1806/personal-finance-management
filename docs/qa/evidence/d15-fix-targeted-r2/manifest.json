@@ -1,0 +1,82 @@
+[
+  {
+    "file": "accessibility-headless-2026-10.json",
+    "sha256": "f2d7366b9a81190dd63699ebbf23872000dabc9655137f103cf716463c5f1f7f",
+    "bytes": 33387
+  },
+  {
+    "file": "accessibility-headless-2026-11.json",
+    "sha256": "795f7ceada05896543ef636f109dd3e12f85bc5d4bba9c0aaa89369bc06e2f52",
+    "bytes": 33371
+  },
+  {
+    "file": "browser-targeted-results.json",
+    "sha256": "f5a2b1745559979e9560250e3afe246ce39a9f84e2907f32d1bb4098012d6860",
+    "bytes": 29398
+  },
+  {
+    "file": "browser-targeted.log",
+    "sha256": "9d5e839706242aca75d9e4f2b158dc827f3213e34e9f218c6fa884c119f9cd84",
+    "bytes": 663
+  },
+  {
+    "file": "console-headless-disabled-1280.json",
+    "sha256": "b72dd8824fc15eec1690b261a053a0420d346d0b11efa9ee305eba0c05010fa5",
+    "bytes": 4399
+  },
+  {
+    "file": "console-headless-disabled-390.json",
+    "sha256": "b72dd8824fc15eec1690b261a053a0420d346d0b11efa9ee305eba0c05010fa5",
+    "bytes": 4399
+  },
+  {
+    "file": "console-headless-normal.json",
+    "sha256": "dd4ccb2385fd041fe021a80d9e9ccca34cf26de8c0b3d1f2d158d4f5d98b40fd",
+    "bytes": 5092
+  },
+  {
+    "file": "fallback-1280-light.png",
+    "sha256": "15563d31a1cb0bad9ba706aa5bff6b82007c588263a3f521da37edc0dc5a1e4c",
+    "bytes": 253016
+  },
+  {
+    "file": "fallback-390-dark.png",
+    "sha256": "14aec9fbfb2a1c824331b5b3a98bc610fab7029f23dbf813a53e0ff2f7a05dfb",
+    "bytes": 130440
+  },
+  {
+    "file": "git-after.json",
+    "sha256": "d7fa16aeb0062957b61d373961f60e82ee73f67365f5518a33f13add7c0c1aed",
+    "bytes": 16523
+  },
+  {
+    "file": "git-after.log",
+    "sha256": "d863ddf6e5bc04d4ff58842fbb4ddf85a3241d52ed6a26bd95e4bfabc1f0a466",
+    "bytes": 369
+  },
+  {
+    "file": "git-before.json",
+    "sha256": "d7fa16aeb0062957b61d373961f60e82ee73f67365f5518a33f13add7c0c1aed",
+    "bytes": 16523
+  },
+  {
+    "file": "git-before.log",
+    "sha256": "d863ddf6e5bc04d4ff58842fbb4ddf85a3241d52ed6a26bd95e4bfabc1f0a466",
+    "bytes": 369
+  },
+  {
+    "file": "kpi-headless-2026-10.png",
+    "sha256": "51da6ad7ce7ca9c3c2fefd169c90e3e5fcb68dc0efa5029978dee7126ab23b14",
+    "bytes": 39105
+  },
+  {
+    "file": "kpi-headless-2026-11.png",
+    "sha256": "820e6564d1e20cd8fbae1464753f7e15bef9f64c3be2d0053f63a43887e58aa2",
+    "bytes": 39210
+  },
+  {
+    "file": "live-backend.log",
+    "sha256": "50c272d468e4eb567c36a7e20ee39c41756fe8ad678d2dbd07e478f506cb82a9",
+    "bytes": 1457
+  }
+]

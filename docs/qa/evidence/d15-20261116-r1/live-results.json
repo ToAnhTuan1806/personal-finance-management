@@ -1,0 +1,1405 @@
+{
+  "task": "SE2-D15-DB",
+  "startedUtc": "2026-11-16T08:16:42.516496+00:00",
+  "baseline": "4650bd9dd8c5d150b3fb25aa40913ac13784faf5",
+  "tests": [
+    {
+      "id": "RECONCILE-A-2026-09",
+      "status": "PASS",
+      "detail": {
+        "sql": {
+          "month": "2026-09",
+          "totalIncome": "200.10",
+          "totalExpense": "79.99",
+          "balance": "120.11",
+          "sql": "SELECT COALESCE(SUM(CASE WHEN type='INCOME' THEN amount ELSE 0 END),0),COALESCE(SUM(CASE WHEN type='EXPENSE' THEN amount ELSE 0 END),0) FROM transactions WHERE user_id=1 AND transaction_date>='2026-09-01' AND transaction_date<'2026-10-01';"
+        },
+        "dashboard": {
+          "year": 2026,
+          "month": 9,
+          "totalIncome": "200.10",
+          "totalExpense": "79.99",
+          "balance": "120.11"
+        },
+        "report": {
+          "from": "2026-09",
+          "to": "2026-09",
+          "months": [
+            {
+              "month": "2026-09",
+              "totalIncome": "200.10",
+              "totalExpense": "79.99",
+              "balance": "120.11"
+            }
+          ],
+          "expensesByCategory": [
+            {
+              "categoryId": 36,
+              "categoryName": "D15_A_EXPENSE",
+              "totalAmount": "79.99"
+            }
+          ]
+        },
+        "spoofedUserId": false
+      }
+    },
+    {
+      "id": "RECONCILE-A-2026-10",
+      "status": "PASS",
+      "detail": {
+        "sql": {
+          "month": "2026-10",
+          "totalIncome": "200.10",
+          "totalExpense": "7999.99",
+          "balance": "-7799.89",
+          "sql": "SELECT COALESCE(SUM(CASE WHEN type='INCOME' THEN amount ELSE 0 END),0),COALESCE(SUM(CASE WHEN type='EXPENSE' THEN amount ELSE 0 END),0) FROM transactions WHERE user_id=1 AND transaction_date>='2026-10-01' AND transaction_date<'2026-11-01';"
+        },
+        "dashboard": {
+          "year": 2026,
+          "month": 10,
+          "totalIncome": "200.10",
+          "totalExpense": "7999.99",
+          "balance": "-7799.89"
+        },
+        "report": {
+          "from": "2026-10",
+          "to": "2026-10",
+          "months": [
+            {
+              "month": "2026-10",
+              "totalIncome": "200.10",
+              "totalExpense": "7999.99",
+              "balance": "-7799.89"
+            }
+          ],
+          "expensesByCategory": [
+            {
+              "categoryId": 36,
+              "categoryName": "D15_A_EXPENSE",
+              "totalAmount": "7999.99"
+            }
+          ]
+        },
+        "spoofedUserId": false
+      }
+    },
+    {
+      "id": "RECONCILE-A-2026-11",
+      "status": "PASS",
+      "detail": {
+        "sql": {
+          "month": "2026-11",
+          "totalIncome": "200.10",
+          "totalExpense": "80.00",
+          "balance": "120.10",
+          "sql": "SELECT COALESCE(SUM(CASE WHEN type='INCOME' THEN amount ELSE 0 END),0),COALESCE(SUM(CASE WHEN type='EXPENSE' THEN amount ELSE 0 END),0) FROM transactions WHERE user_id=1 AND transaction_date>='2026-11-01' AND transaction_date<'2026-12-01';"
+        },
+        "dashboard": {
+          "year": 2026,
+          "month": 11,
+          "totalIncome": "200.10",
+          "totalExpense": "80.00",
+          "balance": "120.10"
+        },
+        "report": {
+          "from": "2026-11",
+          "to": "2026-11",
+          "months": [
+            {
+              "month": "2026-11",
+              "totalIncome": "200.10",
+              "totalExpense": "80.00",
+              "balance": "120.10"
+            }
+          ],
+          "expensesByCategory": [
+            {
+              "categoryId": 36,
+              "categoryName": "D15_A_EXPENSE",
+              "totalAmount": "80.00"
+            }
+          ]
+        },
+        "spoofedUserId": false
+      }
+    },
+    {
+      "id": "RECONCILE-A-2026-12",
+      "status": "PASS",
+      "detail": {
+        "sql": {
+          "month": "2026-12",
+          "totalIncome": "120.40",
+          "totalExpense": "120.40",
+          "balance": "0.00",
+          "sql": "SELECT COALESCE(SUM(CASE WHEN type='INCOME' THEN amount ELSE 0 END),0),COALESCE(SUM(CASE WHEN type='EXPENSE' THEN amount ELSE 0 END),0) FROM transactions WHERE user_id=1 AND transaction_date>='2026-12-01' AND transaction_date<'2027-01-01';"
+        },
+        "dashboard": {
+          "year": 2026,
+          "month": 12,
+          "totalIncome": "120.40",
+          "totalExpense": "120.40",
+          "balance": "0.00"
+        },
+        "report": {
+          "from": "2026-12",
+          "to": "2026-12",
+          "months": [
+            {
+              "month": "2026-12",
+              "totalIncome": "120.40",
+              "totalExpense": "120.40",
+              "balance": "0.00"
+            }
+          ],
+          "expensesByCategory": [
+            {
+              "categoryId": 36,
+              "categoryName": "D15_A_EXPENSE",
+              "totalAmount": "120.40"
+            }
+          ]
+        },
+        "spoofedUserId": false
+      }
+    },
+    {
+      "id": "RECONCILE-A-2027-01",
+      "status": "PASS",
+      "detail": {
+        "sql": {
+          "month": "2027-01",
+          "totalIncome": "200.10",
+          "totalExpense": "120.41",
+          "balance": "79.69",
+          "sql": "SELECT COALESCE(SUM(CASE WHEN type='INCOME' THEN amount ELSE 0 END),0),COALESCE(SUM(CASE WHEN type='EXPENSE' THEN amount ELSE 0 END),0) FROM transactions WHERE user_id=1 AND transaction_date>='2027-01-01' AND transaction_date<'2027-02-01';"
+        },
+        "dashboard": {
+          "year": 2027,
+          "month": 1,
+          "totalIncome": "200.10",
+          "totalExpense": "120.41",
+          "balance": "79.69"
+        },
+        "report": {
+          "from": "2027-01",
+          "to": "2027-01",
+          "months": [
+            {
+              "month": "2027-01",
+              "totalIncome": "200.10",
+              "totalExpense": "120.41",
+              "balance": "79.69"
+            }
+          ],
+          "expensesByCategory": [
+            {
+              "categoryId": 36,
+              "categoryName": "D15_A_EXPENSE",
+              "totalAmount": "120.41"
+            }
+          ]
+        },
+        "spoofedUserId": false
+      }
+    },
+    {
+      "id": "RECONCILE-A-2027-02",
+      "status": "PASS",
+      "detail": {
+        "sql": {
+          "month": "2027-02",
+          "totalIncome": "0.00",
+          "totalExpense": "0.00",
+          "balance": "0.00",
+          "sql": "SELECT COALESCE(SUM(CASE WHEN type='INCOME' THEN amount ELSE 0 END),0),COALESCE(SUM(CASE WHEN type='EXPENSE' THEN amount ELSE 0 END),0) FROM transactions WHERE user_id=1 AND transaction_date>='2027-02-01' AND transaction_date<'2027-03-01';"
+        },
+        "dashboard": {
+          "year": 2027,
+          "month": 2,
+          "totalIncome": 0,
+          "totalExpense": 0,
+          "balance": 0
+        },
+        "report": {
+          "from": "2027-02",
+          "to": "2027-02",
+          "months": [
+            {
+              "month": "2027-02",
+              "totalIncome": 0,
+              "totalExpense": 0,
+              "balance": 0
+            }
+          ],
+          "expensesByCategory": []
+        },
+        "spoofedUserId": false
+      }
+    },
+    {
+      "id": "RECONCILE-B-2026-09",
+      "status": "PASS",
+      "detail": {
+        "sql": {
+          "month": "2026-09",
+          "totalIncome": "9999999.99",
+          "totalExpense": "999999.99",
+          "balance": "9000000.00",
+          "sql": "SELECT COALESCE(SUM(CASE WHEN type='INCOME' THEN amount ELSE 0 END),0),COALESCE(SUM(CASE WHEN type='EXPENSE' THEN amount ELSE 0 END),0) FROM transactions WHERE user_id=2 AND transaction_date>='2026-09-01' AND transaction_date<'2026-10-01';"
+        },
+        "dashboard": {
+          "year": 2026,
+          "month": 9,
+          "totalIncome": "9999999.99",
+          "totalExpense": "999999.99",
+          "balance": "9000000.00"
+        },
+        "report": {
+          "from": "2026-09",
+          "to": "2026-09",
+          "months": [
+            {
+              "month": "2026-09",
+              "totalIncome": "9999999.99",
+              "totalExpense": "999999.99",
+              "balance": "9000000.00"
+            }
+          ],
+          "expensesByCategory": [
+            {
+              "categoryId": 38,
+              "categoryName": "D15_B_EXPENSE",
+              "totalAmount": "999999.99"
+            }
+          ]
+        },
+        "spoofedUserId": false
+      }
+    },
+    {
+      "id": "RECONCILE-B-2026-10",
+      "status": "PASS",
+      "detail": {
+        "sql": {
+          "month": "2026-10",
+          "totalIncome": "9999999.99",
+          "totalExpense": "999999.99",
+          "balance": "9000000.00",
+          "sql": "SELECT COALESCE(SUM(CASE WHEN type='INCOME' THEN amount ELSE 0 END),0),COALESCE(SUM(CASE WHEN type='EXPENSE' THEN amount ELSE 0 END),0) FROM transactions WHERE user_id=2 AND transaction_date>='2026-10-01' AND transaction_date<'2026-11-01';"
+        },
+        "dashboard": {
+          "year": 2026,
+          "month": 10,
+          "totalIncome": "9999999.99",
+          "totalExpense": "999999.99",
+          "balance": "9000000.00"
+        },
+        "report": {
+          "from": "2026-10",
+          "to": "2026-10",
+          "months": [
+            {
+              "month": "2026-10",
+              "totalIncome": "9999999.99",
+              "totalExpense": "999999.99",
+              "balance": "9000000.00"
+            }
+          ],
+          "expensesByCategory": [
+            {
+              "categoryId": 38,
+              "categoryName": "D15_B_EXPENSE",
+              "totalAmount": "999999.99"
+            }
+          ]
+        },
+        "spoofedUserId": false
+      }
+    },
+    {
+      "id": "RECONCILE-B-2026-11",
+      "status": "PASS",
+      "detail": {
+        "sql": {
+          "month": "2026-11",
+          "totalIncome": "9999999.99",
+          "totalExpense": "999999.99",
+          "balance": "9000000.00",
+          "sql": "SELECT COALESCE(SUM(CASE WHEN type='INCOME' THEN amount ELSE 0 END),0),COALESCE(SUM(CASE WHEN type='EXPENSE' THEN amount ELSE 0 END),0) FROM transactions WHERE user_id=2 AND transaction_date>='2026-11-01' AND transaction_date<'2026-12-01';"
+        },
+        "dashboard": {
+          "year": 2026,
+          "month": 11,
+          "totalIncome": "9999999.99",
+          "totalExpense": "999999.99",
+          "balance": "9000000.00"
+        },
+        "report": {
+          "from": "2026-11",
+          "to": "2026-11",
+          "months": [
+            {
+              "month": "2026-11",
+              "totalIncome": "9999999.99",
+              "totalExpense": "999999.99",
+              "balance": "9000000.00"
+            }
+          ],
+          "expensesByCategory": [
+            {
+              "categoryId": 38,
+              "categoryName": "D15_B_EXPENSE",
+              "totalAmount": "999999.99"
+            }
+          ]
+        },
+        "spoofedUserId": false
+      }
+    },
+    {
+      "id": "RECONCILE-B-2026-12",
+      "status": "PASS",
+      "detail": {
+        "sql": {
+          "month": "2026-12",
+          "totalIncome": "9999999.99",
+          "totalExpense": "999999.99",
+          "balance": "9000000.00",
+          "sql": "SELECT COALESCE(SUM(CASE WHEN type='INCOME' THEN amount ELSE 0 END),0),COALESCE(SUM(CASE WHEN type='EXPENSE' THEN amount ELSE 0 END),0) FROM transactions WHERE user_id=2 AND transaction_date>='2026-12-01' AND transaction_date<'2027-01-01';"
+        },
+        "dashboard": {
+          "year": 2026,
+          "month": 12,
+          "totalIncome": "9999999.99",
+          "totalExpense": "999999.99",
+          "balance": "9000000.00"
+        },
+        "report": {
+          "from": "2026-12",
+          "to": "2026-12",
+          "months": [
+            {
+              "month": "2026-12",
+              "totalIncome": "9999999.99",
+              "totalExpense": "999999.99",
+              "balance": "9000000.00"
+            }
+          ],
+          "expensesByCategory": [
+            {
+              "categoryId": 38,
+              "categoryName": "D15_B_EXPENSE",
+              "totalAmount": "999999.99"
+            }
+          ]
+        },
+        "spoofedUserId": false
+      }
+    },
+    {
+      "id": "RECONCILE-B-2027-01",
+      "status": "PASS",
+      "detail": {
+        "sql": {
+          "month": "2027-01",
+          "totalIncome": "9999999.99",
+          "totalExpense": "999999.99",
+          "balance": "9000000.00",
+          "sql": "SELECT COALESCE(SUM(CASE WHEN type='INCOME' THEN amount ELSE 0 END),0),COALESCE(SUM(CASE WHEN type='EXPENSE' THEN amount ELSE 0 END),0) FROM transactions WHERE user_id=2 AND transaction_date>='2027-01-01' AND transaction_date<'2027-02-01';"
+        },
+        "dashboard": {
+          "year": 2027,
+          "month": 1,
+          "totalIncome": "9999999.99",
+          "totalExpense": "999999.99",
+          "balance": "9000000.00"
+        },
+        "report": {
+          "from": "2027-01",
+          "to": "2027-01",
+          "months": [
+            {
+              "month": "2027-01",
+              "totalIncome": "9999999.99",
+              "totalExpense": "999999.99",
+              "balance": "9000000.00"
+            }
+          ],
+          "expensesByCategory": [
+            {
+              "categoryId": 38,
+              "categoryName": "D15_B_EXPENSE",
+              "totalAmount": "999999.99"
+            }
+          ]
+        },
+        "spoofedUserId": false
+      }
+    },
+    {
+      "id": "RECONCILE-B-2027-02",
+      "status": "PASS",
+      "detail": {
+        "sql": {
+          "month": "2027-02",
+          "totalIncome": "9999999.99",
+          "totalExpense": "999999.99",
+          "balance": "9000000.00",
+          "sql": "SELECT COALESCE(SUM(CASE WHEN type='INCOME' THEN amount ELSE 0 END),0),COALESCE(SUM(CASE WHEN type='EXPENSE' THEN amount ELSE 0 END),0) FROM transactions WHERE user_id=2 AND transaction_date>='2027-02-01' AND transaction_date<'2027-03-01';"
+        },
+        "dashboard": {
+          "year": 2027,
+          "month": 2,
+          "totalIncome": "9999999.99",
+          "totalExpense": "999999.99",
+          "balance": "9000000.00"
+        },
+        "report": {
+          "from": "2027-02",
+          "to": "2027-02",
+          "months": [
+            {
+              "month": "2027-02",
+              "totalIncome": "9999999.99",
+              "totalExpense": "999999.99",
+              "balance": "9000000.00"
+            }
+          ],
+          "expensesByCategory": [
+            {
+              "categoryId": 38,
+              "categoryName": "D15_B_EXPENSE",
+              "totalAmount": "999999.99"
+            }
+          ]
+        },
+        "spoofedUserId": false
+      }
+    },
+    {
+      "id": "BUDGET-A-2026-09",
+      "status": "PASS",
+      "detail": {
+        "monthly": {
+          "id": 1,
+          "year": 2026,
+          "month": 9,
+          "amountLimit": "100.00",
+          "spentAmount": "79.99",
+          "remainingAmount": "20.01",
+          "exceeded": false
+        },
+        "category": {
+          "id": 1,
+          "categoryId": 36,
+          "categoryName": "D15_A_EXPENSE",
+          "year": 2026,
+          "month": 9,
+          "amountLimit": "100.00",
+          "spentAmount": "79.99",
+          "remainingAmount": "20.01",
+          "usagePercentage": "79.99",
+          "exceeded": false,
+          "status": "SAFE"
+        },
+        "displayExpected": "SAFE",
+        "exactPercentage": "79.99",
+        "display2dp": "79.99",
+        "overspent": "0"
+      }
+    },
+    {
+      "id": "BUDGET-A-2026-10",
+      "status": "PASS",
+      "detail": {
+        "monthly": {
+          "id": 3,
+          "year": 2026,
+          "month": 10,
+          "amountLimit": "10000.00",
+          "spentAmount": "7999.99",
+          "remainingAmount": "2000.01",
+          "exceeded": false
+        },
+        "category": {
+          "id": 3,
+          "categoryId": 36,
+          "categoryName": "D15_A_EXPENSE",
+          "year": 2026,
+          "month": 10,
+          "amountLimit": "10000.00",
+          "spentAmount": "7999.99",
+          "remainingAmount": "2000.01",
+          "usagePercentage": "80.00",
+          "exceeded": false,
+          "status": "SAFE"
+        },
+        "displayExpected": "SAFE",
+        "exactPercentage": "79.9999",
+        "display2dp": "80.00",
+        "overspent": "0"
+      }
+    },
+    {
+      "id": "BUDGET-A-2026-11",
+      "status": "PASS",
+      "detail": {
+        "monthly": {
+          "id": 5,
+          "year": 2026,
+          "month": 11,
+          "amountLimit": "100.00",
+          "spentAmount": "80.00",
+          "remainingAmount": "20.00",
+          "exceeded": false
+        },
+        "category": {
+          "id": 5,
+          "categoryId": 36,
+          "categoryName": "D15_A_EXPENSE",
+          "year": 2026,
+          "month": 11,
+          "amountLimit": "100.00",
+          "spentAmount": "80.00",
+          "remainingAmount": "20.00",
+          "usagePercentage": "80.00",
+          "exceeded": false,
+          "status": "WARNING"
+        },
+        "displayExpected": "WARNING",
+        "exactPercentage": "80",
+        "display2dp": "80.00",
+        "overspent": "0"
+      }
+    },
+    {
+      "id": "BUDGET-A-2026-12",
+      "status": "PASS",
+      "detail": {
+        "monthly": {
+          "id": 7,
+          "year": 2026,
+          "month": 12,
+          "amountLimit": "120.40",
+          "spentAmount": "120.40",
+          "remainingAmount": "0.00",
+          "exceeded": false
+        },
+        "category": {
+          "id": 7,
+          "categoryId": 36,
+          "categoryName": "D15_A_EXPENSE",
+          "year": 2026,
+          "month": 12,
+          "amountLimit": "120.40",
+          "spentAmount": "120.40",
+          "remainingAmount": "0.00",
+          "usagePercentage": "100.00",
+          "exceeded": false,
+          "status": "OVER_BUDGET"
+        },
+        "displayExpected": "AT_LIMIT",
+        "exactPercentage": "100",
+        "display2dp": "100.00",
+        "overspent": "0"
+      }
+    },
+    {
+      "id": "BUDGET-A-2027-01",
+      "status": "PASS",
+      "detail": {
+        "monthly": {
+          "id": 9,
+          "year": 2027,
+          "month": 1,
+          "amountLimit": "120.40",
+          "spentAmount": "120.41",
+          "remainingAmount": "-0.01",
+          "exceeded": true
+        },
+        "category": {
+          "id": 9,
+          "categoryId": 36,
+          "categoryName": "D15_A_EXPENSE",
+          "year": 2027,
+          "month": 1,
+          "amountLimit": "120.40",
+          "spentAmount": "120.41",
+          "remainingAmount": "-0.01",
+          "usagePercentage": "100.01",
+          "exceeded": true,
+          "status": "OVER_BUDGET"
+        },
+        "displayExpected": "OVER_BUDGET",
+        "exactPercentage": "100.0083056478405315614617940",
+        "display2dp": "100.01",
+        "overspent": "0.01"
+      }
+    },
+    {
+      "id": "BUDGET-A-2027-02",
+      "status": "PASS",
+      "detail": {
+        "http": 404,
+        "categoryBudgets": [],
+        "displayExpected": "NOT_SET"
+      }
+    },
+    {
+      "id": "BUDGET-B-LARGE",
+      "status": "PASS",
+      "detail": {
+        "monthly": {
+          "id": 8,
+          "year": 2026,
+          "month": 12,
+          "amountLimit": "2000000.00",
+          "spentAmount": "999999.99",
+          "remainingAmount": "1000000.01",
+          "exceeded": false
+        },
+        "category": {
+          "id": 8,
+          "categoryId": 38,
+          "categoryName": "D15_B_EXPENSE",
+          "year": 2026,
+          "month": 12,
+          "amountLimit": "2000000.00",
+          "spentAmount": "999999.99",
+          "remainingAmount": "1000000.01",
+          "usagePercentage": "50.00",
+          "exceeded": false,
+          "status": "SAFE"
+        },
+        "displayExpected": "SAFE",
+        "exactPercentage": "49.9999995",
+        "display2dp": "50.00",
+        "overspent": "0"
+      }
+    },
+    {
+      "id": "OWNER-QUERY-A",
+      "status": "PASS",
+      "detail": {
+        "sql": {
+          "month": "2026-12",
+          "totalIncome": "120.40",
+          "totalExpense": "120.40",
+          "balance": "0.00",
+          "sql": "SELECT COALESCE(SUM(CASE WHEN type='INCOME' THEN amount ELSE 0 END),0),COALESCE(SUM(CASE WHEN type='EXPENSE' THEN amount ELSE 0 END),0) FROM transactions WHERE user_id=1 AND transaction_date>='2026-12-01' AND transaction_date<'2027-01-01';"
+        },
+        "dashboard": {
+          "year": 2026,
+          "month": 12,
+          "totalIncome": "120.40",
+          "totalExpense": "120.40",
+          "balance": "0.00"
+        },
+        "report": {
+          "from": "2026-12",
+          "to": "2026-12",
+          "months": [
+            {
+              "month": "2026-12",
+              "totalIncome": "120.40",
+              "totalExpense": "120.40",
+              "balance": "0.00"
+            }
+          ],
+          "expensesByCategory": [
+            {
+              "categoryId": 36,
+              "categoryName": "D15_A_EXPENSE",
+              "totalAmount": "120.40"
+            }
+          ]
+        },
+        "spoofedUserId": true
+      }
+    },
+    {
+      "id": "OWNER-QUERY-B",
+      "status": "PASS",
+      "detail": {
+        "sql": {
+          "month": "2026-12",
+          "totalIncome": "9999999.99",
+          "totalExpense": "999999.99",
+          "balance": "9000000.00",
+          "sql": "SELECT COALESCE(SUM(CASE WHEN type='INCOME' THEN amount ELSE 0 END),0),COALESCE(SUM(CASE WHEN type='EXPENSE' THEN amount ELSE 0 END),0) FROM transactions WHERE user_id=2 AND transaction_date>='2026-12-01' AND transaction_date<'2027-01-01';"
+        },
+        "dashboard": {
+          "year": 2026,
+          "month": 12,
+          "totalIncome": "9999999.99",
+          "totalExpense": "999999.99",
+          "balance": "9000000.00"
+        },
+        "report": {
+          "from": "2026-12",
+          "to": "2026-12",
+          "months": [
+            {
+              "month": "2026-12",
+              "totalIncome": "9999999.99",
+              "totalExpense": "999999.99",
+              "balance": "9000000.00"
+            }
+          ],
+          "expensesByCategory": [
+            {
+              "categoryId": 38,
+              "categoryName": "D15_B_EXPENSE",
+              "totalAmount": "999999.99"
+            }
+          ]
+        },
+        "spoofedUserId": true
+      }
+    },
+    {
+      "id": "RANGE-CROSS-YEAR-EMPTY",
+      "status": "PASS",
+      "detail": {
+        "from": "2026-09",
+        "to": "2027-02",
+        "months": [
+          {
+            "month": "2026-09",
+            "totalIncome": "200.10",
+            "totalExpense": "79.99",
+            "balance": "120.11"
+          },
+          {
+            "month": "2026-10",
+            "totalIncome": "200.10",
+            "totalExpense": "7999.99",
+            "balance": "-7799.89"
+          },
+          {
+            "month": "2026-11",
+            "totalIncome": "200.10",
+            "totalExpense": "80.00",
+            "balance": "120.10"
+          },
+          {
+            "month": "2026-12",
+            "totalIncome": "120.40",
+            "totalExpense": "120.40",
+            "balance": "0.00"
+          },
+          {
+            "month": "2027-01",
+            "totalIncome": "200.10",
+            "totalExpense": "120.41",
+            "balance": "79.69"
+          },
+          {
+            "month": "2027-02",
+            "totalIncome": 0,
+            "totalExpense": 0,
+            "balance": 0
+          }
+        ],
+        "expensesByCategory": [
+          {
+            "categoryId": 36,
+            "categoryName": "D15_A_EXPENSE",
+            "totalAmount": "8400.79"
+          }
+        ]
+      }
+    },
+    {
+      "id": "DELTA-TARGET-MINUS-BASE",
+      "status": "PASS",
+      "detail": {
+        "base": {
+          "month": "2026-12",
+          "totalIncome": "120.40",
+          "totalExpense": "120.40",
+          "balance": "0.00",
+          "sql": "SELECT COALESCE(SUM(CASE WHEN type='INCOME' THEN amount ELSE 0 END),0),COALESCE(SUM(CASE WHEN type='EXPENSE' THEN amount ELSE 0 END),0) FROM transactions WHERE user_id=1 AND transaction_date>='2026-12-01' AND transaction_date<'2027-01-01';"
+        },
+        "target": {
+          "month": "2027-01",
+          "totalIncome": "200.10",
+          "totalExpense": "120.41",
+          "balance": "79.69",
+          "sql": "SELECT COALESCE(SUM(CASE WHEN type='INCOME' THEN amount ELSE 0 END),0),COALESCE(SUM(CASE WHEN type='EXPENSE' THEN amount ELSE 0 END),0) FROM transactions WHERE user_id=1 AND transaction_date>='2027-01-01' AND transaction_date<'2027-02-01';"
+        },
+        "delta": {
+          "totalIncome": "79.70",
+          "totalExpense": "0.01",
+          "balance": "79.69"
+        },
+        "scope": "SQL oracle only"
+      }
+    },
+    {
+      "id": "CSV-DECIMALS-OWNER",
+      "status": "PASS",
+      "detail": {
+        "dataRows": 8,
+        "sha256": "c5e775019d99d3c896b463208c7707ee10081784ac352bdbd205d5e55b0f67c5",
+        "headers": [
+          "Mã giao dịch",
+          "Ngày giao dịch",
+          "Loại",
+          "Danh mục",
+          "Số tiền",
+          "Ghi chú"
+        ]
+      }
+    },
+    {
+      "id": "JWT-1-MISSING",
+      "status": "PASS",
+      "detail": {
+        "path": "/dashboard/summary?month=2026-12",
+        "http": 401
+      }
+    },
+    {
+      "id": "JWT-1-INVALID",
+      "status": "PASS",
+      "detail": {
+        "path": "/dashboard/summary?month=2026-12",
+        "http": 401
+      }
+    },
+    {
+      "id": "JWT-1-EXPIRED",
+      "status": "PASS",
+      "detail": {
+        "path": "/dashboard/summary?month=2026-12",
+        "http": 401
+      }
+    },
+    {
+      "id": "JWT-2-MISSING",
+      "status": "PASS",
+      "detail": {
+        "path": "/dashboard/expenses-by-category?month=2026-12",
+        "http": 401
+      }
+    },
+    {
+      "id": "JWT-2-INVALID",
+      "status": "PASS",
+      "detail": {
+        "path": "/dashboard/expenses-by-category?month=2026-12",
+        "http": 401
+      }
+    },
+    {
+      "id": "JWT-2-EXPIRED",
+      "status": "PASS",
+      "detail": {
+        "path": "/dashboard/expenses-by-category?month=2026-12",
+        "http": 401
+      }
+    },
+    {
+      "id": "JWT-3-MISSING",
+      "status": "PASS",
+      "detail": {
+        "path": "/reports/monthly?from=2026-12&to=2027-02",
+        "http": 401
+      }
+    },
+    {
+      "id": "JWT-3-INVALID",
+      "status": "PASS",
+      "detail": {
+        "path": "/reports/monthly?from=2026-12&to=2027-02",
+        "http": 401
+      }
+    },
+    {
+      "id": "JWT-3-EXPIRED",
+      "status": "PASS",
+      "detail": {
+        "path": "/reports/monthly?from=2026-12&to=2027-02",
+        "http": 401
+      }
+    },
+    {
+      "id": "JWT-4-MISSING",
+      "status": "PASS",
+      "detail": {
+        "path": "/budgets/2026/12",
+        "http": 401
+      }
+    },
+    {
+      "id": "JWT-4-INVALID",
+      "status": "PASS",
+      "detail": {
+        "path": "/budgets/2026/12",
+        "http": 401
+      }
+    },
+    {
+      "id": "JWT-4-EXPIRED",
+      "status": "PASS",
+      "detail": {
+        "path": "/budgets/2026/12",
+        "http": 401
+      }
+    },
+    {
+      "id": "JWT-5-MISSING",
+      "status": "PASS",
+      "detail": {
+        "path": "/category-budgets?year=2026&month=12",
+        "http": 401
+      }
+    },
+    {
+      "id": "JWT-5-INVALID",
+      "status": "PASS",
+      "detail": {
+        "path": "/category-budgets?year=2026&month=12",
+        "http": 401
+      }
+    },
+    {
+      "id": "JWT-5-EXPIRED",
+      "status": "PASS",
+      "detail": {
+        "path": "/category-budgets?year=2026&month=12",
+        "http": 401
+      }
+    },
+    {
+      "id": "JWT-6-MISSING",
+      "status": "PASS",
+      "detail": {
+        "path": "/transactions/export?month=2026-12",
+        "http": 401
+      }
+    },
+    {
+      "id": "JWT-6-INVALID",
+      "status": "PASS",
+      "detail": {
+        "path": "/transactions/export?month=2026-12",
+        "http": 401
+      }
+    },
+    {
+      "id": "JWT-6-EXPIRED",
+      "status": "PASS",
+      "detail": {
+        "path": "/transactions/export?month=2026-12",
+        "http": 401
+      }
+    },
+    {
+      "id": "OWNER-CATEGORY-B-ID",
+      "status": "PASS",
+      "detail": {
+        "foreignBudgetId": 8,
+        "http": 404
+      }
+    },
+    {
+      "id": "ZERO-MUTATION-HTTP",
+      "status": "PASS",
+      "detail": {
+        "snapshot": "afterHttpReads",
+        "equal": true
+      }
+    },
+    {
+      "id": "ZERO-MUTATION-BROWSER",
+      "status": "PASS",
+      "detail": {
+        "snapshot": "afterBrowserReads",
+        "equal": true
+      }
+    }
+  ],
+  "initialCleanGate": "BLOCKED: two pre-existing untracked files of unknown origin",
+  "sourceHashes": {
+    "backend/src/main/java/com/smartexpense/backend/BackendApplication.java": "16cc65d526b237a39dc92d3c2b40e7203c26f7d62c63bb97b8d0536dc7d329b1",
+    "backend/src/main/java/com/smartexpense/backend/config/PasswordResetConfig.java": "8531ee740583c39b0caea9cbbc61d3aa541c3281b89fb4bbcac974c7b064cf3c",
+    "backend/src/main/java/com/smartexpense/backend/config/SecurityConfig.java": "bd69cf898c570be57f1ec957c1132fb04d90bfeb8b12b245b88b2e46aa73a303",
+    "backend/src/main/java/com/smartexpense/backend/config/TransactionDateConfig.java": "79596c336bec09ded8a894cd9968587c1b66aacadb11cb359c659f4f73c5b93f",
+    "backend/src/main/java/com/smartexpense/backend/controller/AiChatController.java": "c351799ae4a22cfe8922f3743eb8afe86c1e55d4e1eaffbedc28ed30bcbde331",
+    "backend/src/main/java/com/smartexpense/backend/controller/AuthController.java": "b243d7a77d9bdb5b9da1430d2323a96785faf3719ea11e924a285db2dfd7e0b2",
+    "backend/src/main/java/com/smartexpense/backend/controller/BudgetController.java": "4a916818c359701f8c72583ea1b7fc0590360c20b2f2c371b6cf26b79bac6b22",
+    "backend/src/main/java/com/smartexpense/backend/controller/CalendarController.java": "50b4ba68148fe37d9c03804b9e8ddc48280b3c853c6f0da3c32c5910047cd759",
+    "backend/src/main/java/com/smartexpense/backend/controller/CategoryBudgetController.java": "5ccb5705dbb0e249f4a16cf68a47df7ee34b2f4be0f9a3039bbdfbad92b37f88",
+    "backend/src/main/java/com/smartexpense/backend/controller/CategoryController.java": "d057e3bf8489ad5c3bd961b246b1aa4a5126fc6b56aba2fbf8b6349a0aad848a",
+    "backend/src/main/java/com/smartexpense/backend/controller/DashboardController.java": "7ed87ecd973583b98648244c857b967654fd48b0f89c016b942309060f22728d",
+    "backend/src/main/java/com/smartexpense/backend/controller/RecurringTemplateController.java": "1db6910ac6ed07c61f232a8fd0593c7aba8cece7de3c9f6d5aa79dde67c1b724",
+    "backend/src/main/java/com/smartexpense/backend/controller/ReportController.java": "cd27241ba5e729a4dc69fd3e3b1eed6a151537c579f7444434a3a0cf220af7b4",
+    "backend/src/main/java/com/smartexpense/backend/controller/TransactionController.java": "38569964aa338818ce8f53d8288f40f7056668fffc376b77d5278a1cc4a2f56e",
+    "backend/src/main/java/com/smartexpense/backend/controller/TransactionExportController.java": "691140586a5d72ed9fc47ea342f29e89cbfd4228fbe208407378366deaf8df5d",
+    "backend/src/main/java/com/smartexpense/backend/controller/UserController.java": "d694c4c55d7e76be8a4d144e930964b08fe50ae3514243154e8b61d79d317bc4",
+    "backend/src/main/java/com/smartexpense/backend/dto/ApiError.java": "d87fe28763cf2b6590a5976b212b9bb96a925f5290d1030d71821319b8d465a7",
+    "backend/src/main/java/com/smartexpense/backend/dto/ai/AiChatRequest.java": "88b21735c33443b5e86850b4c61104b2f6415f9468950f9fde03971e13cd80f3",
+    "backend/src/main/java/com/smartexpense/backend/dto/ai/AiChatResponse.java": "4404b5effb35e132067fb0a4c2ebd9f7d278c754d849a47fec62d12b87467a1c",
+    "backend/src/main/java/com/smartexpense/backend/dto/auth/AuthMessageResponse.java": "fd8b92f81784ded2b8dde2edf8dcc2b1e89c7973b2ee71bce83b5547522f5609",
+    "backend/src/main/java/com/smartexpense/backend/dto/auth/AuthResponse.java": "64a195ef65ac33b2dddadff151cffd2446fd775164734e68833f8e6dbe392b72",
+    "backend/src/main/java/com/smartexpense/backend/dto/auth/ForgotPasswordRequest.java": "54bddd3ca4d072619bc3aba65d4420fadc9defe2b94d2b29cf44683c8c19a366",
+    "backend/src/main/java/com/smartexpense/backend/dto/auth/LoginRequest.java": "4b9006591583d2903aef6cf56181ad32918b6896da0955daaa77ed6cd23a1ffe",
+    "backend/src/main/java/com/smartexpense/backend/dto/auth/RegisterRequest.java": "83c0fd6c410bdfc9b7da57ec98fcaaf8b58912f971bf1b968a01105c9d433517",
+    "backend/src/main/java/com/smartexpense/backend/dto/auth/ResetPasswordRequest.java": "c231161b810189978456d7ed2fe7a1a083d726922bfbd6ac7ec1b225442c16b8",
+    "backend/src/main/java/com/smartexpense/backend/dto/auth/UserResponse.java": "acb4f1ade1dd2073dc85dd636c67ca0037ca7d2c7867e0393a4efb29e65e3fba",
+    "backend/src/main/java/com/smartexpense/backend/dto/budget/BudgetRequest.java": "f4db1f6dab46ace03b6871ffb91a849ea8e8b28bf5e4cc6cf1295de19b393e8b",
+    "backend/src/main/java/com/smartexpense/backend/dto/budget/BudgetResponse.java": "6792c226d8cae84511e01978c137344c04ff89b8c6f482cd9b337acd87c0c019",
+    "backend/src/main/java/com/smartexpense/backend/dto/calendar/CalendarDayResponse.java": "816227586bd9293d0776697f11a9e5683413903f2ce71754852ce7e6d02bea75",
+    "backend/src/main/java/com/smartexpense/backend/dto/calendar/CalendarMonthResponse.java": "b9ce67927013ec878589929ecd97599b52ef950e2568d800310c79d028350360",
+    "backend/src/main/java/com/smartexpense/backend/dto/category/CategoryAppearance.java": "ca0dd7137259a0856d14a6cec70db8f72a6e0e363abf94961875afad53d3916c",
+    "backend/src/main/java/com/smartexpense/backend/dto/category/CategoryRequest.java": "382e5c896ada7fc4a776a743ad28bcafcef144de9be6ac44054fc596aed7225a",
+    "backend/src/main/java/com/smartexpense/backend/dto/category/CategoryResponse.java": "d7849cf0d7d61908e23cf17a5dc99054a8a052379caefa484dd4d4eebd96de5a",
+    "backend/src/main/java/com/smartexpense/backend/dto/categorybudget/CategoryBudgetLimitRequest.java": "5b42358fc284d873c179a5b6ae6a8a3c2e50302fc6516e1b30ac7327c4497171",
+    "backend/src/main/java/com/smartexpense/backend/dto/categorybudget/CategoryBudgetRequest.java": "ba8762bfaa00b2ccce95fd3107e81d732b8328c4faa84946f374e559aaf44e98",
+    "backend/src/main/java/com/smartexpense/backend/dto/categorybudget/CategoryBudgetResponse.java": "7502f030a7f9ef78b5347f3e94e7587dbdd919b33dd417a9380ee1a3d6293339",
+    "backend/src/main/java/com/smartexpense/backend/dto/dashboard/CategoryExpenseResponse.java": "61634e6d6a0dcbcb5cb4b60a80e90f3dc7a10f8afb4a576b4d1e7267abcf4df6",
+    "backend/src/main/java/com/smartexpense/backend/dto/dashboard/DashboardSummaryResponse.java": "7d2bef8001289d179d61a418ad6947cb559adf7eea6bb6ee149e0786ca0e531b",
+    "backend/src/main/java/com/smartexpense/backend/dto/recurring/RecurringApplicationRequest.java": "df0c7fcd26eb2d8c52ae4e543fe822c9395851734dbafaf3664d577518856af2",
+    "backend/src/main/java/com/smartexpense/backend/dto/recurring/RecurringApplicationResponse.java": "475ac4da7179b5ac28be91c625c75846d8dde16964e8250ecb360ce780187a9c",
+    "backend/src/main/java/com/smartexpense/backend/dto/recurring/RecurringPeriodIntegerDeserializer.java": "3843e1daf925d752473b6707f5446dc9b9c394810e485fee064d66b12e6a4e20",
+    "backend/src/main/java/com/smartexpense/backend/dto/recurring/RecurringPreviewResponse.java": "1cb7b7db3572c7fbd17c364f01b60527e7b745ad5e653c53cf5a4fa63757797b",
+    "backend/src/main/java/com/smartexpense/backend/dto/recurring/RecurringTemplateJsonDeserializers.java": "9403caf9bb8918b64794f9169b76751f382b2325714bb261abc6fa6b69bcf4e3",
+    "backend/src/main/java/com/smartexpense/backend/dto/recurring/RecurringTemplateRequest.java": "7a4f08a29a997b963cf40adeab8dd1b93b3a470770c0f95ab0847437eb9d79dc",
+    "backend/src/main/java/com/smartexpense/backend/dto/recurring/RecurringTemplateResponse.java": "20b023e8a3aaf1cd4bd87078c8bd4d7d3facc45d4fd8b59ce538e894bea10c51",
+    "backend/src/main/java/com/smartexpense/backend/dto/report/MonthlyReportResponse.java": "a4b92c94424abbcabe7e69874ecff8935df396057ee403cd78116b7441ec4116",
+    "backend/src/main/java/com/smartexpense/backend/dto/report/MonthlySummaryResponse.java": "1d543477a7f21cf1a6e8eec8dd755e3339d54f12ff3e85036f675a08e1d94261",
+    "backend/src/main/java/com/smartexpense/backend/dto/transaction/TransactionRequest.java": "ca8a081cafd4130b2897f235696f2a8c9fd67788315c1347ecbce82d12ad410a",
+    "backend/src/main/java/com/smartexpense/backend/dto/transaction/TransactionResponse.java": "26673222c023c9188c0b75235570d324ca38442fd073e9406eb1fb30bbc9ac62",
+    "backend/src/main/java/com/smartexpense/backend/entity/Category.java": "814a1b7bbf3d38d50fa85041e08867fbd0359ac3747beca8ed445443d468cf88",
+    "backend/src/main/java/com/smartexpense/backend/entity/CategoryBudget.java": "21d4108cf2128011b692982c48b366ef469fa8dd5863d0cc5447c350ff20b132",
+    "backend/src/main/java/com/smartexpense/backend/entity/MonthlyBudget.java": "d8af976e59e10c8341528d3158f35a6bcb7b2c4fe95915839d7952b4e0f0f893",
+    "backend/src/main/java/com/smartexpense/backend/entity/PasswordResetToken.java": "05da02683b3da3600d8df6bf3e8acf20a68088a4a684fa7ec3d75dc1901b405c",
+    "backend/src/main/java/com/smartexpense/backend/entity/RecurringApplication.java": "8ba8a2c793ab7af6747ccb6818ef2d308d9d7486c92154c8443b2a72e2ce3694",
+    "backend/src/main/java/com/smartexpense/backend/entity/RecurringTemplate.java": "32f3842cd1d029b760b9111bfe9c7c9b509ce90f6f8ce82f6c5ee12f5b5b895b",
+    "backend/src/main/java/com/smartexpense/backend/entity/Transaction.java": "4e8a835988e9aa2100739fb9d3b55df502dd4d9e8c6bd0bd61d4c99cfefe261e",
+    "backend/src/main/java/com/smartexpense/backend/entity/User.java": "59236f1a87624f396e4f07c2ab28e6f366186fe886d3a8de16763581c32eb09a",
+    "backend/src/main/java/com/smartexpense/backend/enums/CategoryBudgetStatus.java": "a3b5c07be5a86e677bc306edcdd226bc15ce75af973e32602c1f1cab48c931de",
+    "backend/src/main/java/com/smartexpense/backend/enums/TransactionType.java": "e4fbb62789702651e945ff3e11026c5d4efc7b3a09d0389d6550e63aef32f254",
+    "backend/src/main/java/com/smartexpense/backend/exception/CategoryBudgetExceptionHandler.java": "3b014973afcf900d2da3b12aabe80302066d30beb89b13d39a1f5f2a8b8e5d22",
+    "backend/src/main/java/com/smartexpense/backend/exception/D11Exception.java": "6b52b3b6b612d384b010211747b325bd905d94d283199b945be99d0f7db13992",
+    "backend/src/main/java/com/smartexpense/backend/exception/D11ExceptionHandler.java": "c865d11820022041962d40b3ebb01cb920365014a252d10d9e2d936af672a30b",
+    "backend/src/main/java/com/smartexpense/backend/exception/GlobalExceptionHandler.java": "23de4f44d5020820f4a0b2b36923fcd88e15d83d0b8ab2a73e4781d509075ac7",
+    "backend/src/main/java/com/smartexpense/backend/exception/PasswordResetException.java": "429989c22b8db448934d77d795b6369549bd00362ad1f717d0f412138b618aef",
+    "backend/src/main/java/com/smartexpense/backend/exception/PasswordResetExceptionHandler.java": "7687820bfe13b0eeacfa6ad375d49a7c74e7cf0d963119feb8caf3be4f6af32a",
+    "backend/src/main/java/com/smartexpense/backend/repository/CategoryBudgetRepository.java": "f6cfebb14a96b1b4ff63aeb029331114c52bfa34fe18b64af94d0058719a5c73",
+    "backend/src/main/java/com/smartexpense/backend/repository/CategoryRepository.java": "f32a3ba2fa560d7530cbe09e0ef68a58296d421feb8f0be03588c2d73ca950b5",
+    "backend/src/main/java/com/smartexpense/backend/repository/MonthlyBudgetRepository.java": "47cbe639d7220eca9eb8581601cfc40f294bb4ce25b418e417c7ccc0292c496b",
+    "backend/src/main/java/com/smartexpense/backend/repository/PasswordResetTokenRepository.java": "a16f85e09053015ed4f4231e084782c6ec4b325fcc831f6e47e3e4b919475e80",
+    "backend/src/main/java/com/smartexpense/backend/repository/RecurringApplicationRepository.java": "bf080f306544d97b7363e37e4e0771d074c54c59cfec5607bc645d220877451a",
+    "backend/src/main/java/com/smartexpense/backend/repository/RecurringTemplateRepository.java": "7bced7892ab3773cc92735f44cd1b414e767a93979b9b2a48fbc4ad24f6a690b",
+    "backend/src/main/java/com/smartexpense/backend/repository/TransactionRepository.java": "11fca352f2744f767fd00c7ae0159fb54785f8813951fdd8bcbde4c2116aca6f",
+    "backend/src/main/java/com/smartexpense/backend/repository/UserRepository.java": "c5e28285982601a979e620c33e0d6fc0851e133ab7ec7590c6003f0b68c37444",
+    "backend/src/main/java/com/smartexpense/backend/security/ApiSecurityExceptionHandler.java": "9f98e43a3c7701b2e49d2fbd7739e5431ba6ac92945c75eae550a7abd67e8508",
+    "backend/src/main/java/com/smartexpense/backend/security/JwtConfig.java": "1de4d3257df72086e264b27df895eaa8f4a1f6edc514e7d6ad8fd63901a13e22",
+    "backend/src/main/java/com/smartexpense/backend/security/PasswordResetRateLimiter.java": "ddca1d89f1551762cf9f580bee1abc4638a7d26241b9ff5129c1e3fa843a58ae",
+    "backend/src/main/java/com/smartexpense/backend/service/AiChatService.java": "8bd42de4ce81be0ad6d5e24b5aa594e94d624364ae485f7f2ecd34e1031debae",
+    "backend/src/main/java/com/smartexpense/backend/service/AiFinancialContextService.java": "cec045656f15453e43e891c276530d082f87eb11c0d6f43e4d0b47e25f2e069d",
+    "backend/src/main/java/com/smartexpense/backend/service/AiFinancialReplyFormatter.java": "0d2b3869fdc4d61769a43839207f020641d3daa81e2c1c9ae40db2e36cf3cdaf",
+    "backend/src/main/java/com/smartexpense/backend/service/AiProvider.java": "ed8002d5581b1d5f40aaebced7eed44633b3b0dbc7f74702d0e07e661b6dae76",
+    "backend/src/main/java/com/smartexpense/backend/service/AiQueryInterpreter.java": "2f6575cab87fd54a2bac86bd3433f8cc3a7256b6fed1e9f87cf8a9f6fd331d2c",
+    "backend/src/main/java/com/smartexpense/backend/service/AiRateLimiter.java": "7272fa918e2e437849831152ecc5bb6b764f0a2ff5561dcdc136c222fd39799c",
+    "backend/src/main/java/com/smartexpense/backend/service/AuthService.java": "eb2077ad3f564e3013173f309e44187770117c52c33c32d98c69fc676b4cdf37",
+    "backend/src/main/java/com/smartexpense/backend/service/BudgetService.java": "da4be99b2e640445e85b3dc37476d87e764df5ef0b35bdb06da6149c8b512bce",
+    "backend/src/main/java/com/smartexpense/backend/service/CalendarService.java": "e58a3ff77fe48a476a04c0d8badca15303c97a885b12f8ed172001964af7bf9c",
+    "backend/src/main/java/com/smartexpense/backend/service/CategoryBudgetService.java": "3b6d8101027ce70a712543f161ed1c866919e4de9b8e6bd6d5d7cfa19837ff53",
+    "backend/src/main/java/com/smartexpense/backend/service/CategoryService.java": "7ece52371c597459040981b84f2cdd1f3133b0961691c27beb7ecf9214abff8b",
+    "backend/src/main/java/com/smartexpense/backend/service/DashboardService.java": "d9fef72a957ae8bdd71a225c1cfbc1cf9c23ea79436c87d13aac499d032d31b9",
+    "backend/src/main/java/com/smartexpense/backend/service/GeminiAiProvider.java": "6889e94f70624b6e88dac15d940d3b1bd2bf76bb04cb2b28d38f56e70dcb725f",
+    "backend/src/main/java/com/smartexpense/backend/service/PasswordResetEmailSender.java": "f2cb185aa01dc10e8440cabbafae6d6fc42c85b21e7df391a5ae7efa03c1de3a",
+    "backend/src/main/java/com/smartexpense/backend/service/PasswordResetService.java": "5426249d1bcc3d7ce615486d4dd634501a970626b0fd568cb222bfd3f5138bc6",
+    "backend/src/main/java/com/smartexpense/backend/service/RecurringApplicationService.java": "5028e4dafa783c52c8ea1815cbc98ed537713a6c2123dded983a6553993eb9e4",
+    "backend/src/main/java/com/smartexpense/backend/service/RecurringTemplateService.java": "e7641bb9fa978c973ca32b3d2a70f6aa561621a4a996981235c94cb2e9721334",
+    "backend/src/main/java/com/smartexpense/backend/service/ReportService.java": "4aded6957fa77ab11d2cee7dc3b85743d0286c35fd36ab3be9616e9882e2a739",
+    "backend/src/main/java/com/smartexpense/backend/service/SmtpPasswordResetEmailSender.java": "659d80edb3c018efff7c67edb80b28197c5490f331e87d6ced0f3743870249c5",
+    "backend/src/main/java/com/smartexpense/backend/service/TransactionExportService.java": "0b988957b4263a50edf7a163d179b2ea4237eb45ece44364b61d4e160f99f1ef",
+    "backend/src/main/java/com/smartexpense/backend/service/TransactionService.java": "7c96f5edb8b858e7a5de5a5ec954bff2b1ea987d491725e313b06e2e9f1e5064",
+    "backend/src/main/java/com/smartexpense/backend/util/RecurringTemplateDates.java": "e8980f93c852006281e7410d537713ac404f7ca366d7d696840da053f04c4029",
+    "backend/src/main/java/com/smartexpense/backend/validation/BcryptLength.java": "e31f2ad5001ceff1c15eca1489271a1a68d3e6792b95757d9831640e1bdeebaf",
+    "backend/src/main/java/com/smartexpense/backend/validation/BcryptLengthValidator.java": "c276f8ff4c15e96066affaf262ba8661a053f329694605e97de398099a6a3ac7",
+    "backend/src/main/java/com/smartexpense/backend/validation/NotFutureTransactionDate.java": "b3b4a1812d2a4015a7215289b7875f196a75bab0bc31cf59c5dd89f26c8692af",
+    "backend/src/main/java/com/smartexpense/backend/validation/NotFutureTransactionDateValidator.java": "53f575b37c82eb8e0f78e5515fbae347816b8b920569cef0d0f04132b7390527",
+    "backend/src/main/resources/application.properties": "23d08ab023afafe54225afad8c27a630048e6fabb5c85fe924e8b2447b92f1ce",
+    "frontend/src/App.jsx": "def3af42be5b657a5c97ae0e4f9f175643eab28e891711133baa7b0f778bc29f",
+    "frontend/src/api/axiosClient.js": "74c2fac86628b197692a206e00b4b7ddd3d034f51c16f32a5bb19f6446e7b1f1",
+    "frontend/src/api/errors.js": "67ab939349840254a8a4d57145aad5c021bde37b4f0b20ab7001062999e9cc98",
+    "frontend/src/assets/ai-assistant-mascot-sprite.png": "c4ae27a9120f51a3c37fd2f635a2369ed43cc7ec28beb9d7c355b539f6e133f9",
+    "frontend/src/assets/wallet-logo.png": "628be09fa2a5579bf073a5d004bc2915a2a60070a0f9a40f5b4791183fd597b0",
+    "frontend/src/auth/actions.js": "eaf7b40f0a1835bb171b56ddf18d62ebae17cffe59c2754162663ce3f44963ac",
+    "frontend/src/auth/session.js": "c24ad5192392d0ec7f00cb01ff5aac599797cf781588fa573a4df5151a747bb2",
+    "frontend/src/components/BudgetModal.jsx": "6cab508416b887c9e3825e4ea8d04a67f0f8157a0a638c2b5e74d51d18efd53c",
+    "frontend/src/components/CategoryBudgetModal.jsx": "5993630d67db3e24aada00a2caea1cc167ad24acea9a7a61c5e605666f38edb8",
+    "frontend/src/components/CategoryModal.jsx": "8bddefc43f864d5b3da3a64ed65bfce9dc59ea8938adc32fbc2a513e02716469",
+    "frontend/src/components/ProtectedRoute.jsx": "b06aed329939d6626d348ee0dde50b062e889109b2f2d67f7611d8c9dffe1ac1",
+    "frontend/src/components/TransactionModal.jsx": "4953c98e8b7040e871bf9a3abc3bef8615364d8e447390267880bedaff7f65af",
+    "frontend/src/components/ai/AiAssistantWidget.jsx": "69bd6c97a5f12de2ed2f75290dd75497145f82d30b9bdb94e7505d2974b9000e",
+    "frontend/src/components/ai/AiComparisonCard.jsx": "51921890fcfdc86d2f24aebde5d163c7e9be82c303766a5a1d22187c170d8483",
+    "frontend/src/components/ai/AiFinancialCharts.jsx": "77b331aad8c3c2e93f0ba76cfb37a250607d0b6157edc8445839377761caaa93",
+    "frontend/src/components/ai/AiRobotCanvas.jsx": "9b495f62f8ccfd7bb4691714d9452bf6cb164e356fb4a691e2ecbb907e746b8d",
+    "frontend/src/components/ai/AiRobotLauncher.jsx": "389b9c0c2159e3dfaca47fc119390d2f42311c1b2b3dc6e53dd5462b3f355066",
+    "frontend/src/components/ai/robotScene.js": "70867c34eaf85d9ceece8778c8fb2bc6d6026f4e0fe2a78c7657ade1300f0e04",
+    "frontend/src/components/ai/robotState.js": "ef405eb1578754acfb8340f010c4fd0c6251f8e07656a660aabe8ab86b177df2",
+    "frontend/src/components/auth/AuthCard.css": "524861f4ab339dd39b5d550d9f22216a1d249171456d918c09519083cd8c35de",
+    "frontend/src/components/auth/AuthCard.jsx": "a8977f85dfe0ca06cfec46f4653380654a5ad0071c622c3d4c3fdf1ca5d522f5",
+    "frontend/src/components/budget/BudgetUsage.jsx": "b3bb8e71c53f9d02233e453083a412fda62729d6fa3840434cc339233efa0e9a",
+    "frontend/src/components/budget/CategoryBudgetCard.jsx": "f9beca78875bc38eb1cbff879fc2f3564717f70169484ca9a4bd2decd8f022dc",
+    "frontend/src/components/budget/CategoryBudgetModal.jsx": "a5e24ac17e79a0895d2791bd7921a944b229d3575e85379d238dff2d530bdbd5",
+    "frontend/src/components/budget/CategoryBudgetSection.jsx": "7f5326469fcdd9da854a8629ca10b43534fa90690fc6f89f5a7151e7d90d82df",
+    "frontend/src/components/budget/categoryBudgetUtils.js": "5adefa4a8416d4549668b22fd34988e0c7856f6031c87208fa43963b553130fb",
+    "frontend/src/components/budget/index.js": "2bd7d754d8df416d19d1fc812c00430bd2cb2cab4f72e7106d162464d118eeee",
+    "frontend/src/components/calendar/DayTransactions.jsx": "b3e1334f338d66fc2ad7c2fdbf8ad20fc851f5b2df0db4abf84038afd7c02585",
+    "frontend/src/components/calendar/MonthCalendar.jsx": "e5bb683577452784d9c64ebb7ed19f5270815309e19f791bfb97da92d43999df",
+    "frontend/src/components/category/CategoryAppearancePicker.jsx": "4d1ea7952b357d80eba70770a14faa3b38f7460a124edc81f46353e71e3f675c",
+    "frontend/src/components/category/CategoryBadge.jsx": "f5db136ce51d8675c5353031d7ea06ce83022161fb5d0d0f5698b584fe8e2391",
+    "frontend/src/components/dashboard/DashboardWidgets.css": "c0b8500e1832c4398bc0c496bc94cb2c1615008f18d8ebfec9f661cfeeecb955",
+    "frontend/src/components/dashboard/ExpenseDonutChart.jsx": "5511a5646f62a1a9af386ad8f6d019951b3d6916f61485e7e98ffa719683c293",
+    "frontend/src/components/dashboard/MonthlyDelta.jsx": "71612283a62ad1ecd6060f93740bee7eeb268fe682beb3765e7979ac91ea2b1d",
+    "frontend/src/components/dashboard/RollingNumber.jsx": "293d3df1523ac82f624f7ec476b8bef27641e0cc3890742ba4b944ac76384510",
+    "frontend/src/components/dashboard/monthlyInsights.js": "6dfe75e59e84eb8f4c3eeef53e8ce2df6ed294f8319ae035c69b400d4c908be8",
+    "frontend/src/components/dashboard/useDashboardMonths.js": "5c167c246640ed5dc363622f7d7dc75d18be63ee1d03227a6d8c886d10683279",
+    "frontend/src/components/layout/MainLayout.jsx": "0a76241d507f1a185d0ae82dd517773fd2fdf638fb391d7ea0bbda10f74b294f",
+    "frontend/src/components/layout/MobileNavigation.jsx": "6739a4b9525722be34c9bdc61801e882dd0e03f849db330e408a4974bc53ce37",
+    "frontend/src/components/layout/Sidebar.css": "960d83c5e68464a953aa2a71339cb306c811508997e974436fa015316d973307",
+    "frontend/src/components/layout/Sidebar.jsx": "72a56502e68fbe2d696148bed952f9e9fa07ba446b90bcb49a4c95b0cf737cf6",
+    "frontend/src/components/layout/ThemeToggle.jsx": "3c587ca4d515647756786e11bc7ead0f72f69630a8d06d4bff830a75170cab24",
+    "frontend/src/components/layout/navigation.js": "530dcf861b56cc071fd2db56bf2772deb4e74ec427624d2ad337c99148c738b7",
+    "frontend/src/components/recurring/RecurringPreviewModal.jsx": "5f6e7e75c7ab1830c1e69987451ed26a01800d62e7658727054ca4c29464107e",
+    "frontend/src/components/recurring/RecurringTemplateCard.jsx": "567ebdc5a4289ca45ddcc0e94d397d5ada1fb9dc8ef54066cec1590365aacbad",
+    "frontend/src/components/recurring/RecurringTemplateModal.jsx": "ac98889b1e61d0504305beec86e6e6bebd89825ad57d1699fca01fa5a5bce091",
+    "frontend/src/components/recurring/index.js": "5359ac540e0ce92a29c3d9afc70e516fd1188ca201d230913c98a1e662325e08",
+    "frontend/src/components/recurring/recurringTemplateUtils.js": "2b58c3270071084734ee7db3f5a1d93e95d1829a2221aea4e01f3d5c9d59916f",
+    "frontend/src/components/reports/CategoryBreakdownSection.jsx": "69222fb7dd76a8d588d856d913e2c021d496b3f8e2e561ec43176c85ef6c31f3",
+    "frontend/src/components/reports/MonthlyComparisonChart.jsx": "b079fd31b91f88402632fed252cdace547ba287fe7bda8fc8d80f9371e238cff",
+    "frontend/src/components/reports/index.js": "a1dc323892b30de887ef07f741f13c9120bdb306a8fe79834059823c96c7a85b",
+    "frontend/src/components/reports/reportUtils.js": "9740d216d9d6c27e4334c78cd5ab6f402510e4749ac883c2a5b827c26b47cdbc",
+    "frontend/src/components/ui/AsyncState.jsx": "da49463dcc4a79168a35db111cf8cfb71f5b08198adef2ffa20dbf9f95132d92",
+    "frontend/src/components/ui/DateRangePicker.jsx": "dd1cb30a2b6b9c3a90bb9f08a8bc2bfb3c218112563decb0d282a23e040cd430",
+    "frontend/src/components/ui/FloatingInput.css": "fc678d74e0a103684e664b2416b0a55221d380d91a7b8764a32089f75ca60649",
+    "frontend/src/components/ui/FloatingInput.jsx": "2fdc735131d3d81fe8f132664ac3d6cf7805a82572a78d34c110933760ed18cb",
+    "frontend/src/components/ui/LucianUI.css": "345ad85e2c3a5bbfa581e223e0efa866ccfc2fd6cb782931d77f435b290d5253",
+    "frontend/src/components/ui/MoneyInput.jsx": "31966a104985e2db79260153125c7beb1209b31a3151dcb8362de98759b299ab",
+    "frontend/src/components/ui/MonthPickerInput.jsx": "9b8b93a247abbabfcf44cf5d7dd50f6cd92ed5eb05175c157984aab376d45b17",
+    "frontend/src/components/ui/PillTabs.jsx": "5c12fa0b6c930d33122920282b12d35820451f404e9ee62985edf709792d9b07",
+    "frontend/src/contexts/AuthContext.jsx": "e7b047fc7efd3162062165072549b28af2711befb5d1e6e1bd39869f30f2bd1c",
+    "frontend/src/contexts/QuickAddContext.jsx": "3ea7c8fe2ce12651f6f4d958d8d13c82fb84de5b775cdea57773ed4b0323fc65",
+    "frontend/src/contexts/ThemeContext.jsx": "a2d43b315a2e535942e338059deb35285944d585ece06af585f7b54005de4f40",
+    "frontend/src/contexts/ToastContext.jsx": "5b2010f70507a3f2871d96f6a5f3e3cc48b8b657680c0e3a3dc9ea85ee055ce9",
+    "frontend/src/hooks/useModalFocus.js": "78ae5b5b8ac08db8a72f4cfa5f2e372695c23bceb31138e452dc36cdb5ed4e2e",
+    "frontend/src/hooks/useVietnamToday.js": "021d293f23e90c3c804a57b5cf29f448780d80eb16937c5f534230f1cbe8ec08",
+    "frontend/src/index.css": "91529aae6263f257f496cf74923ca3ff9af76f1e86325b507f24d2ab7f53c653",
+    "frontend/src/main.jsx": "fc8e02dea24acda7b416f63fb757a2c8cf1bed9e139f40d7a444df7e4f6f4dd8",
+    "frontend/src/pages/Budgets.jsx": "7458056115e8d550083b4d2cbfd91a604e71685c6e1e0fe9ca04d3cdb151aa41",
+    "frontend/src/pages/Calendar.jsx": "bae643c534d182c53f092a6b59162a4aa51c9b252871ca38210b68fd81222371",
+    "frontend/src/pages/Categories.jsx": "f30d6c719e6f74594f846e4742c828829b1c98ae5c05da3e7a88b5720e369198",
+    "frontend/src/pages/Dashboard.jsx": "6f1ba0b23714e68d7edb167461ea5ada089e9cce24359dbe7d3c806ee7bcb47b",
+    "frontend/src/pages/ForgotPassword.jsx": "a3bb0c36009629a96d789da897c4ee543ba4f5ad468dfef18052410c07a652e5",
+    "frontend/src/pages/Login.jsx": "f263e8c7638cc2c2f7a3f7f639243d48738f0073966930bf2c2e110b33fa1fed",
+    "frontend/src/pages/QuickAdd.jsx": "d3daecca85806dd77d3e7dca9f565ce088a63cfda83cc7cb66246fdb553cc1c8",
+    "frontend/src/pages/RecurringTemplates.jsx": "3127eed9a449c5a00f4a559323b6c6f3a31d50b30b3fb16fd06005f15c87050a",
+    "frontend/src/pages/Register.jsx": "d418d356ed3e0426218f362cb03cb0b950f37c86623b2123e68ebc1e17319f27",
+    "frontend/src/pages/Reports.jsx": "45f7133dd8da2f536ed667e3992574ec7ae4b426591163fe615c184824d252c5",
+    "frontend/src/pages/ResetPassword.jsx": "bed8acfd15b99d7f94eebf7c4ca9f406192b43a457001331f8d0c83f470e0938",
+    "frontend/src/pages/Transactions.jsx": "66d9cce25db7267109594e195eb631a37f4209a1867d04d849b45e7cdd532ea4",
+    "frontend/src/services/aiChatService.js": "acb10929492aa03ab3a5613945251e7cc2d85d17f32d0776254c6ccb992af67e",
+    "frontend/src/services/authService.js": "40e5376714864ddc2d5723cc8917c3c7739aafcc3eb1cd2d02a9d391f4d0bd4d",
+    "frontend/src/services/budgetService.js": "dfbf73e49af10c8492894f84cbe93b6cdc2ce75a1cc5d16e1f3392fb58cdb439",
+    "frontend/src/services/calendarService.js": "8b62ae9c05f7173d4fb9c9277b8df137ae7b6cae412280bfb8b037b3d942e171",
+    "frontend/src/services/categoryBudgetService.js": "a46f27e70dbd9ce37fccadb31164df3d26149baffa26f9f4498972966d155458",
+    "frontend/src/services/categoryService.js": "6dede42b6fa0664585ae922e3a973128293d9d96e6a1ab01f3f8dc0f21657a83",
+    "frontend/src/services/csvExportService.js": "a01fba321bab721760acd425ea4e95438b72f1ff8b32e1b240c5e5158bd7f33e",
+    "frontend/src/services/dashboardService.js": "157c49efc5664fba16b8305b03ad452828b757f244aed991e0cb015794d1068e",
+    "frontend/src/services/dayTransactionService.js": "ed249704b0583808d776e8aa04f55d2de152549e1e5882ce9f10447f101fbba5",
+    "frontend/src/services/recurringTemplateService.js": "7ff2290d35473964c285b8847685524a9a9a5b3d193b7be5c59085a12dbb99c0",
+    "frontend/src/services/reportService.js": "6e81cb092455b1a7d5a8239a617233c22461b2dceea168634edc645d02e1b95f",
+    "frontend/src/services/transactionService.js": "4950946d8394f873cefba596d6c1559095f3b4e9363bf89b8f89bbb54cdd1e55",
+    "frontend/src/styles/auth-background.css": "1a9c1560c416eb303df00cf39767b2178a5aad0b4a377e2bafd1c4a3d68a4294",
+    "frontend/src/utils/calendar.js": "0e20c2aa307f34df015861171b1a8c44a458f088a2ef427efc397beeb13284c9",
+    "frontend/src/utils/calendarSelection.js": "d74bb30ebf0f08141237438857da92968d485b495af5ef62c0d65d4a8b38ff11",
+    "frontend/src/utils/cashFlow.js": "75570145ad0fd1190ecf36bdddd9f993308e7403a4c4cada459a7fefc1869292",
+    "frontend/src/utils/categoryAppearance.js": "c0d1865353a092666a333a7ff7104903f60291cfbef796fedecef65d97598478",
+    "frontend/src/utils/quickAddSubmission.js": "43fba5605ee8ad132c0494b79925f406effa6cb775a6efe4c962fc4b34cf1452",
+    "frontend/src/utils/transactionForm.js": "3fdf7f5556b3ecf9c2c29ab3569227466069c3779d98bf3124e039b63940512e",
+    "frontend/src/utils/vietnamDayClock.js": "5401d5eff85fd49e7bc8e719c89d295c2337bc5664e7d68b9cdaec0bb05332d5"
+  },
+  "jarSha256": "f244a16cd6a99d9a7a5436478927fc67e0b2fcc40e4adbcd7aaa94daefbda1d7",
+  "environment": {
+    "mysql": "8.0.46",
+    "database": "se_d15_qa_060e82cf4f6a40808fbcd6dfc6fcb1e5",
+    "containerId": "be15e82b46e89e21d1e4c329b3fabd94bedc2981404b6707ec02aed4f37b37ec",
+    "dockerEndpoint": "npipe:////./pipe/dockerDesktopLinuxEngine",
+    "hibernate": "validate",
+    "transport": "127.0.0.1 only"
+  },
+  "schemaInputs": {
+    "backend/src/test/resources/d06-legacy-schema.sql": "aa02c1a770b4786ce087a2feb729b9cc844a5744026fa0a8d210d9ff9f3d25e0",
+    "database/migrations/V002__category_icon_color.sql": "02dfb91fbf51b88eacb2e4e90b79beec1e3dda822f7d03e8f0fa0b54498ae8ff",
+    "database/migrations/V003__create_category_budgets.sql": "d26d5fef8d09c6cb1d63a19e2a6d3af9ceb76381b3974e136250d9e055ede67b",
+    "database/migrations/V004__create_recurring_templates.sql": "ec6ecbb9cded66e025a00c103a23b549046df5551eae89c7871a88a85193f565",
+    "database/migrations/V005__create_recurring_applications.sql": "9433eb4465ec407d47013b164198bd3c240422f6fd857ae12d983d46a78b736d",
+    "database/migrations/V006__create_password_reset_tokens.sql": "d540564ebba1e6d73dc790f9de04f8c318c2869c34d8915ae01d8c1442dff1d4"
+  },
+  "owners": {
+    "A": 1,
+    "B": 2
+  },
+  "fixture": [
+    {
+      "month": "2026-09",
+      "spent": "79.99",
+      "limit": "100.00"
+    },
+    {
+      "month": "2026-10",
+      "spent": "7999.99",
+      "limit": "10000.00"
+    },
+    {
+      "month": "2026-11",
+      "spent": "80.00",
+      "limit": "100.00"
+    },
+    {
+      "month": "2026-12",
+      "spent": "120.40",
+      "limit": "120.40"
+    },
+    {
+      "month": "2027-01",
+      "spent": "120.41",
+      "limit": "120.40"
+    },
+    {
+      "month": "2027-02",
+      "spent": "0.00",
+      "limit": null
+    }
+  ],
+  "beforeReads": {
+    "tables": {
+      "categories": {
+        "rows": 38,
+        "sha256": "b2ebf43f8978043679f2943f7cccb30f975c7be09e2ae1f95ee05beaaef9e769"
+      },
+      "category_budgets": {
+        "rows": 11,
+        "sha256": "fc856f79de0d2d2d15a2914fe9f59af51e31cc4a13de540e5398cbf5aff55ed4"
+      },
+      "monthly_budgets": {
+        "rows": 11,
+        "sha256": "9b07e4469e64f3f6f167fe6b70ad9792debc9c1d3acdd3aa8492bc8254445772"
+      },
+      "password_reset_tokens": {
+        "rows": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "recurring_applications": {
+        "rows": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "recurring_templates": {
+        "rows": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "transactions": {
+        "rows": 26,
+        "sha256": "2df4c7426e21eaf30df963bd2ea748baad3dcce78e1ed797b71e9eb32e2e9bd1"
+      },
+      "users": {
+        "rows": 2,
+        "sha256": "0378e22d89238eb04fff8a06f89a0314eb1235a6ab74588b8eecf45aca544325"
+      }
+    },
+    "writeCounters": "categories\t38\ncategory_budgets\t11\nmonthly_budgets\t11\npassword_reset_tokens\t0\nrecurring_applications\t0\nrecurring_templates\t0\ntransactions\t26\nusers\t2"
+  },
+  "afterHttpReads": {
+    "tables": {
+      "categories": {
+        "rows": 38,
+        "sha256": "b2ebf43f8978043679f2943f7cccb30f975c7be09e2ae1f95ee05beaaef9e769"
+      },
+      "category_budgets": {
+        "rows": 11,
+        "sha256": "fc856f79de0d2d2d15a2914fe9f59af51e31cc4a13de540e5398cbf5aff55ed4"
+      },
+      "monthly_budgets": {
+        "rows": 11,
+        "sha256": "9b07e4469e64f3f6f167fe6b70ad9792debc9c1d3acdd3aa8492bc8254445772"
+      },
+      "password_reset_tokens": {
+        "rows": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "recurring_applications": {
+        "rows": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "recurring_templates": {
+        "rows": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "transactions": {
+        "rows": 26,
+        "sha256": "2df4c7426e21eaf30df963bd2ea748baad3dcce78e1ed797b71e9eb32e2e9bd1"
+      },
+      "users": {
+        "rows": 2,
+        "sha256": "0378e22d89238eb04fff8a06f89a0314eb1235a6ab74588b8eecf45aca544325"
+      }
+    },
+    "writeCounters": "categories\t38\ncategory_budgets\t11\nmonthly_budgets\t11\npassword_reset_tokens\t0\nrecurring_applications\t0\nrecurring_templates\t0\ntransactions\t26\nusers\t2"
+  },
+  "browserExitCode": 0,
+  "afterBrowserReads": {
+    "tables": {
+      "categories": {
+        "rows": 38,
+        "sha256": "b2ebf43f8978043679f2943f7cccb30f975c7be09e2ae1f95ee05beaaef9e769"
+      },
+      "category_budgets": {
+        "rows": 11,
+        "sha256": "fc856f79de0d2d2d15a2914fe9f59af51e31cc4a13de540e5398cbf5aff55ed4"
+      },
+      "monthly_budgets": {
+        "rows": 11,
+        "sha256": "9b07e4469e64f3f6f167fe6b70ad9792debc9c1d3acdd3aa8492bc8254445772"
+      },
+      "password_reset_tokens": {
+        "rows": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "recurring_applications": {
+        "rows": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "recurring_templates": {
+        "rows": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "transactions": {
+        "rows": 26,
+        "sha256": "2df4c7426e21eaf30df963bd2ea748baad3dcce78e1ed797b71e9eb32e2e9bd1"
+      },
+      "users": {
+        "rows": 2,
+        "sha256": "0378e22d89238eb04fff8a06f89a0314eb1235a6ab74588b8eecf45aca544325"
+      }
+    },
+    "writeCounters": "categories\t38\ncategory_budgets\t11\nmonthly_budgets\t11\npassword_reset_tokens\t0\nrecurring_applications\t0\nrecurring_templates\t0\ntransactions\t26\nusers\t2"
+  },
+  "cleanup": "PASS: only newly created container removed (including all fixtures)",
+  "counts": {
+    "PASS": 45,
+    "FAIL": 0,
+    "ERROR": 0,
+    "SKIPPED": 0
+  },
+  "finishedUtc": "2026-11-16T08:20:51.755376+00:00",
+  "status": "PARTIAL: initial clean gate blocked"
+}

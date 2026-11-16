@@ -1,0 +1,102 @@
+TARGETED QA PASS
+FE feature/trang 7716cc5528e35ce90bf082dd7ae7653ea6e9c3db
+BE 4650bd9dd8c5d150b3fb25aa40913ac13784faf5
+Chrome Chrome/157.0.8103.78
+Frontend http://127.0.0.1:61895/
+Backend http://127.0.0.1:61790
+16 PASS / 0 FAIL / 0 ERROR / 0 NOT_RUN
+
+A-VISUAL-2026-11 | PASS | headless | {'width': 1280, 'height': 800} | light | WebGL-disabled=False
+Expected: Rendered digits/signs preserve 200.10/80.00/120.10; no NaN/Infinity; settled RAF/transition
+Actual: {"values": [{"text": "200,1₫", "digits": [{"digit": "2", "overlap": 1}, {"digit": "0", "overlap": 1}, {"digit": "0", "overlap": 1}, {"digit": "1", "overlap": 1}], "visible": true, "rect": {"width": 96, "height": 30}}, {"text": "80₫", "digits": [{"digit": "8", "overlap": 1}, {"digit": "0", "overlap": 1}], "visible": true, "rect": {"width": 50.5625, "height": 30}}, {"text": "120,1₫", "digits": [{"digit": "1", "overlap": 1}, {"digit": "2", "overlap": 1}, {"digit": "0", "overlap": 1}, {"digit": "1", "overlap": 1}], "visible": true, "rect": {"width": 96, "height": 30}}], "expectedCanonical": ["200,1₫", "80₫", "120,1₫"], "framesWaited": 2, "transitionWaitMs": 1400}
+Evidence: kpi-headless-2026-11.png
+
+A-ACCESSIBILITY-2026-11 | PASS | headless | {'width': 1280, 'height': 800} | light | WebGL-disabled=False
+Expected: Actual Chrome AX StaticText for each KPI equals exact SQL/API values 200.10/80.00/120.10
+Actual: {"staticTextByKpi": [["200,1 ₫"], ["80 ₫"], ["120,1 ₫"]], "expectedCanonical": ["200,1₫", "80₫", "120,1₫"]}
+Evidence: accessibility-headless-2026-11.json
+
+A-VISUAL-2026-10 | PASS | headless | {'width': 1280, 'height': 800} | light | WebGL-disabled=False
+Expected: Rendered digits/signs preserve 0.01/0.02/-0.01; no NaN/Infinity; settled RAF/transition
+Actual: {"values": [{"text": "0,01₫", "digits": [{"digit": "0", "overlap": 1}, {"digit": "0", "overlap": 1}, {"digit": "1", "overlap": 1}], "visible": true, "rect": {"width": 77.40625, "height": 30}}, {"text": "0,02₫", "digits": [{"digit": "0", "overlap": 1}, {"digit": "0", "overlap": 1}, {"digit": "2", "overlap": 1}], "visible": true, "rect": {"width": 77.40625, "height": 30}}, {"text": "−0,01₫", "digits": [{"digit": "0", "overlap": 1}, {"digit": "0", "overlap": 1}, {"digit": "1", "overlap": 1}], "visible": true, "rect": {"width": 97.515625, "height": 30}}], "expectedCanonical": ["0,01₫", "0,02₫", "-0,01₫"], "framesWaited": 2, "transitionWaitMs": 1400}
+Evidence: kpi-headless-2026-10.png
+
+A-ACCESSIBILITY-2026-10 | PASS | headless | {'width': 1280, 'height': 800} | light | WebGL-disabled=False
+Expected: Actual Chrome AX StaticText for each KPI equals exact SQL/API values 0.01/0.02/-0.01
+Actual: {"staticTextByKpi": [["0,01 ₫"], ["0,02 ₫"], ["-0,01 ₫"]], "expectedCanonical": ["0,01₫", "0,02₫", "-0,01₫"]}
+Evidence: accessibility-headless-2026-10.json
+
+B-NORMAL-ROUTE-CYCLE | PASS | headless | {'width': 1280, 'height': 800} | light | WebGL-disabled=False
+Expected: Six SPA route visits Dashboard/Budgets/Reports twice; robot or static mascot visible; launcher focus/click/open/close; no renderer/canvas loop; no chat API
+Actual: {"states": [{"route": "/", "focusable": true, "disabled": false, "canvasCount": 1, "canvasVisibility": "hidden", "fallbackVisible": true, "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png", "launcherWidth": 80, "launcherHeight": 80, "viewportVisible": true, "openClose": true}, {"route": "/budgets", "focusable": true, "disabled": false, "canvasCount": 1, "canvasVisibility": "hidden", "fallbackVisible": true, "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png", "launcherWidth": 84, "launcherHeight": 84, "viewportVisible": true, "openClose": true}, {"route": "/reports", "focusable": true, "disabled": false, "canvasCount": 1, "canvasVisibility": "hidden", "fallbackVisible": true, "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png", "launcherWidth": 84, "launcherHeight": 84, "viewportVisible": true, "openClose": true}, {"route": "/", "focusable": true, "disabled": false, "canvasCount": 1, "canvasVisibility": "hidden", "fallbackVisible": true, "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png", "launcherWidth": 84, "launcherHeight": 84, "viewportVisible": true, "openClose": true}, {"route": "/budgets", "focusable": true, "disabled": false, "canvasCount": 1, "canvasVisibility": "hidden", "fallbackVisible": true, "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png", "launcherWidth": 84, "launcherHeight": 84, "viewportVisible": true, "openClose": true}, {"route": "/reports", "focusable": true, "disabled": false, "canvasCount": 1, "canvasVisibility": "hidden", "fallbackVisible": true, "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png", "launcherWidth": 84, "launcherHeight": 84, "viewportVisible": true, "openClose": true}], "canvasCountsAcrossSixRoutes": [1, 1, 1, 1, 1, 1], "unchangedAfterIdle": true}
+Evidence: 
+
+B-ERROR-GATE | PASS | headless | {'width': 1280, 'height': 800} | light | WebGL-disabled=False
+Expected: Zero console.error, page error, unexpected network errors and /api/ai/chat attempts (no WebGL filtering)
+Actual: {"consoleErrors": 0, "pageErrors": 0, "networkErrors": 0, "chatAttempts": 0, "warnings": 0, "apiRequests": 43}
+Evidence: console-headless-normal.json
+
+A-VISUAL-2026-11 | PASS | headed | {'width': 1280, 'height': 800} | dark | WebGL-disabled=False
+Expected: Rendered digits/signs preserve 200.10/80.00/120.10; no NaN/Infinity; settled RAF/transition
+Actual: {"values": [{"text": "200,1₫", "digits": [{"digit": "2", "overlap": 1}, {"digit": "0", "overlap": 1}, {"digit": "0", "overlap": 1}, {"digit": "1", "overlap": 1}], "visible": true, "rect": {"width": 95.98958587646484, "height": 30}}, {"text": "80₫", "digits": [{"digit": "8", "overlap": 1}, {"digit": "0", "overlap": 1}], "visible": true, "rect": {"width": 50.552085876464844, "height": 30}}, {"text": "120,1₫", "digits": [{"digit": "1", "overlap": 1}, {"digit": "2", "overlap": 1}, {"digit": "0", "overlap": 1}, {"digit": "1", "overlap": 1}], "visible": true, "rect": {"width": 95.98958587646484, "height": 30}}], "expectedCanonical": ["200,1₫", "80₫", "120,1₫"], "framesWaited": 2, "transitionWaitMs": 1400}
+Evidence: kpi-headed-2026-11.png
+
+A-ACCESSIBILITY-2026-11 | PASS | headed | {'width': 1280, 'height': 800} | dark | WebGL-disabled=False
+Expected: Actual Chrome AX StaticText for each KPI equals exact SQL/API values 200.10/80.00/120.10
+Actual: {"staticTextByKpi": [["200,1 ₫"], ["80 ₫"], ["120,1 ₫"]], "expectedCanonical": ["200,1₫", "80₫", "120,1₫"]}
+Evidence: accessibility-headed-2026-11.json
+
+A-VISUAL-2026-10 | PASS | headed | {'width': 1280, 'height': 800} | dark | WebGL-disabled=False
+Expected: Rendered digits/signs preserve 0.01/0.02/-0.01; no NaN/Infinity; settled RAF/transition
+Actual: {"values": [{"text": "0,01₫", "digits": [{"digit": "0", "overlap": 1}, {"digit": "0", "overlap": 1}, {"digit": "1", "overlap": 1}], "visible": true, "rect": {"width": 77.39583587646484, "height": 30}}, {"text": "0,02₫", "digits": [{"digit": "0", "overlap": 1}, {"digit": "0", "overlap": 1}, {"digit": "2", "overlap": 1}], "visible": true, "rect": {"width": 77.39583587646484, "height": 30}}, {"text": "−0,01₫", "digits": [{"digit": "0", "overlap": 1}, {"digit": "0", "overlap": 1}, {"digit": "1", "overlap": 1}], "visible": true, "rect": {"width": 97.5, "height": 30}}], "expectedCanonical": ["0,01₫", "0,02₫", "-0,01₫"], "framesWaited": 2, "transitionWaitMs": 1400}
+Evidence: kpi-headed-2026-10.png
+
+A-ACCESSIBILITY-2026-10 | PASS | headed | {'width': 1280, 'height': 800} | dark | WebGL-disabled=False
+Expected: Actual Chrome AX StaticText for each KPI equals exact SQL/API values 0.01/0.02/-0.01
+Actual: {"staticTextByKpi": [["0,01 ₫"], ["0,02 ₫"], ["-0,01 ₫"]], "expectedCanonical": ["0,01₫", "0,02₫", "-0,01₫"]}
+Evidence: accessibility-headed-2026-10.json
+
+B-NORMAL-ROUTE-CYCLE | PASS | headed | {'width': 1280, 'height': 800} | dark | WebGL-disabled=False
+Expected: Six SPA route visits Dashboard/Budgets/Reports twice; robot or static mascot visible; launcher focus/click/open/close; no renderer/canvas loop; no chat API
+Actual: {"states": [{"route": "/", "focusable": true, "disabled": false, "canvasCount": 1, "canvasVisibility": "hidden", "fallbackVisible": true, "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png", "launcherWidth": 80, "launcherHeight": 80, "viewportVisible": true, "openClose": true}, {"route": "/budgets", "focusable": true, "disabled": false, "canvasCount": 1, "canvasVisibility": "hidden", "fallbackVisible": true, "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png", "launcherWidth": 84, "launcherHeight": 84, "viewportVisible": true, "openClose": true}, {"route": "/reports", "focusable": true, "disabled": false, "canvasCount": 1, "canvasVisibility": "hidden", "fallbackVisible": true, "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png", "launcherWidth": 84, "launcherHeight": 84, "viewportVisible": true, "openClose": true}, {"route": "/", "focusable": true, "disabled": false, "canvasCount": 1, "canvasVisibility": "hidden", "fallbackVisible": true, "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png", "launcherWidth": 84, "launcherHeight": 84, "viewportVisible": true, "openClose": true}, {"route": "/budgets", "focusable": true, "disabled": false, "canvasCount": 1, "canvasVisibility": "hidden", "fallbackVisible": true, "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png", "launcherWidth": 84, "launcherHeight": 84, "viewportVisible": true, "openClose": true}, {"route": "/reports", "focusable": true, "disabled": false, "canvasCount": 1, "canvasVisibility": "hidden", "fallbackVisible": true, "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png", "launcherWidth": 80.12223815917969, "launcherHeight": 80.12223815917969, "viewportVisible": true, "openClose": true}], "canvasCountsAcrossSixRoutes": [1, 1, 1, 1, 1, 1], "unchangedAfterIdle": true}
+Evidence: 
+
+B-ERROR-GATE | PASS | headed | {'width': 1280, 'height': 800} | dark | WebGL-disabled=False
+Expected: Zero console.error, page error, unexpected network errors and /api/ai/chat attempts (no WebGL filtering)
+Actual: {"consoleErrors": 0, "pageErrors": 0, "networkErrors": 0, "chatAttempts": 0, "warnings": 0, "apiRequests": 43}
+Evidence: console-headed-normal.json
+
+C-FALLBACK-ROUTE-CYCLE | PASS | headless | {'width': 1280, 'height': 800} | light | WebGL-disabled=True
+Expected: Six SPA route visits Dashboard/Budgets/Reports twice; robot or static mascot visible; launcher focus/click/open/close; no renderer/canvas loop; no chat API
+Actual: {"states": [{"route": "/", "focusable": true, "disabled": false, "canvasCount": 1, "canvasVisibility": "hidden", "fallbackVisible": true, "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png", "launcherWidth": 80, "launcherHeight": 80, "viewportVisible": true, "openClose": true}, {"route": "/budgets", "focusable": true, "disabled": false, "canvasCount": 1, "canvasVisibility": "hidden", "fallbackVisible": true, "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png", "launcherWidth": 84, "launcherHeight": 84, "viewportVisible": true, "openClose": true}, {"route": "/reports", "focusable": true, "disabled": false, "canvasCount": 1, "canvasVisibility": "hidden", "fallbackVisible": true, "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png", "launcherWidth": 84, "launcherHeight": 84, "viewportVisible": true, "openClose": true}, {"route": "/", "focusable": true, "disabled": false, "canvasCount": 1, "canvasVisibility": "hidden", "fallbackVisible": true, "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png", "launcherWidth": 84, "launcherHeight": 84, "viewportVisible": true, "openClose": true}, {"route": "/budgets", "focusable": true, "disabled": false, "canvasCount": 1, "canvasVisibility": "hidden", "fallbackVisible": true, "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png", "launcherWidth": 84, "launcherHeight": 84, "viewportVisible": true, "openClose": true}, {"route": "/reports", "focusable": true, "disabled": false, "canvasCount": 1, "canvasVisibility": "hidden", "fallbackVisible": true, "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png", "launcherWidth": 84, "launcherHeight": 84, "viewportVisible": true, "openClose": true}], "canvasCountsAcrossSixRoutes": [1, 1, 1, 1, 1, 1], "unchangedAfterIdle": true}
+Evidence: fallback-1280-light.png
+
+C-ERROR-GATE | PASS | headless | {'width': 1280, 'height': 800} | light | WebGL-disabled=True
+Expected: Zero console.error, page error, unexpected network errors and /api/ai/chat attempts (no WebGL filtering)
+Actual: {"consoleErrors": 0, "pageErrors": 0, "networkErrors": 0, "chatAttempts": 0, "warnings": 0, "apiRequests": 37}
+Evidence: console-headless-disabled-1280.json
+
+C-FALLBACK-ROUTE-CYCLE | PASS | headless | {'width': 390, 'height': 844} | dark | WebGL-disabled=True
+Expected: Six SPA route visits Dashboard/Budgets/Reports twice; robot or static mascot visible; launcher focus/click/open/close; no renderer/canvas loop; no chat API
+Actual: {"states": [{"route": "/", "focusable": true, "disabled": false, "canvasCount": 1, "canvasVisibility": "hidden", "fallbackVisible": true, "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png", "launcherWidth": 80, "launcherHeight": 80, "viewportVisible": true, "openClose": true}, {"route": "/budgets", "focusable": true, "disabled": false, "canvasCount": 1, "canvasVisibility": "hidden", "fallbackVisible": true, "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png", "launcherWidth": 84, "launcherHeight": 84, "viewportVisible": true, "openClose": true}, {"route": "/reports", "focusable": true, "disabled": false, "canvasCount": 1, "canvasVisibility": "hidden", "fallbackVisible": true, "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png", "launcherWidth": 84, "launcherHeight": 84, "viewportVisible": true, "openClose": true}, {"route": "/", "focusable": true, "disabled": false, "canvasCount": 1, "canvasVisibility": "hidden", "fallbackVisible": true, "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png", "launcherWidth": 84, "launcherHeight": 84, "viewportVisible": true, "openClose": true}, {"route": "/budgets", "focusable": true, "disabled": false, "canvasCount": 1, "canvasVisibility": "hidden", "fallbackVisible": true, "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png", "launcherWidth": 84, "launcherHeight": 84, "viewportVisible": true, "openClose": true}, {"route": "/reports", "focusable": true, "disabled": false, "canvasCount": 1, "canvasVisibility": "hidden", "fallbackVisible": true, "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png", "launcherWidth": 84, "launcherHeight": 84, "viewportVisible": true, "openClose": true}], "canvasCountsAcrossSixRoutes": [1, 1, 1, 1, 1, 1], "unchangedAfterIdle": true}
+Evidence: fallback-390-dark.png
+
+C-ERROR-GATE | PASS | headless | {'width': 390, 'height': 844} | dark | WebGL-disabled=True
+Expected: Zero console.error, page error, unexpected network errors and /api/ai/chat attempts (no WebGL filtering)
+Actual: {"consoleErrors": 0, "pageErrors": 0, "networkErrors": 0, "chatAttempts": 0, "warnings": 0, "apiRequests": 37}
+Evidence: console-headless-disabled-390.json
+
+Cleanup fixture/container: PASS
+Chrome/Vite helpers cleanup: PASS
+FE source/stash before-after: PASS
+Zero mutation: PASS: eight-table hashes/counts and COUNT_WRITE unchanged
+0 calls or attempted calls to /api/ai/chat.
+History: r1 12 PASS/4 FAIL caused by AX harness capture; r2/r3 10 PASS/1 ERROR caused by occluded headed login; retain raw evidence. See targeted-review.json for QA-H01 and QA-ENV01 adjudication.
+Browser QA before fix: 33 PASS, 2 FAIL at 4650bd9.
+Targeted regression after fix: all affected cases PASS at 7716cc5.
+The 33 unrelated cases were not rerun; inherit prior evidence by risk assessment. This is not a fresh full Browser QA result.
+
+Final cleanup audit: QA-ENV02 resolved; 7 exact-owned orphan QA JVMs stopped, matching JVMs remaining=0. Containers/fixtures and Chrome/Vite helpers removed. See cleanup-verification.json.
+Historical Backend logs have append drift from those JVMs; older immutable hash claims for those three logs are withdrawn, without rewriting old logs/manifests. Browser results/AX/PNG are unchanged.
+Use final-manifest.json for final evidence hashes. No production source edit or rerun of the 33 unrelated Browser QA cases.
+Last Docker recheck: daemon unavailable. Prior successful removal/inspect and empty-label ps checks establish fixture/container cleanup; no Docker restart performed.

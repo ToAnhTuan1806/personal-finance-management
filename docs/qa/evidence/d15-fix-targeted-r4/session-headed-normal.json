@@ -1,0 +1,198 @@
+{
+  "config": {
+    "mode": "headed",
+    "disabled": false,
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    },
+    "theme": "dark"
+  },
+  "diagnostics": {
+    "route": "/reports",
+    "readyState": "complete",
+    "visibility": "visible",
+    "hasFocus": true,
+    "bodyText": "Bỏ qua điều hướng\nSmartExpense\nTổng quan\nGhi chép\nLịch\nLịch sử giao dịch\nDanh mục\nNgân sách\nGiao dịch định kỳ\nBáo cáo\nQA D15 Fix Targeted\nd15-fix-4dd34b9b10bdda1b@example.test\nBáo cáo tài chính\n\nQuản lý tài chính cá nhân\n\nGhi nhanh\nĐăng xuất\nPhân tích đa kỳ (tối đa 6 tháng)\nBáo cáo thu – chi & Thống kê\n\nSo sánh thu nhập, chi tiêu và chênh lệch từ 09/2026 đến 11/2026 cùng cơ cấu chi tiêu theo danh mục.\n\nTháng này\n3 tháng gần nhất\n6 tháng gần nhất\nTừ tháng\nTháng 09/2026\nĐến tháng\nTháng 11/2026\nXem báo cáo\nLàm mới\nTải CSV\nTỔNG THU NHẬP\n\n200,11 ₫\n\nCộng dồn từ 09/2026 đến 11/2026\n\nTỔNG CHI TIÊU\n\n80,02 ₫\n\nChiếm 39,99% tổng thu nhập kỳ này\n\nCHÊNH LỆCH THU – CHI\n\n+120,09 ₫\n\nTiết kiệm 60,01% thu nhập trong kỳ\n\nKỳ báo cáo: 09/2026 – 11/2026\n\nBiểu đồ thu – chi theo từng tháng\nTổng thu\nTổng chi\n09/2026\n10/2026\n11/2026\n0\n55\n110\n165\n220\nBẢNG TỔNG HỢP SỐ LIỆU TỪNG THÁNG (3 THÁNG)\nTHÁNG\tTỔNG THU\tTỔNG CHI\tCHÊNH LỆCH\tTỶ LỆ TIẾT KIỆM\n09/2026\t0 ₫\t0 ₫\t0 ₫\t—\n10/2026\t0,01 ₫\t0,02 ₫\t-0,01 ₫\tThâm hụt\n11/2026\t200,1 ₫\t80 ₫\t+120,1 ₫\t60,02%\nTổng cộng\t200,11 ₫\t80,02 ₫\t+120,09 ₫\t60,01%\n\nKỳ báo cáo: 09/2026 – 11/2026\n\nChi tiêu theo danh mục\nTổng chi\n80,02 ₫\n0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n,\n0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n₫\nĂn uống\n80,02 ₫\n(100,0%)\nBẢNG CHI TIÊU THEO DANH MỤC (1 DANH MỤC)\nTổng chi danh mục: 80,02 ₫\nHẠNG\tDANH MỤC\tSỐ TIỀN CHI\tTỶ TRỌNG\n#1\t\nĂn uống\n\t80,02 ₫\t100%\nTrợ lý tài chính\n09/2026"
+  },
+  "errors": [],
+  "warnings": [],
+  "pageErrors": [],
+  "networkErrors": [],
+  "canceledNavigationRequests": [],
+  "apiRequests": [
+    {
+      "url": "http://127.0.0.1:61895/api/auth/login",
+      "method": "POST"
+    },
+    {
+      "url": "http://127.0.0.1:61895/api/dashboard/expenses-by-category?month=2026-11",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:61895/api/transactions?month=2026-11&page=0&size=8",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:61895/api/budgets/2026/11",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:61895/api/transactions?month=2026-11&page=0&size=100",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:61895/api/reports/monthly?from=2026-11&to=2026-11",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:61895/api/reports/monthly?from=2026-10&to=2026-10",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:61895/api/dashboard/expenses-by-category?month=2026-11",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:61895/api/transactions?month=2026-11&page=0&size=8",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:61895/api/budgets/2026/11",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:61895/api/transactions?month=2026-11&page=0&size=100",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:61895/api/reports/monthly?from=2026-10&to=2026-10",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:61895/api/reports/monthly?from=2026-09&to=2026-09",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:61895/api/dashboard/expenses-by-category?month=2026-10",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:61895/api/transactions?month=2026-10&page=0&size=8",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:61895/api/budgets/2026/10",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:61895/api/transactions?month=2026-10&page=0&size=100",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:61895/api/budgets/2026/11",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:61895/api/categories",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:61895/api/category-budgets?year=2026&month=11",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:61895/api/budgets/2026/11",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:61895/api/categories",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:61895/api/category-budgets?year=2026&month=11",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:61895/api/reports/monthly?from=2026-09&to=2026-11",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:61895/api/reports/monthly?from=2026-09&to=2026-11",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:61895/api/dashboard/expenses-by-category?month=2026-11",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:61895/api/transactions?month=2026-11&page=0&size=8",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:61895/api/budgets/2026/11",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:61895/api/transactions?month=2026-11&page=0&size=100",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:61895/api/reports/monthly?from=2026-11&to=2026-11",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:61895/api/reports/monthly?from=2026-10&to=2026-10",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:61895/api/dashboard/expenses-by-category?month=2026-11",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:61895/api/transactions?month=2026-11&page=0&size=8",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:61895/api/budgets/2026/11",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:61895/api/transactions?month=2026-11&page=0&size=100",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:61895/api/budgets/2026/11",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:61895/api/categories",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:61895/api/category-budgets?year=2026&month=11",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:61895/api/budgets/2026/11",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:61895/api/categories",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:61895/api/category-budgets?year=2026&month=11",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:61895/api/reports/monthly?from=2026-09&to=2026-11",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:61895/api/reports/monthly?from=2026-09&to=2026-11",
+      "method": "GET"
+    }
+  ],
+  "chatAttempts": []
+}

@@ -1,0 +1,20 @@
+Login via browser UI succeeded: headless
+A-VISUAL-2026-11 headless normal PASS
+A-ACCESSIBILITY-2026-11 headless normal FAIL
+A-VISUAL-2026-10 headless normal PASS
+A-ACCESSIBILITY-2026-10 headless normal FAIL
+B-NORMAL-ROUTE-CYCLE headless normal PASS
+B-ERROR-GATE headless normal PASS
+Login via browser UI succeeded: headed
+A-VISUAL-2026-11 headed normal PASS
+A-ACCESSIBILITY-2026-11 headed normal FAIL
+A-VISUAL-2026-10 headed normal PASS
+A-ACCESSIBILITY-2026-10 headed normal FAIL
+B-NORMAL-ROUTE-CYCLE headed normal PASS
+B-ERROR-GATE headed normal PASS
+Login via browser UI succeeded: headless
+C-FALLBACK-ROUTE-CYCLE headless WebGL-disabled PASS
+C-ERROR-GATE headless WebGL-disabled PASS
+Login via browser UI succeeded: headless
+C-FALLBACK-ROUTE-CYCLE headless WebGL-disabled PASS
+C-ERROR-GATE headless WebGL-disabled PASS

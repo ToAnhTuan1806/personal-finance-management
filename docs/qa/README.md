@@ -37,6 +37,14 @@ Mỗi ngày có một báo cáo chung cho **Backend (BE), Frontend (FE) và dữ
 
 Nguồn kế hoạch: [SRS 2.3](../SmartExpense_SRS_v2.docx), [Master Plan](../SmartExpense_QuanTriDuAn.xlsx), [lịch Sprint 3 ngày 09–12/11/2026](../smartexpense-2.0/SPRINT_3_PLAN.md). Quy tắc API hiện có nằm trong [API Contract](../smartexpense-2.0/API_CONTRACT.md).
 
+### Sprint 4 — D15
+
+| Ngày | Ngày thực thi | Nội dung chính | Báo cáo |
+| --- | --- | --- | --- |
+| D15 | 16/11/2026 | QA ngân sách, biểu đồ và số tiền; baseline `4650bd9` | [D15](D15.md) |
+
+D15 **chưa READY FOR REVIEW**: Backend 1.272 PASS, Frontend 573 PASS, lint/build PASS; HTTP/SQL/zero mutation 46 PASS; Chrome thật 33 PASS/2 FAIL. Dashboard làm tròn mất tiền lẻ (P1), console robot có lỗi WebGL và gate working tree sạch ban đầu còn BLOCKED. Xem báo cáo chung D15 và evidence mới, không dùng số liệu D14 để kết luận D15.
+
 ## Review Sprint 2 ngày 08/11/2026
 
 Đã chạy lại trên `dev` SHA `0bee997755f760b836c7ca2af93aacd4100262e1`: **Backend 779 PASS, 0 FAIL/ERROR/SKIPPED** (27 suite, JUnit XML); **Frontend 417 PASS, 0 FAIL/SKIPPED**, lint/build PASS. Gate D03 **55/55** và Date Validation **16/16** là tập con Backend, không cộng lại. CI đúng SHA PASS cả ba job.

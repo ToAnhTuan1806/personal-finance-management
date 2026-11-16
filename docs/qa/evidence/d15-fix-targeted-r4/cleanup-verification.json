@@ -1,0 +1,52 @@
+{
+  "verifiedUtc": "2026-11-16T10:05:40.372914+00:00",
+  "finalCleanup": "PASS",
+  "issue": {
+    "id": "QA-ENV02",
+    "priority": "P2",
+    "kind": "QA harness process cleanup",
+    "status": "RESOLVED",
+    "reproduce": [
+      "Launch Backend through Oracle javapath java.exe shim",
+      "Terminate only the shim process",
+      "Child JVM can remain alive and append Hikari logs after disposable MySQL removal"
+    ],
+    "actual": "7 verified se-d15 QA child JVMs were found: 3 earlier D15 runs and 4 targeted runs. Original parent-only cleanup statements did not establish JVM exit.",
+    "resolution": "Matched each PID to the exact DB-worktree Backend JAR and se-d15 temporary config, stopped only those 7 JVMs; confirmed zero matching JVMs remain. Future targeted harness uses taskkill /PID <owned launcher> /T /F before waiting.",
+    "remainingProductBug": false
+  },
+  "terminatedProcessesEvidence": "jvm-cleanup-before.json",
+  "containerFixturesRemoved": true,
+  "chromeViteHelpersRemoved": true,
+  "historicalLogIntegrity": {
+    "manualOverwritePerformed": false,
+    "actual": "Old Backend JVMs continued appending to three historical live-backend.log files; historical manifest hashes differ for those logs. Do not treat their current contents as immutable originals. All other historical manifest entries remain unchanged. Historical files/manifests were not rewritten to hide this drift.",
+    "drift": [
+      {
+        "path": "docs/qa/evidence/d15-20261116-r1/live-backend.log",
+        "expectedHistoricalSha256": "42699e00bc7dba37fdaaa75cf79cff1f913b68025a282ab6a35d8203a2c1c2ab",
+        "currentSha256": "bbb75756bf981e1be29f9a9c573ed45c363780f6c9e2555f7130639f29dddb1b",
+        "bytes": 820952
+      },
+      {
+        "path": "docs/qa/evidence/d15-20261116-r2/live-backend.log",
+        "expectedHistoricalSha256": "6b81f830ae5d4306e240aff7cad7c81202c0e7991a56f51038ea7190160af023",
+        "currentSha256": "dbeae9607e075abe285f938b63f5bd36f71b0fcfb1cbfcc1f5264e04524df4a2",
+        "bytes": 216062
+      },
+      {
+        "path": "docs/qa/evidence/d15-20261116-r3/live-backend.log",
+        "expectedHistoricalSha256": "f556261ab40f064983834f4bf386c8f957756ffc011934e2327c1e2bbe14e0b6",
+        "currentSha256": "fb6bdcae88e551bdd184047dbb55472daafa90cfd02cb627c00c34d48d26f557",
+        "bytes": 207032
+      }
+    ]
+  },
+  "targetedManifestIntegrity": "Earlier r4 manifests also captured live-backend.log before final JVM stop; use final-manifest.json for current artifact hashes.",
+  "testValidity": "16 browser case results, AX snapshots and PNG unchanged. Cleanup was independently completed after the initial driver result; audit supersedes its premature Backend-stopped assertion.",
+  "harnessChangeAfterBrowserExecution": "Only cleanup process-tree termination changed; no production source or financial/browser test behavior changed.",
+  "lastDockerRecheck": {
+    "status": "NOT_RUN",
+    "actual": "Docker Desktop daemon pipe was unavailable at the final recheck. Before this, all four targeted docker rm calls succeeded, inspect confirmed container absence, and a successful docker ps label check returned zero QA containers. No Docker restart attempted."
+  }
+}
