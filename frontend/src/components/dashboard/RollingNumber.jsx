@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import './DashboardWidgets.css'
 
 const formatter = new Intl.NumberFormat('vi-VN', {
-  maximumFractionDigits: 0,
+  maximumFractionDigits: 2,
 })
 
 export default function RollingNumber({
@@ -27,11 +27,11 @@ export default function RollingNumber({
   }, [safeAmount])
 
   const formatted = formatter.format(
-    Math.round(Math.abs(displayValue))
+    Math.abs(displayValue)
   )
 
   const fullText = `${safeAmount < 0 ? '-' : ''}${
-    formatter.format(Math.round(Math.abs(safeAmount)))
+    formatter.format(Math.abs(safeAmount))
   }${currency ? ' ₫' : ''}`
 
   return (

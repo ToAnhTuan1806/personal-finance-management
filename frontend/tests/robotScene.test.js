@@ -3,7 +3,7 @@ import test from 'node:test'
 import { BufferGeometry, Material } from 'three'
 import { createRobotScene } from '../src/components/ai/robotScene.js'
 
-function fixture({ reduced = false, lowPower = false, failRender = false, failSetup = false, failConfiguration = false, failShader = false } = {}) {
+function fixture({ reduced = false, lowPower = false, failRender = false, failSetup = false, failConfiguration = false, failShader = false, contextMode = 'available' } = {}) {
   const listeners = new Map()
   const mediaListeners = new Set()
   const callbacks = new Map()
@@ -11,6 +11,7 @@ function fixture({ reduced = false, lowPower = false, failRender = false, failSe
   const renders = []
   const sizes = []
   const ratios = []
+  const contextRequests = []
   let clock = 0
   let id = 0
   let factories = 0
@@ -21,11 +22,32 @@ function fixture({ reduced = false, lowPower = false, failRender = false, failSe
   let bounds = { width: 80, height: 80 }
   let rendererOptions
   const parent = { getBoundingClientRect: () => bounds }
+  const context = {
+    HIGH_FLOAT: 1, MEDIUM_FLOAT: 2, LOW_FLOAT: 3, VERTEX_SHADER: 4, FRAGMENT_SHADER: 5,
+    isContextLost: () => contextMode === 'lost',
+    getContextAttributes: () => contextMode === 'no-attributes' ? null : { alpha: true },
+    getShaderPrecisionFormat: (shader, type) => {
+      if (contextMode === 'throw-precision') throw new Error('Shader precision unavailable')
+      if (contextMode === 'null-precision' || (contextMode === 'null-fragment' && shader === 5)) return null
+      return { precision: contextMode === 'zero-precision' || (contextMode === 'mediump' && type === 1) ? 0 : 23 }
+    },
+    getExtension: (name) => {
+      assert.equal(name, 'WEBGL_lose_context')
+      return { loseContext() { contextReleases++ } }
+    },
+  }
+  if (contextMode === 'missing-precision') delete context.getShaderPrecisionFormat
   const canvas = {
     parentElement: parent,
+    getContext: (name, attributes) => {
+      contextRequests.push({ name, attributes })
+      if (contextMode === 'throw-context') throw new Error('WebGL disabled')
+      return contextMode === 'unavailable' ? null : context
+    },
     addEventListener: (name, callback) => listeners.set(name, callback),
     removeEventListener: (name, callback) => { if (listeners.get(name) === callback) listeners.delete(name) },
   }
+  if (contextMode === 'missing-getContext') delete canvas.getContext
   const media = {
     matches: reduced,
     addEventListener: (_, callback) => mediaListeners.add(callback),
@@ -70,7 +92,7 @@ function fixture({ reduced = false, lowPower = false, failRender = false, failSe
     },
   })
   return {
-    api, listeners, mediaListeners, callbacks, renders, sizes, ratios,
+    api, listeners, mediaListeners, callbacks, renders, sizes, ratios, context, contextRequests,
     get failureCount() { return failureCount },
     get disposeCount() { return disposeCount },
     get contextReleases() { return contextReleases },
@@ -100,6 +122,11 @@ test('Robot engine transparent low-power renderer, one instance across states an
   assert.equal(f.rendererOptions.alpha, true)
   assert.equal(f.rendererOptions.powerPreference, 'low-power')
   assert.equal(f.rendererOptions.stencil, false)
+  assert.equal(f.rendererOptions.context, f.context)
+  assert.equal(f.rendererOptions.precision, 'highp')
+  assert.equal(f.contextRequests.length, 1)
+  assert.equal(f.contextRequests[0].name, 'webgl2')
+  assert.equal(f.contextRequests[0].attributes.antialias, true)
   assert.deepEqual(f.ratios, [1.5])
   assert.deepEqual(f.sizes, [[80, 80, false]])
   for (let i = 0; i < 20; i++) {
@@ -114,6 +141,53 @@ test('Robot engine transparent low-power renderer, one instance across states an
   assert.equal(camera.isOrthographicCamera, true)
   assert.deepEqual(camera.position.toArray(), [3, 2, 7])
   assert.ok(scene.getObjectByName('smartexpense-robot'))
+  f.api.dispose()
+})
+
+for (const contextMode of ['unavailable', 'missing-getContext', 'throw-context', 'lost', 'no-attributes', 'null-precision', 'null-fragment', 'zero-precision', 'missing-precision', 'throw-precision']) {
+  test(`Robot engine preflight ${contextMode}: fallback once before renderer, no console.error or leaked resources`, (t) => {
+    const error = t.mock.method(console, 'error', () => {})
+    const f = fixture({ contextMode })
+    assert.equal(f.failureCount, 1)
+    assert.equal(f.factories, 0)
+    assert.equal(f.renders.length, 0)
+    assert.equal(f.listeners.size, 0)
+    assert.equal(f.callbacks.size, 0)
+    assert.equal(f.mediaListeners.size, 0)
+    assert.equal(f.disposeCount, 0)
+    assert.equal(f.contextReleases, ['unavailable', 'missing-getContext', 'throw-context', 'lost'].includes(contextMode) ? 0 : 1)
+    f.api.setActive(true)
+    f.api.setState('LOADING')
+    f.api.dispose()
+    assert.equal(f.failureCount, 1)
+    assert.equal(f.factories, 0)
+    assert.equal(error.mock.callCount(), 0)
+  })
+}
+
+test('Robot engine default Three factory: missing WebGL falls back without constructor console.error', (t) => {
+  const error = t.mock.method(console, 'error', () => {})
+  let failures = 0
+  const listeners = new Map()
+  const canvas = {
+    getContext: () => null,
+    addEventListener: (name, callback) => listeners.set(name, callback),
+    removeEventListener: (name) => listeners.delete(name),
+  }
+  const scene = createRobotScene(canvas, { onFailure: () => { failures++ } })
+  assert.equal(failures, 1)
+  assert.equal(error.mock.callCount(), 0)
+  assert.equal(listeners.size, 0)
+  scene.dispose()
+})
+
+test('Robot engine uses available mediump precision with the validated context', (t) => {
+  const error = t.mock.method(console, 'error', () => {})
+  const f = fixture({ contextMode: 'mediump' })
+  assert.equal(f.failureCount, 0)
+  assert.equal(f.rendererOptions.precision, 'mediump')
+  assert.equal(f.rendererOptions.context, f.context)
+  assert.equal(error.mock.callCount(), 0)
   f.api.dispose()
 })
 
