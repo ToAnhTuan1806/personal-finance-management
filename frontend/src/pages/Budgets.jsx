@@ -14,7 +14,7 @@ import {
 
 import BudgetModal from '../components/BudgetModal'
 import { CategoryBudgetSection, CategoryBudgetModal } from '../components/budget'
-import { getBudgetDisplayStatus } from '../components/budget/categoryBudgetUtils'
+import { getBudgetDisplayStatus, getBudgetUsagePercentage, getBudgetRemaining } from '../components/budget/categoryBudgetUtils'
 import AsyncState from '../components/ui/AsyncState'
 import MonthPickerInput from '../components/ui/MonthPickerInput'
 import { useToast } from '../contexts/ToastContext'
@@ -46,6 +46,7 @@ const formatMoney = (value) =>
   new Intl.NumberFormat('vi-VN', {
     style: 'currency',
     currency: 'VND',
+    maximumFractionDigits: 2,
   }).format(Number(value ?? 0))
 
 export default function Budgets() {
@@ -321,11 +322,9 @@ export default function Budgets() {
   // Dữ liệu để hiển thị tiến độ
   const limit = Number(budget?.amountLimit ?? 0)
   const spent = Number(budget?.spentAmount ?? 0)
-  const remaining = Number(budget?.remainingAmount ?? 0)
+  const remaining = getBudgetRemaining(budget)
 
-  const percentage = limit > 0
-    ? (spent / limit) * 100
-    : 0
+  const percentage = getBudgetUsagePercentage(budget)
 
   // Thanh tiến độ chỉ dài tối đa 100%
   const progressWidth = Math.min(
@@ -557,7 +556,8 @@ export default function Budgets() {
                 aria-label="Tỷ lệ sử dụng ngân sách"
                 aria-valuemin={0}
                 aria-valuemax={100}
-                aria-valuenow={Math.round(progressWidth)}
+                aria-valuenow={progressWidth}
+                aria-valuetext={`${percentage.toLocaleString('vi-VN', { maximumFractionDigits: 1 })}%`}
                 className={`h-full rounded-full transition-all duration-500 ${
                   isExceeded
                     ? 'bg-rose-500'
@@ -613,7 +613,7 @@ export default function Budgets() {
                 <AlertCircle size={20} className="shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
                 <div>
                   <p className="font-bold text-sm">
-                    Trong ngân sách
+                    Gần hết ngân sách
                   </p>
                   <p className="mt-1 text-xs leading-relaxed">
                     Bạn đã sử dụng {percentage.toLocaleString('vi-VN', { maximumFractionDigits: 1 })}% ngân sách tháng này. Chỉ còn {formatMoney(remaining)} khả dụng.

@@ -220,6 +220,8 @@ export function ReportsPage({
     totalIncome > 0 && balance > 0 ? (balance / totalIncome) * 100 : 0
   const expenseRatio =
     totalIncome > 0 ? (totalExpense / totalIncome) * 100 : 0
+  const hasReport = Boolean(report && !loading && !error)
+  const hasActivity = report?.months?.some((item) => item.totalIncome !== 0 || item.totalExpense !== 0)
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -410,6 +412,11 @@ export function ReportsPage({
       )}
 
       {/* 3. Ba thẻ KPI Tổng hợp kỳ báo cáo */}
+      {hasReport && !hasActivity && (
+        <p role="status" className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
+          Chưa có phát sinh thu – chi trong kỳ báo cáo. Hãy chọn khoảng tháng khác để xem số liệu.
+        </p>
+      )}
       <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
         {/* Tổng thu nhập */}
         <div className="relative overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-sm dark:border-slate-800 dark:bg-[#182234]">
@@ -422,7 +429,7 @@ export function ReportsPage({
             </span>
           </div>
           <div className="mt-3">
-            {report ? (
+            {hasReport ? (
               <p className="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400">
                 {formatReportMoney(totalIncome)}
               </p>
@@ -452,7 +459,7 @@ export function ReportsPage({
             </span>
           </div>
           <div className="mt-3">
-            {report ? (
+            {hasReport ? (
               <p className="text-2xl sm:text-3xl font-black text-rose-600 dark:text-rose-400">
                 {formatReportMoney(totalExpense)}
               </p>
@@ -466,7 +473,7 @@ export function ReportsPage({
             )}
           </div>
           <p className="mt-2 text-xs font-medium text-slate-600 dark:text-slate-300">
-            {report && totalIncome > 0
+            {hasReport && totalIncome > 0
               ? `Chiếm ${formatReportPercent(expenseRatio)} tổng thu nhập kỳ này`
               : 'Tổng các khoản chi tiêu trong kỳ báo cáo'}
           </p>
@@ -483,7 +490,7 @@ export function ReportsPage({
             </span>
           </div>
           <div className="mt-3">
-            {report ? (
+            {hasReport ? (
               <p
                 className={`text-2xl sm:text-3xl font-black ${
                   balance >= 0
@@ -504,7 +511,7 @@ export function ReportsPage({
             )}
           </div>
           <p className="mt-2 text-xs font-semibold text-blue-700 dark:text-blue-300">
-            {report
+            {hasReport && hasActivity
               ? savingRate > 0
                 ? `Tiết kiệm ${formatReportPercent(savingRate)} thu nhập trong kỳ`
                 : balance < 0

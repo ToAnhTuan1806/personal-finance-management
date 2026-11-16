@@ -80,8 +80,9 @@ test('categoryBudgetUtils.getStatusConfig: nhãn tiếng Việt và màu sắc p
   assert.equal(safe.label, 'Trong ngân sách')
   assert.ok(safe.barColor.includes('bg-emerald'))
 
-  const warning = getStatusConfig('WARNING')
-  assert.equal(warning.label, 'Trong ngân sách')
+  assert.equal(getStatusConfig('WARNING').label, 'Trong ngân sách')
+  const warning = getStatusConfig('WARNING', { clarifyWarning: true })
+  assert.equal(warning.label, 'Gần hết ngân sách')
   assert.ok(warning.barColor.includes('bg-amber'))
 
   const over = getStatusConfig('OVER_BUDGET')
@@ -191,7 +192,7 @@ test('CategoryBudgetCard: thanh tiến độ OVER_BUDGET (>=100%) giới hạn t
   assert.ok(html.includes(formatMoney(500000)))
 })
 
-test('CategoryBudgetCard: trạng thái WARNING (80% - <100%) vẫn hiển thị Trong ngân sách', () => {
+test('CategoryBudgetCard: trạng thái WARNING (80% - <100%) hiển thị Gần hết ngân sách', () => {
   const budget = {
     id: 3,
     categoryId: 12,
@@ -205,7 +206,7 @@ test('CategoryBudgetCard: trạng thái WARNING (80% - <100%) vẫn hiển thị
 
   const html = render(CategoryBudgetCard, { budget, onEdit: noOp, onDelete: noOp })
 
-  assert.ok(html.includes('Trong ngân sách'))
+  assert.ok(html.includes('Gần hết ngân sách'))
   assert.ok(html.includes('85%'))
   assert.ok(html.includes('style="width:85%"'))
 })
@@ -413,6 +414,7 @@ test('CategoryBudgetSection: hiển thị danh sách các card ngân sách khi c
   // Hiển thị cả 2 danh mục
   assert.ok(html.includes('Ăn uống'))
   assert.ok(html.includes('Đi lại'))
-  // Cả hai mức dưới hạn mức đều hiển thị cùng trạng thái
-  assert.equal((html.match(/Trong ngân sách/g) || []).length, 2)
+  // Phân biệt ngân sách an toàn và gần hết hạn mức.
+  assert.equal((html.match(/Trong ngân sách/g) || []).length, 1)
+  assert.equal((html.match(/Gần hết ngân sách/g) || []).length, 1)
 })

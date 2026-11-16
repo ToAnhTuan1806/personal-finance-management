@@ -6,6 +6,7 @@ export const formatMoney = (value) =>
   new Intl.NumberFormat('vi-VN', {
     style: 'currency',
     currency: 'VND',
+    maximumFractionDigits: 2,
   }).format(Number(value ?? 0))
 
 /**
@@ -33,13 +34,14 @@ export function getBudgetStatus(budget) {
  * Giữ riêng với enum Backend vì contract hiện trả OVER_BUDGET tại đúng 100%.
  */
 export function getBudgetDisplayStatus(budget) {
+  if (budget == null) return 'NOT_SET'
   const limit = Number(budget?.amountLimit || 0)
   const spent = Number(budget?.spentAmount || 0)
 
-  if (limit <= 0) return 'SAFE'
   if (spent > limit) return 'OVER_BUDGET'
   if (spent === limit) return 'AT_LIMIT'
-  if (spent >= limit * 0.8) return 'WARNING'
+  // So sánh đơn vị xu để tránh sai số nhị phân, ví dụ 0,04 / 0,05 = đúng 80%.
+  if (Math.round(spent * 100) * 5 >= Math.round(limit * 100) * 4) return 'WARNING'
   return 'SAFE'
 }
 
@@ -47,7 +49,8 @@ export function getBudgetDisplayStatus(budget) {
  * Get usage percentage (can exceed 100%)
  */
 export function getBudgetUsagePercentage(budget) {
-  if (budget?.usagePercentage != null && !Number.isNaN(Number(budget.usagePercentage))) {
+  if ((budget?.amountLimit == null || budget?.spentAmount == null) &&
+      budget?.usagePercentage != null && Number.isFinite(Number(budget.usagePercentage))) {
     return Number(budget.usagePercentage)
   }
 
@@ -61,7 +64,7 @@ export function getBudgetUsagePercentage(budget) {
 /**
  * Visual styling and label configuration based on status
  */
-export function getStatusConfig(status) {
+export function getStatusConfig(status, { clarifyWarning = false } = {}) {
   switch (status) {
     case 'OVER_BUDGET':
       return {
@@ -74,7 +77,7 @@ export function getStatusConfig(status) {
       }
     case 'WARNING':
       return {
-        label: 'Trong ngân sách',
+        label: clarifyWarning ? 'Gần hết ngân sách' : 'Trong ngân sách',
         statusKey: 'WARNING',
         barColor: 'bg-amber-500 dark:bg-amber-400',
         textColor: 'text-amber-700 dark:text-amber-300',
@@ -90,6 +93,14 @@ export function getStatusConfig(status) {
         badgeClass:
           'bg-amber-50 text-amber-700 border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/60',
       }
+    case 'NOT_SET':
+      return {
+        label: 'Chưa thiết lập ngân sách',
+        statusKey: 'NOT_SET',
+        barColor: 'bg-slate-400',
+        textColor: 'text-slate-600 dark:text-slate-300',
+        badgeClass: 'bg-slate-50 text-slate-600 dark:bg-slate-800 dark:text-slate-300',
+      }
     case 'SAFE':
     default:
       return {
@@ -101,6 +112,10 @@ export function getStatusConfig(status) {
           'bg-emerald-50 text-emerald-700 border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/60',
       }
   }
+}
+
+export function getBudgetRemaining(budget) {
+  return (Math.round(Number(budget?.amountLimit ?? 0) * 100) - Math.round(Number(budget?.spentAmount ?? 0) * 100)) / 100
 }
 
 /**
