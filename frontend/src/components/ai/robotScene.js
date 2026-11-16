@@ -17,6 +17,17 @@ import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.j
 
 const STATES = new Set(['IDLE', 'LOADING', 'SUCCESS', 'ERROR'])
 
+function getShaderPrecision(context) {
+  for (const [precision, type] of [['highp', context.HIGH_FLOAT], ['mediump', context.MEDIUM_FLOAT], ['lowp', context.LOW_FLOAT]]) {
+    const supported = [context.VERTEX_SHADER, context.FRAGMENT_SHADER].every(shader => {
+      const format = context.getShaderPrecisionFormat?.(shader, type)
+      return Number.isFinite(format?.precision) && format.precision > 0
+    })
+    if (supported) return precision
+  }
+  return null
+}
+
 // This module is loaded by the visual's dynamic import, never by Dashboard's main bundle.
 export function createRobotScene(canvas, {
   onFailure = () => {},
@@ -25,6 +36,7 @@ export function createRobotScene(canvas, {
 } = {}) {
   const geometries = new Set()
   const materials = new Set()
+  let context
   let renderer
   let observer
   let frame = null
@@ -69,7 +81,13 @@ export function createRobotScene(canvas, {
     materials.clear()
     renderer?.dispose()
     // Release the context on real unmount, not on panel open/close or visibility changes.
-    if (!contextAlreadyLost) renderer?.forceContextLoss?.()
+    if (!contextAlreadyLost) {
+      if (renderer) renderer.forceContextLoss?.()
+      else {
+        // Preflight may reject an allocated context before a renderer exists.
+        try { context?.getExtension?.('WEBGL_lose_context')?.loseContext() } catch { /* Context already unavailable. */ }
+      }
+    }
   }
   const fail = () => {
     if (failed || disposed) return
@@ -181,6 +199,22 @@ export function createRobotScene(canvas, {
   }
 
   try {
+    const contextAttributes = { alpha: true, antialias: !lowPower, powerPreference: 'low-power', depth: true, stencil: false, premultipliedAlpha: true, preserveDrawingBuffer: false }
+    canvas.addEventListener('webglcontextlost', contextLost)
+    // Three requires WebGL2 and logs constructor errors before throwing. Probe
+    // support ourselves so missing WebGL/precision goes directly to the SVG.
+    context = canvas.getContext?.('webgl2', contextAttributes)
+    contextAlreadyLost = context?.isContextLost?.() === true
+    if (!context || contextAlreadyLost || !context.getContextAttributes?.()) {
+      fail()
+      return api
+    }
+    const precision = getShaderPrecision(context)
+    if (!precision) {
+      fail()
+      return api
+    }
+
     scene = new Scene()
     camera = new OrthographicCamera(-2.15, 2.15, 2.15, -2.15, 0.1, 30)
     camera.position.set(3, 2, 7)
@@ -227,8 +261,7 @@ export function createRobotScene(canvas, {
     light.position.set(3, 5, 6)
     scene.add(light)
 
-    canvas.addEventListener('webglcontextlost', contextLost)
-    renderer = rendererFactory({ canvas, alpha: true, antialias: !lowPower, powerPreference: 'low-power', depth: true, stencil: false })
+    renderer = rendererFactory({ canvas, context, precision, ...contextAttributes })
     if (renderer.debug) {
       // Three normally reports shader errors to console and can leave a blank canvas.
       // Abort this draw so our normal failure path disposes the context and shows SVG.
