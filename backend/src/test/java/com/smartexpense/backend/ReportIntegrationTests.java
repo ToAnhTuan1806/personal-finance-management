@@ -1,13 +1,16 @@
 package com.smartexpense.backend;
 
 import com.smartexpense.backend.dto.dashboard.DashboardSummaryResponse;
+import com.smartexpense.backend.dto.budget.BudgetResponse;
 import com.smartexpense.backend.dto.report.MonthlyReportResponse;
 import com.smartexpense.backend.dto.report.MonthlySummaryResponse;
 import com.smartexpense.backend.entity.Category;
+import com.smartexpense.backend.entity.MonthlyBudget;
 import com.smartexpense.backend.entity.Transaction;
 import com.smartexpense.backend.entity.User;
 import com.smartexpense.backend.enums.TransactionType;
 import com.smartexpense.backend.repository.CategoryRepository;
+import com.smartexpense.backend.repository.MonthlyBudgetRepository;
 import com.smartexpense.backend.repository.TransactionRepository;
 import com.smartexpense.backend.repository.UserRepository;
 import jakarta.persistence.EntityManager;
@@ -63,6 +66,7 @@ class ReportIntegrationTests extends MySqlIntegrationTestSupport {
     @Autowired UserRepository users;
     @Autowired CategoryRepository categories;
     @Autowired TransactionRepository transactions;
+    @Autowired MonthlyBudgetRepository budgets;
     @Autowired EntityManager entityManager;
     @Autowired EntityManagerFactory entityManagerFactory;
     @Autowired JdbcTemplate jdbc;
@@ -201,6 +205,114 @@ class ReportIntegrationTests extends MySqlIntegrationTestSupport {
         assertThat(response.expensesByCategory().getFirst().getTotalAmount())
                 .isEqualByComparingTo("19999999999999.98");
         assertMatchesDashboardAndSql(userA, response);
+    }
+
+    @ParameterizedTest
+    @CsvSource({"80.08,100.10", "100.10,80.08", "0.00,100.10", "100.10,0.00", "0.00,0.00"})
+    void comparisonInputsKeepExactTotalsAcrossYearIncludingZeroBase(String previous, String current)
+            throws Exception {
+        // Chỉ xác minh dữ liệu đầu vào cho insight FE; Backend không thêm phép tính phần trăm.
+        if (new BigDecimal(previous).signum() > 0) save(expenseA, "2026-12-31", previous);
+        if (new BigDecimal(current).signum() > 0) save(expenseA, "2027-01-01", current);
+        save(expenseA, "2026-11-30", "900.00");
+        save(expenseA, "2027-02-01", "800.00");
+        save(expenseB, "2027-01-01", "999.99");
+
+        var response = report(userA, "2026-12", "2027-01");
+        assertThat(response.months()).hasSize(2);
+        assertMonth(response.months().getFirst(), "2026-12", "0", previous);
+        assertMonth(response.months().getLast(), "2027-01", "0", current);
+        assertMatchesDashboardAndSql(userA, response);
+    }
+
+    @ParameterizedTest
+    @CsvSource({"79.99,20.01,false", "80.00,20.00,false", "100.00,0.00,false", "100.01,-0.01,true"})
+    void monthlyBudgetThresholdsMatchReportsAndSql(String spent, String remaining, boolean exceeded)
+            throws Exception {
+        monthlyBudget(userA, 2026, 12, "100.00");
+        save(expenseA, "2026-12-01", "0.10");
+        save(expenseA, "2026-12-31", new BigDecimal(spent).subtract(new BigDecimal("0.10")).toPlainString());
+        save(incomeA, "2026-12-15", "500.50");
+        save(expenseA, "2026-11-30", "800.00");
+        save(expenseA, "2027-01-01", "900.00");
+        save(expenseB, "2026-12-15", "999.99");
+
+        var budget = readMonthlyBudget(userA, 2026, 12);
+        assertThat(budget.getAmountLimit()).isEqualByComparingTo("100.00");
+        assertThat(budget.getSpentAmount()).isEqualByComparingTo(spent);
+        assertThat(budget.getRemainingAmount()).isEqualByComparingTo(remaining);
+        assertThat(budget.isExceeded()).isEqualTo(exceeded);
+        var response = report(userA, "2026-12", "2026-12");
+        assertThat(budget.getSpentAmount()).isEqualByComparingTo(response.months().getFirst().totalExpense());
+        assertMatchesDashboardAndSql(userA, response);
+    }
+
+    @Test
+    void monthlyBudgetsSeparateDecemberAndJanuaryAndIgnoreClientOwner() throws Exception {
+        for (int[] period : List.of(new int[]{2026, 12}, new int[]{2027, 1})) {
+            monthlyBudget(userA, period[0], period[1], "100.00");
+            monthlyBudget(userB, period[0], period[1], "200.00");
+        }
+        save(expenseA, "2026-11-30", "800.00");
+        save(expenseA, "2026-12-01", "0.10");
+        save(expenseA, "2026-12-31", "0.20");
+        save(expenseA, "2027-01-01", "10.01");
+        save(expenseA, "2027-01-31", "20.02");
+        save(expenseA, "2027-02-01", "900.00");
+        save(incomeA, "2027-01-01", "500.00");
+        save(expenseB, "2026-12-31", "50.05");
+        save(expenseB, "2027-01-01", "60.06");
+
+        assertThat(readMonthlyBudget(userA, 2026, 12).getSpentAmount()).isEqualByComparingTo("0.30");
+        assertThat(readMonthlyBudget(userA, 2027, 1).getSpentAmount()).isEqualByComparingTo("30.03");
+        assertThat(readMonthlyBudget(userB, 2026, 12).getSpentAmount()).isEqualByComparingTo("50.05");
+        var januaryB = readMonthlyBudget(userB, 2027, 1);
+        assertThat(januaryB.getSpentAmount()).isEqualByComparingTo("60.06");
+        assertThat(januaryB.getAmountLimit()).isEqualByComparingTo("200.00");
+    }
+
+    @Test
+    void emptyMonthlyBudgetKeepsFullLimitEvenWhenOtherOwnerHasExpenses() throws Exception {
+        monthlyBudget(userA, 2027, 1, "100.00");
+        save(expenseA, "2026-12-31", "70.07");
+        save(expenseA, "2027-02-01", "80.08");
+        save(incomeA, "2027-01-01", "500.50");
+        save(expenseB, "2027-01-15", "999.99");
+        var budget = readMonthlyBudget(userA, 2027, 1);
+        assertThat(budget.getSpentAmount()).isZero();
+        assertThat(budget.getRemainingAmount()).isEqualByComparingTo("100.00");
+        assertThat(budget.isExceeded()).isFalse();
+    }
+
+    @Test
+    void missingOwnMonthlyBudgetReturns404InsteadOfOtherOwnersBudget() throws Exception {
+        monthlyBudget(userB, 2027, 1, "200.00");
+        entityManager.flush();
+        mvc.perform(get("/api/budgets/2027/1").param("userId", userB.getId().toString())
+                        .header(HttpHeaders.AUTHORIZATION, bearer(userA)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("RESOURCE_NOT_FOUND"));
+    }
+
+    private void monthlyBudget(User owner, int year, int month, String limit) {
+        var budget = new MonthlyBudget();
+        budget.setUser(owner);
+        budget.setYear(year);
+        budget.setMonth(month);
+        budget.setAmountLimit(new BigDecimal(limit));
+        budgets.save(budget);
+    }
+
+    private BudgetResponse readMonthlyBudget(User owner, int year, int month) throws Exception {
+        entityManager.flush();
+        String body = mvc.perform(get("/api/budgets/{year}/{month}", year, month)
+                        .param("userId", (owner == userA ? userB : userA).getId().toString())
+                        .header(HttpHeaders.AUTHORIZATION, bearer(owner)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.year").value(year))
+                .andExpect(jsonPath("$.month").value(month))
+                .andReturn().getResponse().getContentAsString();
+        return json.readValue(body, BudgetResponse.class);
     }
 
     private MonthlyReportResponse report(User owner, String from, String to) throws Exception {
