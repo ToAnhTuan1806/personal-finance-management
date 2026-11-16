@@ -152,9 +152,9 @@ export default function CategoryBreakdownSection({
               </span>
             </div>
 
-            <div className="overflow-x-auto rounded-2xl border border-slate-200/80 dark:border-slate-800">
+            <div role="region" aria-label="Cuộn ngang bảng chi tiêu theo danh mục" tabIndex={0} className="overflow-x-auto rounded-2xl border border-slate-200/80 focus-visible:outline-2 focus-visible:outline-blue-500 dark:border-slate-800">
               <table
-                className="w-full min-w-[440px] text-left text-xs"
+                className="w-full min-w-[440px] whitespace-nowrap text-left text-xs"
                 aria-label="Bảng chi tiêu theo danh mục"
               >
                 <thead className="bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:bg-slate-800/60 dark:text-slate-400">

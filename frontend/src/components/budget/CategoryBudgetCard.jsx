@@ -3,6 +3,7 @@ import CategoryBadge from '../category/CategoryBadge'
 import {
   formatMoney,
   getBudgetDisplayStatus,
+  getBudgetRemaining,
   getBudgetUsagePercentage,
   getStatusConfig,
 } from './categoryBudgetUtils'
@@ -25,22 +26,21 @@ export default function CategoryBudgetCard({
   }
 
   const status = getBudgetDisplayStatus(budget)
-  const config = getStatusConfig(status)
+  const config = getStatusConfig(status, { clarifyWarning: true })
   const percentage = getBudgetUsagePercentage(budget)
   const progressWidth = Math.min(100, Math.max(0, percentage))
 
   const limit = Number(budget.amountLimit || 0)
   const spent = Number(budget.spentAmount || 0)
-  const remaining = Number(budget.remainingAmount != null ? budget.remainingAmount : limit - spent)
-  const isExceeded = Boolean(
-    budget.exceeded === true || remaining < 0 || (limit > 0 && spent > limit)
-  )
+  const remaining = getBudgetRemaining(budget)
+  const isExceeded = status === 'OVER_BUDGET'
 
   return (
     <div
       role="region"
       aria-label={`Ngân sách danh mục ${categoryName}`}
-      className="group flex flex-col justify-between rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-xs transition-all hover:border-blue-200 hover:shadow-md dark:border-slate-800 dark:bg-[#1E293B]/70 dark:hover:border-blue-700/60"
+      data-budget-status={status}
+      className={`group flex flex-col justify-between rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-xs transition-all hover:border-blue-200 hover:shadow-md dark:border-slate-800 dark:bg-[#1E293B]/70 dark:hover:border-blue-700/60 ${status === 'SAFE' ? '' : status === 'OVER_BUDGET' ? 'ring-2 ring-rose-400 dark:ring-rose-500' : 'ring-2 ring-amber-400 dark:ring-amber-500'}`}
     >
       {/* Header: Category Badge, Name, Status, Actions */}
       <div>
@@ -114,17 +114,17 @@ export default function CategoryBudgetCard({
       </div>
 
       {/* Financial Details */}
-      <div className="mt-4 grid grid-cols-3 gap-2 border-t border-slate-100 pt-3 text-xs dark:border-slate-800">
+      <div className="mt-4 grid grid-cols-1 gap-2 border-t border-slate-100 pt-3 text-xs sm:grid-cols-3 dark:border-slate-800">
         <div>
           <span className="block text-[11px] font-medium text-slate-500 dark:text-slate-400">Hạn mức</span>
-          <span className="mt-0.5 block truncate font-bold text-slate-800 dark:text-slate-100" title={formatMoney(limit)}>
+          <span className="mt-0.5 block break-words font-bold text-slate-800 dark:text-slate-100" title={formatMoney(limit)}>
             {formatMoney(limit)}
           </span>
         </div>
 
         <div>
           <span className="block text-[11px] font-medium text-slate-500 dark:text-slate-400">Đã chi</span>
-          <span className="mt-0.5 block truncate font-bold text-slate-800 dark:text-slate-100" title={formatMoney(spent)}>
+          <span className="mt-0.5 block break-words font-bold text-slate-800 dark:text-slate-100" title={formatMoney(spent)}>
             {formatMoney(spent)}
           </span>
         </div>
@@ -134,7 +134,7 @@ export default function CategoryBudgetCard({
             {isExceeded ? 'Chi vượt' : 'Còn lại'}
           </span>
           <span
-            className={`mt-0.5 block truncate font-bold ${
+            className={`mt-0.5 block break-words font-bold ${
               isExceeded
                 ? 'text-rose-600 dark:text-rose-400'
                 : status === 'AT_LIMIT'

@@ -33,6 +33,10 @@ import { useAuth } from '../contexts/AuthContext'
 import RollingNumber from '../components/dashboard/RollingNumber'
 import ExpenseDonutChart from '../components/dashboard/ExpenseDonutChart'
 import dashboardService from '../services/dashboardService'
+import useDashboardMonths from '../components/dashboard/useDashboardMonths.js'
+import MonthlyDelta from '../components/dashboard/MonthlyDelta.jsx'
+import BudgetUsage from '../components/budget/BudgetUsage.jsx'
+import { formatMoney as formatBudgetMoney, getBudgetRemaining } from '../components/budget/categoryBudgetUtils.js'
 import { getMonthlyTransactions, getTransactions } from '../services/transactionService'
 import { getBudget } from '../services/budgetService'
 import { buildDailyCashFlow, formatCashFlowTick } from '../utils/cashFlow'
@@ -101,7 +105,6 @@ function AuthenticatedDashboard() {
   const { openQuickAdd, mutationVersion } = useQuickAdd()
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth)
 
-  const [summary, setSummary] = useState(null)
   const [categoryExpenses, setCategoryExpenses] = useState(null)
   const [recentTransactions, setRecentTransactions] = useState(null)
   const [monthlyTransactions, setMonthlyTransactions] = useState(null)
@@ -112,6 +115,8 @@ function AuthenticatedDashboard() {
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState('')
   const [reloadKey, setReloadKey] = useState(0)
+  const { current, previous, summary } = useDashboardMonths(selectedMonth, reloadKey, mutationVersion)
+  const summaryError = current.status === 'error' ? getApiErrorMessage(current.error) : ''
 
   // 12 kỳ tháng gần nhất
   const monthOptions = useMemo(() => {
@@ -160,7 +165,6 @@ function AuthenticatedDashboard() {
     const month = Number(monthStr)
 
     Promise.allSettled([
-      dashboardService.getSummary(selectedMonth),
       dashboardService.getExpenseChartData(selectedMonth),
       getTransactions({
         month: selectedMonth,
@@ -170,18 +174,10 @@ function AuthenticatedDashboard() {
       getBudget(year, month),
       getMonthlyTransactions(selectedMonth),
     ])
-      .then(([summaryResult, categoryResult, transactionResult, budgetResult, monthlyResult]) => {
+      .then(([categoryResult, transactionResult, budgetResult, monthlyResult]) => {
         if (ignore) return
 
         const failedSections = []
-
-        // 1. Tổng thu / chi / số dư
-        if (summaryResult.status === 'fulfilled') {
-          setSummary(summaryResult.value)
-        } else {
-          setSummary(null)
-          failedSections.push('tổng quan tài chính')
-        }
 
         // 2. Chi tiêu theo danh mục
         if (categoryResult.status === 'fulfilled') {
@@ -221,7 +217,7 @@ function AuthenticatedDashboard() {
         }
 
         if (failedSections.length > 0) {
-          const failure = [summaryResult, categoryResult, transactionResult, monthlyResult]
+          const failure = [categoryResult, transactionResult, monthlyResult]
             .find((result) => result.status === 'rejected') ||
             (budgetResult.status === 'rejected' && budgetResult.reason?.response?.status !== 404 ? budgetResult : null)
           setError(
@@ -438,14 +434,14 @@ function AuthenticatedDashboard() {
       </section>
 
       {/* 3. Cảnh báo lỗi nếu có */}
-      {error && !loading && (
+      {(error || summaryError) && !loading && (
         <div
           role="alert"
           className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-300"
         >
           <div className="flex items-center gap-2">
             <AlertCircle size={19} />
-            <span>{error}</span>
+            <span>{error || summaryError}</span>
           </div>
 
           <button
@@ -481,6 +477,7 @@ function AuthenticatedDashboard() {
           <p className="mt-2 text-xs font-medium text-slate-600 dark:text-slate-300">
             Tổng các khoản thu trong tháng
           </p>
+          <MonthlyDelta current={current} previous={previous} field="totalIncome" month={selectedMonth} onRetry={() => setReloadKey((key) => key + 1)} />
         </div>
 
         {/* Chi tiêu */}
@@ -502,6 +499,7 @@ function AuthenticatedDashboard() {
           <p className="mt-2 text-xs font-medium text-slate-600 dark:text-slate-300">
             {totalIncome > 0 ? `Chiếm ${expenseRate}% thu nhập` : 'Tổng các khoản chi trong tháng'}
           </p>
+          <MonthlyDelta current={current} previous={previous} field="totalExpense" month={selectedMonth} onRetry={() => setReloadKey((key) => key + 1)} />
         </div>
 
         {/* Số dư - Nổi bật nhất */}
@@ -699,61 +697,19 @@ function AuthenticatedDashboard() {
               <div>
                 <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Hạn mức ngân sách</p>
                 <p className="text-lg font-black text-slate-900 dark:text-slate-100 mt-1">
-                  {formatMoney(budget.amountLimit)}
+                  {formatBudgetMoney(budget.amountLimit)}
                 </p>
               </div>
               <div>
                 <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Còn lại khả dụng</p>
                 <p className="text-lg font-black text-emerald-600 dark:text-emerald-400 mt-1">
-                  {formatMoney(Math.max(0, Number(budget.amountLimit || 0) - Number(budget.spentAmount ?? totalExpense)))}
+                  {formatBudgetMoney(Math.max(0, getBudgetRemaining(budget)))}
                 </p>
               </div>
             </div>
 
             {/* Thanh tiến độ */}
-            {(() => {
-              const spent = Number(budget.spentAmount ?? totalExpense)
-              const limit = Math.max(1, Number(budget.amountLimit || 1))
-              const percentage = Math.min(Math.round((spent / limit) * 100), 100)
-              const isDanger = spent > limit
-              const isWarning = !isDanger && spent / limit >= 0.8
-              const barColor = isDanger
-                ? 'bg-rose-500'
-                : isWarning
-                ? 'bg-amber-500'
-                : 'bg-emerald-500'
-
-              return (
-                <div className="space-y-2">
-                  <div className="h-3 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-                    <div
-                      className={`h-full ${barColor} rounded-full transition-all duration-700`}
-                      style={{ width: `${percentage}%` }}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between text-xs font-semibold">
-                    <span
-                      className={
-                        isDanger
-                          ? 'text-rose-600 dark:text-rose-400'
-                          : isWarning
-                          ? 'text-amber-600 dark:text-amber-400'
-                          : 'text-emerald-600 dark:text-emerald-400'
-                      }
-                    >
-                      {isDanger
-                        ? `Đã vượt ngân sách ${Math.round((spent / limit) * 100)}%!`
-                        : isWarning
-                        ? `Cảnh báo: Đã sử dụng ${percentage}% ngân sách`
-                        : `Tiến độ tốt: Đã sử dụng ${percentage}% ngân sách`}
-                    </span>
-                    <span className="text-slate-500 dark:text-slate-400 font-medium">
-                      Hạn mức {formatMonth(selectedMonth)}
-                    </span>
-                  </div>
-                </div>
-              )
-            })()}
+            <BudgetUsage budget={budget} />
           </div>
         ) : (
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 rounded-2xl bg-blue-50/60 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/40">

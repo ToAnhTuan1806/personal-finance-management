@@ -265,9 +265,9 @@ export default function MonthlyComparisonChart({
             </h3>
           </div>
 
-          <div className="overflow-x-auto rounded-2xl border border-slate-200/80 dark:border-slate-800">
+          <div role="region" aria-label="Cuộn ngang bảng thu chi theo tháng" tabIndex={0} className="overflow-x-auto rounded-2xl border border-slate-200/80 focus-visible:outline-2 focus-visible:outline-blue-500 dark:border-slate-800">
             <table
-              className="w-full min-w-[520px] text-left text-xs"
+              className="w-full min-w-[520px] whitespace-nowrap text-left text-xs"
               aria-label="Bảng tổng hợp số liệu từng tháng"
             >
               <thead className="bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:bg-slate-800/60 dark:text-slate-400">
