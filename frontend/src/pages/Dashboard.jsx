@@ -30,6 +30,7 @@ import {
 } from 'recharts'
 
 import { useAuth } from '../contexts/AuthContext'
+import { landingPreview } from '../components/dashboard/landingPreview.js'
 import RollingNumber from '../components/dashboard/RollingNumber'
 import ExpenseDonutChart from '../components/dashboard/ExpenseDonutChart'
 import dashboardService from '../services/dashboardService'
@@ -928,6 +929,8 @@ function AuthenticatedDashboard() {
 }
 
 function GuestDashboard() {
+  const { transactions, totalIncome, totalExpense, balance, savingRate, categoryExpenses, budget } = landingPreview
+  const savingLabel = savingRate.toLocaleString('vi-VN', { maximumFractionDigits: 1 })
   return (
     <div className="space-y-10 animate-fade-in">
       {/* 1. Hero Banner 2 cột trực quan */}
@@ -991,14 +994,14 @@ function GuestDashboard() {
                   </div>
                 </div>
                 <span className="shrink-0 rounded-full bg-emerald-400/20 px-2 py-0.5 text-[9px] sm:text-[10px] font-bold text-emerald-300">
-                  +67,7% tiết kiệm
+                  {savingLabel}% tiết kiệm
                 </span>
               </div>
               <p className="-mt-1 text-[10px] font-semibold text-blue-200/90">Dữ liệu minh họa</p>
 
               <div>
                 <p className="text-[11px] font-medium text-blue-200 uppercase tracking-wider">Số dư khả dụng</p>
-                <p className="text-2xl font-black text-white mt-0.5">10.150.000 ₫</p>
+                <p className="text-2xl font-black text-white mt-0.5">{formatMoney(balance)}</p>
               </div>
 
               <div className="grid grid-cols-2 gap-2.5 pt-1">
@@ -1007,14 +1010,14 @@ function GuestDashboard() {
                     <ArrowDownRight size={12} />
                     <span>Thu nhập</span>
                   </div>
-                  <p className="text-xs font-extrabold text-white mt-1">15.000.000 ₫</p>
+                  <p className="text-xs font-extrabold text-white mt-1">{formatMoney(totalIncome)}</p>
                 </div>
                 <div className="rounded-xl bg-white/10 p-2.5">
                   <div className="flex items-center gap-1 text-[10px] text-rose-300 font-bold">
                     <ArrowUpRight size={12} />
                     <span>Chi tiêu</span>
                   </div>
-                  <p className="text-xs font-extrabold text-white mt-1">4.850.000 ₫</p>
+                  <p className="text-xs font-extrabold text-white mt-1">{formatMoney(totalExpense)}</p>
                 </div>
               </div>
             </div>
@@ -1116,7 +1119,7 @@ function GuestDashboard() {
               <ArrowDownRight size={18} />
             </div>
             <p className="mt-2 text-2xl font-black text-emerald-800 dark:text-emerald-300">
-              15.000.000 ₫
+              {formatMoney(totalIncome)}
             </p>
             <p className="mt-1.5 text-xs sm:text-[13px] text-emerald-700/80 dark:text-emerald-400/80 font-medium">
               Tổng hợp các khoản thu trong tháng
@@ -1129,7 +1132,7 @@ function GuestDashboard() {
               <ArrowUpRight size={18} />
             </div>
             <p className="mt-2 text-2xl font-black text-rose-800 dark:text-rose-300">
-              4.850.000 ₫
+              {formatMoney(totalExpense)}
             </p>
             <p className="mt-1.5 text-xs sm:text-[13px] text-rose-700/80 dark:text-rose-400/80 font-medium">
               Phân loại chi tiết theo từng danh mục
@@ -1142,12 +1145,26 @@ function GuestDashboard() {
               <Wallet size={18} />
             </div>
             <p className="mt-2 text-2xl font-black text-blue-800 dark:text-blue-300">
-              10.150.000 ₫
+              {formatMoney(balance)}
             </p>
             <p className="mt-1.5 text-xs sm:text-[13px] text-blue-700/80 dark:text-blue-400/80 font-medium">
-              Đã tiết kiệm 67,7% thu nhập
+              Đã tiết kiệm {savingLabel}% thu nhập
             </p>
           </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <ExpenseDonutChart data={categoryExpenses} title="Chi tiêu theo danh mục" subtitle="Minh họa · Tháng 11/2026" />
+          <section aria-labelledby="preview-budget-title" className="space-y-5 rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm sm:p-6 dark:border-slate-800 dark:bg-[#182234]">
+            <div>
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Minh họa · Tháng 11/2026</p>
+              <h3 id="preview-budget-title" className="mt-1 text-lg font-bold text-slate-900 dark:text-slate-100">Ngân sách hàng tháng</h3>
+            </div>
+            <p className="text-sm text-slate-600 dark:text-slate-300">Đã chi <strong>{formatMoney(budget.spentAmount)}</strong> / {formatMoney(budget.amountLimit)}</p>
+            <BudgetUsage budget={budget} />
+            <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">Còn lại: {formatMoney(getBudgetRemaining(budget))}</p>
+            <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">Thử bật hoặc tắt danh mục trong biểu đồ để xem tỷ trọng. Dữ liệu minh họa chỉ nằm trên trang này, không lưu vào tài khoản.</p>
+          </section>
         </div>
 
         {/* Bảng giao dịch mẫu & Card bảo mật */}
@@ -1156,10 +1173,10 @@ function GuestDashboard() {
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4 dark:border-slate-800">
               <div>
                 <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                  Giao dịch gần đây
+                  Giao dịch minh họa tháng 11/2026
                 </h3>
                 <p className="text-xs sm:text-[13px] text-slate-600 dark:text-slate-300 font-medium">
-                  Danh sách hiển thị sau khi bạn bắt đầu ghi chép
+                  Toàn bộ giao dịch dùng để tính số liệu minh họa
                 </p>
               </div>
               <Link
@@ -1170,46 +1187,28 @@ function GuestDashboard() {
               </Link>
             </div>
 
-            <div className="divide-y divide-slate-100 dark:divide-slate-800/80">
-              <div className="flex items-center justify-between gap-2 py-3.5">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400">
-                    <ArrowDownRight size={18} />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold text-slate-800 dark:text-slate-200 truncate">Lương tháng 11</p>
-                    <p className="text-xs sm:text-[13px] text-slate-600 dark:text-slate-300 font-medium truncate">Thu nhập · 01/11/2026</p>
-                  </div>
-                </div>
-                <span className="shrink-0 whitespace-nowrap text-xs sm:text-sm font-bold text-emerald-600 dark:text-emerald-400">+15.000.000 ₫</span>
-              </div>
-
-              <div className="flex items-center justify-between gap-2 py-3.5">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400">
-                    <ArrowUpRight size={18} />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold text-slate-800 dark:text-slate-200 truncate">Đi chợ</p>
-                    <p className="text-xs sm:text-[13px] text-slate-600 dark:text-slate-300 font-medium truncate">Ăn uống · 03/11/2026</p>
-                  </div>
-                </div>
-                <span className="shrink-0 whitespace-nowrap text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200">-450.000 ₫</span>
-              </div>
-
-              <div className="flex items-center justify-between gap-2 py-3.5">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400">
-                    <ArrowUpRight size={18} />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold text-slate-800 dark:text-slate-200 truncate">Tiền điện & Internet</p>
-                    <p className="text-xs sm:text-[13px] text-slate-600 dark:text-slate-300 font-medium truncate">Hóa đơn · 05/11/2026</p>
-                  </div>
-                </div>
-                <span className="shrink-0 whitespace-nowrap text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200">-820.000 ₫</span>
-              </div>
-            </div>
+            <ul className="divide-y divide-slate-100 dark:divide-slate-800/80" aria-label="Giao dịch minh họa tháng 11/2026">
+              {transactions.map((transaction) => {
+                const income = transaction.type === 'INCOME'
+                const Icon = income ? ArrowDownRight : ArrowUpRight
+                return (
+                  <li key={transaction.id} className="flex items-center justify-between gap-2 py-3.5">
+                    <div className="flex min-w-0 items-center gap-2.5">
+                      <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${income ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400' : 'bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400'}`}>
+                        <Icon size={18} aria-hidden="true" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{transaction.note}</p>
+                        <p className="text-xs font-medium text-slate-600 dark:text-slate-300">{transaction.categoryName} · {formatDate(transaction.transactionDate)}</p>
+                      </div>
+                    </div>
+                    <span className={`shrink-0 whitespace-nowrap text-xs font-bold sm:text-sm ${income ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-800 dark:text-slate-200'}`}>
+                      {income ? '+' : '−'}{formatMoney(transaction.amount)}
+                    </span>
+                  </li>
+                )
+              })}
+            </ul>
           </div>
 
           {/* Callout box bảo mật */}

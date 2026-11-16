@@ -16,7 +16,7 @@ import walletLogo from '../../assets/wallet-logo.png'
 import { ThemeSegmented } from './ThemeToggle'
 
 import './Sidebar.css'
-import { navigation as menus } from './navigation'
+import { sidebarNavigation as menus, sidebarGroups } from './navigation'
 
 export default function Sidebar({
   expanded,
@@ -187,47 +187,51 @@ export default function Sidebar({
           />
         </button>
 
-        <ul
-          className="se040-menu"
-          style={{ '--se-active-index': activeIndex }}
-        >
-          <li className="se040-highlight" aria-hidden="true" />
+        <div className="se040-menu">
+          {sidebarGroups.map((group, groupIndex) => (
+            <section key={group.label} aria-labelledby={`sidebar-group-${groupIndex}`}>
+              <h2 id={`sidebar-group-${groupIndex}`} className="se040-group-title">{group.label}</h2>
+              <ul className="se040-group-list">
+                {group.items.map((item) => {
+                  const index = menus.indexOf(item)
+                  const { path, label, icon: Icon, authRequired } = item
+                  const isLocked = !isAuthenticated && authRequired
 
-          {menus.map((item, index) => {
-            const { path, label, icon: Icon, authRequired } = item
-            const isLocked = !isAuthenticated && authRequired
-
-            return (
-              <li key={path} className="se040-menu-row">
-                <NavLink
-                  ref={(element) => {
-                    linksRef.current[index] = element
-                  }}
-                  to={path}
-                  end={path === '/'}
-                  onClick={(event) => handleItemClick(event, item)}
-                  onKeyDown={(event) => handleArrowKeys(event, index)}
-                  title={isLocked ? `${label} (Cần đăng nhập)` : label}
-                  aria-label={isLocked ? `${label} (Cần đăng nhập)` : label}
-                  style={{ '--se-index': index }}
-                  className={({ isActive }) =>
-                    `se040-item ${isActive ? 'is-active' : ''} ${isLocked ? 'is-locked' : ''}`
-                  }
-                >
-                  <Icon size={22} className="se040-icon" />
-                  <span className="se040-item-text">{label}</span>
-                  {isLocked && (
-                    <Lock
-                      size={13}
-                      className="se040-lock-icon"
-                      aria-label="Yêu cầu đăng nhập"
-                    />
-                  )}
-                </NavLink>
-              </li>
-            )
-          })}
-        </ul>
+                  return (
+                    <li key={path} className="se040-menu-row">
+                      <NavLink
+                        ref={(element) => {
+                          linksRef.current[index] = element
+                        }}
+                        to={path}
+                        end={path === '/'}
+                        onClick={(event) => handleItemClick(event, item)}
+                        onKeyDown={(event) => handleArrowKeys(event, index)}
+                        title={isLocked ? `${label} (Cần đăng nhập)` : label}
+                        aria-label={isLocked ? `${label} (Cần đăng nhập)` : label}
+                        style={{ '--se-index': index }}
+                        className={({ isActive }) =>
+                          `se040-item ${isActive ? 'is-active' : ''} ${isLocked ? 'is-locked' : ''}`
+                        }
+                      >
+                        <Icon size={22} className="se040-icon" aria-hidden="true" />
+                        <span className="se040-tooltip" aria-hidden="true">{label}</span>
+                        <span className="se040-item-text">{label}</span>
+                        {isLocked && (
+                          <Lock
+                            size={13}
+                            className="se040-lock-icon"
+                            aria-label="Yêu cầu đăng nhập"
+                          />
+                        )}
+                      </NavLink>
+                    </li>
+                  )
+                })}
+              </ul>
+            </section>
+          ))}
+        </div>
 
         {/* Chỉ hiển thị trong Drawer mobile: giao diện và tài khoản (đã bị ẩn khỏi Header hẹp) */}
         <div className="se040-mobile-extras">
@@ -297,6 +301,8 @@ export default function Sidebar({
             onClick={handleProfileClick}
             title={isAuthenticated ? 'Tài khoản & Đăng xuất' : 'Bấm để đăng nhập'}
             role="button"
+            aria-label="Tài khoản & Đăng xuất"
+            aria-expanded={profileMenuOpen}
             tabIndex={0}
             onKeyDown={(event) => {
               if (event.key === 'Enter' || event.key === ' ') {

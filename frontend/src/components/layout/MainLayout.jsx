@@ -3,24 +3,17 @@ import { Link, Outlet, useLocation, useNavigate } from 'react-router'
 import { LogOut, Menu, Plus } from 'lucide-react'
 
 import Sidebar from './Sidebar'
+import GuestLayout from './GuestLayout'
+import { pageTitles } from './navigation'
 import ThemeToggle from './ThemeToggle'
 import { useAuth } from '../../contexts/AuthContext'
 import { QuickAddProvider, useQuickAdd } from '../../contexts/QuickAddContext'
 import MobileNavigation from './MobileNavigation'
 import AiAssistantWidget from '../ai/AiAssistantWidget'
 
-const pageTitles = {
-  '/': 'Tổng quan',
-  '/transactions': 'Quản lý giao dịch',
-  '/categories': 'Quản lý danh mục',
-  '/budgets': 'Ngân sách hàng tháng',
-  '/quick-add': 'Ghi thu chi nhanh',
-  '/recurring-templates': 'Giao dịch định kỳ',
-  '/reports': 'Báo cáo tài chính',
-  '/calendar': 'Lịch thu chi',
-}
-
 export default function MainLayout() {
+  const { isAuthenticated } = useAuth()
+  if (!isAuthenticated) return <GuestLayout />
   return <QuickAddProvider><LayoutContent /></QuickAddProvider>
 }
 

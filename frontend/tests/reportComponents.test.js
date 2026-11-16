@@ -401,7 +401,7 @@ test('ReportsPage: hiển thị cảnh báo validation và khóa nút Xem báo c
 test('navigation: cấu hình đúng route /reports cho trang Báo cáo bên trong menu bảo vệ', () => {
   const reportsNav = navigation.find((item) => item.path === '/reports')
   assert.ok(reportsNav, 'Phải có mục Báo cáo (/reports) trong navigation')
-  assert.equal(reportsNav.label, 'Báo cáo')
+  assert.equal(reportsNav.label, 'Báo cáo tài chính')
   assert.equal(reportsNav.authRequired, true)
 })
 
