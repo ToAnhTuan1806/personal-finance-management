@@ -1,0 +1,404 @@
+[
+  {
+    "name": "backend-fresh",
+    "command": "gradlew.bat --offline test verifyD03IntegrationTests --console=plain --rerun-tasks",
+    "exitCode": 0,
+    "startedEpoch": 1794816690.562248,
+    "durationSeconds": 795.01,
+    "status": "PASS",
+    "logSha256": "36b63180919d4d692255a1f72d95fe2a00ce6902d540ab2b532d757e3b87a469",
+    "suites": [
+      {
+        "name": "com.smartexpense.backend.AiChatApiTests",
+        "fresh": true,
+        "tests": 87,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.AuthSecurityQaIntegrationTests",
+        "fresh": true,
+        "tests": 22,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.BackendApplicationTests",
+        "fresh": true,
+        "tests": 69,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.CalendarIntegrationTests",
+        "fresh": true,
+        "tests": 33,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.CalendarQueryIntegrationTests",
+        "fresh": true,
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.CalendarServiceTests",
+        "fresh": true,
+        "tests": 8,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.CategoryAppearanceIntegrationTests",
+        "fresh": true,
+        "tests": 49,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.CategoryAppearanceTests",
+        "fresh": true,
+        "tests": 6,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.CategoryBudgetIntegrationTests",
+        "fresh": true,
+        "tests": 42,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.CategoryBudgetMigrationIntegrationTests",
+        "fresh": true,
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.CategoryBudgetServiceTests",
+        "fresh": true,
+        "tests": 23,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.CategoryNameIntegrationTests",
+        "fresh": true,
+        "tests": 35,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.CsvExportApiTests",
+        "fresh": true,
+        "tests": 26,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.D06MigrationIntegrationTests",
+        "fresh": true,
+        "tests": 6,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.D11IntegrationTests",
+        "fresh": true,
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.D13IntegrationTests",
+        "fresh": true,
+        "tests": 19,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.D14IntegrationTests",
+        "fresh": true,
+        "tests": 17,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.MonthlyBudgetApiTests",
+        "fresh": true,
+        "tests": 8,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.PasswordResetApiTests",
+        "fresh": true,
+        "tests": 25,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.PasswordResetBackendMigrationIntegrationTests",
+        "fresh": true,
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.PasswordResetIntegrationTests",
+        "fresh": true,
+        "tests": 8,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.PasswordResetMigrationIntegrationTests",
+        "fresh": true,
+        "tests": 10,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.QaBaselineAuthIntegrationTests",
+        "fresh": true,
+        "tests": 30,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.QaDayCategoryIntegrationTests",
+        "fresh": true,
+        "tests": 18,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.QaTransactionCalendarIntegrationTests",
+        "fresh": true,
+        "tests": 12,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.RecurringApplicationContractTests",
+        "fresh": true,
+        "tests": 31,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.RecurringApplicationIntegrationTests",
+        "fresh": true,
+        "tests": 48,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.RecurringApplicationMigrationIntegrationTests",
+        "fresh": true,
+        "tests": 25,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.RecurringTemplateApiTests",
+        "fresh": true,
+        "tests": 63,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.RecurringTemplateContractTests",
+        "fresh": true,
+        "tests": 98,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.RecurringTemplateDatesTests",
+        "fresh": true,
+        "tests": 11,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.RecurringTemplateIntegrationTests",
+        "fresh": true,
+        "tests": 65,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.RecurringTemplateMigrationIntegrationTests",
+        "fresh": true,
+        "tests": 12,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.RegistrationCategoryIntegrationTests",
+        "fresh": true,
+        "tests": 13,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.ReportApiTests",
+        "fresh": true,
+        "tests": 33,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.ReportIntegrationTests",
+        "fresh": true,
+        "tests": 21,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.security.ApiSecurityExceptionHandlerTests",
+        "fresh": true,
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.security.AuthVersionJwtTests",
+        "fresh": true,
+        "tests": 16,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.security.PasswordResetRateLimiterTests",
+        "fresh": true,
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.service.AiBudgetAdviceTests",
+        "fresh": true,
+        "tests": 12,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.service.AiFinancialReplyFormatterTests",
+        "fresh": true,
+        "tests": 6,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.service.AiQueryInterpreterTests",
+        "fresh": true,
+        "tests": 106,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.service.GeminiAiProviderTests",
+        "fresh": true,
+        "tests": 18,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.service.PasswordResetServiceTests",
+        "fresh": true,
+        "tests": 21,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.service.SmtpPasswordResetEmailSenderTests",
+        "fresh": true,
+        "tests": 12,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.TransactionCreateIntegrationTests",
+        "fresh": true,
+        "tests": 55,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.TransactionDateIntegrationTests",
+        "fresh": true,
+        "tests": 16,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "name": "com.smartexpense.backend.TransactionDayIntegrationTests",
+        "fresh": true,
+        "tests": 24,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    ],
+    "counts": {
+      "tests": 1272,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 0,
+      "passed": 1272
+    }
+  }
+]

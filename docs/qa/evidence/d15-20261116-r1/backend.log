@@ -1,0 +1,47 @@
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>setlocal EnableExtensions 
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>goto afterSafetyNet 
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>set DIRNAME=F:\RikkeiEdu\personal-finance-management-DB\backend\ 
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>if "F:\RikkeiEdu\personal-finance-management-DB\backend\" == "" set DIRNAME=. 
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>set APP_BASE_NAME=gradlew 
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>set APP_HOME=F:\RikkeiEdu\personal-finance-management-DB\backend\ 
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>for %i in ("F:\RikkeiEdu\personal-finance-management-DB\backend\") do set APP_HOME=%~fi 
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>set APP_HOME=F:\RikkeiEdu\personal-finance-management-DB\backend\ 
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>set DEFAULT_JVM_OPTS="-Xmx64m" "-Xms64m" 
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>if defined JAVA_HOME goto findJavaFromJavaHome 
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>set JAVA_EXE=java.exe 
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>java.exe -version  1>NUL 2>&1 
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>if 0 EQU 0 goto execute 
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>endlocal   & "java.exe" "-Xmx64m" "-Xms64m"   "-Dorg.gradle.appname=gradlew" -jar "F:\RikkeiEdu\personal-finance-management-DB\backend\\gradle\wrapper\gradle-wrapper.jar" --offline test verifyD03IntegrationTests --console=plain   & call :exitWithErrorLevel   & goto exitWithErrorLevel 
+Starting a Gradle Daemon, 3 incompatible and 5 stopped Daemons could not be reused, use --status for details
+> Task :compileJava UP-TO-DATE
+> Task :processResources UP-TO-DATE
+> Task :classes UP-TO-DATE
+> Task :compileTestJava UP-TO-DATE
+> Task :processTestResources UP-TO-DATE
+> Task :testClasses UP-TO-DATE
+> Task :test UP-TO-DATE
+
+> Task :verifyD03IntegrationTests
+D03 MySQL PASS: executed=55, skipped=0, failures=0, errors=0 (JUnit XML verified).
+
+BUILD SUCCESSFUL in 6s
+6 actionable tasks: 1 executed, 5 up-to-date
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.8.1/userguide/configuration_cache_enabling.html
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>"C:\WINDOWS\system32\cmd.exe" /c exit 0 
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>"C:\WINDOWS\system32\cmd.exe" /c exit 0 

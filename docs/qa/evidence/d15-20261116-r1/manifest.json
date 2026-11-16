@@ -1,0 +1,170 @@
+{
+  "baseline": "4650bd9dd8c5d150b3fb25aa40913ac13784faf5",
+  "files": [
+    {
+      "path": "docs/qa/evidence/d15-20261116-r1/backend-fresh.json",
+      "bytes": 10498,
+      "sha256": "c068fbbdaaa4eb4644eb8eb246610ed5dbdb756a67af3f549bc4bf24484adbcd"
+    },
+    {
+      "path": "docs/qa/evidence/d15-20261116-r1/backend-fresh.log",
+      "bytes": 3202,
+      "sha256": "36b63180919d4d692255a1f72d95fe2a00ce6902d540ab2b532d757e3b87a469"
+    },
+    {
+      "path": "docs/qa/evidence/d15-20261116-r1/backend-jar.log",
+      "bytes": 2200,
+      "sha256": "f9d782ce1bce62da912cdf451d671ea0dd10853bbd742415570ca12512a43058"
+    },
+    {
+      "path": "docs/qa/evidence/d15-20261116-r1/backend.log",
+      "bytes": 2531,
+      "sha256": "83c090f54f1df70d7b40949ef12a1540ba0065d0e7c0804389714afa17b53442"
+    },
+    {
+      "path": "docs/qa/evidence/d15-20261116-r1/browser-results.json",
+      "bytes": 20503,
+      "sha256": "2f492179ea5cf897e3a22473294848325fa34dc868e86a52c4fa4d08031b007b"
+    },
+    {
+      "path": "docs/qa/evidence/d15-20261116-r1/browser-run.log",
+      "bytes": 2154,
+      "sha256": "70eb010c6e541541a30db0de88b63cf9f0835c08d889c15adefe0f7d55f3e298"
+    },
+    {
+      "path": "docs/qa/evidence/d15-20261116-r1/export-A.csv.log",
+      "bytes": 657,
+      "sha256": "a8ab60991978cf128b55b074524e6556f149d66f512d1f071f1bfbcac7b582c5"
+    },
+    {
+      "path": "docs/qa/evidence/d15-20261116-r1/frontend-build.log",
+      "bytes": 1035,
+      "sha256": "565da776904a59d95b0b9b6ab33b44f4dcc542376ebbe74a3ba2e76005abd505"
+    },
+    {
+      "path": "docs/qa/evidence/d15-20261116-r1/frontend-lint.log",
+      "bytes": 35,
+      "sha256": "0d4695f4da2780a75fa8d28ae5fabe88093b7de3774417c514e2ecd90774e01f"
+    },
+    {
+      "path": "docs/qa/evidence/d15-20261116-r1/frontend-test.log",
+      "bytes": 57422,
+      "sha256": "91d19cfbdf2e0f96492e81c781e448562d02f5ac154b9ace2c15c2b9b3f2d65f"
+    },
+    {
+      "path": "docs/qa/evidence/d15-20261116-r1/git-before.txt",
+      "bytes": 104,
+      "sha256": "281eb3aee8da6ec6eedb01f4691cde1f21a5f8637dcda33b2be36b44a2b20f96"
+    },
+    {
+      "path": "docs/qa/evidence/d15-20261116-r1/git-final.json",
+      "bytes": 3114,
+      "sha256": "ddfc5b19decff257bfa3f22675fc11a39c1746a35bde99b51e02c25e563f785b"
+    },
+    {
+      "path": "docs/qa/evidence/d15-20261116-r1/junit-cases.json",
+      "bytes": 265889,
+      "sha256": "ae39466094a3b854c4cd78796e23655df133073f0b180e58e87c6bdc9ee7c2fd"
+    },
+    {
+      "path": "docs/qa/evidence/d15-20261116-r1/live-backend.log",
+      "bytes": 640352,
+      "sha256": "42699e00bc7dba37fdaaa75cf79cff1f913b68025a282ab6a35d8203a2c1c2ab"
+    },
+    {
+      "path": "docs/qa/evidence/d15-20261116-r1/live-results.json",
+      "bytes": 64380,
+      "sha256": "57d299849e05bf5dbeb22797dd2c067513d8059870840da253e30c846849164a"
+    },
+    {
+      "path": "docs/qa/evidence/d15-20261116-r1/preexisting-sha256.json",
+      "bytes": 445,
+      "sha256": "545b9120743a8d0881e0b4eadef3417a2a868bc44ca4566698dc5eb3744e5fd1"
+    },
+    {
+      "path": "docs/qa/evidence/d15-20261116-r1/regression.json",
+      "bytes": 11795,
+      "sha256": "352491322b732fc6538310b9ffc8ea97e8e65439eb26cb743cdfe97d5851854f"
+    },
+    {
+      "path": "docs/qa/evidence/d15-20261116-r2/browser-results.json",
+      "bytes": 29233,
+      "sha256": "a7c67e77d98aa233fe24cbe3d06a730da236aec0b9df54c294d55b54bf60bff2"
+    },
+    {
+      "path": "docs/qa/evidence/d15-20261116-r2/browser-run.log",
+      "bytes": 1444,
+      "sha256": "99f452aed65ae0d2d938c230c8887c3127ddc0e607652b1a6e6283535044fcab"
+    },
+    {
+      "path": "docs/qa/evidence/d15-20261116-r2/export-A.csv.log",
+      "bytes": 657,
+      "sha256": "a8ab60991978cf128b55b074524e6556f149d66f512d1f071f1bfbcac7b582c5"
+    },
+    {
+      "path": "docs/qa/evidence/d15-20261116-r2/live-backend.log",
+      "bytes": 35462,
+      "sha256": "6b81f830ae5d4306e240aff7cad7c81202c0e7991a56f51038ea7190160af023"
+    },
+    {
+      "path": "docs/qa/evidence/d15-20261116-r2/live-results.json",
+      "bytes": 64714,
+      "sha256": "4c2c58c825a1e0bace8aa3848b2b91cd5f33bf275f75eab26bbc6cfbf0018419"
+    },
+    {
+      "path": "docs/qa/evidence/d15-20261116-r3/browser-results.json",
+      "bytes": 24786,
+      "sha256": "375c21f4939c7ca34577c2e4f874fbf74fe515bbe5414edcfa30bd9eab55922b"
+    },
+    {
+      "path": "docs/qa/evidence/d15-20261116-r3/browser-run.log",
+      "bytes": 1473,
+      "sha256": "f335b3e06556244525aa4143823ce4406677e8793167c2de112086b6e6ae5d63"
+    },
+    {
+      "path": "docs/qa/evidence/d15-20261116-r3/export-A.csv.log",
+      "bytes": 663,
+      "sha256": "c2459901792f7e6a031449cdcb44354d168a2f807601a641241b640e86460077"
+    },
+    {
+      "path": "docs/qa/evidence/d15-20261116-r3/live-backend.log",
+      "bytes": 21917,
+      "sha256": "f556261ab40f064983834f4bf386c8f957756ffc011934e2327c1e2bbe14e0b6"
+    },
+    {
+      "path": "docs/qa/evidence/d15-20261116-r3/live-results.json",
+      "bytes": 68891,
+      "sha256": "109ab26e01977d1dcaa4539223c121208a4566254979e9c41ffb8f5fc56535ec"
+    },
+    {
+      "path": "scripts/qa/d15_browser_qa.mjs",
+      "bytes": 20740,
+      "sha256": "a73ffd3b96becc279c6f97b2bad0c55fadc1c1c7af7dd095e0db192c4af46560"
+    },
+    {
+      "path": "scripts/qa/d15_evidence.py",
+      "bytes": 5637,
+      "sha256": "da50d6e86df552bc34d7433e527a3ee3497dae11b585f8f36e4e1212453b43ff"
+    },
+    {
+      "path": "scripts/qa/d15_financial_qa.py",
+      "bytes": 25965,
+      "sha256": "8e127e945222ece1485dc36f48be760a043ce1e056949dd484550a2bdfa5a93d"
+    },
+    {
+      "path": "scripts/qa/d15_regression.py",
+      "bytes": 4305,
+      "sha256": "9ced462f4ccf79a13f4d6a11b580df5309292a0198aa5c5da19865fa30bd0f48"
+    },
+    {
+      "path": "docs/qa/D15.md",
+      "bytes": 17507,
+      "sha256": "f653b4d14eebc36e28535f95eee66317cfd85d9e7a931bb5c9543498ba75779e"
+    },
+    {
+      "path": "docs/qa/README.md",
+      "bytes": 11255,
+      "sha256": "9ccbed7b9ee201486ee5531b92eabaa8c23a9a3b5f7a023bcc709d7b9f70c90e"
+    }
+  ]
+}

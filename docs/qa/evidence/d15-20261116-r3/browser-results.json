@@ -1,0 +1,474 @@
+{
+  "baseline": "4650bd9dd8c5d150b3fb25aa40913ac13784faf5",
+  "browserVersion": "Chrome/157.0.8103.78",
+  "mode": "Real Chrome headless, integrated app, live loopback API/MySQL; only error/race cases use CDP transport control",
+  "tests": [
+    {
+      "id": "UI-DASHBOARD-CURRENT-DELTA",
+      "status": "PASS",
+      "detail": {
+        "month": "2026-11",
+        "statuses": [
+          "Không đổi 0 ₫ (0%) so với 10/2026.",
+          "Giảm 7.919,99 ₫ (99%) so với 10/2026.",
+          "Gần hết ngân sách · Đã sử dụng 80%"
+        ]
+      }
+    },
+    {
+      "id": "UI-DASHBOARD-CENTS",
+      "status": "FAIL",
+      "detail": "Expected exact 200.10/80.00/120.10; actual [\"200 ₫\",\"80 ₫\",\"120 ₫\"]\n+ actual - expected\n\n  [\n+   '200 ₫',\n-   '200,1 ₫',\n    '80 ₫',\n+   '120 ₫'\n-   '120,1 ₫'\n  ]\n",
+      "observed": {
+        "route": "/",
+        "text": "Bỏ qua điều hướng\nSmartExpense\nTổng quan\nGhi chép\nLịch\nLịch sử giao dịch\nDanh mục\nNgân sách\nGiao dịch định kỳ\nBáo cáo\nQA D15 A\nd15-a-ed3364a035e04fe29ace3563cf837142@example.test\nTổng quan\n\nQuản lý tài chính cá nhân\n\nGhi nhanh\nĐăng xuất\nXin chào, QA D15 A\nTổng quan\n\nThu nhập, chi tiêu và số dư của bạn trong tháng 11/2026.\n\nThêm giao dịch\nTháng 11/2026\nTháng 10/2026\nTháng 09/2026\nTháng 08/2026\nTháng 07/2026\nTháng 06/2026\nTháng 05/2026\nTháng 04/2026\nTháng 03/2026\nTháng 02/2026\nTháng 01/2026\nTháng 12/2025\nTHAO TÁC NHANH\n+ Thêm chi tiêu\n+ Thêm thu nhập\nNgân sách\nDanh mục\nTHU NHẬP\n200 ₫\n0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n₫\n\nTổng các khoản thu trong tháng\n\nKhông đổi 0 ₫ (0%) so với 10/2026.\n\nCHI TIÊU\n80 ₫\n0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n₫\n\nChiếm 40,0% thu nhập\n\nGiảm 7.919,99 ₫ (99%) so với 10/2026.\n\nSỐ DƯ\n120 ₫\n0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n₫\n\nĐã tiết kiệm 60,0% thu nhập\n\nĐang tải thống kê tháng 11/2026...\nNgân sách tháng này\n\nHạn mức chi tiêu tháng 11/2026\n\nQuản lý ngân sách\n\nĐã chi tiêu\n\n80 ₫\n\nHạn mức ngân sách\n\n100 ₫\n\nCòn lại khả dụng\n\n20 ₫\n\nGần hết ngân sách · Đã sử dụng 80%\n\nGiao dịch gần đây\n\nCác giao dịch mới nhất trong tháng 11/2026\n\nXem tất cả\nĐang tải giao dịch...\nĐiểm nhấn tháng này\n\nDANH MỤC CHI NHIỀU NHẤT\n\nD15_A_EXPENSE\n\n80 ₫ (100% tổng chi)\n\nDANH MỤC ĐÃ PHÁT SINH CHI TIÊU\n\n1 danh mục\n\nTổng chi: 80 ₫\n\nCHI TRUNG BÌNH MỖI NGÀY\n\n5 ₫\n\nTính theo ngày thực tế trong tháng\n\nQuản lý ngân sách\nTrợ lý tài chính\n0"
+      }
+    },
+    {
+      "id": "UI-DASHBOARD-BASE-ZERO",
+      "status": "PASS",
+      "detail": {
+        "statuses": [
+          "Tăng 200,1 ₫ · Mới phát sinh so với 08/2026.",
+          "Tăng 79,99 ₫ · Mới phát sinh so với 08/2026.",
+          "Trong ngân sách · Đã sử dụng 80%"
+        ]
+      }
+    },
+    {
+      "id": "UI-DASHBOARD-EMPTY-MONTH",
+      "status": "PASS",
+      "detail": {
+        "values": [
+          "0 ₫",
+          "0 ₫",
+          "0 ₫"
+        ],
+        "baseZero": true,
+        "budget": "NOT_SET"
+      }
+    },
+    {
+      "id": "UI-DASHBOARD-RAPID-MONTH",
+      "status": "PASS",
+      "detail": {
+        "selected": "2026-11",
+        "values": [
+          "200 ₫",
+          "80 ₫",
+          "120 ₫",
+          "80 ₫"
+        ]
+      }
+    },
+    {
+      "id": "UI-DASHBOARD-LOADING-ERROR-RETRY",
+      "status": "PASS",
+      "detail": {
+        "loadingObserved": true,
+        "errorObserved": true,
+        "retryRecovered": true,
+        "transport": "CDP injected 500 only in this case"
+      }
+    },
+    {
+      "id": "UI-BUDGET-SAFE-2026-09",
+      "status": "PASS",
+      "detail": {
+        "month": "2026-09",
+        "state": "SAFE",
+        "progress": [
+          {
+            "min": "0",
+            "max": "100",
+            "now": "79.99",
+            "text": "80%"
+          },
+          {
+            "min": "0",
+            "max": "100",
+            "now": "80",
+            "text": "80%"
+          }
+        ],
+        "text": "Bỏ qua điều hướng\nSmartExpense\nTổng quan\nGhi chép\nLịch\nLịch sử giao dịch\nDanh mục\nNgân sách\nGiao dịch định kỳ\nBáo cáo\nQA D15 A\nd15-a-ed3364a035e04fe29ace3563cf837142@example.test\nNgân sách hàng tháng\n\nQuản lý tài chính cá nhân\n\nGhi nhanh\nĐăng xuất\nNgân sách hàng tháng\n\nKiểm soát hạn mức chi tiêu và quản lý tài chính thông minh theo từng tháng.\n\nCHỌN THÁNG\nTháng 09/2026\n\nHẠN MỨC NGÂN SÁCH\n\n100 ₫\n\nĐã cấu hình cho tháng 9/2026\n\nĐÃ CHI TRONG THÁNG\n\n79,99 ₫\n\nTừ các giao dịch chi tiêu\n\nNGÂN SÁCH CÒN LẠI\n\n20,01 ₫\n\nHạn mức khả dụng\n\nTiến độ ngân sách\n\nTỷ lệ phần trăm đã sử dụng của tháng 9/2026\n\n80%\n\nĐã sử dụng 79,99 ₫ trên tổng 100 ₫.\n\nTrong ngân sách\n\nChi tiêu đang trong hạn mức kiểm soát tốt. Còn 20,01 ₫ có thể sử dụng.\n\nCập nhật ngân sách\nXóa ngân sách\nNgân sách theo danh mục\n\nKiểm soát chi tiêu chi tiết cho từng hạng mục trong tháng.\n\nThêm ngân sách\nD15_A_EXPENSE\nTRONG NGÂN SÁCH\nTiến độ chi tiêu\n80%\nHạn mức\n100 ₫\nĐã chi\n79,99 ₫\nCòn lại\n20,01 ₫\nTrợ lý tài chính"
+      }
+    },
+    {
+      "id": "UI-BUDGET-SAFE-2026-10",
+      "status": "PASS",
+      "detail": {
+        "month": "2026-10",
+        "state": "SAFE",
+        "progress": [
+          {
+            "min": "0",
+            "max": "100",
+            "now": "79.9999",
+            "text": "80%"
+          },
+          {
+            "min": "0",
+            "max": "100",
+            "now": "80",
+            "text": "80%"
+          }
+        ],
+        "text": "Bỏ qua điều hướng\nSmartExpense\nTổng quan\nGhi chép\nLịch\nLịch sử giao dịch\nDanh mục\nNgân sách\nGiao dịch định kỳ\nBáo cáo\nQA D15 A\nd15-a-ed3364a035e04fe29ace3563cf837142@example.test\nNgân sách hàng tháng\n\nQuản lý tài chính cá nhân\n\nGhi nhanh\nĐăng xuất\nNgân sách hàng tháng\n\nKiểm soát hạn mức chi tiêu và quản lý tài chính thông minh theo từng tháng.\n\nCHỌN THÁNG\nTháng 10/2026\n\nHẠN MỨC NGÂN SÁCH\n\n10.000 ₫\n\nĐã cấu hình cho tháng 10/2026\n\nĐÃ CHI TRONG THÁNG\n\n7.999,99 ₫\n\nTừ các giao dịch chi tiêu\n\nNGÂN SÁCH CÒN LẠI\n\n2.000,01 ₫\n\nHạn mức khả dụng\n\nTiến độ ngân sách\n\nTỷ lệ phần trăm đã sử dụng của tháng 10/2026\n\n80%\n\nĐã sử dụng 7.999,99 ₫ trên tổng 10.000 ₫.\n\nTrong ngân sách\n\nChi tiêu đang trong hạn mức kiểm soát tốt. Còn 2.000,01 ₫ có thể sử dụng.\n\nCập nhật ngân sách\nXóa ngân sách\nNgân sách theo danh mục\n\nKiểm soát chi tiêu chi tiết cho từng hạng mục trong tháng.\n\nThêm ngân sách\nD15_A_EXPENSE\nTRONG NGÂN SÁCH\nTiến độ chi tiêu\n80%\nHạn mức\n10.000 ₫\nĐã chi\n7.999,99 ₫\nCòn lại\n2.000,01 ₫\nTrợ lý tài chính"
+      }
+    },
+    {
+      "id": "UI-BUDGET-WARNING-2026-11",
+      "status": "PASS",
+      "detail": {
+        "month": "2026-11",
+        "state": "WARNING",
+        "progress": [
+          {
+            "min": "0",
+            "max": "100",
+            "now": "80",
+            "text": "80%"
+          },
+          {
+            "min": "0",
+            "max": "100",
+            "now": "80",
+            "text": "80%"
+          }
+        ],
+        "text": "Bỏ qua điều hướng\nSmartExpense\nTổng quan\nGhi chép\nLịch\nLịch sử giao dịch\nDanh mục\nNgân sách\nGiao dịch định kỳ\nBáo cáo\nQA D15 A\nd15-a-ed3364a035e04fe29ace3563cf837142@example.test\nNgân sách hàng tháng\n\nQuản lý tài chính cá nhân\n\nGhi nhanh\nĐăng xuất\nNgân sách hàng tháng\n\nKiểm soát hạn mức chi tiêu và quản lý tài chính thông minh theo từng tháng.\n\nCHỌN THÁNG\nTháng 11/2026\n\nHẠN MỨC NGÂN SÁCH\n\n100 ₫\n\nĐã cấu hình cho tháng 11/2026\n\nĐÃ CHI TRONG THÁNG\n\n80 ₫\n\nTừ các giao dịch chi tiêu\n\nNGÂN SÁCH CÒN LẠI\n\n20 ₫\n\nHạn mức khả dụng\n\nTiến độ ngân sách\n\nTỷ lệ phần trăm đã sử dụng của tháng 11/2026\n\n80%\n\nĐã sử dụng 80 ₫ trên tổng 100 ₫.\n\nGần hết ngân sách\n\nBạn đã sử dụng 80% ngân sách tháng này. Chỉ còn 20 ₫ khả dụng.\n\nCập nhật ngân sách\nXóa ngân sách\nNgân sách theo danh mục\n\nKiểm soát chi tiêu chi tiết cho từng hạng mục trong tháng.\n\nThêm ngân sách\nD15_A_EXPENSE\nGẦN HẾT NGÂN SÁCH\nTiến độ chi tiêu\n80%\nHạn mức\n100 ₫\nĐã chi\n80 ₫\nCòn lại\n20 ₫\nTrợ lý tài chính"
+      }
+    },
+    {
+      "id": "UI-BUDGET-AT_LIMIT-2026-12",
+      "status": "PASS",
+      "detail": {
+        "month": "2026-12",
+        "state": "AT_LIMIT",
+        "progress": [
+          {
+            "min": "0",
+            "max": "100",
+            "now": "100",
+            "text": "100%"
+          },
+          {
+            "min": "0",
+            "max": "100",
+            "now": "100",
+            "text": "100%"
+          },
+          {
+            "min": "0",
+            "max": "100",
+            "now": "25",
+            "text": "25%"
+          }
+        ],
+        "text": "Bỏ qua điều hướng\nSmartExpense\nTổng quan\nGhi chép\nLịch\nLịch sử giao dịch\nDanh mục\nNgân sách\nGiao dịch định kỳ\nBáo cáo\nQA D15 A\nd15-a-ed3364a035e04fe29ace3563cf837142@example.test\nNgân sách hàng tháng\n\nQuản lý tài chính cá nhân\n\nGhi nhanh\nĐăng xuất\nNgân sách hàng tháng\n\nKiểm soát hạn mức chi tiêu và quản lý tài chính thông minh theo từng tháng.\n\nCHỌN THÁNG\nTháng 12/2026\n\nHẠN MỨC NGÂN SÁCH\n\n120,4 ₫\n\nĐã cấu hình cho tháng 12/2026\n\nĐÃ CHI TRONG THÁNG\n\n120,4 ₫\n\nTừ các giao dịch chi tiêu\n\nNGÂN SÁCH CÒN LẠI\n\n0 ₫\n\nĐã sử dụng hết hạn mức\n\nTiến độ ngân sách\n\nTỷ lệ phần trăm đã sử dụng của tháng 12/2026\n\n100%\n\nĐã sử dụng 120,4 ₫ trên tổng 120,4 ₫.\n\nĐã sử dụng hết ngân sách\n\nBạn đã sử dụng toàn bộ 120,4 ₫ trong tháng 12/2026. Hiện không còn ngân sách khả dụng.\n\nCập nhật ngân sách\nXóa ngân sách\nNgân sách theo danh mục\n\nKiểm soát chi tiêu chi tiết cho từng hạng mục trong tháng.\n\nThêm ngân sách\nD15_A_EXPENSE\nĐÃ SỬ DỤNG HẾT NGÂN SÁCH\nTiến độ chi tiêu\n100%\nHạn mức\n120,15 ₫\nĐã chi\n120,15 ₫\nCòn lại\n0 ₫\nD15_A_EXPENSE_OTHER\nTRONG NGÂN SÁCH\nTiến độ chi tiêu\n25%\nHạn mức\n1 ₫\nĐã chi\n0,25 ₫\nCòn lại\n0,75 ₫\nTrợ lý tài chính"
+      }
+    },
+    {
+      "id": "UI-BUDGET-OVER_BUDGET-2027-01",
+      "status": "PASS",
+      "detail": {
+        "month": "2027-01",
+        "state": "OVER_BUDGET",
+        "progress": [
+          {
+            "min": "0",
+            "max": "100",
+            "now": "100",
+            "text": "100%"
+          },
+          {
+            "min": "0",
+            "max": "100",
+            "now": "100",
+            "text": "100%"
+          }
+        ],
+        "text": "Bỏ qua điều hướng\nSmartExpense\nTổng quan\nGhi chép\nLịch\nLịch sử giao dịch\nDanh mục\nNgân sách\nGiao dịch định kỳ\nBáo cáo\nQA D15 A\nd15-a-ed3364a035e04fe29ace3563cf837142@example.test\nNgân sách hàng tháng\n\nQuản lý tài chính cá nhân\n\nGhi nhanh\nĐăng xuất\nNgân sách hàng tháng\n\nKiểm soát hạn mức chi tiêu và quản lý tài chính thông minh theo từng tháng.\n\nCHỌN THÁNG\nTháng 01/2027\n\nHẠN MỨC NGÂN SÁCH\n\n120,4 ₫\n\nĐã cấu hình cho tháng 1/2027\n\nĐÃ CHI TRONG THÁNG\n\n120,41 ₫\n\nTừ các giao dịch chi tiêu\n\nNGÂN SÁCH CÒN LẠI\n\n-0,01 ₫\n\nĐã chi vượt hạn mức\n\nTiến độ ngân sách\n\nTỷ lệ phần trăm đã sử dụng của tháng 1/2027\n\n100%\n\nĐã sử dụng 120,41 ₫ trên tổng 120,4 ₫.\n\nVượt ngân sách\n\nBạn đã chi vượt 0,01 ₫ trong tháng 1/2027. Hãy hạn chế các khoản chi không cần thiết.\n\nCập nhật ngân sách\nXóa ngân sách\nNgân sách theo danh mục\n\nKiểm soát chi tiêu chi tiết cho từng hạng mục trong tháng.\n\nThêm ngân sách\nD15_A_EXPENSE\nVƯỢT NGÂN SÁCH\nTiến độ chi tiêu\n100%\nHạn mức\n120,4 ₫\nĐã chi\n120,41 ₫\nChi vượt\n-0,01 ₫\nTrợ lý tài chính"
+      }
+    },
+    {
+      "id": "UI-BUDGET-NOT_SET-2027-02",
+      "status": "PASS",
+      "detail": {
+        "month": "2027-02",
+        "state": "NOT_SET",
+        "progress": [],
+        "text": "Bỏ qua điều hướng\nSmartExpense\nTổng quan\nGhi chép\nLịch\nLịch sử giao dịch\nDanh mục\nNgân sách\nGiao dịch định kỳ\nBáo cáo\nQA D15 A\nd15-a-ed3364a035e04fe29ace3563cf837142@example.test\nNgân sách hàng tháng\n\nQuản lý tài chính cá nhân\n\nGhi nhanh\nĐăng xuất\nNgân sách hàng tháng\n\nKiểm soát hạn mức chi tiêu và quản lý tài chính thông minh theo từng tháng.\n\nCHỌN THÁNG\nTháng 02/2027\nChưa thiết lập ngân sách\n\nBạn chưa đặt hạn mức chi tiêu cho tháng 2/2027. Hãy đặt ngân sách để bắt đầu theo dõi tiến độ chi tiêu.\n\nThiết lập ngân sách\nNgân sách theo danh mục\n\nKiểm soát chi tiêu chi tiết cho từng hạng mục trong tháng.\n\nThêm ngân sách\n\nChưa có ngân sách theo danh mục nào.\n\nThiết lập hạn mức cho từng danh mục để kiểm soát chi tiêu tốt hơn.\n\nThêm ngân sách đầu tiên\nTrợ lý tài chính"
+      }
+    },
+    {
+      "id": "UI-REPORTS-YEAR-CHART-TABLE-CSV",
+      "status": "PASS",
+      "detail": {
+        "rows": "THÁNG\tTỔNG THU\tTỔNG CHI\tCHÊNH LỆCH\tTỶ LỆ TIẾT KIỆM\n12/2026\t120,4 ₫\t120,4 ₫\t0 ₫\t0%\n01/2027\t200,1 ₫\t120,41 ₫\t+79,69 ₫\t39,83%\n02/2027\t0 ₫\t0 ₫\t0 ₫\t—\nTổng cộng\t320,5 ₫\t240,81 ₫\t+79,69 ₫\t24,86%",
+        "chart": true,
+        "csvDownloaded": true,
+        "csvBytes": 657
+      }
+    },
+    {
+      "id": "UI-REPORTS-EMPTY-MONTH",
+      "status": "PASS",
+      "detail": {
+        "text": "Bỏ qua điều hướng\nSmartExpense\nTổng quan\nGhi chép\nLịch\nLịch sử giao dịch\nDanh mục\nNgân sách\nGiao dịch định kỳ\nBáo cáo\nQA D15 A\nd15-a-ed3364a035e04fe29ace3563cf837142@example.test\nBáo cáo tài chính\n\nQuản lý tài chính cá nhân\n\nGhi nhanh\nĐăng xuất\nPhân tích đa kỳ (tối đa 6 tháng)\nBáo cáo thu – chi & Thống kê\n\nSo sánh thu nhập, chi tiêu và chênh lệch từ 02/2027 đến 02/2027 cùng cơ cấu chi tiêu theo danh mục.\n\nTháng này\n3 tháng gần nhất\n6 tháng gần nhất\nTừ tháng\nTháng 02/2027\nĐến tháng\nTháng 02/2027\nXem báo cáo\nLàm mới\nTải CSV\n\nChưa có phát sinh thu – chi trong kỳ báo cáo. Hãy chọn khoảng tháng khác để xem số liệu.\n\nTỔNG THU NHẬP\n\n0 ₫\n\nCộng dồn từ 02/2027 đến 02/2027\n\nTỔNG CHI TIÊU\n\n0 ₫\n\nTổng các khoản chi tiêu trong kỳ báo cáo\n\nCHÊNH LỆCH THU – CHI\n\n0 ₫\n\nSố dư ròng trong khoảng thời gian đã chọn\n\nKỳ báo cáo: 02/2027 – 02/2027\n\nBiểu đồ thu – chi theo từng tháng\nTổng thu\nTổng chi\n\nChưa có phát sinh thu – chi trong khoảng thời gian đã chọn\n\nTất cả các tháng trong khoảng từ 02/2027 đến 02/2027 đều có thu nhập và chi tiêu bằng 0 ₫.\n\nBẢNG TỔNG HỢP SỐ LIỆU TỪNG THÁNG (1 THÁNG)\nTHÁNG\tTỔNG THU\tTỔNG CHI\tCHÊNH LỆCH\tTỶ LỆ TIẾT KIỆM\n02/2027\t0 ₫\t0 ₫\t0 ₫\t—\nTổng cộng\t0 ₫\t0 ₫\t0 ₫\t—\n\nKỳ báo cáo: 02/2027 – 02/2027\n\nChi tiêu theo danh mục\n\nChưa có khoản chi tiêu nào trong khoảng thời gian đã chọn\n\nKhi có giao dịch chi tiêu hợp lệ, biểu đồ tròn và bảng chi tiêu theo danh mục sẽ tự động hiển thị tại đây.\n\nTrợ lý tài chính\nThành công\nĐã tải xuống file CSV báo cáo.\n55"
+      }
+    },
+    {
+      "id": "UI-LAYOUT-dashboard-360-light",
+      "status": "PASS",
+      "detail": {
+        "viewport": 360,
+        "scroll": 360,
+        "theme": "light",
+        "main": true
+      }
+    },
+    {
+      "id": "UI-LAYOUT-reports-360-light",
+      "status": "PASS",
+      "detail": {
+        "viewport": 360,
+        "scroll": 360,
+        "theme": "light",
+        "main": true
+      }
+    },
+    {
+      "id": "UI-LAYOUT-budgets-360-light",
+      "status": "PASS",
+      "detail": {
+        "viewport": 360,
+        "scroll": 360,
+        "theme": "light",
+        "main": true
+      }
+    },
+    {
+      "id": "UI-LAYOUT-dashboard-360-dark",
+      "status": "PASS",
+      "detail": {
+        "viewport": 360,
+        "scroll": 360,
+        "theme": "dark",
+        "main": true
+      }
+    },
+    {
+      "id": "UI-LAYOUT-reports-360-dark",
+      "status": "PASS",
+      "detail": {
+        "viewport": 360,
+        "scroll": 360,
+        "theme": "dark",
+        "main": true
+      }
+    },
+    {
+      "id": "UI-LAYOUT-budgets-360-dark",
+      "status": "PASS",
+      "detail": {
+        "viewport": 360,
+        "scroll": 360,
+        "theme": "dark",
+        "main": true
+      }
+    },
+    {
+      "id": "UI-LAYOUT-dashboard-390-light",
+      "status": "PASS",
+      "detail": {
+        "viewport": 390,
+        "scroll": 390,
+        "theme": "light",
+        "main": true
+      }
+    },
+    {
+      "id": "UI-LAYOUT-reports-390-light",
+      "status": "PASS",
+      "detail": {
+        "viewport": 390,
+        "scroll": 390,
+        "theme": "light",
+        "main": true
+      }
+    },
+    {
+      "id": "UI-LAYOUT-budgets-390-light",
+      "status": "PASS",
+      "detail": {
+        "viewport": 390,
+        "scroll": 390,
+        "theme": "light",
+        "main": true
+      }
+    },
+    {
+      "id": "UI-LAYOUT-dashboard-390-dark",
+      "status": "PASS",
+      "detail": {
+        "viewport": 390,
+        "scroll": 390,
+        "theme": "dark",
+        "main": true
+      }
+    },
+    {
+      "id": "UI-LAYOUT-reports-390-dark",
+      "status": "PASS",
+      "detail": {
+        "viewport": 390,
+        "scroll": 390,
+        "theme": "dark",
+        "main": true
+      }
+    },
+    {
+      "id": "UI-LAYOUT-budgets-390-dark",
+      "status": "PASS",
+      "detail": {
+        "viewport": 390,
+        "scroll": 390,
+        "theme": "dark",
+        "main": true
+      }
+    },
+    {
+      "id": "UI-LAYOUT-dashboard-1280-light",
+      "status": "PASS",
+      "detail": {
+        "viewport": 1280,
+        "scroll": 1265,
+        "theme": "light",
+        "main": true
+      }
+    },
+    {
+      "id": "UI-LAYOUT-reports-1280-light",
+      "status": "PASS",
+      "detail": {
+        "viewport": 1280,
+        "scroll": 1265,
+        "theme": "light",
+        "main": true
+      }
+    },
+    {
+      "id": "UI-LAYOUT-budgets-1280-light",
+      "status": "PASS",
+      "detail": {
+        "viewport": 1280,
+        "scroll": 1265,
+        "theme": "light",
+        "main": true
+      }
+    },
+    {
+      "id": "UI-LAYOUT-dashboard-1280-dark",
+      "status": "PASS",
+      "detail": {
+        "viewport": 1280,
+        "scroll": 1265,
+        "theme": "dark",
+        "main": true
+      }
+    },
+    {
+      "id": "UI-LAYOUT-reports-1280-dark",
+      "status": "PASS",
+      "detail": {
+        "viewport": 1280,
+        "scroll": 1265,
+        "theme": "dark",
+        "main": true
+      }
+    },
+    {
+      "id": "UI-LAYOUT-budgets-1280-dark",
+      "status": "PASS",
+      "detail": {
+        "viewport": 1280,
+        "scroll": 1265,
+        "theme": "dark",
+        "main": true
+      }
+    },
+    {
+      "id": "UI-KEYBOARD-FOCUS-PICKER",
+      "status": "PASS",
+      "detail": {
+        "enterOpened": true,
+        "focusInside": true,
+        "escapeClosed": true,
+        "focusRestored": true
+      }
+    },
+    {
+      "id": "UI-OWNER-B-THEN-A",
+      "status": "PASS",
+      "detail": {
+        "b": [
+          "10.000.000 ₫",
+          "1.000.000 ₫",
+          "9.000.000 ₫"
+        ],
+        "a": [
+          "200 ₫",
+          "80 ₫",
+          "120 ₫"
+        ],
+        "note": "Owner totals rounded by existing Dashboard; exactness tested separately"
+      }
+    },
+    {
+      "id": "UI-CONSOLE-UNEXPECTED-ERRORS",
+      "status": "FAIL",
+      "detail": "[\"THREE.WebGLRenderer: Cannot read properties of null (reading 'precision')\",\"THREE.WebGLRenderer: Cannot read properties of null (reading 'precision')\",\"THREE.WebGLRenderer: Cannot read properties of null (reading 'precision')\"]\n\n3 !== 0\n",
+      "observed": {
+        "route": "/",
+        "text": "Bỏ qua điều hướng\nSmartExpense\nTổng quan\nGhi chép\nLịch\nLịch sử giao dịch\nDanh mục\nNgân sách\nGiao dịch định kỳ\nBáo cáo\nQA D15 A\nd15-a-ed3364a035e04fe29ace3563cf837142@example.test\nTổng quan\n\nQuản lý tài chính cá nhân\n\nGhi nhanh\nĐăng xuất\nXin chào, QA D15 A\nTổng quan\n\nThu nhập, chi tiêu và số dư của bạn trong tháng 11/2026.\n\nThêm giao dịch\nTháng 11/2026\nTháng 10/2026\nTháng 09/2026\nTháng 08/2026\nTháng 07/2026\nTháng 06/2026\nTháng 05/2026\nTháng 04/2026\nTháng 03/2026\nTháng 02/2026\nTháng 01/2026\nTháng 12/2025\nTHAO TÁC NHANH\n+ Thêm chi tiêu\n+ Thêm thu nhập\nNgân sách\nDanh mục\nTHU NHẬP\n200 ₫\n0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n₫\n\nTổng các khoản thu trong tháng\n\nKhông đổi 0 ₫ (0%) so với 10/2026.\n\nCHI TIÊU\n80 ₫\n0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n₫\n\nChiếm 40,0% thu nhập\n\nGiảm 7.919,99 ₫ (99%) so với 10/2026.\n\nSỐ DƯ\n120 ₫\n0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n₫\n\nĐã tiết kiệm 60,0% thu nhập\n\nĐang tải thống kê tháng 11/2026...\nNgân sách tháng này\n\nHạn mức chi tiêu tháng 11/2026\n\nQuản lý ngân sách\n\nĐã chi tiêu\n\n80 ₫\n\nHạn mức ngân sách\n\n100 ₫\n\nCòn lại khả dụng\n\n20 ₫\n\nGần hết ngân sách · Đã sử dụng 80%\n\nGiao dịch gần đây\n\nCác giao dịch mới nhất trong tháng 11/2026\n\nXem tất cả\nĐang tải giao dịch...\nĐiểm nhấn tháng này\n\nDANH MỤC CHI NHIỀU NHẤT\n\nD15_A_EXPENSE\n\n80 ₫ (100% tổng chi)\n\nDANH MỤC ĐÃ PHÁT SINH CHI TIÊU\n\n1 danh mục\n\nTổng chi: 80 ₫\n\nCHI TRUNG BÌNH MỖI NGÀY\n\n5 ₫\n\nTính theo ngày thực tế trong tháng\n\nQuản lý ngân sách\nTrợ lý tài chính\n0"
+      }
+    }
+  ],
+  "counts": {
+    "PASS": 33,
+    "FAIL": 2,
+    "ERROR": 0,
+    "BLOCKED": 0,
+    "SKIPPED": 0
+  },
+  "errors": [
+    "THREE.WebGLRenderer: Cannot read properties of null (reading 'precision')",
+    "THREE.WebGLRenderer: Cannot read properties of null (reading 'precision')",
+    "THREE.WebGLRenderer: Cannot read properties of null (reading 'precision')"
+  ],
+  "expectedNetworkErrors": [
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "http://127.0.0.1:63623/api/budgets/2026/8",
+      "reason": "NOT_SET returns 404 by contract"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+      "url": "http://127.0.0.1:63623/api/reports/monthly?from=2026-10&to=2026-10",
+      "reason": "deliberate fault injection"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+      "url": "http://127.0.0.1:63623/api/reports/monthly?from=2026-09&to=2026-09",
+      "reason": "deliberate fault injection"
+    },
+    {
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "http://127.0.0.1:63623/api/budgets/2027/2",
+      "reason": "NOT_SET returns 404 by contract"
+    }
+  ],
+  "printPdf": "NOT_APPLICABLE: no print/PDF UI implemented"
+}

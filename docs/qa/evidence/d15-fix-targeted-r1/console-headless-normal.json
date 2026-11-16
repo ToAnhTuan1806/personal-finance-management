@@ -1,0 +1,190 @@
+{
+  "errors": [],
+  "warnings": [],
+  "pageErrors": [],
+  "networkErrors": [],
+  "canceledNavigationRequests": [],
+  "apiRequests": [
+    {
+      "url": "http://127.0.0.1:65011/src/api/errors.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:65011/src/api/axiosClient.js",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:65011/api/auth/login",
+      "method": "POST"
+    },
+    {
+      "url": "http://127.0.0.1:65011/api/dashboard/expenses-by-category?month=2026-11",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:65011/api/transactions?month=2026-11&page=0&size=8",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:65011/api/budgets/2026/11",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:65011/api/transactions?month=2026-11&page=0&size=100",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:65011/api/reports/monthly?from=2026-11&to=2026-11",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:65011/api/reports/monthly?from=2026-10&to=2026-10",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:65011/api/dashboard/expenses-by-category?month=2026-11",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:65011/api/transactions?month=2026-11&page=0&size=8",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:65011/api/budgets/2026/11",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:65011/api/transactions?month=2026-11&page=0&size=100",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:65011/api/reports/monthly?from=2026-10&to=2026-10",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:65011/api/reports/monthly?from=2026-09&to=2026-09",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:65011/api/dashboard/expenses-by-category?month=2026-10",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:65011/api/transactions?month=2026-10&page=0&size=8",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:65011/api/budgets/2026/10",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:65011/api/transactions?month=2026-10&page=0&size=100",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:65011/api/budgets/2026/11",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:65011/api/categories",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:65011/api/category-budgets?year=2026&month=11",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:65011/api/budgets/2026/11",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:65011/api/categories",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:65011/api/category-budgets?year=2026&month=11",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:65011/api/reports/monthly?from=2026-09&to=2026-11",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:65011/api/reports/monthly?from=2026-09&to=2026-11",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:65011/api/dashboard/expenses-by-category?month=2026-11",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:65011/api/transactions?month=2026-11&page=0&size=8",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:65011/api/budgets/2026/11",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:65011/api/transactions?month=2026-11&page=0&size=100",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:65011/api/reports/monthly?from=2026-11&to=2026-11",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:65011/api/reports/monthly?from=2026-10&to=2026-10",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:65011/api/dashboard/expenses-by-category?month=2026-11",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:65011/api/transactions?month=2026-11&page=0&size=8",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:65011/api/budgets/2026/11",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:65011/api/transactions?month=2026-11&page=0&size=100",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:65011/api/budgets/2026/11",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:65011/api/categories",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:65011/api/category-budgets?year=2026&month=11",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:65011/api/budgets/2026/11",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:65011/api/categories",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:65011/api/category-budgets?year=2026&month=11",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:65011/api/reports/monthly?from=2026-09&to=2026-11",
+      "method": "GET"
+    },
+    {
+      "url": "http://127.0.0.1:65011/api/reports/monthly?from=2026-09&to=2026-11",
+      "method": "GET"
+    }
+  ],
+  "chatAttempts": []
+}

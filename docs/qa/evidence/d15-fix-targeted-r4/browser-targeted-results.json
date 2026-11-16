@@ -1,0 +1,1355 @@
+{
+  "task": "D15 frontend fix targeted Browser QA",
+  "startedUtc": "2026-11-16T09:08:52.638635+00:00",
+  "frontendHead": "7716cc5528e35ce90bf082dd7ae7653ea6e9c3db",
+  "frontendWorktree": "F:\\RikkeiEdu\\personal-finance-management-FE",
+  "baselineGate": "PASS",
+  "backendHead": "4650bd9dd8c5d150b3fb25aa40913ac13784faf5",
+  "oracle": [
+    {
+      "month": "2026-11",
+      "sql": {
+        "month": "2026-11",
+        "totalIncome": "200.10",
+        "totalExpense": "80.00",
+        "balance": "120.10",
+        "sql": "SELECT COALESCE(SUM(CASE WHEN type='INCOME' THEN amount ELSE 0 END),0),COALESCE(SUM(CASE WHEN type='EXPENSE' THEN amount ELSE 0 END),0) FROM transactions WHERE user_id=3 AND transaction_date>='2026-11-01' AND transaction_date<'2026-12-01';"
+      },
+      "dashboard": {
+        "year": 2026,
+        "month": 11,
+        "totalIncome": "200.10",
+        "totalExpense": "80.00",
+        "balance": "120.10"
+      },
+      "report": {
+        "from": "2026-11",
+        "to": "2026-11",
+        "months": [
+          {
+            "month": "2026-11",
+            "totalIncome": "200.10",
+            "totalExpense": "80.00",
+            "balance": "120.10"
+          }
+        ],
+        "expensesByCategory": [
+          {
+            "categoryId": 40,
+            "categoryName": "Ăn uống",
+            "totalAmount": "80.00"
+          }
+        ]
+      }
+    },
+    {
+      "month": "2026-10",
+      "sql": {
+        "month": "2026-10",
+        "totalIncome": "0.01",
+        "totalExpense": "0.02",
+        "balance": "-0.01",
+        "sql": "SELECT COALESCE(SUM(CASE WHEN type='INCOME' THEN amount ELSE 0 END),0),COALESCE(SUM(CASE WHEN type='EXPENSE' THEN amount ELSE 0 END),0) FROM transactions WHERE user_id=3 AND transaction_date>='2026-10-01' AND transaction_date<'2026-11-01';"
+      },
+      "dashboard": {
+        "year": 2026,
+        "month": 10,
+        "totalIncome": "0.01",
+        "totalExpense": "0.02",
+        "balance": "-0.01"
+      },
+      "report": {
+        "from": "2026-10",
+        "to": "2026-10",
+        "months": [
+          {
+            "month": "2026-10",
+            "totalIncome": "0.01",
+            "totalExpense": "0.02",
+            "balance": "-0.01"
+          }
+        ],
+        "expensesByCategory": [
+          {
+            "categoryId": 40,
+            "categoryName": "Ăn uống",
+            "totalAmount": "0.02"
+          }
+        ]
+      }
+    }
+  ],
+  "tests": [
+    {
+      "id": "A-VISUAL-2026-11",
+      "expected": "Rendered digits/signs preserve 200.10/80.00/120.10; no NaN/Infinity; settled RAF/transition",
+      "mode": "headless",
+      "webglDisabled": false,
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "theme": "light",
+      "evidence": [
+        "kpi-headless-2026-11.png"
+      ],
+      "actual": {
+        "values": [
+          {
+            "text": "200,1₫",
+            "digits": [
+              {
+                "digit": "2",
+                "overlap": 1
+              },
+              {
+                "digit": "0",
+                "overlap": 1
+              },
+              {
+                "digit": "0",
+                "overlap": 1
+              },
+              {
+                "digit": "1",
+                "overlap": 1
+              }
+            ],
+            "visible": true,
+            "rect": {
+              "width": 96,
+              "height": 30
+            }
+          },
+          {
+            "text": "80₫",
+            "digits": [
+              {
+                "digit": "8",
+                "overlap": 1
+              },
+              {
+                "digit": "0",
+                "overlap": 1
+              }
+            ],
+            "visible": true,
+            "rect": {
+              "width": 50.5625,
+              "height": 30
+            }
+          },
+          {
+            "text": "120,1₫",
+            "digits": [
+              {
+                "digit": "1",
+                "overlap": 1
+              },
+              {
+                "digit": "2",
+                "overlap": 1
+              },
+              {
+                "digit": "0",
+                "overlap": 1
+              },
+              {
+                "digit": "1",
+                "overlap": 1
+              }
+            ],
+            "visible": true,
+            "rect": {
+              "width": 96,
+              "height": 30
+            }
+          }
+        ],
+        "expectedCanonical": [
+          "200,1₫",
+          "80₫",
+          "120,1₫"
+        ],
+        "framesWaited": 2,
+        "transitionWaitMs": 1400
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "A-ACCESSIBILITY-2026-11",
+      "expected": "Actual Chrome AX StaticText for each KPI equals exact SQL/API values 200.10/80.00/120.10",
+      "mode": "headless",
+      "webglDisabled": false,
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "theme": "light",
+      "evidence": [
+        "accessibility-headless-2026-11.json"
+      ],
+      "actual": {
+        "staticTextByKpi": [
+          [
+            "200,1 ₫"
+          ],
+          [
+            "80 ₫"
+          ],
+          [
+            "120,1 ₫"
+          ]
+        ],
+        "expectedCanonical": [
+          "200,1₫",
+          "80₫",
+          "120,1₫"
+        ]
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "A-VISUAL-2026-10",
+      "expected": "Rendered digits/signs preserve 0.01/0.02/-0.01; no NaN/Infinity; settled RAF/transition",
+      "mode": "headless",
+      "webglDisabled": false,
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "theme": "light",
+      "evidence": [
+        "kpi-headless-2026-10.png"
+      ],
+      "actual": {
+        "values": [
+          {
+            "text": "0,01₫",
+            "digits": [
+              {
+                "digit": "0",
+                "overlap": 1
+              },
+              {
+                "digit": "0",
+                "overlap": 1
+              },
+              {
+                "digit": "1",
+                "overlap": 1
+              }
+            ],
+            "visible": true,
+            "rect": {
+              "width": 77.40625,
+              "height": 30
+            }
+          },
+          {
+            "text": "0,02₫",
+            "digits": [
+              {
+                "digit": "0",
+                "overlap": 1
+              },
+              {
+                "digit": "0",
+                "overlap": 1
+              },
+              {
+                "digit": "2",
+                "overlap": 1
+              }
+            ],
+            "visible": true,
+            "rect": {
+              "width": 77.40625,
+              "height": 30
+            }
+          },
+          {
+            "text": "−0,01₫",
+            "digits": [
+              {
+                "digit": "0",
+                "overlap": 1
+              },
+              {
+                "digit": "0",
+                "overlap": 1
+              },
+              {
+                "digit": "1",
+                "overlap": 1
+              }
+            ],
+            "visible": true,
+            "rect": {
+              "width": 97.515625,
+              "height": 30
+            }
+          }
+        ],
+        "expectedCanonical": [
+          "0,01₫",
+          "0,02₫",
+          "-0,01₫"
+        ],
+        "framesWaited": 2,
+        "transitionWaitMs": 1400
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "A-ACCESSIBILITY-2026-10",
+      "expected": "Actual Chrome AX StaticText for each KPI equals exact SQL/API values 0.01/0.02/-0.01",
+      "mode": "headless",
+      "webglDisabled": false,
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "theme": "light",
+      "evidence": [
+        "accessibility-headless-2026-10.json"
+      ],
+      "actual": {
+        "staticTextByKpi": [
+          [
+            "0,01 ₫"
+          ],
+          [
+            "0,02 ₫"
+          ],
+          [
+            "-0,01 ₫"
+          ]
+        ],
+        "expectedCanonical": [
+          "0,01₫",
+          "0,02₫",
+          "-0,01₫"
+        ]
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "B-NORMAL-ROUTE-CYCLE",
+      "expected": "Six SPA route visits Dashboard/Budgets/Reports twice; robot or static mascot visible; launcher focus/click/open/close; no renderer/canvas loop; no chat API",
+      "mode": "headless",
+      "webglDisabled": false,
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "theme": "light",
+      "evidence": [],
+      "actual": {
+        "states": [
+          {
+            "route": "/",
+            "focusable": true,
+            "disabled": false,
+            "canvasCount": 1,
+            "canvasVisibility": "hidden",
+            "fallbackVisible": true,
+            "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png",
+            "launcherWidth": 80,
+            "launcherHeight": 80,
+            "viewportVisible": true,
+            "openClose": true
+          },
+          {
+            "route": "/budgets",
+            "focusable": true,
+            "disabled": false,
+            "canvasCount": 1,
+            "canvasVisibility": "hidden",
+            "fallbackVisible": true,
+            "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png",
+            "launcherWidth": 84,
+            "launcherHeight": 84,
+            "viewportVisible": true,
+            "openClose": true
+          },
+          {
+            "route": "/reports",
+            "focusable": true,
+            "disabled": false,
+            "canvasCount": 1,
+            "canvasVisibility": "hidden",
+            "fallbackVisible": true,
+            "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png",
+            "launcherWidth": 84,
+            "launcherHeight": 84,
+            "viewportVisible": true,
+            "openClose": true
+          },
+          {
+            "route": "/",
+            "focusable": true,
+            "disabled": false,
+            "canvasCount": 1,
+            "canvasVisibility": "hidden",
+            "fallbackVisible": true,
+            "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png",
+            "launcherWidth": 84,
+            "launcherHeight": 84,
+            "viewportVisible": true,
+            "openClose": true
+          },
+          {
+            "route": "/budgets",
+            "focusable": true,
+            "disabled": false,
+            "canvasCount": 1,
+            "canvasVisibility": "hidden",
+            "fallbackVisible": true,
+            "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png",
+            "launcherWidth": 84,
+            "launcherHeight": 84,
+            "viewportVisible": true,
+            "openClose": true
+          },
+          {
+            "route": "/reports",
+            "focusable": true,
+            "disabled": false,
+            "canvasCount": 1,
+            "canvasVisibility": "hidden",
+            "fallbackVisible": true,
+            "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png",
+            "launcherWidth": 84,
+            "launcherHeight": 84,
+            "viewportVisible": true,
+            "openClose": true
+          }
+        ],
+        "canvasCountsAcrossSixRoutes": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "unchangedAfterIdle": true
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "B-ERROR-GATE",
+      "expected": "Zero console.error, page error, unexpected network errors and /api/ai/chat attempts (no WebGL filtering)",
+      "mode": "headless",
+      "webglDisabled": false,
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "theme": "light",
+      "evidence": [
+        "console-headless-normal.json"
+      ],
+      "actual": {
+        "consoleErrors": 0,
+        "pageErrors": 0,
+        "networkErrors": 0,
+        "chatAttempts": 0,
+        "warnings": 0,
+        "apiRequests": 43
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "A-VISUAL-2026-11",
+      "expected": "Rendered digits/signs preserve 200.10/80.00/120.10; no NaN/Infinity; settled RAF/transition",
+      "mode": "headed",
+      "webglDisabled": false,
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "theme": "dark",
+      "evidence": [
+        "kpi-headed-2026-11.png"
+      ],
+      "actual": {
+        "values": [
+          {
+            "text": "200,1₫",
+            "digits": [
+              {
+                "digit": "2",
+                "overlap": 1
+              },
+              {
+                "digit": "0",
+                "overlap": 1
+              },
+              {
+                "digit": "0",
+                "overlap": 1
+              },
+              {
+                "digit": "1",
+                "overlap": 1
+              }
+            ],
+            "visible": true,
+            "rect": {
+              "width": 95.98958587646484,
+              "height": 30
+            }
+          },
+          {
+            "text": "80₫",
+            "digits": [
+              {
+                "digit": "8",
+                "overlap": 1
+              },
+              {
+                "digit": "0",
+                "overlap": 1
+              }
+            ],
+            "visible": true,
+            "rect": {
+              "width": 50.552085876464844,
+              "height": 30
+            }
+          },
+          {
+            "text": "120,1₫",
+            "digits": [
+              {
+                "digit": "1",
+                "overlap": 1
+              },
+              {
+                "digit": "2",
+                "overlap": 1
+              },
+              {
+                "digit": "0",
+                "overlap": 1
+              },
+              {
+                "digit": "1",
+                "overlap": 1
+              }
+            ],
+            "visible": true,
+            "rect": {
+              "width": 95.98958587646484,
+              "height": 30
+            }
+          }
+        ],
+        "expectedCanonical": [
+          "200,1₫",
+          "80₫",
+          "120,1₫"
+        ],
+        "framesWaited": 2,
+        "transitionWaitMs": 1400
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "A-ACCESSIBILITY-2026-11",
+      "expected": "Actual Chrome AX StaticText for each KPI equals exact SQL/API values 200.10/80.00/120.10",
+      "mode": "headed",
+      "webglDisabled": false,
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "theme": "dark",
+      "evidence": [
+        "accessibility-headed-2026-11.json"
+      ],
+      "actual": {
+        "staticTextByKpi": [
+          [
+            "200,1 ₫"
+          ],
+          [
+            "80 ₫"
+          ],
+          [
+            "120,1 ₫"
+          ]
+        ],
+        "expectedCanonical": [
+          "200,1₫",
+          "80₫",
+          "120,1₫"
+        ]
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "A-VISUAL-2026-10",
+      "expected": "Rendered digits/signs preserve 0.01/0.02/-0.01; no NaN/Infinity; settled RAF/transition",
+      "mode": "headed",
+      "webglDisabled": false,
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "theme": "dark",
+      "evidence": [
+        "kpi-headed-2026-10.png"
+      ],
+      "actual": {
+        "values": [
+          {
+            "text": "0,01₫",
+            "digits": [
+              {
+                "digit": "0",
+                "overlap": 1
+              },
+              {
+                "digit": "0",
+                "overlap": 1
+              },
+              {
+                "digit": "1",
+                "overlap": 1
+              }
+            ],
+            "visible": true,
+            "rect": {
+              "width": 77.39583587646484,
+              "height": 30
+            }
+          },
+          {
+            "text": "0,02₫",
+            "digits": [
+              {
+                "digit": "0",
+                "overlap": 1
+              },
+              {
+                "digit": "0",
+                "overlap": 1
+              },
+              {
+                "digit": "2",
+                "overlap": 1
+              }
+            ],
+            "visible": true,
+            "rect": {
+              "width": 77.39583587646484,
+              "height": 30
+            }
+          },
+          {
+            "text": "−0,01₫",
+            "digits": [
+              {
+                "digit": "0",
+                "overlap": 1
+              },
+              {
+                "digit": "0",
+                "overlap": 1
+              },
+              {
+                "digit": "1",
+                "overlap": 1
+              }
+            ],
+            "visible": true,
+            "rect": {
+              "width": 97.5,
+              "height": 30
+            }
+          }
+        ],
+        "expectedCanonical": [
+          "0,01₫",
+          "0,02₫",
+          "-0,01₫"
+        ],
+        "framesWaited": 2,
+        "transitionWaitMs": 1400
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "A-ACCESSIBILITY-2026-10",
+      "expected": "Actual Chrome AX StaticText for each KPI equals exact SQL/API values 0.01/0.02/-0.01",
+      "mode": "headed",
+      "webglDisabled": false,
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "theme": "dark",
+      "evidence": [
+        "accessibility-headed-2026-10.json"
+      ],
+      "actual": {
+        "staticTextByKpi": [
+          [
+            "0,01 ₫"
+          ],
+          [
+            "0,02 ₫"
+          ],
+          [
+            "-0,01 ₫"
+          ]
+        ],
+        "expectedCanonical": [
+          "0,01₫",
+          "0,02₫",
+          "-0,01₫"
+        ]
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "B-NORMAL-ROUTE-CYCLE",
+      "expected": "Six SPA route visits Dashboard/Budgets/Reports twice; robot or static mascot visible; launcher focus/click/open/close; no renderer/canvas loop; no chat API",
+      "mode": "headed",
+      "webglDisabled": false,
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "theme": "dark",
+      "evidence": [],
+      "actual": {
+        "states": [
+          {
+            "route": "/",
+            "focusable": true,
+            "disabled": false,
+            "canvasCount": 1,
+            "canvasVisibility": "hidden",
+            "fallbackVisible": true,
+            "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png",
+            "launcherWidth": 80,
+            "launcherHeight": 80,
+            "viewportVisible": true,
+            "openClose": true
+          },
+          {
+            "route": "/budgets",
+            "focusable": true,
+            "disabled": false,
+            "canvasCount": 1,
+            "canvasVisibility": "hidden",
+            "fallbackVisible": true,
+            "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png",
+            "launcherWidth": 84,
+            "launcherHeight": 84,
+            "viewportVisible": true,
+            "openClose": true
+          },
+          {
+            "route": "/reports",
+            "focusable": true,
+            "disabled": false,
+            "canvasCount": 1,
+            "canvasVisibility": "hidden",
+            "fallbackVisible": true,
+            "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png",
+            "launcherWidth": 84,
+            "launcherHeight": 84,
+            "viewportVisible": true,
+            "openClose": true
+          },
+          {
+            "route": "/",
+            "focusable": true,
+            "disabled": false,
+            "canvasCount": 1,
+            "canvasVisibility": "hidden",
+            "fallbackVisible": true,
+            "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png",
+            "launcherWidth": 84,
+            "launcherHeight": 84,
+            "viewportVisible": true,
+            "openClose": true
+          },
+          {
+            "route": "/budgets",
+            "focusable": true,
+            "disabled": false,
+            "canvasCount": 1,
+            "canvasVisibility": "hidden",
+            "fallbackVisible": true,
+            "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png",
+            "launcherWidth": 84,
+            "launcherHeight": 84,
+            "viewportVisible": true,
+            "openClose": true
+          },
+          {
+            "route": "/reports",
+            "focusable": true,
+            "disabled": false,
+            "canvasCount": 1,
+            "canvasVisibility": "hidden",
+            "fallbackVisible": true,
+            "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png",
+            "launcherWidth": 80.12223815917969,
+            "launcherHeight": 80.12223815917969,
+            "viewportVisible": true,
+            "openClose": true
+          }
+        ],
+        "canvasCountsAcrossSixRoutes": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "unchangedAfterIdle": true
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "B-ERROR-GATE",
+      "expected": "Zero console.error, page error, unexpected network errors and /api/ai/chat attempts (no WebGL filtering)",
+      "mode": "headed",
+      "webglDisabled": false,
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "theme": "dark",
+      "evidence": [
+        "console-headed-normal.json"
+      ],
+      "actual": {
+        "consoleErrors": 0,
+        "pageErrors": 0,
+        "networkErrors": 0,
+        "chatAttempts": 0,
+        "warnings": 0,
+        "apiRequests": 43
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "C-FALLBACK-ROUTE-CYCLE",
+      "expected": "Six SPA route visits Dashboard/Budgets/Reports twice; robot or static mascot visible; launcher focus/click/open/close; no renderer/canvas loop; no chat API",
+      "mode": "headless",
+      "webglDisabled": true,
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "theme": "light",
+      "evidence": [
+        "fallback-1280-light.png"
+      ],
+      "actual": {
+        "states": [
+          {
+            "route": "/",
+            "focusable": true,
+            "disabled": false,
+            "canvasCount": 1,
+            "canvasVisibility": "hidden",
+            "fallbackVisible": true,
+            "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png",
+            "launcherWidth": 80,
+            "launcherHeight": 80,
+            "viewportVisible": true,
+            "openClose": true
+          },
+          {
+            "route": "/budgets",
+            "focusable": true,
+            "disabled": false,
+            "canvasCount": 1,
+            "canvasVisibility": "hidden",
+            "fallbackVisible": true,
+            "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png",
+            "launcherWidth": 84,
+            "launcherHeight": 84,
+            "viewportVisible": true,
+            "openClose": true
+          },
+          {
+            "route": "/reports",
+            "focusable": true,
+            "disabled": false,
+            "canvasCount": 1,
+            "canvasVisibility": "hidden",
+            "fallbackVisible": true,
+            "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png",
+            "launcherWidth": 84,
+            "launcherHeight": 84,
+            "viewportVisible": true,
+            "openClose": true
+          },
+          {
+            "route": "/",
+            "focusable": true,
+            "disabled": false,
+            "canvasCount": 1,
+            "canvasVisibility": "hidden",
+            "fallbackVisible": true,
+            "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png",
+            "launcherWidth": 84,
+            "launcherHeight": 84,
+            "viewportVisible": true,
+            "openClose": true
+          },
+          {
+            "route": "/budgets",
+            "focusable": true,
+            "disabled": false,
+            "canvasCount": 1,
+            "canvasVisibility": "hidden",
+            "fallbackVisible": true,
+            "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png",
+            "launcherWidth": 84,
+            "launcherHeight": 84,
+            "viewportVisible": true,
+            "openClose": true
+          },
+          {
+            "route": "/reports",
+            "focusable": true,
+            "disabled": false,
+            "canvasCount": 1,
+            "canvasVisibility": "hidden",
+            "fallbackVisible": true,
+            "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png",
+            "launcherWidth": 84,
+            "launcherHeight": 84,
+            "viewportVisible": true,
+            "openClose": true
+          }
+        ],
+        "canvasCountsAcrossSixRoutes": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "unchangedAfterIdle": true
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "C-ERROR-GATE",
+      "expected": "Zero console.error, page error, unexpected network errors and /api/ai/chat attempts (no WebGL filtering)",
+      "mode": "headless",
+      "webglDisabled": true,
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "theme": "light",
+      "evidence": [
+        "console-headless-disabled-1280.json"
+      ],
+      "actual": {
+        "consoleErrors": 0,
+        "pageErrors": 0,
+        "networkErrors": 0,
+        "chatAttempts": 0,
+        "warnings": 0,
+        "apiRequests": 37
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "C-FALLBACK-ROUTE-CYCLE",
+      "expected": "Six SPA route visits Dashboard/Budgets/Reports twice; robot or static mascot visible; launcher focus/click/open/close; no renderer/canvas loop; no chat API",
+      "mode": "headless",
+      "webglDisabled": true,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "theme": "dark",
+      "evidence": [
+        "fallback-390-dark.png"
+      ],
+      "actual": {
+        "states": [
+          {
+            "route": "/",
+            "focusable": true,
+            "disabled": false,
+            "canvasCount": 1,
+            "canvasVisibility": "hidden",
+            "fallbackVisible": true,
+            "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png",
+            "launcherWidth": 80,
+            "launcherHeight": 80,
+            "viewportVisible": true,
+            "openClose": true
+          },
+          {
+            "route": "/budgets",
+            "focusable": true,
+            "disabled": false,
+            "canvasCount": 1,
+            "canvasVisibility": "hidden",
+            "fallbackVisible": true,
+            "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png",
+            "launcherWidth": 84,
+            "launcherHeight": 84,
+            "viewportVisible": true,
+            "openClose": true
+          },
+          {
+            "route": "/reports",
+            "focusable": true,
+            "disabled": false,
+            "canvasCount": 1,
+            "canvasVisibility": "hidden",
+            "fallbackVisible": true,
+            "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png",
+            "launcherWidth": 84,
+            "launcherHeight": 84,
+            "viewportVisible": true,
+            "openClose": true
+          },
+          {
+            "route": "/",
+            "focusable": true,
+            "disabled": false,
+            "canvasCount": 1,
+            "canvasVisibility": "hidden",
+            "fallbackVisible": true,
+            "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png",
+            "launcherWidth": 84,
+            "launcherHeight": 84,
+            "viewportVisible": true,
+            "openClose": true
+          },
+          {
+            "route": "/budgets",
+            "focusable": true,
+            "disabled": false,
+            "canvasCount": 1,
+            "canvasVisibility": "hidden",
+            "fallbackVisible": true,
+            "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png",
+            "launcherWidth": 84,
+            "launcherHeight": 84,
+            "viewportVisible": true,
+            "openClose": true
+          },
+          {
+            "route": "/reports",
+            "focusable": true,
+            "disabled": false,
+            "canvasCount": 1,
+            "canvasVisibility": "hidden",
+            "fallbackVisible": true,
+            "fallbackImage": "/src/assets/ai-assistant-mascot-sprite.png",
+            "launcherWidth": 84,
+            "launcherHeight": 84,
+            "viewportVisible": true,
+            "openClose": true
+          }
+        ],
+        "canvasCountsAcrossSixRoutes": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "unchangedAfterIdle": true
+      },
+      "status": "PASS"
+    },
+    {
+      "id": "C-ERROR-GATE",
+      "expected": "Zero console.error, page error, unexpected network errors and /api/ai/chat attempts (no WebGL filtering)",
+      "mode": "headless",
+      "webglDisabled": true,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "theme": "dark",
+      "evidence": [
+        "console-headless-disabled-390.json"
+      ],
+      "actual": {
+        "consoleErrors": 0,
+        "pageErrors": 0,
+        "networkErrors": 0,
+        "chatAttempts": 0,
+        "warnings": 0,
+        "apiRequests": 37
+      },
+      "status": "PASS"
+    }
+  ],
+  "cleanup": {
+    "status": "PASS",
+    "containerId": "3958b57158e709fe0544051ff01618f8561a69b628aedb6fbb324547492449e3",
+    "actual": "Only this newly created disposable container removed; fixtures removed with it; Backend stopped"
+  },
+  "backendUrl": "http://127.0.0.1:61790",
+  "environment": {
+    "mysql": "8.0.46",
+    "database": "se_d15_qa_04f207ae2f484ce892a2c8e02dcfe678",
+    "containerId": "3958b57158e709fe0544051ff01618f8561a69b628aedb6fbb324547492449e3",
+    "dockerEndpoint": "npipe:////./pipe/dockerDesktopLinuxEngine",
+    "hibernate": "validate",
+    "transport": "127.0.0.1 only"
+  },
+  "schemaInputs": {
+    "backend/src/test/resources/d06-legacy-schema.sql": "aa02c1a770b4786ce087a2feb729b9cc844a5744026fa0a8d210d9ff9f3d25e0",
+    "database/migrations/V002__category_icon_color.sql": "02dfb91fbf51b88eacb2e4e90b79beec1e3dda822f7d03e8f0fa0b54498ae8ff",
+    "database/migrations/V003__create_category_budgets.sql": "d26d5fef8d09c6cb1d63a19e2a6d3af9ceb76381b3974e136250d9e055ede67b",
+    "database/migrations/V004__create_recurring_templates.sql": "ec6ecbb9cded66e025a00c103a23b549046df5551eae89c7871a88a85193f565",
+    "database/migrations/V005__create_recurring_applications.sql": "9433eb4465ec407d47013b164198bd3c240422f6fd857ae12d983d46a78b736d",
+    "database/migrations/V006__create_password_reset_tokens.sql": "d540564ebba1e6d73dc790f9de04f8c318c2869c34d8915ae01d8c1442dff1d4"
+  },
+  "backendJarSha256": "f244a16cd6a99d9a7a5436478927fc67e0b2fcc40e4adbcd7aaa94daefbda1d7",
+  "beforeReads": {
+    "tables": {
+      "categories": {
+        "rows": 56,
+        "sha256": "02acef860519fc63e8e053b0b5d983848b00c7109900c65ed7b59f1f87a64548"
+      },
+      "category_budgets": {
+        "rows": 12,
+        "sha256": "d322504dffb560806b7cda632b71612a84d483cce3b801d4dc2285577752cbae"
+      },
+      "monthly_budgets": {
+        "rows": 13,
+        "sha256": "70669a5329ca1cdd3b5c799337511930cc8e3a4654296fd62fdac4cdca86d45d"
+      },
+      "password_reset_tokens": {
+        "rows": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "recurring_applications": {
+        "rows": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "recurring_templates": {
+        "rows": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "transactions": {
+        "rows": 30,
+        "sha256": "2ee66b83a8868a5721eb9fc4f660c91f6a1a46d043f7f04e99bccbf0b1629b7a"
+      },
+      "users": {
+        "rows": 3,
+        "sha256": "c406f8d88f61a0467567561eb7dbd0c7439dc3e2ba76a6dee0579b9be33d1551"
+      }
+    },
+    "writeCounters": "categories\t56\ncategory_budgets\t12\nmonthly_budgets\t13\npassword_reset_tokens\t0\nrecurring_applications\t0\nrecurring_templates\t0\ntransactions\t30\nusers\t3"
+  },
+  "browserExitCode": 0,
+  "frontendUrl": "http://127.0.0.1:61895/",
+  "browserHelpersCleanup": "PASS",
+  "chatAttempts": [],
+  "sessions": [
+    {
+      "config": {
+        "mode": "headless",
+        "disabled": false,
+        "viewport": {
+          "width": 1280,
+          "height": 800
+        },
+        "theme": "light"
+      },
+      "flags": [
+        "--remote-debugging-port=0",
+        "--remote-debugging-address=127.0.0.1",
+        "--no-first-run",
+        "--no-default-browser-check",
+        "--disable-background-networking",
+        "--disable-component-update",
+        "--enable-automation",
+        "--disable-backgrounding-occluded-windows",
+        "--disable-renderer-backgrounding",
+        "--disable-background-timer-throttling",
+        "--disable-features=CalculateNativeWinOcclusion",
+        "--window-size=1280,800",
+        "--headless=new",
+        "about:blank"
+      ],
+      "browserVersion": "Chrome/157.0.8103.78",
+      "cleanup": "PASS",
+      "errorCount": 0,
+      "warningCount": 0,
+      "pageErrorCount": 0,
+      "networkErrorCount": 0
+    },
+    {
+      "config": {
+        "mode": "headed",
+        "disabled": false,
+        "viewport": {
+          "width": 1280,
+          "height": 800
+        },
+        "theme": "dark"
+      },
+      "flags": [
+        "--remote-debugging-port=0",
+        "--remote-debugging-address=127.0.0.1",
+        "--no-first-run",
+        "--no-default-browser-check",
+        "--disable-background-networking",
+        "--disable-component-update",
+        "--enable-automation",
+        "--disable-backgrounding-occluded-windows",
+        "--disable-renderer-backgrounding",
+        "--disable-background-timer-throttling",
+        "--disable-features=CalculateNativeWinOcclusion",
+        "--window-size=1280,800",
+        "about:blank"
+      ],
+      "browserVersion": "Chrome/157.0.8103.78",
+      "cleanup": "PASS",
+      "errorCount": 0,
+      "warningCount": 0,
+      "pageErrorCount": 0,
+      "networkErrorCount": 0
+    },
+    {
+      "config": {
+        "mode": "headless",
+        "disabled": true,
+        "viewport": {
+          "width": 1280,
+          "height": 800
+        },
+        "theme": "light"
+      },
+      "flags": [
+        "--remote-debugging-port=0",
+        "--remote-debugging-address=127.0.0.1",
+        "--no-first-run",
+        "--no-default-browser-check",
+        "--disable-background-networking",
+        "--disable-component-update",
+        "--enable-automation",
+        "--disable-backgrounding-occluded-windows",
+        "--disable-renderer-backgrounding",
+        "--disable-background-timer-throttling",
+        "--disable-features=CalculateNativeWinOcclusion",
+        "--window-size=1280,800",
+        "--headless=new",
+        "--disable-webgl",
+        "--disable-webgl2",
+        "about:blank"
+      ],
+      "browserVersion": "Chrome/157.0.8103.78",
+      "cleanup": "PASS",
+      "errorCount": 0,
+      "warningCount": 0,
+      "pageErrorCount": 0,
+      "networkErrorCount": 0
+    },
+    {
+      "config": {
+        "mode": "headless",
+        "disabled": true,
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "theme": "dark"
+      },
+      "flags": [
+        "--remote-debugging-port=0",
+        "--remote-debugging-address=127.0.0.1",
+        "--no-first-run",
+        "--no-default-browser-check",
+        "--disable-background-networking",
+        "--disable-component-update",
+        "--enable-automation",
+        "--disable-backgrounding-occluded-windows",
+        "--disable-renderer-backgrounding",
+        "--disable-background-timer-throttling",
+        "--disable-features=CalculateNativeWinOcclusion",
+        "--window-size=390,844",
+        "--headless=new",
+        "--disable-webgl",
+        "--disable-webgl2",
+        "about:blank"
+      ],
+      "browserVersion": "Chrome/157.0.8103.78",
+      "cleanup": "PASS",
+      "errorCount": 0,
+      "warningCount": 0,
+      "pageErrorCount": 0,
+      "networkErrorCount": 0
+    }
+  ],
+  "description": "Actual app, browser UI login, real HTTP/MySQL. Visible digits reconstructed from rendered clipping geometry, actual Chrome AX snapshots; no React/financial response mocks. No WebGL errors filtered.",
+  "afterReads": {
+    "tables": {
+      "categories": {
+        "rows": 56,
+        "sha256": "02acef860519fc63e8e053b0b5d983848b00c7109900c65ed7b59f1f87a64548"
+      },
+      "category_budgets": {
+        "rows": 12,
+        "sha256": "d322504dffb560806b7cda632b71612a84d483cce3b801d4dc2285577752cbae"
+      },
+      "monthly_budgets": {
+        "rows": 13,
+        "sha256": "70669a5329ca1cdd3b5c799337511930cc8e3a4654296fd62fdac4cdca86d45d"
+      },
+      "password_reset_tokens": {
+        "rows": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "recurring_applications": {
+        "rows": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "recurring_templates": {
+        "rows": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "transactions": {
+        "rows": 30,
+        "sha256": "2ee66b83a8868a5721eb9fc4f660c91f6a1a46d043f7f04e99bccbf0b1629b7a"
+      },
+      "users": {
+        "rows": 3,
+        "sha256": "c406f8d88f61a0467567561eb7dbd0c7439dc3e2ba76a6dee0579b9be33d1551"
+      }
+    },
+    "writeCounters": "categories\t56\ncategory_budgets\t12\nmonthly_budgets\t13\npassword_reset_tokens\t0\nrecurring_applications\t0\nrecurring_templates\t0\ntransactions\t30\nusers\t3"
+  },
+  "zeroMutation": "PASS: eight-table hashes/counts and COUNT_WRITE unchanged",
+  "sourceGateAfter": "PASS",
+  "frontendSourceUnchanged": true,
+  "counts": {
+    "PASS": 16,
+    "FAIL": 0,
+    "ERROR": 0,
+    "NOT_RUN": 0
+  },
+  "status": "TARGETED QA PASS",
+  "finishedUtc": "2026-11-16T09:10:27.612366+00:00",
+  "scope": "Targeted only. Prior Browser QA: 33 PASS / 2 FAIL at 4650bd9. The 33 unrelated cases were not rerun; inherit prior evidence by risk assessment only if targeted gates all pass."
+}

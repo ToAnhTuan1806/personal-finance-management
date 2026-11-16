@@ -1,0 +1,89 @@
+{
+  "status": "TARGETED QA PASS",
+  "authorRole": "Senior QA verification",
+  "frontendSha": "7716cc5528e35ce90bf082dd7ae7653ea6e9c3db",
+  "backendSha": "4650bd9dd8c5d150b3fb25aa40913ac13784faf5",
+  "primaryEvidence": "browser-targeted-results.json",
+  "historicalRunsPreserved": "Original results/AX/PNG retained; see cleanup audit for historical Backend log append drift.",
+  "harnessAndEnvironmentIssues": [
+    {
+      "id": "QA-H01",
+      "priority": "P2",
+      "kind": "harness",
+      "status": "FIXED AND RECHECKED",
+      "runs": [
+        "d15-fix-targeted-r1"
+      ],
+      "actual": "Partial AX capture omitted StaticText descendants of ignored generic spans; four provisional A accessibility failures were capture errors, not confirmed product bugs.",
+      "reproduce": [
+        "Read Accessibility.getPartialAXTree for the sr-only KPI span",
+        "Filter only returned immediate nodes for StaticText; ignored parent has childIds not included in partial response"
+      ],
+      "resolution": "Resolve actual Chrome AX descendant nodes using Accessibility.getFullAXTree; r4 headless and headed exact StaticText all PASS.",
+      "supersedesProvisionalProductBugIds": [
+        "D15-FIX-TGT-01",
+        "D15-FIX-TGT-02",
+        "D15-FIX-TGT-03",
+        "D15-FIX-TGT-04"
+      ]
+    },
+    {
+      "id": "QA-ENV01",
+      "priority": "P2",
+      "kind": "Chrome headed environment",
+      "status": "RESOLVED FOR FINAL RUN",
+      "runs": [
+        "d15-fix-targeted-r2",
+        "d15-fix-targeted-r3"
+      ],
+      "reproduce": [
+        "Launch headed Chrome while Windows marks its content as occluded/hidden",
+        "Attempt browser UI typing/submit; login may timeout or input may not reach the form"
+      ],
+      "actual": "r2 timeout, r3 input guard stopped session; no console/page/network error.",
+      "resolution": "Restore native window, bring page forward, wait for actual visible state, disable Chrome native occlusion/background throttling; final headed diagnostics visible=true and hasFocus=true."
+    },
+    {
+      "id": "QA-ENV02",
+      "priority": "P2",
+      "kind": "QA harness process cleanup",
+      "status": "RESOLVED",
+      "reproduce": [
+        "Launch Backend through Oracle javapath java.exe shim",
+        "Terminate only the shim process",
+        "Child JVM can remain alive and append Hikari logs after disposable MySQL removal"
+      ],
+      "actual": "7 verified se-d15 QA child JVMs were found: 3 earlier D15 runs and 4 targeted runs. Original parent-only cleanup statements did not establish JVM exit.",
+      "resolution": "Matched each PID to the exact DB-worktree Backend JAR and se-d15 temporary config, stopped only those 7 JVMs; confirmed zero matching JVMs remain. Future targeted harness uses taskkill /PID <owned launcher> /T /F before waiting.",
+      "remainingProductBug": false
+    }
+  ],
+  "screenshotVisualReview": {
+    "status": "PASS",
+    "files": [
+      "kpi-headed-2026-10.png",
+      "kpi-headed-2026-11.png",
+      "fallback-390-dark.png",
+      "fallback-1280-light.png"
+    ],
+    "actual": "Headed PNG show 200,1 / 80 / 120,1 and 0,01 / 0,02 / minus 0,01; disabled-WebGL desktop/mobile show static mascot inside usable launcher."
+  },
+  "riskAssessment": {
+    "priorBaseline": "4650bd9dd8c5d150b3fb25aa40913ac13784faf5",
+    "priorBrowserCounts": {
+      "PASS": 33,
+      "FAIL": 2
+    },
+    "changedProductionFiles": [
+      "frontend/src/components/dashboard/RollingNumber.jsx",
+      "frontend/src/pages/Dashboard.jsx",
+      "frontend/src/components/ai/robotScene.js"
+    ],
+    "decision": "Only affected cases rerun in this targeted cycle. The 33 unrelated prior PASS cases were NOT rerun; inherited from prior evidence by risk assessment. Do not present as a fresh full 35-case run.",
+    "priorEvidence": "../d15-20261116-r3/browser-results.json"
+  },
+  "remainingProductBugsFromTargetedRun": [],
+  "actions": "No production source edits, Git writes/stash changes, commit/push/PR/merge/deploy/Trello operations.",
+  "cleanupAudit": "cleanup-verification.json",
+  "finalVerifiedManifest": "final-manifest.json"
+}

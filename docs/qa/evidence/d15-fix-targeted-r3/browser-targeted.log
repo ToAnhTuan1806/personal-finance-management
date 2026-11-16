@@ -1,0 +1,14 @@
+Login via browser UI succeeded: headless
+A-VISUAL-2026-11 headless normal PASS
+A-ACCESSIBILITY-2026-11 headless normal PASS
+A-VISUAL-2026-10 headless normal PASS
+A-ACCESSIBILITY-2026-10 headless normal PASS
+B-NORMAL-ROUTE-CYCLE headless normal PASS
+B-ERROR-GATE headless normal PASS
+SESSION ERROR headed Browser input did not reach the login form
+Login via browser UI succeeded: headless
+C-FALLBACK-ROUTE-CYCLE headless WebGL-disabled PASS
+C-ERROR-GATE headless WebGL-disabled PASS
+Login via browser UI succeeded: headless
+C-FALLBACK-ROUTE-CYCLE headless WebGL-disabled PASS
+C-ERROR-GATE headless WebGL-disabled PASS

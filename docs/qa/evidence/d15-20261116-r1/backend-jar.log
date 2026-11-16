@@ -1,0 +1,41 @@
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>setlocal EnableExtensions 
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>goto afterSafetyNet 
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>set DIRNAME=F:\RikkeiEdu\personal-finance-management-DB\backend\ 
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>if "F:\RikkeiEdu\personal-finance-management-DB\backend\" == "" set DIRNAME=. 
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>set APP_BASE_NAME=gradlew 
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>set APP_HOME=F:\RikkeiEdu\personal-finance-management-DB\backend\ 
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>for %i in ("F:\RikkeiEdu\personal-finance-management-DB\backend\") do set APP_HOME=%~fi 
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>set APP_HOME=F:\RikkeiEdu\personal-finance-management-DB\backend\ 
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>set DEFAULT_JVM_OPTS="-Xmx64m" "-Xms64m" 
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>if defined JAVA_HOME goto findJavaFromJavaHome 
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>set JAVA_EXE=java.exe 
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>java.exe -version  1>NUL 2>&1 
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>if 0 EQU 0 goto execute 
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>endlocal   & "java.exe" "-Xmx64m" "-Xms64m"   "-Dorg.gradle.appname=gradlew" -jar "F:\RikkeiEdu\personal-finance-management-DB\backend\\gradle\wrapper\gradle-wrapper.jar" --offline bootJar --console=plain   & call :exitWithErrorLevel   & goto exitWithErrorLevel 
+> Task :compileJava UP-TO-DATE
+> Task :processResources UP-TO-DATE
+> Task :classes UP-TO-DATE
+> Task :resolveMainClassName UP-TO-DATE
+> Task :bootJar UP-TO-DATE
+
+BUILD SUCCESSFUL in 1s
+4 actionable tasks: 4 up-to-date
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.8.1/userguide/configuration_cache_enabling.html
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>"C:\WINDOWS\system32\cmd.exe" /c exit 0 
+
+F:\RikkeiEdu\personal-finance-management-DB\backend>"C:\WINDOWS\system32\cmd.exe" /c exit 0 

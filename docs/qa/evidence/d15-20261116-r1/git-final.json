@@ -1,0 +1,17 @@
+{
+  "head": "4650bd9dd8c5d150b3fb25aa40913ac13784faf5",
+  "branch": "feature/quynh",
+  "upstream": "origin/feature/quynh",
+  "dev": "4650bd9dd8c5d150b3fb25aa40913ac13784faf5",
+  "aheadBehindDev": "0\t0",
+  "stash": "stash@{0}: On feature/tuan: WIP FE giao diện ngày 13-11-2026\nstash@{1}: On feature/trang: WIP evidence D13 FE NLU trước đồng bộ\nstash@{2}: On feature/tuan: WIP truoc D13 - bao toan thay doi ngay 11-11-2026\nstash@{3}: On feature/trang: Luu tam cau hinh Backend local",
+  "worktrees": "F:/RikkeiEdu/personal-finance-management    9638350 [feature/tuan]\nF:/RikkeiEdu/personal-finance-management-DB 4650bd9 [feature/quynh]\nF:/RikkeiEdu/personal-finance-management-FE 8317699 [feature/trang]",
+  "status": "M docs/qa/README.md\n?? docs/qa/D15.md\n?? docs/qa/evidence/d15-20261116-r1/backend-fresh.json\n?? docs/qa/evidence/d15-20261116-r1/backend-fresh.log\n?? docs/qa/evidence/d15-20261116-r1/backend-jar.log\n?? docs/qa/evidence/d15-20261116-r1/backend.log\n?? docs/qa/evidence/d15-20261116-r1/browser-results.json\n?? docs/qa/evidence/d15-20261116-r1/browser-run.log\n?? docs/qa/evidence/d15-20261116-r1/export-A.csv.log\n?? docs/qa/evidence/d15-20261116-r1/frontend-build.log\n?? docs/qa/evidence/d15-20261116-r1/frontend-lint.log\n?? docs/qa/evidence/d15-20261116-r1/frontend-test.log\n?? docs/qa/evidence/d15-20261116-r1/git-before.txt\n?? docs/qa/evidence/d15-20261116-r1/git-final.json\n?? docs/qa/evidence/d15-20261116-r1/junit-cases.json\n?? docs/qa/evidence/d15-20261116-r1/live-backend.log\n?? docs/qa/evidence/d15-20261116-r1/live-results.json\n?? docs/qa/evidence/d15-20261116-r1/manifest.json\n?? docs/qa/evidence/d15-20261116-r1/preexisting-sha256.json\n?? docs/qa/evidence/d15-20261116-r1/regression.json\n?? docs/qa/evidence/d15-20261116-r2/browser-results.json\n?? docs/qa/evidence/d15-20261116-r2/browser-run.log\n?? docs/qa/evidence/d15-20261116-r2/export-A.csv.log\n?? docs/qa/evidence/d15-20261116-r2/live-backend.log\n?? docs/qa/evidence/d15-20261116-r2/live-results.json\n?? docs/qa/evidence/d15-20261116-r3/browser-results.json\n?? docs/qa/evidence/d15-20261116-r3/browser-run.log\n?? docs/qa/evidence/d15-20261116-r3/export-A.csv.log\n?? docs/qa/evidence/d15-20261116-r3/live-backend.log\n?? docs/qa/evidence/d15-20261116-r3/live-results.json\n?? docs/qa/evidence/d15-db/SE2-D15-DB_LIVE_API_RESULTS.json\n?? docs/qa/evidence/d15-db/backend.log\n?? scripts/qa/d15_browser_qa.mjs\n?? scripts/qa/d15_evidence.py\n?? scripts/qa/d15_financial_qa.py\n?? scripts/qa/d15_regression.py",
+  "trackedDiff": "docs/qa/README.md | 8 ++++++++\n 1 file changed, 8 insertions(+)",
+  "logRedactions": {},
+  "remoteDevVerified": "4650bd9dd8c5d150b3fb25aa40913ac13784faf5 (git ls-remote during session)",
+  "preexistingEvidence": "Unknown origin; preserved, excluded from results; JSON incomplete",
+  "backendIntegration": "9638350b16691ea0dea236e37938ceeff4767c53; merge 4437f1e8022d1bcc81d1cc2c0b24c2e4b865ebcd",
+  "frontendIntegration": "8317699f39e6b95c79ceff4ddd7b7ad5977363e5; merge 4650bd9dd8c5d150b3fb25aa40913ac13784faf5",
+  "preexistingUnchanged": true
+}
