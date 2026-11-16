@@ -246,14 +246,14 @@ test('QA-D08-07: Accessibility - Dialog xóa chuẩn role="alertdialog" và nhã
   assert.match(pageHtml, /aria-label="Bật tắt mẫu định kỳ Bảo hiểm"/)
 })
 
-test('QA-D08-08: Điều hướng hệ thống giữ đủ 8 mục trên Sidebar/Drawer và thu gọn 5 mục trên MobileNavigation (grid-cols-5)', async () => {
-  assert.equal(navigation.length, 8, 'Menu hệ thống phải có đủ 8 mục trên Sidebar/Drawer')
+test('QA-D08-08: Giữ đủ 8 route điều hướng và 5 mục trên MobileNavigation (grid-cols-5)', async () => {
+  assert.equal(navigation.length, 8, 'Giữ đủ 8 route trong cấu hình điều hướng chung')
   const quickAddItem = navigation.find((item) => item.path === '/quick-add')
   const transactionsItem = navigation.find((item) => item.path === '/transactions')
   const recurringItem = navigation.find((item) => item.path === '/recurring-templates')
 
   assert.equal(quickAddItem?.label, 'Ghi chép')
-  assert.equal(transactionsItem?.label, 'Lịch sử giao dịch')
+  assert.equal(transactionsItem?.label, 'Quản lý giao dịch')
   assert.equal(transactionsItem?.mobileLabel, 'Lịch sử')
   assert.equal(recurringItem?.label, 'Giao dịch định kỳ')
   assert.equal(recurringItem?.mobileLabel, 'Định kỳ')
@@ -305,10 +305,11 @@ test('QA-UI-POLISH: Đồng bộ copywriting GuestDashboard tháng 11, ẩn phâ
   assert.match(dashboardSrc, /Theo dõi thu chi mỗi ngày/)
   assert.match(dashboardSrc, /Tổng quan tháng 11/)
   assert.match(dashboardSrc, /Dữ liệu minh họa/)
-  assert.match(dashboardSrc, /Lương tháng 11/)
-  assert.match(dashboardSrc, /01\/11\/2026/)
-  assert.match(dashboardSrc, /03\/11\/2026/)
-  assert.match(dashboardSrc, /05\/11\/2026/)
+  const { landingPreview } = await import('../src/components/dashboard/landingPreview.js')
+  assert.ok(landingPreview.transactions.some((item) => item.note === 'Lương tháng 11'))
+  for (const date of ['2026-11-01', '2026-11-03', '2026-11-05']) {
+    assert.ok(landingPreview.transactions.some((item) => item.transactionDate === date))
+  }
   assert.match(
     dashboardSrc,
     /Theo dõi tỷ trọng chi tiêu theo danh mục và dòng tiền theo thời gian qua các biểu đồ trực quan\./

@@ -22,9 +22,7 @@ export function CalendarMonthContent({ result, year, month, selectedDate, today,
         <p role="status" className="text-sm text-slate-600 dark:text-slate-300">Tháng này chưa có giao dịch. Các ngày có tổng bằng 0.</p>}
       <p className="text-xs text-slate-600 dark:text-slate-300">Dấu + là thu, dấu − là chi. Số lớn trong ô được viết gọn; chọn ngày để xem tổng đầy đủ và giao dịch bên dưới.</p>
       <MonthCalendar data={data} selectedDate={selectedDate} today={today} onSelect={onSelect} />
-      <div role="status" aria-live="polite" aria-atomic="true" className="rounded-xl border border-slate-200 p-4 text-sm text-slate-700 dark:border-slate-700 dark:text-slate-200">
-        {selected ? <><strong>Ngày {selected.date.split('-').reverse().join('/')}</strong><p className="mt-2 break-words">Thu: {formatCalendarMoney(selected.incomeTotal)} · Chi: {formatCalendarMoney(selected.expenseTotal)}</p></> : 'Chọn một ngày để xem tổng thu và chi.'}
-      </div>
+      {!selected && <p className="text-sm text-slate-600 dark:text-slate-300">Chọn một ngày để xem tổng thu và chi.</p>}
     </>
   )
 }
@@ -54,8 +52,8 @@ export default function MonthCalendar({ data, selectedDate, today, onSelect }) {
                     (selectedDate === date ? 'bg-blue-50 ring-2 ring-inset ring-blue-600 dark:bg-blue-950/40 dark:ring-blue-400' : '')}>
                   <span className={'flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold sm:text-sm ' +
                     (today === date ? 'bg-blue-600 text-white' : 'text-slate-800 dark:text-slate-100')}>{Number(date.slice(-2))}</span>
-                  <span aria-hidden="true" className="w-full truncate text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 sm:text-xs">+{compactCalendarMoney(day.incomeTotal)}</span>
-                  <span aria-hidden="true" className="w-full truncate text-[10px] font-semibold text-rose-700 dark:text-rose-300 sm:text-xs">−{compactCalendarMoney(day.expenseTotal)}</span>
+                  {day.incomeTotal > 0 && <span aria-hidden="true" className="w-full truncate text-[10px] font-semibold text-emerald-700 dark:text-emerald-300 sm:text-xs">+{compactCalendarMoney(day.incomeTotal)}</span>}
+                  {day.expenseTotal > 0 && <span aria-hidden="true" className="w-full truncate text-[10px] font-semibold text-rose-700 dark:text-rose-300 sm:text-xs">−{compactCalendarMoney(day.expenseTotal)}</span>}
                 </button>
               </td>
             )

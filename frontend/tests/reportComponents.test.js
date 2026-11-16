@@ -32,6 +32,7 @@ let CategoryBreakdownSection
 let ReportsPage
 let MonthPickerInput
 let MonthPickerPanel
+let ExpenseDonutChart
 
 const render = (Component, props) =>
   renderToStaticMarkup(createElement(Component, props))
@@ -53,6 +54,7 @@ before(async () => {
     '/src/components/reports/CategoryBreakdownSection.jsx'
   )
   CategoryBreakdownSection = categoryMod.default
+  ExpenseDonutChart = (await server.ssrLoadModule('/src/components/dashboard/ExpenseDonutChart.jsx')).default
 
   const monthPickerMod = await server.ssrLoadModule('/src/components/ui/MonthPickerInput.jsx')
   MonthPickerInput = monthPickerMod.default
@@ -327,6 +329,36 @@ test('CategoryBreakdownSection: hiển thị empty state khi expensesByCategory 
   )
 })
 
+test('Reports bỏ legend Donut lặp, giữ tên/màu/số tiền/tỷ trọng trong bảng và tên truy cập biểu đồ', () => {
+  const html = render(CategoryBreakdownSection, { report: sampleReport })
+  assert.doesNotMatch(html, /se097-legend|Bật hoặc tắt danh mục chi tiêu/)
+  assert.match(html, /<svg[^>]*role="img"[^>]*aria-label="[^"]*Ăn uống/)
+  const colors = ['#F97316', '#0EA5E9', '#10B981']
+  const rows = [...html.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/g)].map((match) => match[1])
+  for (const [index, category] of sampleReport.expensesByCategory.entries()) {
+    const row = rows.find((value) => value.includes(category.categoryName))
+    assert.ok(row, category.categoryName)
+    assert.ok(row.includes(colors[index]))
+    assert.ok(html.includes(`stroke="${colors[index]}"`))
+    assert.ok(row.includes(formatReportMoney(category.totalAmount)))
+    assert.ok(row.includes(formatReportPercent(calculateExpensePercentage(category.totalAmount, 35_500_000))))
+  }
+  assert.match(html, /role="region" aria-label="Cuộn ngang bảng chi tiêu theo danh mục" tabindex="0"/)
+})
+
+test('Donut dùng ở Dashboard vẫn có legend tương tác theo mặc định', () => {
+  const html = render(ExpenseDonutChart, { data: sampleReport.expensesByCategory })
+  assert.match(html, /se097-legend/)
+  assert.equal((html.match(/aria-pressed="true"/g) || []).length, 3)
+})
+
+test('thẻ biểu đồ cột xếp nội dung từ trên xuống, giữ vùng bảng có thể focus bằng bàn phím', () => {
+  const html = render(MonthlyComparisonChart, { report: sampleReport })
+  const rootClasses = html.match(/<section[^>]*class="([^"]+)"/)[1]
+  assert.doesNotMatch(rootClasses, /justify-between/)
+  assert.match(html, /role="region" aria-label="Cuộn ngang bảng thu chi theo tháng" tabindex="0"/)
+})
+
 test('ReportsPage: render đầy đủ bộ lọc (mặc định 3 tháng, tối đa 6 tháng), 3 thẻ KPI, biểu đồ cột và bảng danh mục', () => {
   const html = render(ReportsPage, {
     anchorMonth: '2026-11',
@@ -367,15 +399,31 @@ test('MonthPickerPanel: toàn bộ tháng và thao tác hiển thị bằng ti�
     value: '2026-11',
     min: '2026-09',
     max: '2027-02',
+    onClear() {},
   })
 
   assert.match(html, /data-month-picker-locale="vi"/)
-  assert.match(html, /Năm 2026/)
+  assert.match(html, /<label[^>]*>Năm<\/label>/)
+  assert.match(html, /id="month-panel-test-year"[^>]*value="2026"/)
+  assert.match(html, /inputMode="numeric"|inputmode="numeric"/)
+  assert.doesNotMatch(html, /<select|<option/)
   assert.match(html, /Tháng 1/)
   assert.match(html, /Tháng 12/)
   assert.match(html, /Xóa lựa chọn/)
   assert.match(html, /Tháng hiện tại/)
   assert.doesNotMatch(html, />Jan<|>Feb<|>Clear<|>This month</)
+})
+
+test('MonthPickerPanel: tháng bắt buộc không có nút xóa và popup đổi màu theo Light/Dark', () => {
+  const html = render(MonthPickerPanel, {
+    panelId: 'required-month-panel',
+    visibleYear: 2026,
+    value: '2026-11',
+  })
+
+  assert.doesNotMatch(html, /Xóa lựa chọn/)
+  assert.match(html, /bg-white text-slate-800 dark:border-slate-700 dark:bg-\[#182234\]/)
+  assert.match(html, /aria-label="Tháng 11 năm 2026" aria-pressed="true"/)
 })
 
 test('ReportsPage: hiển thị cảnh báo validation và khóa nút Xem báo cáo khi khoảng tháng > 6 tháng', () => {
@@ -401,7 +449,7 @@ test('ReportsPage: hiển thị cảnh báo validation và khóa nút Xem báo c
 test('navigation: cấu hình đúng route /reports cho trang Báo cáo bên trong menu bảo vệ', () => {
   const reportsNav = navigation.find((item) => item.path === '/reports')
   assert.ok(reportsNav, 'Phải có mục Báo cáo (/reports) trong navigation')
-  assert.equal(reportsNav.label, 'Báo cáo')
+  assert.equal(reportsNav.label, 'Báo cáo tài chính')
   assert.equal(reportsNav.authRequired, true)
 })
 

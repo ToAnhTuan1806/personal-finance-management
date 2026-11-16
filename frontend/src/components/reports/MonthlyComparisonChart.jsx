@@ -116,7 +116,7 @@ export default function MonthlyComparisonChart({
   return (
     <section
       aria-label="Biểu đồ cột thu chi theo từng tháng"
-      className="flex min-w-0 flex-col justify-between rounded-3xl border border-slate-200/90 bg-white p-4 sm:p-6 shadow-sm dark:border-slate-800 dark:bg-[#182234]"
+      className="flex min-w-0 flex-col rounded-3xl border border-slate-200/90 bg-white p-4 sm:p-6 shadow-sm dark:border-slate-800 dark:bg-[#182234]"
     >
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
