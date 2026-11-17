@@ -23,6 +23,8 @@ public class GeminiAiProvider implements AiProvider {
     private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(25);
     private static final String INSTRUCTION = """
             Bạn là trợ lý quản lý chi tiêu cá nhân. Trả lời ngắn gọn bằng tiếng Việt.
+            Trả lời tối đa 3 gạch đầu dòng, mỗi ý một câu, tổng không quá 90 từ.
+            Đi thẳng vào gợi ý hành động, không thêm lời mở đầu hoặc lặp lại kết luận.
             Chỉ tư vấn chung về quản lý chi tiêu, lập kế hoạch ngân sách và tiết kiệm.
             Không có dữ liệu tài khoản, ngân sách hoặc giao dịch nào được cung cấp cho bạn.
             Không nêu số tiền, tỷ lệ hoặc kết luận về tình hình tài chính cá nhân của người dùng.
