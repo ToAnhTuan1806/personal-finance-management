@@ -3,12 +3,17 @@ package com.smartexpense.backend.service;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
-import org.springframework.mail.SimpleMailMessage;
+import jakarta.mail.MessagingException;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.springframework.web.util.HtmlUtils;
 
+import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.Set;
 
 @Service
@@ -39,18 +44,24 @@ public class SmtpPasswordResetEmailSender implements PasswordResetEmailSender {
     public void sendResetLink(String email, String rawToken) {
         if (!isConfigured()) throw new IllegalStateException("Password reset email is not configured");
         String link = trustedBaseUrl() + "/reset-password?token=" + rawToken;
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(from);
-        message.setTo(email);
-        message.setSubject("Đặt lại mật khẩu SmartExpense");
-        message.setText("Bạn đã yêu cầu đặt lại mật khẩu SmartExpense.\n\n"
-                + "Mở liên kết sau để đặt mật khẩu mới:\n" + link + "\n\n"
-                + "Liên kết có hiệu lực 30 phút và chỉ được sử dụng một lần.\n"
-                + "Nếu bạn không yêu cầu, hãy bỏ qua email này. Mật khẩu hiện tại vẫn được giữ nguyên.");
         try {
-            mail.getObject().send(message);
-        } catch (MailException exception) {
-            // MailSendException có thể giữ failed message chứa recipient/link. Không truyền cause này ra ngoài.
+            JavaMailSender sender = mail.getObject();
+            var message = sender.createMimeMessage();
+            var helper = new MimeMessageHelper(message, true, StandardCharsets.UTF_8.name());
+            helper.setFrom(from, "SmartExpense");
+            helper.setTo(email);
+            helper.setSubject("Đặt lại mật khẩu SmartExpense");
+            String plainText = "Bạn đã yêu cầu đặt lại mật khẩu SmartExpense.\n\n"
+                    + "Mở liên kết sau để đặt mật khẩu mới:\n" + link + "\n\n"
+                    + "Liên kết có hiệu lực 30 phút và chỉ được sử dụng một lần.\n"
+                    + "Nếu bạn không yêu cầu, hãy bỏ qua email này. Mật khẩu hiện tại vẫn được giữ nguyên.";
+            String html = new ClassPathResource("mail/password-reset.html")
+                    .getContentAsString(StandardCharsets.UTF_8)
+                    .replace("{{resetLink}}", HtmlUtils.htmlEscape(link, StandardCharsets.UTF_8.name()));
+            helper.setText(plainText, html);
+            sender.send(message);
+        } catch (MailException | MessagingException | IOException exception) {
+            // MIME/SMTP errors can contain recipient/link/configuration; do not expose their cause.
             throw new IllegalStateException("Password reset email delivery failed");
         }
     }
