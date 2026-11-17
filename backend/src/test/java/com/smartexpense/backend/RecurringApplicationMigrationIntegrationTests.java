@@ -1,5 +1,6 @@
 package com.smartexpense.backend;
 
+import com.smartexpense.backend.entity.RecurringApplication;
 import com.github.dockerjava.api.model.ExposedPort;
 import com.github.dockerjava.api.model.PortBinding;
 import com.github.dockerjava.api.model.Ports;
@@ -282,7 +283,7 @@ class RecurringApplicationMigrationIntegrationTests {
         for (var candidate : scanner.findCandidateComponents("com.smartexpense.backend.entity")) {
             entities.add(Class.forName(candidate.getBeanClassName()));
         }
-        boolean hasD09 = entities.stream().anyMatch(type -> type.getSimpleName().equals("RecurringApplication")
+        boolean hasD09 = entities.stream().anyMatch(type -> type == RecurringApplication.class
                 || type.isAnnotationPresent(Table.class) && type.getAnnotation(Table.class).name().equals("recurring_applications"));
         Assumptions.assumeTrue(hasD09, "BLOCKED D09-BE: no Backend Entity mapped to recurring_applications; no substitute Entity or DDL is allowed");
         D12MigrationTestSupport.validateCurrentMappings(entities);

@@ -7,6 +7,7 @@ import com.smartexpense.backend.entity.Category;
 import com.smartexpense.backend.enums.TransactionType;
 import com.smartexpense.backend.repository.*;
 import jakarta.persistence.EntityManagerFactory;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -19,6 +20,10 @@ import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.support.EncodedResource;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpSession;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextImpl;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -135,8 +140,9 @@ class QaBaselineAuthIntegrationTests extends MySqlIntegrationTestSupport {
         verifyMySqlConnection();
         String seed = Files.readString(Path.of("../database/seed.sql"), StandardCharsets.UTF_8);
         // Chỉ đổi đích/owner của bản sao trong RAM; không sửa seed gốc hoặc chạy vào DB mẫu/VPS.
-        seed = seed.replaceAll("(?im)^\\s*USE\\s+personal_finance_db\\s*;", "USE " + MYSQL.getDatabaseName() + ";")
-                .replaceAll("(?i)[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}", a.getEmail());
+        assertThat(seed).contains("USE personal_finance_db;", "totuan.18dz@gmail.com");
+        seed = seed.replace("USE personal_finance_db;", "USE " + MYSQL.getDatabaseName() + ";")
+                .replace("totuan.18dz@gmail.com", a.getEmail());
         assertThat(seed.contains("USE personal_finance_db")).isFalse();
         EncodedResource script = new EncodedResource(new ByteArrayResource(seed.getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8);
         try (var connection = dataSource.getConnection()) {
@@ -160,6 +166,60 @@ class QaBaselineAuthIntegrationTests extends MySqlIntegrationTestSupport {
         assertThat(result.getResponse().getHeader("Set-Cookie")).isNull();
         assertThat(result.getResponse().getContentAsString().contains(password)).isFalse();
         assertThat(result.getResponse().getContentAsString().contains("passwordHash")).isFalse();
+    }
+
+    @Test
+    void validJwtInCookiesCannotAuthenticateProtectedApi() throws Exception {
+        error(mvc.perform(get("/api/users/me").cookie(
+                new Cookie("accessToken", tokenA), new Cookie("token", tokenA),
+                new Cookie("JSESSIONID", "qa-session"))), 401, "UNAUTHORIZED");
+        assertThat(counts()).containsExactly(2L, 34L, 1L, 1L);
+    }
+
+    @Test
+    void validJwtInQueryCannotAuthenticateProtectedApi() throws Exception {
+        error(mvc.perform(get("/api/users/me").param("access_token", tokenA)), 401, "UNAUTHORIZED");
+    }
+
+    @Test
+    void existingSessionSecurityContextCannotReplaceBearerAuthentication() throws Exception {
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY,
+                new SecurityContextImpl(new UsernamePasswordAuthenticationToken(
+                        a.getId().toString(), "unused", List.of())));
+        error(mvc.perform(get("/api/users/me").session(session)), 401, "UNAUTHORIZED");
+    }
+
+    @Test
+    void bearerWriteDoesNotRequireCsrfTokenOrCreateSession() throws Exception {
+        Long category = categories.findByUserId(a.getId()).stream()
+                .filter(item -> item.getType() == TransactionType.EXPENSE).findFirst().orElseThrow().getId();
+        var result = mvc.perform(post("/api/transactions").header("Authorization", bearer(tokenA))
+                .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(transactionBody(category))))
+                .andExpect(status().isCreated()).andReturn();
+        assertThat(result.getRequest().getSession(false)).isNull();
+        assertThat(result.getResponse().getHeader("Set-Cookie")).isNull();
+        assertThat(transactions.count()).isEqualTo(2);
+    }
+
+    @Test
+    void trustedCorsPreflightAllowsBearerHeaderWithoutCookieCredentials() throws Exception {
+        mvc.perform(options("/api/transactions").header("Origin", "http://localhost:5173")
+                .header("Access-Control-Request-Method", "POST")
+                .header("Access-Control-Request-Headers", "Authorization, Content-Type"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:5173"))
+                .andExpect(header().string("Access-Control-Allow-Headers", "Authorization, Content-Type"))
+                .andExpect(header().doesNotExist("Access-Control-Allow-Credentials"));
+    }
+
+    @Test
+    void untrustedCorsOriginIsRejectedEvenWithValidBearer() throws Exception {
+        mvc.perform(get("/api/users/me").header("Authorization", bearer(tokenA))
+                .header("Origin", "https://untrusted.example.test"))
+                .andExpect(status().isForbidden())
+                .andExpect(header().doesNotExist("Access-Control-Allow-Origin"));
+        assertThat(counts()).containsExactly(2L, 34L, 1L, 1L);
     }
 
     @ParameterizedTest

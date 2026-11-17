@@ -2,6 +2,7 @@ package com.smartexpense.backend.service;
 
 import com.smartexpense.backend.exception.D11Exception;
 import org.springframework.http.HttpStatus;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import java.time.Clock;
 import java.util.HashMap;
@@ -13,6 +14,7 @@ public class AiRateLimiter {
     private final Map<Long, Window> windows = new HashMap<>();
     private final Clock clock;
 
+    @Autowired
     public AiRateLimiter() { this(Clock.systemUTC()); }
     public AiRateLimiter(Clock clock) { this.clock = clock; }
 
