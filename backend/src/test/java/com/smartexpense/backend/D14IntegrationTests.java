@@ -180,7 +180,7 @@ class D14IntegrationTests extends MySqlIntegrationTestSupport {
     }
 
     @ParameterizedTest
-    @CsvSource({"Xin chào,UNKNOWN", "Sửa ngân sách,UNSUPPORTED", "Ngân sách; DROP TABLE transactions,UNSUPPORTED",
+    @CsvSource({"Xin chào,GREETING", "Hôm nay thời tiết thế nào,UNKNOWN", "Sửa ngân sách,UNSUPPORTED", "Ngân sách; DROP TABLE transactions,UNSUPPORTED",
             "Ngân sách tài khoản khác,UNSUPPORTED", "Ngân sách' OR 1=1 --,BUDGET"})
     void unknownUnsupportedAndInjectionNeverWriteOrExposeOtherOwner(String prompt, String intent) throws Exception {
         save(expenseA, "2026-11-01", "0.30"); save(expenseB, "2026-11-01", "999.99");

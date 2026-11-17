@@ -468,7 +468,7 @@ class AiChatApiTests {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"Xin chào", "ns", "Hôm nay thời tiết thế nào", "Tổng thu năm nay"})
+    @ValueSource(strings = {"ns", "Hôm nay thời tiết thế nào", "Tổng thu năm nay"})
     void unknownListsCapabilitiesAndExamplesWithoutDataOrProvider(String question) throws Exception {
         var response = ask(question);
         assertThat(response.intent()).isEqualTo("UNKNOWN");
@@ -476,6 +476,105 @@ class AiChatApiTests {
         assertThat(response.reply()).contains("SUMMARY", "CATEGORIES", "BUDGET", "ADVICE", "COMPARISON", "CATEGORY_TREND", "1.", "2.", "3.");
         if (question.contains("năm nay")) assertThat(response.reply()).contains("Chưa hỗ trợ thống kê cả năm");
         verifyNoInteractions(transactions, provider, monthly, categoryBudgets);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"heelo", "helo", "chao bot", "Xin chào", "xin chao", "ê", "Ê!", "bot ơi"})
+    void greetsWithExamplesWithoutQueryingDataOrCallingProvider(String message) throws Exception {
+        mvc.perform(post(ENDPOINT).header(HttpHeaders.AUTHORIZATION, token).contentType(MediaType.APPLICATION_JSON)
+                        .content(json.writeValueAsString(Map.of("message", message, "month", "2026-11"))))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.intent").value("GREETING"))
+                .andExpect(jsonPath("$.period").value("2026-11"))
+                .andExpect(jsonPath("$.suggestedExpense").doesNotExist())
+                .andExpect(jsonPath("$.reply").value(org.hamcrest.Matchers.allOf(
+                        org.hamcrest.Matchers.containsString("Xin chào"),
+                        org.hamcrest.Matchers.containsString("nội dung + số tiền"),
+                        org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("65k")))));
+        verifyNoInteractions(transactions, provider, monthly, categoryBudgets, categories);
+    }
+
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', textBlock = """
+            Vừa ăn trưa 65k tiền mặt | 65000 | Ăn uống
+            Đổ xăng 80 nghìn | 80000 | Đi lại
+            Mua áo 250k | 250000 | Quần áo
+            Cafe 35k | 35000 | Ăn uống
+            """)
+    void suggestsExpenseWithOwnedCategoryWithoutSavingOrCallingProvider(String message, String amount, String name) throws Exception {
+        Category category = new Category(); category.setId(12L); category.setName(name); category.setType(TransactionType.EXPENSE);
+        when(categories.findByUserIdAndType(owner, TransactionType.EXPENSE)).thenReturn(List.of(category));
+        LocalDate before = LocalDate.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
+        var response = ask(message);
+        assertThat(response.intent()).isEqualTo("CREATE_EXPENSE");
+        assertThat(response.period()).isEqualTo("2026-11");
+        assertThat(response.reply()).isEqualTo("Mình đã soạn sẵn giao dịch chi tiêu bên dưới, bạn hãy kiểm tra và xác nhận lưu nhé!");
+        assertThat(response.stats()).isNull();
+        assertThat(response.budget()).isNull();
+        assertThat(response.comparison()).isNull();
+        assertThat(response.suggestedExpense().amount()).isEqualByComparingTo(amount);
+        assertThat(response.suggestedExpense().note()).isEqualTo(message);
+        assertThat(response.suggestedExpense().categoryId()).isEqualTo(12L);
+        assertThat(response.suggestedExpense().categoryName()).isEqualTo(name);
+        assertThat(response.suggestedExpense().type()).isEqualTo(TransactionType.EXPENSE);
+        assertThat(response.suggestedExpense().transactionDate()).isBetween(before, LocalDate.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh")));
+        verify(categories).findByUserIdAndType(owner, TransactionType.EXPENSE);
+        verifyNoMoreInteractions(categories);
+        verifyNoInteractions(transactions, provider, monthly, categoryBudgets);
+    }
+
+    @Test
+    void greetingsAndUnclearMessagesNeverRepeatPreviousExpense() throws Exception {
+        assertThat(ask("Ăn trưa 65k tiền mặt").suggestedExpense().amount()).isEqualByComparingTo("65000");
+        for (String message : List.of("ê", "xin chào", "mình chưa hiểu")) {
+            var response = ask(message);
+            assertThat(response.intent()).isIn("GREETING", "UNKNOWN");
+            assertThat(response.suggestedExpense()).isNull();
+            assertThat(response.reply()).doesNotContain("65k", "65000");
+        }
+        assertThat(ask("Ăn trưa 120k tiền mặt").suggestedExpense().amount()).isEqualByComparingTo("120000");
+        verifyNoInteractions(transactions, provider, monthly, categoryBudgets);
+    }
+
+    @Test
+    void expenseJsonMatchesTransactionFieldsAndIgnoresClientOwner() throws Exception {
+        mvc.perform(post(ENDPOINT).header(HttpHeaders.AUTHORIZATION, token).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"message\":\"Vừa ăn trưa 65k tiền mặt\",\"month\":\"2026-11\",\"userId\":999}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.intent").value("CREATE_EXPENSE"))
+                .andExpect(jsonPath("$.suggestedExpense.amount").value(65000))
+                .andExpect(jsonPath("$.suggestedExpense.note").value("Vừa ăn trưa 65k tiền mặt"))
+                .andExpect(jsonPath("$.suggestedExpense.type").value("EXPENSE"))
+                .andExpect(jsonPath("$.suggestedExpense.transactionDate").isString())
+                .andExpect(jsonPath("$.suggestedExpense.categoryId").isEmpty());
+        verify(categories).findByUserIdAndType(owner, TransactionType.EXPENSE);
+        verifyNoMoreInteractions(categories);
+        verifyNoInteractions(transactions, provider, monthly, categoryBudgets);
+    }
+
+    @Test
+    void expenseCategoryPrefersSpecificMatchThenOtherThenManualSelection() throws Exception {
+        Category generic = new Category(); generic.setId(11L); generic.setName("Khác");
+        Category dining = new Category(); dining.setId(12L); dining.setName("Ăn uống");
+        Category cafe = new Category(); cafe.setId(13L); cafe.setName("Cà phê");
+        when(categories.findByUserIdAndType(owner, TransactionType.EXPENSE)).thenReturn(List.of(generic, dining, cafe));
+        assertThat(ask("Cafe 35k").suggestedExpense().categoryId()).isEqualTo(13L);
+        assertThat(ask("Đổ xăng 80k").suggestedExpense().categoryId()).isEqualTo(11L);
+        when(categories.findByUserIdAndType(owner, TransactionType.EXPENSE)).thenReturn(List.of(dining));
+        var unmatched = ask("Đổ xăng 80k").suggestedExpense();
+        assertThat(unmatched.categoryId()).isNull();
+        assertThat(unmatched.categoryName()).isNull();
+        verify(categories, times(3)).findByUserIdAndType(owner, TransactionType.EXPENSE);
+        verifyNoMoreInteractions(categories);
+        verifyNoInteractions(transactions, provider, monthly, categoryBudgets);
+    }
+
+    @Test
+    void previousResponseConstructorsKeepSuggestedExpenseAbsent() {
+        for (var response : List.of(
+                new AiChatResponse("Reply", "2026-11", "SUMMARY", null, List.of(), null),
+                new AiChatResponse("Reply", "2026-11", "COMPARISON", null, List.of(), null, null))) {
+            assertThat(response.suggestedExpense()).isNull();
+            assertThat(json.writeValueAsString(response)).doesNotContain("suggestedExpense");
+        }
     }
 
     @Test
@@ -500,9 +599,9 @@ class AiChatApiTests {
 
     @Test
     void unknownIsStillRateLimited() throws Exception {
-        for (int i = 0; i < 10; i++) ask("Xin chào");
+        for (int i = 0; i < 10; i++) ask("Hôm nay thời tiết thế nào");
         mvc.perform(post(ENDPOINT).header(HttpHeaders.AUTHORIZATION, token).contentType(MediaType.APPLICATION_JSON)
-                .content("{\"message\":\"Xin chào\",\"month\":\"2026-11\"}"))
+                .content("{\"message\":\"Hôm nay thời tiết thế nào\",\"month\":\"2026-11\"}"))
                 .andExpect(status().isTooManyRequests());
         verifyNoInteractions(transactions, provider);
     }
