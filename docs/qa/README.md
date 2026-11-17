@@ -2,6 +2,12 @@
 
 Mỗi ngày có một báo cáo chung cho **Backend (BE), Frontend (FE) và dữ liệu/QA**. Mở báo cáo của ngày cần xem thay vì ghép nhiều hồ sơ BE/DB riêng.
 
+## Snapshot hiện hành — 18/11/2026
+
+Phiên bản tích hợp `dev 88be77a` đã có code BE/FE/DB và CI/CD SUCCESS. Kết quả local đã đối chiếu ngày 17/11: Backend 1.279 PASS, Frontend 617 PASS; D03 55/55 là tập con Backend. Backup/restore scripts 22 PASS, HTTP/SQL/restore 13 PASS. Số liệu theo từng lượt/tập con, không cộng vào tổng mới; không chạy lại tests chỉ để sửa tài liệu này.
+
+Xem [bàn giao kỹ thuật](../smartexpense-2.0/RELEASE_D16_D18.md) cho SHA, CI/CD và giới hạn nghiệm thu. Các bảng D01–D15 và review Sprint 2 bên dưới là hồ sơ lịch sử, không dùng những trạng thái FAIL/chưa merge ban đầu làm trạng thái bản hiện tại. Báo cáo D16_D18 và evidence mới còn local ở worktree DB/QA, chưa được đưa vào commit code.
+
 ## Mục lục
 
 ### Sprint 1 — D01–D04
@@ -35,7 +41,7 @@ Mỗi ngày có một báo cáo chung cho **Backend (BE), Frontend (FE) và dữ
 
 **Sprint 3 hoàn thành: 15/15 task BE/FE/DB-QA.** Trên Trello, 12 task D10–D13 nằm trong danh sách Done; ba task D14 mới nằm trong danh sách Rebuild and Test và đều đã được đánh dấu complete. Ba task D14 cũ đang archived trong Backlog là lịch sử đã được thay thế, không tính vào 15 task Sprint 3. Các task Quên mật khẩu thuộc D12 đã hoàn thành và nằm trong Done. PR #49–#65 đã được đối chiếu trên GitHub; riêng D14 được hợp nhất qua PR #63–#65 và commit tích hợp cuối trên dev là ca969fa475c58583e69e71ff6e412e9abe91441f. Tài liệu này không tự thay đổi trạng thái thẻ Trello.
 
-Nguồn kế hoạch: [SRS 2.3](../SmartExpense_SRS_v2.docx), [Master Plan](../SmartExpense_QuanTriDuAn.xlsx), [lịch Sprint 3 ngày 09–12/11/2026](../smartexpense-2.0/SPRINT_3_PLAN.md). Quy tắc API hiện có nằm trong [API Contract](../smartexpense-2.0/API_CONTRACT.md).
+Nguồn kế hoạch: [SRS 2.3](../SmartExpense_SRS_v2.docx), [Master Plan](../SmartExpense_QuanTriDuAn.xlsx), [lịch Sprint 3 lịch sử ngày 08/11](../archive/plans/SPRINT_3_PLAN_2026-11-08.md). Quy tắc API hiện có nằm trong [API Contract](../smartexpense-2.0/API_CONTRACT.md).
 
 ### Sprint 4 — D15
 
@@ -43,7 +49,7 @@ Nguồn kế hoạch: [SRS 2.3](../SmartExpense_SRS_v2.docx), [Master Plan](../S
 | --- | --- | --- | --- |
 | D15 | 16/11/2026 | QA ngân sách, biểu đồ và số tiền; baseline `4650bd9` | [D15](D15.md) |
 
-D15 **chưa READY FOR REVIEW**: Backend 1.272 PASS, Frontend 573 PASS, lint/build PASS; HTTP/SQL/zero mutation 46 PASS; Chrome thật 33 PASS/2 FAIL. Dashboard làm tròn mất tiền lẻ (P1), console robot có lỗi WebGL và gate working tree sạch ban đầu còn BLOCKED. Xem báo cáo chung D15 và evidence mới, không dùng số liệu D14 để kết luận D15.
+Snapshot QA D15 ban đầu **chưa READY FOR REVIEW**: Backend 1.272 PASS, Frontend 573 PASS, lint/build PASS; HTTP/SQL/zero mutation 46 PASS; Chrome thật 33 PASS/2 FAIL. Dashboard làm tròn mất tiền lẻ (P1), console robot có lỗi WebGL và gate working tree sạch ban đầu còn BLOCKED. Các lỗi tiền lẻ/WebGL có lượt sửa và targeted QA tiếp theo; xem [báo cáo D15](D15.md) và [kết quả targeted r4](evidence/d15-fix-targeted-r4/browser-targeted-results.json). Không dùng snapshot ban đầu này làm kết luận cho dev hiện tại.
 
 ## Review Sprint 2 ngày 08/11/2026
 
@@ -110,11 +116,11 @@ Bằng chứng tạo lại nằm trong `backend/build/test-results/test/`, `back
 
 ## Giới hạn chung
 
-Bộ tài liệu QA gồm mục lục này và D01–D09, cùng báo cáo Date Validation và review Sprint 2. Các báo cáo ngày giữ nguyên baseline, kết quả và bằng chứng lịch sử; kết quả mới không ghi đè số liệu cũ.
+Bộ tài liệu QA đã commit gồm mục lục này, D01–D15 và review Sprint 2. Các báo cáo ngày giữ nguyên baseline, kết quả và bằng chứng lịch sử; kết quả mới không ghi đè số liệu cũ.
 
 - Browser UI D01–D06 hiện PASS theo xác nhận tự kiểm thử của người dùng. Test local và xác nhận UI không thay cho kiểm tra trạng thái VPS.
 - Bản sửa D06 ngày 08/11 khóa owner trước kiểm tra/lưu Category qua API. Không tự gộp/xóa dữ liệu trùng cũ và không bảo đảm uniqueness cho writer SQL trực tiếp bỏ qua Service. Chi tiết tại [D06](D06.md).
 - Master Plan còn nội dung backfill metadata, trong khi API hiện hành giữ NULL và dùng fallback; cần nhóm chốt tài liệu riêng, không tự backfill.
 - FR-07 và FR-08 có hồ sơ riêng tại D07–D09. FR-09/FR-10 và phần mở rộng AI/Auth của Sprint 3 có hồ sơ D10–D14; phạm vi production/Gemini Live chưa được coi là PASS nếu báo cáo ngày không có bằng chứng.
 
-Lượt cập nhật ngày 08/11 chỉ sửa tài liệu và lịch kế hoạch; không sửa code, migration, workflow, lịch sử Git hoặc trạng thái thẻ Trello. Không thay cho review và ký nghiệm thu của nhóm.
+Lượt ngày 08/11 là snapshot lịch sử. Lượt tổ chức tài liệu ngày 18/11 chỉ cập nhật mục lục/liên kết và phân biệt kết quả hiện tại; không sửa code, migration, workflow hoặc trạng thái Trello. Không thay cho review và ký nghiệm thu của nhóm.

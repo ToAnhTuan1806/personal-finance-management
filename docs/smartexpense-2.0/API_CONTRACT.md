@@ -1,13 +1,15 @@
 # SmartExpense 2.0 — API cho FE/BE
 
-Nguồn: [SRS 2.2 ngày 27/10/2026](../SmartExpense_SRS_v2.docx), [Master Plan](../SmartExpense_QuanTriDuAn.xlsx). Đối chiếu mã ngày 30/10/2026. **API hiện có** đã triển khai Backend; **API dự kiến** còn chờ triển khai/review. Calendar D04 đã merge vào dev qua PR #20, vẫn **chờ Frontend xác nhận tích hợp**; trạng thái Backend không thay cho phê duyệt của FE/DB.
+> **Đối chiếu ngày 18/11/2026:** mô tả mã nguồn đã tích hợp tại `dev 88be77a3a582f0f5b5654ed66ae70270783d80a1`. Đây là cập nhật tài liệu, không đổi endpoint, DTO/JSON, schema hoặc Auth. Calendar, Reports, CSV, định kỳ, Forgot/Reset Password và AI đã có trong bản tích hợp; việc gửi email tới hộp thư thật và vận hành VPS vẫn cần xác nhận riêng.
+
+Nguồn yêu cầu: [SRS 2.3](../SmartExpense_SRS_v2.docx) và [Master Plan](../SmartExpense_QuanTriDuAn.xlsx). Lịch Sprint 3 trong các nguồn này là snapshot ngày 08/11. Xem [bàn giao kỹ thuật và release](RELEASE_D16_D18.md), [mục lục tài liệu](../README.md). Các mục đề xuất chưa triển khai được giữ riêng ở mục 4.
 
 ## 1. Quy ước chung
 
 - Base path `/api`. JSON request/response, trừ CSV; không thêm envelope vào response thành công cũ. Gửi `Authorization: Bearer <ACCESS_TOKEN>` cho API bảo vệ; chỉ POST register/login/forgot-password/reset-password công khai.
 - Owner luôn từ JWT, không lấy userId client. List/thống kê/export chỉ lấy dữ liệu owner; lookup ID không tồn tại/khác owner trả 404. Ngoại lệ hiện có: POST/PUT transactions trả **400** cho category sai/khác owner.
 - ID là integer/Java Long; type là INCOME/EXPENSE. Tiền JSON number, BE BigDecimal; input 0.01–9999999999999.99, tối đa 2 số thập phân. FE lưu ý sai số JavaScript ở số lớn; giữ nguyên tên/kiểu field cũ.
-- Ngày YYYY-MM-DD, tháng YYYY-MM; không chuyển DATE qua UTC. API mới đề xuất năm 1900–2100, tháng 1–12, giờ nghiệp vụ UTC+07:00. Validation năm của giao dịch cũ chưa thống nhất với Budget/Dashboard.
+- Ngày YYYY-MM-DD, tháng YYYY-MM; không chuyển DATE qua UTC. Calendar/Budget/Reports/AI dùng năm 1900–2100, tháng 1–12 theo contract từng endpoint. Giao dịch không được có ngày lớn hơn hôm nay tại Asia/Ho_Chi_Minh; không áp miền năm của báo cáo một cách mặc định lên mọi DATE.
 - Lỗi: 400 input sai; 401 thiếu/sai/hết hạn JWT; 403 quyền thao tác; 404 owner; 409 xung đột; 500 thông báo trung lập. DELETE thành công 204 không body. User không còn tồn tại có thể trả 401.
 - **ApiError đã triển khai từ D02:** `{status,code,message}`, validation theo field có thêm `errors:{field:message}`. Mã theo HTTP: 400 VALIDATION_ERROR, 401 UNAUTHORIZED, 403 FORBIDDEN, 404 RESOURCE_NOT_FOUND, 409 CONFLICT, 500 INTERNAL_ERROR. Lỗi 500 dùng thông báo trung lập, không trả SQL/stack trace/secret; lỗi parse/query có thể không có `errors`.
 
@@ -23,8 +25,8 @@ Mọi đường dẫn trong bảng đều nằm dưới `/api`; Input là body, 
 | --- | --- | --- | --- | --- |
 | POST | `/auth/register` | `{fullName,email,password}` | 201 User | 400 validation; 409 email trùng |
 | POST | `/auth/login` | `{email,password}` | 200 `{accessToken,tokenType:"Bearer",user:User}` | 400 validation; 401 sai tài khoản/mật khẩu |
-| POST | `/auth/forgot-password` | `{email}` | 200 `{message}` chung, không cần JWT; D12 local | 400 validation; 429 AUTH_RATE_LIMITED theo IP |
-| POST | `/auth/reset-password` | `{token,newPassword}` | 200 `{message}`, không cấp JWT; D12 local | 400 INVALID_RESET_TOKEN/PASSWORD_REUSE/VALIDATION_ERROR; 429 AUTH_RATE_LIMITED |
+| POST | `/auth/forgot-password` | `{email}` | 200 `{message}` chung, không cần JWT; đã tích hợp | 400 validation; 429 AUTH_RATE_LIMITED theo IP |
+| POST | `/auth/reset-password` | `{token,newPassword}` | 200 `{message}`, không cấp JWT; đã tích hợp | 400 INVALID_RESET_TOKEN/PASSWORD_REUSE/VALIDATION_ERROR; 429 AUTH_RATE_LIMITED |
 | GET | `/users/me` | Không body | 200 User | 401 user không tồn tại |
 | GET | `/categories` | Query type? | 200 Category[] | 400 enum sai |
 | GET | `/categories/{id}` | Path id | 200 Category | 404 owner |
@@ -46,10 +48,10 @@ Mọi đường dẫn trong bảng đều nằm dưới `/api`; Input là body, 
 | DELETE | `/category-budgets/{id}` | Path id | 204 | 400 ID sai; 404 budget owner |
 | GET | `/dashboard/summary` | Query month bắt buộc | 200 `{year,month,totalIncome,totalExpense,balance}` | 400 tháng sai |
 | GET | `/dashboard/expenses-by-category` | Query month bắt buộc | 200 `[{categoryId,categoryName,totalAmount}]` | 400 tháng sai |
-| GET | `/calendar/month` | Query year,month bắt buộc | 200 CalendarMonth; Backend D04, chờ FE xác nhận | 400 kỳ sai; 401 JWT thiếu/sai/hết hạn |
-| GET | `/reports/monthly` | Query from,to bắt buộc, YYYY-MM | 200 MonthlyReport D10, chờ FE xác nhận tích hợp | 400 kỳ sai/quá 6 tháng; 401 JWT thiếu/sai/hết hạn |
-| GET | `/transactions/export` | Query Filter, không page/size/sort | 200 CSV D11, triển khai local | 400 filter sai; 422 EXPORT_LIMIT_EXCEEDED; 401 JWT |
-| POST | `/ai/chat` | `{message,month,compareMonth?}` | 200 AiChat P1/P2 D11/D13, triển khai local | 400 validation; 401 JWT; 429 rate/quota; 502/503/504 provider (ADVICE) |
+| GET | `/calendar/month` | Query year,month bắt buộc | 200 CalendarMonth | 400 kỳ sai; 401 JWT thiếu/sai/hết hạn |
+| GET | `/reports/monthly` | Query from,to bắt buộc, YYYY-MM | 200 MonthlyReport | 400 kỳ sai/quá 6 tháng; 401 JWT thiếu/sai/hết hạn |
+| GET | `/transactions/export` | Query Filter, không page/size/sort | 200 CSV D11 | 400 filter sai; 422 EXPORT_LIMIT_EXCEEDED; 401 JWT |
+| POST | `/ai/chat` | `{message,month,compareMonth?}` | 200 AiChat P1/P2 D11/D13 | 400 validation; 401 JWT; 429 rate/quota; 502/503/504 provider (ADVICE) |
 
 ### DTO và validation
 
@@ -70,10 +72,10 @@ CalendarMonth = { year, month, incomeTotal, expenseTotal,
 
 - Register: fullName không blank/≤100, email hợp lệ, password≥8 và tối đa 72 bytes UTF-8 (giới hạn BCrypt); email trim/lowercase, tên trim. Register trả User, **không cấp JWT**. Login yêu cầu password không blank; quá 72 bytes trả 401 như sai thông tin đăng nhập. Không có refresh/logout server; logout xóa phiên client. D12 vô hiệu JWT cũ sau reset qua `auth_version` như bên dưới.
 - Category: name không blank/≤100, type bắt buộc; icon/color theo mục D06 bên dưới. Precheck tên trùng cùng owner/type trả 409 theo quy tắc bên dưới. Bản sửa ngày 08/11/2026 khóa owner trong MySQL trước precheck để bảo vệ POST/PUT đồng thời qua API; không thêm UNIQUE constraint.
-- Transaction: mọi field bắt buộc trừ note (null hoặc ≤500); category cùng owner/type, tiền theo mục 1. FE mặc định ngày hôm nay.
+- Transaction: mọi field bắt buộc trừ note (null hoặc ≤500); category cùng owner/type, tiền theo mục 1. FE mặc định ngày hôm nay; Backend kiểm tra ngày không lớn hơn hôm nay theo Asia/Ho_Chi_Minh.
 - Filter: month **hoặc** đủ startDate/endDate, không gửi cả hai; start≤end, inclusive hai đầu. keyword trim, tìm note không phân biệt hoa/thường; `%`/`_` hiện là wildcard LIKE. categoryId khác owner trong filter trả danh sách rỗng.
 - page≥0, size 1–100, offset = page × size phải ≤2147483647 (giới hạn JPA); vượt offset trả 400 VALIDATION_ERROR, không tự clamp page. Page hợp lệ vượt phạm vi dữ liệu vẫn trả content rỗng. Sort ngày DESC/id DESC, không nhận sort tùy ý. FE mặc định 10 dòng, giữ field number. Danh mục không có sort cố định.
-- Budget/Dashboard: năm 1900–2100, tháng 1–12; amountLimit theo giới hạn tiền chung. spentAmount chỉ EXPENSE đúng kỳ; remainingAmount có thể âm, exceeded chỉ khi spent>limit. UI: <80% safe, 80–<100% warning, ≥100% đỏ. Unique ngân sách user/năm/tháng đã có; race upsert cần kiểm thử.
+- Budget/Dashboard: năm 1900–2100, tháng 1–12; amountLimit theo giới hạn tiền chung. spentAmount chỉ EXPENSE đúng kỳ; remainingAmount có thể âm, exceeded chỉ khi spent>limit. UI: dưới 80% safe, 80–<100% warning, đúng hạn mức AT_LIMIT, chi lớn hơn hạn mức mới OVER_BUDGET. So tiền trước làm tròn tỷ lệ; unique ngân sách user/năm/tháng đã có.
 - Dashboard tháng rỗng trả tổng 0, danh mục `[]`, balance=totalIncome-totalExpense; danh mục sort totalAmount DESC. Giữ tên totalAmount/spentAmount/remainingAmount.
 
 ### Tên danh mục trùng (bổ sung D06-BE, 03/11/2026)
@@ -105,7 +107,7 @@ Khóa nằm ở MySQL, không phải mutex trong một JVM; mọi instance ứng
 
 Endpoint, DTO thành công, JSON number/field hiện có và ApiError được giữ nguyên. Trả 409 cho tên trùng là **thay đổi validation có chủ đích theo yêu cầu bổ sung**, thay cho hành vi cho phép trùng trước đây; không coi là hành vi đã có trong contract ngày 30/10.
 
-### Category icon/color (D06-BE, chờ FE và DB/QA xác nhận)
+### Category icon/color (D06-BE)
 
 - Giữ endpoint/status CRUD. `name/type` vẫn bắt buộc trên POST/PUT. `icon` là string ≤40, phân biệt hoa/thường, chỉ nhận key Lucide trong allowlist: `tag, utensils, shopping-bag, car, home, heart, graduation-cap, gamepad-2, briefcase, gift, wallet, circle, shirt, sparkles, users, zap, phone, hand-coins, trending-up, clock`. Các key đã đối chiếu với thư viện FE hiện có, chưa phải FE duyệt registry/UI.
 - `color` khớp chính xác `#RRGGBB` (nhận hex hoa/thường, trả uppercase). Icon/color blank, HTML, URL hoặc sai định dạng trả 400 `VALIDATION_ERROR`, lỗi field trong `errors.icon/color`. Không trim để hợp thức hóa metadata sai.
@@ -283,7 +285,7 @@ Khi sửa `transactionDate` sang tháng/năm khác, cần refetch **cả tháng 
 
 Quick Add (FR-03) dùng POST `/transactions`, không thêm `/quick-add`. Khóa submit đồng bộ; chỉ báo thành công sau response rồi refetch giao dịch/Dashboard/ngân sách/lịch. Timeout không tự POST lại vì server có thể đã lưu: giữ form, kiểm tra lại danh sách. Bỏ fallback thành công giả và đồng bộ xóa token/user/context khi 401 là việc còn cần triển khai (FR-01/11).
 
-### Ngân sách danh mục — D07-BE Commit 2 (04/11/2026, chờ review/tích hợp FE và D07-DB)
+### Ngân sách danh mục — D07-BE
 
 Phần này mô tả mã Backend tại local, chưa xác nhận triển khai hoặc migration trên DB thật. **Bộ endpoint D07 đã được chốt theo Phương án 1 — CRUD theo ID:** POST upsert, GET danh sách theo query year/month, GET/PUT/DELETE theo `/{id}` như bảng ở mục 2. Không triển khai thêm route `/{year}/{month}/{categoryId}`. Quyết định này giữ nguyên UNIQUE `(user_id, category_id, year, month)` và owner từ JWT; không đổi endpoint ngân sách tổng. Trạng thái API định kỳ/báo cáo/CSV được ghi riêng trong các mục D08–D11 bên dưới.
 
@@ -336,7 +338,7 @@ Chỉ duplicate key MySQL **1062 / SQLSTATE 23000** mới được chuyển sang
 
 ### D11 — CSV và AI Assistant+ P1
 
-Hợp đồng Backend triển khai local theo nhiệm vụ **SE2-D11-BE** được giao ngày **09/11/2026**, hạn **10/11/2026**. Đây là bàn giao DTO để FE tích hợp; chưa xác nhận nghiệm thu FE/QA, MySQL hoặc Gemini live. Bản giao việc D11 thay thế header CSV đề xuất cũ; không sửa API giao dịch/báo cáo/ngân sách hiện có, schema, JWT hoặc CORS.
+Hợp đồng D11 đã tích hợp BE/FE và có QA nội bộ. Không suy ra SMTP/Gemini Live PASS từ kết quả các intent thống kê hoặc từ HTTP 200. Bản giao việc D11 thay thế header CSV đề xuất cũ; không sửa API giao dịch/báo cáo/ngân sách hiện có, schema, JWT hoặc CORS.
 
 #### CSV
 
@@ -423,7 +425,7 @@ Không trả body lỗi thô của Gemini, key, token, stack trace hoặc SQL. D
 
 ### D13 — AI Assistant+ P2 (SE2-D13-BE)
 
-Mở rộng theo giao việc trực tiếp ngày **11/11/2026**; chỉ chuẩn bị code, ngày commit dự kiến **12/11/2026** sau phê duyệt riêng. Phạm vi này bổ sung P2 vào P1 đã có, thay phần loại chatbot khỏi phạm vi trong lịch Sprint 3 cũ; không mở rộng gợi ý ngân sách D14. Đây là hợp đồng triển khai Backend local, chưa thay cho nghiệm thu FE/QA hoặc release.
+Mở rộng P2 theo giao việc ngày **11/11/2026**, đã tích hợp trong phiên bản đối chiếu. Phạm vi này bổ sung P2 vào P1 đã có, thay phần loại chatbot khỏi phạm vi trong lịch Sprint 3 cũ; không mở rộng gợi ý ngân sách D14. Quy tắc dưới đây mô tả Backend hiện có; trạng thái release và giới hạn QA nằm trong tài liệu bàn giao.
 
 Giữ `POST /api/ai/chat`, Bearer JWT và tất cả field P1. Request có thêm `compareMonth` tùy chọn:
 
@@ -613,11 +615,11 @@ Link duy nhất: `APP_FRONTEND_URL/reset-password?token=<raw-token>`; không dù
 
 Khi thiếu SMTP/from/FE URL, Auth khác vẫn chạy; worker không tạo token và ghi `password_reset_email_not_configured`. Mail chỉ gửi sau commit token. Gửi lỗi/timeout ghi `password_reset_email_delivery_failed`, vô hiệu đúng hash của token không giao được bằng transaction riêng; nếu DB lỗi khi cleanup ghi `password_reset_processing_failed`, token vẫn có TTL 30 phút. Log chỉ có event cố định, không exception/raw SMTP/link/email/secret. Hai response vẫn trung lập, không có trạng thái “đã giao”. DTO Auth loại email/password/token khỏi toString. Test mail dùng mock và SMTP stub loopback; **không coi là Email Live PASS**.
 
-## 3. API dự kiến — cần review trước triển khai
+## 3. Mẫu định kỳ và Preview/Apply — đã triển khai
 
 API mới yêu cầu JWT, ID dương, input hợp lệ; lỗi chung theo mục 1. Category/template khác owner trả 404; category thuộc owner nhưng sai type trả 400.
 
-**Liên kết danh mục với ngân sách/mẫu (FR-02/07/08), chưa duyệt:** mở rộng rule không xóa/đổi type khi có transaction/budget/template (kể cả inactive) →409 CATEGORY_IN_USE; không cascade tài chính. D06 giữ rule transaction 409 CONFLICT hiện có; chưa thêm bảng hoặc rule của D07/D08.
+Các endpoint định kỳ đã có ở RecurringTemplateController. Owner luôn từ JWT; không có scheduler chạy tự động. Quy tắc chặn xóa/đổi type danh mục khi chỉ có budget/template chưa được mở rộng thành CATEGORY_IN_USE; xem đề xuất ở mục 4.
 
 | Method | Đường dẫn | Request | Thành công / lỗi nghiệp vụ |
 | --- | --- | --- | --- |
@@ -627,10 +629,9 @@ API mới yêu cầu JWT, ID dương, input hợp lệ; lỗi chung theo mục 1
 | PUT | `/recurring-templates/{id}` | TemplateInput đầy đủ | 200 Template; tắt bằng active=false |
 | DELETE | `/recurring-templates/{id}` | Path id | 204; 409 TEMPLATE_IN_USE nếu đã áp dụng |
 | GET | `/recurring-templates/{id}/preview` | Query year,month bắt buộc | 200 Preview, không ghi dữ liệu |
-| POST | `/recurring-templates/{id}/apply` | `{year,month}` | 201 Application; 409 TEMPLATE_INACTIVE/ALREADY_APPLIED |
-| GET | `/reports/categories` | Query fromMonth,toMonth bắt buộc | 200 CategoryReport; 400 kỳ sai/quá giới hạn |
+| POST | `/recurring-templates/{id}/apply` | `{year,month}` | 201 Application; 400 ngày tương lai; 409 CONFLICT inactive/đã áp dụng/race |
 
-### DTO và hành vi dự kiến
+### DTO và hành vi hiện có
 
 Ký hiệu `...Input` giữ các field của Input tương ứng. ID/tiền/tỷ lệ/year/month của kỳ là số; fromMonth/toMonth và month trong báo cáo là string YYYY-MM. active/canApply/alreadyApplied là boolean; reasonCode/status là string. Input bắt buộc, trừ note (null hoặc ≤500), metadata Category và query có dấu ?. Response trả note=null khi trống. Phân trang mẫu dùng cùng giới hạn page/size hiện có.
 
@@ -640,24 +641,22 @@ Template = { id, categoryName, ...TemplateInput }
 Preview = { templateId, year, month, transactionDate, categoryId, categoryName,
   type, amount, note, alreadyApplied, canApply, reasonCode }
 Application = { id, templateId, year, month, transactionId, transaction:Transaction }
-CategoryReport = { fromMonth, toMonth, totalExpense,
-  categories:[{categoryId,categoryName,totalAmount,categoryShare}] }
 ```
 
-- **Định kỳ (FR-08):** dayOfMonth 1–31, category cùng owner/type, active bắt buộc; ngày vượt tháng lấy ngày cuối. Preview inactive/đã áp dụng vẫn 200, canApply=false, reasonCode ưu tiên ALREADY_APPLIED rồi TEMPLATE_INACTIVE; hợp lệ trả null. Apply kiểm tra lại, lưu transaction+marker nguyên tử. Cùng mẫu/năm/tháng: một request 201, lần sau/đồng thời 409. Không scheduler; sửa mẫu không sửa giao dịch cũ. Đề xuất xóa giao dịch giữ marker (transaction_id=null), không apply lại; mẫu đã áp dụng chỉ được tắt.
+- **Định kỳ (FR-08):** dayOfMonth 1–31, category cùng owner/type, active bắt buộc; ngày vượt tháng lấy ngày cuối. Preview inactive/đã áp dụng vẫn 200, canApply=false, reasonCode ưu tiên ALREADY_APPLIED rồi TEMPLATE_INACTIVE; hợp lệ trả null. Apply kiểm tra lại, lưu transaction+marker nguyên tử. Cùng mẫu/năm/tháng: một request 201, lần sau/đồng thời 409. Không scheduler; sửa mẫu không sửa giao dịch cũ. Xóa giao dịch giữ marker (transaction_id=null), không apply lại; mẫu đã áp dụng bị chặn DELETE và có thể tắt.
 
 **D09 — chốt cho FE/BE:** year từ 1900–2100, month từ 1–12, bắt buộc ở cả hai API. Preview có thứ tự reasonCode `ALREADY_APPLIED` → `TEMPLATE_INACTIVE` → `FUTURE_DATE`; hợp lệ là null. `FUTURE_DATE` nghĩa là ngày do `RecurringTemplateDates` tính lớn hơn hôm nay theo `Asia/Ho_Chi_Minh` (Clock có thể inject), trả 200 với canApply=false và không ghi database. Apply kiểm tra lại cùng quy tắc: ngày tương lai trả **400 VALIDATION_ERROR**, message "Ngày giao dịch không được lớn hơn ngày hiện tại."; inactive/đã áp dụng hoặc thua race UNIQUE trả **409 CONFLICT** theo ApiError hiện tại (không dùng reasonCode làm code lỗi HTTP). POST thành công trả 201 Application. Không retry tự động trong transaction thất bại; transaction và marker cùng rollback khi ghi lỗi. Mẫu có bất kỳ marker nào bị chặn DELETE với **409 CONFLICT**, message `TEMPLATE_IN_USE`; xóa giao dịch giữ marker nhờ V005 `ON DELETE SET NULL`, vẫn chặn apply lại và xóa mẫu. Category không tồn tại/khác owner trả 404, sai type trả 400. D09 không thay đổi việc tạo/sửa mẫu cho các kỳ tương lai của D08.
 
 **Phân loại lỗi ghi D09:** chỉ MySQL **1062 / SQLSTATE 23000** là duplicate trả **409 CONFLICT**. FK, CHECK, NOT NULL hoặc lỗi toàn vẹn khác trả **500 INTERNAL_ERROR** trung lập, không lộ SQL/constraint. Chỉ áp dụng đường ghi Apply D09; D01–D08 giữ handler hiện tại. Lỗi ghi luôn rollback cả transaction và marker, không retry trong transaction đã lỗi.
 
-- **Báo cáo (FR-09):** MonthlyReport đã triển khai theo mục Reports D10 ở trên, tối đa 6 tháng. `/reports/categories` riêng và `categoryShare` vẫn là đề xuất, chưa triển khai trong D10; đề xuất sort totalAmount DESC/categoryId ASC, categoryShare là % round HALF_UP 2 số (tổng làm tròn có thể khác 100); rỗng trả categories=[]. Drilldown dùng filter giao dịch.
-- **CSV (FR-10):** đã có hợp đồng triển khai local tại mục **D11 — CSV và AI Assistant+ P1** ở trên, thay thế đề xuất CSV cũ. FE tải blob, phân biệt JSON lỗi; Report chuyển khoảng tháng thành range ngày khi export. Cross-origin đọc filename vẫn cần review expose header CORS.
+## 4. Đề xuất chưa triển khai và quyết định vận hành còn lại
 
-## 4. Những điểm cần chốt
+- `/reports/categories` riêng cùng DTO CategoryReport/categoryShare chưa có trong Controller. Reports hiện dùng `/reports/monthly` theo contract D10; không gọi endpoint đề xuất này trên FE.
+- Rule CATEGORY_IN_USE cho danh mục chỉ có budget/template là đề xuất, chưa thay rule transaction 409 CONFLICT hiện có. Không suy ra composite owner FK hoặc cascade tài chính từ mô tả này.
+- Chưa có Idempotency-Key với storage/TTL/replay, refresh token, scheduler định kỳ hoặc API admin/deploy/theme mới. Cần thiết kế và duyệt riêng trước triển khai.
+- Filter keyword hiện dùng LIKE theo repository; thay đổi `%`/`_` thành tìm literal sẽ đổi semantics, cần task/contract riêng. Không tự coi ghi chú đề xuất cũ là code đã có.
+- CSV trong Reports đã tích hợp bằng chuyển khoảng tháng sang range ngày. Cross-origin đọc Content-Disposition vẫn cần cấu hình expose header được review; same-origin `/api` không cần mở rộng CORS.
+- DB/QA và người vận hành còn chốt migration runner/ddl-auto, backup production, image digest/rollback và kiểm tra VPS. Xem [Migration, backup và rollback](../../README.md#migration-backup-và-rollback) cùng [bàn giao kỹ thuật](RELEASE_D16_D18.md).
+- SMTP nhận thư/reset thực tế và Gemini ADVICE phụ thuộc cấu hình/quota. Không xác nhận thành công bằng phản hồi forgot chung hoặc response thống kê do Backend tạo. Cảnh báo CSRF giữ OPEN để review có thẩm quyền, không bật/tắt bảo mật chỉ để vượt Quality Gate.
 
-- **FE — Q01/Q04/Q13:** endpoint/DTO mới, lịch, submit và UX timeout. Idempotency-Key nếu cần phải có thiết kế cả nhóm duyệt, chưa có storage/TTL/replay.
-- **Cả nhóm — Q02/Q03/Q05–Q09/Q11:** mã lỗi nghiệp vụ 2.0, metadata/default, rule ngân sách/xóa/định kỳ, Reports D10 và CSV/AI D11 chờ FE xác nhận tích hợp; thống nhất email≤255, miền năm/ngày, keyword≤500 tìm literal và tiền JSON number. Ngoài các hợp đồng triển khai D10/D11 đã ghi riêng ở trên, các giới hạn mới vẫn là đề xuất.
-- **DB/QA — Q10/Q14:** version migration/runner/FK/ddl-auto, backup/rollback, CI gate/pin SHA; xem [README](../../README.md#migration-backup-và-rollback).
-- **Q12:** nguồn kế hoạch đã xác nhận: 12 FR, 45 task, 27/10–16/11/2026, ba owner/nhánh theo README; không phải duyệt API/schema hoặc ký thay thành viên.
-
-FR-01 tài khoản, FR-02 danh mục, FR-03 Quick Add, FR-04 lịch, FR-05 giao dịch, FR-06 ngân sách tổng, FR-07 ngân sách danh mục, FR-08 định kỳ, FR-09 báo cáo, FR-10 CSV ở trên. **FR-11 UI/UX và FR-12 QA/DevOps** không thêm API theme/admin/deploy; vẫn cần responsive/light-dark/keyboard/loading-error-empty và test/review trước nghiệm thu. Không tự coi trạng thái Trello là bằng chứng duyệt; không thêm refresh token hoặc scheduler vào phạm vi.
+FR-01 tài khoản, FR-02 danh mục, FR-03 Quick Add, FR-04 lịch, FR-05 giao dịch, FR-06 ngân sách tổng, FR-07 ngân sách danh mục, FR-08 định kỳ, FR-09 báo cáo và FR-10 CSV có contract triển khai ở trên. FR-11 UI/UX và FR-12 QA/DevOps yêu cầu kiểm thử/review; nội dung tài liệu không tự đổi trạng thái Trello hoặc ký nghiệm thu thay thành viên.
