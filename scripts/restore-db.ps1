@@ -1,4 +1,4 @@
-# ==============================================================================
+﻿# ==============================================================================
 # SmartExpense - Database Restore Script (PowerShell)
 # ==============================================================================
 # Usage:
@@ -8,7 +8,9 @@
 param(
     [Parameter(Mandatory=$true)]
     [string]$BackupFile,
+    [ValidatePattern('^[A-Za-z0-9][A-Za-z0-9_.-]*$')]
     [string]$ContainerName = "smartexpense-mysql",
+    [ValidatePattern('^[A-Za-z0-9_]+$')]
     [string]$DbName = "personal_finance_db"
 )
 
@@ -29,18 +31,13 @@ Write-Host "Restoring database '$DbName' from '$BackupFile'..." -ForegroundColor
 
 # Read the private credential without a hardcoded fallback or shell interpolation.
 . (Join-Path $PSScriptRoot 'Read-LocalEnvironment.ps1')
+. (Join-Path $PSScriptRoot 'Invoke-DatabaseTool.ps1')
 $dbRootPass = Get-SmartExpenseRootPassword
 $previousMysqlPwd = [Environment]::GetEnvironmentVariable('MYSQL_PWD', 'Process')
 [Environment]::SetEnvironmentVariable('MYSQL_PWD', $dbRootPass, 'Process')
 
 try {
-    # Execute restore via mysql client inside container
-    $cmd = "docker exec -i -e MYSQL_PWD $ContainerName mysql -u root $DbName"
-    cmd /c "$cmd < `"$BackupFile`""
-    $restoreExitCode = $LASTEXITCODE
-    if ($restoreExitCode -ne 0) {
-        throw "mysql restore failed with exit code $restoreExitCode."
-    }
+    Invoke-SmartExpenseDatabaseTool -ContainerName $ContainerName -DbName $DbName -Mode restore -FilePath $BackupFile
     Write-Host " Database restored successfully!" -ForegroundColor Green
 } catch {
     Write-Host " Restore failed: $_" -ForegroundColor Red
