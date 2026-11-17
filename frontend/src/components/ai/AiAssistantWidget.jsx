@@ -30,6 +30,7 @@ import {
   createAiChatController,
   formatAiReplyForDisplay,
   getAiSuggestedQuestions,
+  getAiResponseSummary,
   getDefaultCompareMonth,
 } from "../../services/aiChatService.js";
 import AiRobotLauncher from "./AiRobotLauncher.jsx";
@@ -38,6 +39,7 @@ import aiMascotSprite from "../../assets/ai-assistant-mascot-sprite.png";
 import MonthPickerInput from "../ui/MonthPickerInput.jsx";
 import AiComparisonCard from "./AiComparisonCard.jsx";
 import { AiCategoryChart } from "./AiFinancialCharts.jsx";
+import transactionService from "../../services/transactionService.js";
 
 const MASCOT_OFFSETS = {
   neutral: [0, 0],
@@ -74,7 +76,7 @@ export function RobotSparkleIcon(props) {
 // Giữ lại alias WalletSparkleIcon để tương thích 100%
 export const WalletSparkleIcon = RobotSparkleIcon;
 
-export function AiStructuredResponseCard({ message, onQuickAdd, onNavigate }) {
+export function AiStructuredResponseCard({ message, onQuickAdd, onNavigate, onConfirmExpense, onCancelExpense }) {
   if (!message || message.role !== "assistant") return null;
 
   const {
@@ -86,12 +88,20 @@ export function AiStructuredResponseCard({ message, onQuickAdd, onNavigate }) {
     budget,
     intent,
     comparison,
+    suggestedExpense,
+    expenseStatus = "pending",
+    expenseError,
   } = message;
   const isComparison = intent === "COMPARISON" || intent === "CATEGORY_TREND";
   const textReply = formatAiReplyForDisplay(
     typeof reply === "string" && reply ? reply : String(content || ""),
     intent,
   );
+  const summaryReply = getAiResponseSummary(message);
+  const hasLongAdvice = intent === "ADVICE" && textReply.length > 500;
+  const advicePreview = hasLongAdvice
+    ? textReply.slice(0, 300).replace(/\s+\S*$/, "") + "…"
+    : textReply;
   const hasCategories =
     Array.isArray(topCategories) && topCategories.length > 0;
   const hasBudget =
@@ -105,7 +115,7 @@ export function AiStructuredResponseCard({ message, onQuickAdd, onNavigate }) {
 
   return (
     <div className="space-y-3 text-xs sm:text-sm text-slate-800 dark:text-slate-100 min-w-0">
-      {period && !["UNKNOWN", "UNSUPPORTED"].includes(intent) && (
+      {period && !isComparison && !["UNKNOWN", "UNSUPPORTED", "GREETING", "CREATE_EXPENSE"].includes(intent) && (
         <div className="flex flex-wrap items-center gap-1.5">
           <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-bold text-blue-700 border border-blue-200/70 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800/70">
             <Calendar size={11} aria-hidden="true" />
@@ -121,12 +131,86 @@ export function AiStructuredResponseCard({ message, onQuickAdd, onNavigate }) {
           Cần làm rõ · Chọn một câu hỏi gợi ý để bắt đầu lại.
         </p>
       )}
-      <p className="whitespace-pre-line break-words leading-relaxed text-slate-800 dark:text-slate-100">
-        {textReply}
+      <p className="whitespace-pre-line break-words text-pretty leading-relaxed text-slate-800 dark:text-slate-100">
+        {summaryReply || advicePreview}
       </p>
+      {((summaryReply && !isComparison) || hasLongAdvice) && (
+        <details className="text-xs text-slate-600 dark:text-slate-300">
+          <summary className="cursor-pointer rounded-lg py-2 font-semibold text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-blue-300">
+            {hasLongAdvice ? "Xem toàn bộ lời khuyên" : "Xem diễn giải chi tiết"}
+          </summary>
+          <p className="mt-1 whitespace-pre-line break-words text-pretty leading-relaxed">{textReply}</p>
+        </details>
+      )}
+
+      {suggestedExpense && (
+        <section
+          aria-label="Thẻ xác nhận chi tiêu"
+          aria-busy={expenseStatus === "saving"}
+          className="min-w-0 space-y-3 rounded-xl border border-amber-200 bg-amber-50/60 p-3 dark:border-amber-900/60 dark:bg-amber-950/20"
+        >
+          <p className="text-xs font-bold text-slate-700 dark:text-slate-200">Khoản chi đề xuất</p>
+          <p className="break-words text-xl font-black text-rose-700 dark:text-rose-300">
+            {formatReportMoney(suggestedExpense.amount)}
+          </p>
+          <dl className="space-y-2 text-xs">
+            <div className="flex flex-wrap justify-between gap-x-3 gap-y-1">
+              <dt className="text-slate-600 dark:text-slate-400">Danh mục</dt>
+              <dd className="min-w-0 break-words font-semibold">{suggestedExpense.categoryName || "Chưa phân loại"}</dd>
+            </div>
+            <div className="flex flex-wrap justify-between gap-x-3 gap-y-1">
+              <dt className="text-slate-600 dark:text-slate-400">Ngày giao dịch</dt>
+              <dd><time dateTime={suggestedExpense.transactionDate}>{suggestedExpense.transactionDate}</time></dd>
+            </div>
+            <div className="space-y-1">
+              <dt className="text-slate-600 dark:text-slate-400">Ghi chú</dt>
+              <dd className="whitespace-pre-line break-words">{suggestedExpense.note || "Không có ghi chú"}</dd>
+            </div>
+          </dl>
+          {expenseStatus === "saved" ? (
+            <p role="status" className="font-semibold text-emerald-700 dark:text-emerald-300">✅ Đã lưu giao dịch vào sổ chi tiêu!</p>
+          ) : expenseStatus === "cancelled" ? (
+            <p role="status" className="font-semibold text-slate-600 dark:text-slate-300">Đã hủy bỏ đề xuất</p>
+          ) : (
+            <>
+              {expenseError && (
+                <p role="alert" className="break-words text-rose-700 dark:text-rose-300">{expenseError}</p>
+              )}
+              {suggestedExpense.categoryId == null && (
+                <div className="space-y-2 text-amber-800 dark:text-amber-200">
+                  <p>Chưa có danh mục phù hợp. Vui lòng chọn danh mục trong biểu mẫu ghi khoản chi mới.</p>
+                  <button type="button" onClick={() => onQuickAdd?.()}
+                    className="rounded-lg underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+                    Mở biểu mẫu ghi khoản chi
+                  </button>
+                </div>
+              )}
+              <div className="flex flex-wrap gap-2">
+                <button type="button"
+                  disabled={expenseStatus === "saving" || suggestedExpense.categoryId == null}
+                  onClick={() => onConfirmExpense?.(message.id)}
+                  className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-xs font-bold text-white hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50">
+                  {expenseStatus === "saving"
+                    ? <Loader2 size={14} aria-hidden="true" className="animate-spin motion-reduce:animate-none" />
+                    : expenseStatus === "error" ? <RefreshCw size={14} aria-hidden="true" /> : <Plus size={14} aria-hidden="true" />}
+                  {expenseStatus === "saving" ? "Đang lưu..." : expenseStatus === "error" ? "Thử lại" : "Xác nhận lưu"}
+                </button>
+                <button type="button" disabled={expenseStatus === "saving"}
+                  onClick={() => onCancelExpense?.(message.id)}
+                  className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700">
+                  <X size={14} aria-hidden="true" /> Hủy
+                </button>
+              </div>
+            </>
+          )}
+        </section>
+      )}
+      {intent === "CREATE_EXPENSE" && !suggestedExpense && (
+        <p role="alert" className="text-rose-700 dark:text-rose-300">Chưa nhận được đề xuất chi tiêu hợp lệ. Vui lòng nhập lại yêu cầu.</p>
+      )}
 
       {isComparison && (
-        <AiComparisonCard comparison={comparison} period={period} />
+        <AiComparisonCard comparison={comparison} period={period} intent={intent} />
       )}
 
       {/* Bento Mini-Grid cho Thu - Chi - Số dư */}
@@ -398,6 +482,8 @@ export function AiAssistantPanelView({
   onRetry,
   onQuickAdd,
   onNavigate,
+  onConfirmExpense,
+  onCancelExpense,
   inputRef,
   listEndRef,
 }) {
@@ -602,10 +688,10 @@ export function AiAssistantPanelView({
         {messages.length === 0 && !loading && (
           <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-4 text-center dark:border-slate-800 dark:bg-[#182234]">
             <p className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200">
-              Bạn muốn tìm hiểu gì về thu chi?
+              Bạn muốn ghi khoản chi hay xem thu chi?
             </p>
             <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-              Chọn một câu hỏi gợi ý bên dưới hoặc nhập câu hỏi để bắt đầu nhé.
+              Ghi chi: nhập nội dung và số tiền bất kỳ. Bạn sẽ được kiểm tra trước khi lưu.
             </p>
           </div>
         )}
@@ -633,6 +719,8 @@ export function AiAssistantPanelView({
                     message={item}
                     onQuickAdd={onQuickAdd}
                     onNavigate={onNavigate}
+                    onConfirmExpense={onConfirmExpense}
+                    onCancelExpense={onCancelExpense}
                   />
                 )}
               </div>
@@ -768,7 +856,7 @@ export function AiAssistantPanelView({
                 }
               }
             }}
-            placeholder="Nhập câu hỏi về thu chi, ngân sách..."
+            placeholder="Nhập khoản chi hoặc câu hỏi..."
             className="block w-full resize-none rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs sm:text-sm text-slate-800 outline-none transition-colors focus:border-blue-500 focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-60 dark:border-slate-700 dark:bg-[#1E293B] dark:text-slate-100 max-h-24 min-h-[38px]"
           />
           {draft.length >= 400 && (
@@ -1022,6 +1110,8 @@ export default function AiAssistantWidget({
         onRetry={() => controller.retryLastMessage()}
         onQuickAdd={onQuickAdd}
         onNavigate={() => controller.closePanel()}
+        onConfirmExpense={(id) => controller.confirmExpense(id, transactionService.createTransaction)}
+        onCancelExpense={(id) => controller.cancelExpense(id)}
         inputRef={inputRef}
         listEndRef={listEndRef}
       />
