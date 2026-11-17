@@ -206,6 +206,23 @@ class GeminiAiProviderTests {
         assertThatCode(() -> limiter.acquire(7L)).doesNotThrowAnyException();
     }
 
+    @Test
+    void limiterRejectsNewOwnersAtCapacityWithoutEvictingActiveWindows() {
+        var limiter = new AiRateLimiter(Clock.fixed(Instant.EPOCH, ZoneOffset.UTC));
+        for (long owner = 0; owner < 10_000; owner++) limiter.acquire(owner);
+        assertThatThrownBy(() -> limiter.acquire(10_000L))
+                .isInstanceOfSatisfying(D11Exception.class, error -> {
+                    assertThat(error.getStatusCode().value()).isEqualTo(503);
+                    assertThat(error.getCode()).isEqualTo("AI_UNAVAILABLE");
+                });
+        for (int request = 1; request < 10; request++) limiter.acquire(0L);
+        assertThatThrownBy(() -> limiter.acquire(0L))
+                .isInstanceOfSatisfying(D11Exception.class, error -> {
+                    assertThat(error.getStatusCode().value()).isEqualTo(429);
+                    assertThat(error.getCode()).isEqualTo("AI_RATE_LIMITED");
+                });
+    }
+
     private GeminiAiProvider provider(String key, String model, Duration timeout) {
         return new GeminiAiProvider(HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(1)).build(), json, key, model,
                 URI.create("http://127.0.0.1:" + server.getAddress().getPort() + "/interactions"), timeout);

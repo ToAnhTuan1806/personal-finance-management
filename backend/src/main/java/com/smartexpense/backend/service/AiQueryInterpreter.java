@@ -1,6 +1,7 @@
 package com.smartexpense.backend.service;
 
 import com.smartexpense.backend.dto.ai.AiChatRequest;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
@@ -21,6 +22,7 @@ public class AiQueryInterpreter {
             "\\b(?:thang\\s*(?:thu\\s*)?|t(?=\\d))(nay|truoc|\\d{1,2}(?:\\s*/\\s*\\d{4})?)(?![\\d/])\\b"
                     + "|\\b(\\d{4})-(\\d{2})\\b|\\b(\\d{1,2})/(\\d{4})\\b");
     private final Clock clock;
+    @Autowired
     public AiQueryInterpreter() { this(Clock.system(ZoneId.of("Asia/Ho_Chi_Minh"))); }
     public AiQueryInterpreter(Clock clock) { this.clock = clock; }
 
