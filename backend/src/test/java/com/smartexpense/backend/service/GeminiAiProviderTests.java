@@ -76,7 +76,8 @@ class GeminiAiProviderTests {
         assertThat(body.get()).doesNotContain("SECRET CATEGORY", "PRIVATE_BUDGET", "private@example.test",
                 "100.10", "20.05", "80.05", "budgetSpending", "fake-test-key");
         assertThat(request.path("system_instruction").asString()).contains(
-                "Chỉ tư vấn chung", "Không nói đã kiểm tra tài khoản", "Không nêu số tiền, tỷ lệ");
+                "Chỉ tư vấn chung", "Không nói đã kiểm tra tài khoản", "Không nêu số tiền, tỷ lệ",
+                "tối đa 3 gạch đầu dòng", "mỗi ý một câu", "không quá 90 từ");
         assertThat(calls).hasValue(1);
     }
 

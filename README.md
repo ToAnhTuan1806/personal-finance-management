@@ -228,6 +228,10 @@ Nếu PowerShell chặn script theo Execution Policy, dùng `powershell.exe -NoP
 
 Script đọc `.env` như dữ liệu, không thực thi hoặc nội suy; chỉ truyền các biến Backend vào `gradlew bootRun`. Nó ưu tiên file này, tạm bỏ alias `SPRING_DATASOURCE_*`/`APP_JWT_*` cũ rồi khôi phục biến tiến trình khi dừng; không dùng `setx` và không in secret. `-CheckOnly` chỉ kiểm tra định dạng, không xác minh đăng nhập MySQL. Có thể chọn file riêng bằng `-EnvFile <duong-dan>`.
 
+Để bật tư vấn AI (`ADVICE`), Backend cần `GEMINI_API_KEY` và `GEMINI_MODEL`. Model được chọn cho phần tư vấn ngắn là `gemini-3.5-flash-lite`; cấu hình mẫu có trong `.env.example`. Script trên nạp hai biến từ file env hoặc kế thừa môi trường tiến trình nếu không khai báo trong file. Giá trị trong file, kể cả rỗng, được ưu tiên; muốn giữ key từ môi trường thì bỏ dòng `GEMINI_API_KEY` trong file. `-CheckOnly` không gọi Google và không xác nhận key/quota. Khởi động lại Backend sau khi đổi cấu hình.
+
+Compose truyền hai biến vào container Backend. Người vận hành cần cấp chúng trong môi trường triển khai và recreate Backend để áp dụng; thay đổi local không tự cấu hình key trên VPS. Thống kê, lời chào và soạn khoản chi vẫn xử lý nội bộ; chỉ tư vấn chung gọi Gemini.
+
 Nếu dùng nút Run/Debug thay vì terminal, đặt bốn biến Backend trong Run Configuration riêng của IDE; VS Code Java hỗ trợ `envFile` trỏ tới `${workspaceFolder}/.env`. `.vscode/` và `.idea/` đã được Git bỏ qua. Không thêm credential vào source hoặc launch configuration được commit.
 
 **Lỗi `Access denied for user`:** kiểm tra host/cổng/schema trong `DB_URL`, `DB_USERNAME` và mật khẩu thực của đúng MySQL instance. Có thể kiểm tra thủ công bằng `mysql -h 127.0.0.1 -P <cong-trong-URL> -u <DB_USERNAME> -p` để nhập mật khẩu qua prompt; không ghi password vào lệnh. Kiểm tra quyền user trên schema và các biến IDE cũ đang ghi đè cấu hình.

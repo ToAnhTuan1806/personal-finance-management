@@ -6,13 +6,23 @@
 $ErrorActionPreference = 'Stop'
 $smtpEnvKeys = @('SMTP_HOST', 'SMTP_PORT', 'SMTP_USERNAME', 'SMTP_PASSWORD', 'SMTP_FROM',
         'APP_FRONTEND_URL', 'SMTP_AUTH', 'SMTP_STARTTLS')
-$backendEnvKeys = @('DB_URL', 'DB_USERNAME', 'DB_PASSWORD', 'JWT_SECRET', 'JWT_EXPIRATION') + $smtpEnvKeys
+$geminiEnvKeys = @('GEMINI_API_KEY', 'GEMINI_MODEL')
+$backendEnvKeys = @('DB_URL', 'DB_USERNAME', 'DB_PASSWORD', 'JWT_SECRET', 'JWT_EXPIRATION') + $smtpEnvKeys + $geminiEnvKeys
+
+# PowerShell 7/.NET mới phân biệt biến rỗng với biến bị xóa; alias vắng mặt phải bị xóa thật.
+function Set-BackendProcessEnvironment($Name, $Value) {
+    if ($null -eq $Value) {
+        Remove-Item -LiteralPath ('Env:' + $Name) -ErrorAction SilentlyContinue
+    } else {
+        [Environment]::SetEnvironmentVariable($Name, $Value, 'Process')
+    }
+}
 
 . (Join-Path $PSScriptRoot 'Read-LocalEnvironment.ps1')
 
 $configuration = Read-SmartExpenseEnvironment -Path $EnvFile -AllowedKeys $backendEnvKeys
-# SMTP có thể được cấp qua secret môi trường; file được chọn vẫn có ưu tiên khi khai báo rõ.
-foreach ($key in $smtpEnvKeys) {
+# SMTP/Gemini có thể được cấp qua môi trường; file được chọn ưu tiên khi khai báo rõ.
+foreach ($key in ($smtpEnvKeys + $geminiEnvKeys)) {
     if (-not $configuration.ContainsKey($key)) {
         $inheritedValue = [Environment]::GetEnvironmentVariable($key, 'Process')
         if ($null -ne $inheritedValue) { $configuration[$key] = $inheritedValue }
@@ -56,10 +66,16 @@ try {
     foreach ($key in $managedEnvKeys) {
         $previousValues[$key] = [Environment]::GetEnvironmentVariable($key, 'Process')
         $value = if ($configuration.ContainsKey($key)) { $configuration[$key] } else { $null }
-        [Environment]::SetEnvironmentVariable($key, $value, 'Process')
+        Set-BackendProcessEnvironment $key $value
     }
     if ($CheckOnly) {
         Write-Host 'Cấu hình Backend hợp lệ; không in credential và không kết nối database.'
+        if ([string]::IsNullOrWhiteSpace($configuration['GEMINI_API_KEY']) -or
+                [string]::IsNullOrWhiteSpace($configuration['GEMINI_MODEL'])) {
+            Write-Host 'Gemini chưa đủ key/model; chức năng tư vấn chưa sẵn sàng.'
+        } else {
+            Write-Host 'Gemini có đủ cấu hình; chưa xác minh kết nối, quyền truy cập hoặc quota.'
+        }
         return
     }
     Push-Location (Join-Path (Split-Path -Parent $PSScriptRoot) 'backend')
@@ -69,6 +85,6 @@ try {
     } finally { Pop-Location }
 } finally {
     foreach ($key in $previousValues.Keys) {
-        [Environment]::SetEnvironmentVariable($key, $previousValues[$key], 'Process')
+        Set-BackendProcessEnvironment $key $previousValues[$key]
     }
 }

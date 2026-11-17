@@ -87,7 +87,7 @@ class AiQueryInterpreterTests {
             category expense trend tháng 7 | CATEGORY_TREND | 2026-07
             danh mục chi tiu tăng tháng 5 | CATEGORY_TREND | 2026-05
             xu hướng danh mục | CATEGORY_TREND | 2025-05
-            Xin chào | UNKNOWN | 2025-05
+            Xin chào | GREETING | 2025-05
             Hôm nay thời tiết thế nào | UNKNOWN | 2025-05
             ns | UNKNOWN | 2025-05
             dm | UNKNOWN | 2025-05
@@ -116,6 +116,84 @@ class AiQueryInterpreterTests {
         var result = nlu.interpret(new AiChatRequest(message, "2025-05"));
         assertThat(result.intent()).isEqualTo(intent);
         assertThat(result.month()).isEqualTo(month);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"heelo", "helo", "hey", "chao bot", "hello", "hi", "Xin chào!", "xin chao", "alo", "HELLO SmartExpense", "ê", "Ê!", "bot ơi", "trợ lý ơi"})
+    void recognizesGreetingsWithoutFinancialData(String message) {
+        var result = nlu.interpret(new AiChatRequest(message, "2026-11"));
+        assertThat(result.intent()).isEqualTo("GREETING");
+        assertThat(result.month()).isEqualTo("2026-11");
+        assertThat(result.expense()).isNull();
+    }
+
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', textBlock = """
+            Ăn trưa 65k tiền mặt | 65000 | an uong
+            Vừa ăn trưa 65k tiền mặt | 65000 | an uong
+            Đổ xăng 80 nghìn | 80000 | di lai
+            Đổ xăng 80k | 80000 | di lai
+            Mua áo 250k | 250000 | quan ao
+            Mua áo 1.5tr | 1500000 | quan ao
+            Mua áo 1,5 triệu | 1500000 | quan ao
+            Mua áo 1.5 triệu | 1500000 | quan ao
+            Đổ xăng 80000 | 80000 | di lai
+            Đổ xăng 80.000 | 80000 | di lai
+            Đổ xăng 80,000 đồng | 80000 | di lai
+            Cafe 35 ngin | 35000 | cafe
+            Uống 2 cốc cafe 35 nghin | 35000 | cafe
+            Tiền điện 500k | 500000 | tien dien
+            Tiền nước 80k | 80000 | tien nuoc
+            Mua đồ 1000 | 1000 | mua sam
+            Ăn trưa 65K. | 65000 | an uong
+            """)
+    void parsesExpenseAmountKeywordAndOriginalNote(String message, String amount, String keyword) {
+        var result = nlu.interpret(new AiChatRequest(message, "2026-11"));
+        assertThat(result.intent()).isEqualTo("CREATE_EXPENSE");
+        assertThat(result.expense().amount()).isEqualByComparingTo(amount);
+        assertThat(result.expense().categoryKeyword()).isEqualTo(keyword);
+        assertThat(result.expense().note()).isEqualTo(message);
+    }
+
+    @Test void permitsAmountWithoutKnownCategory() {
+        var result = nlu.interpret(new AiChatRequest("80000", "2026-11"));
+        assertThat(result.intent()).isEqualTo("CREATE_EXPENSE");
+        assertThat(result.expense().amount()).isEqualByComparingTo("80000");
+        assertThat(result.expense().categoryKeyword()).isNull();
+    }
+
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', textBlock = """
+            Hello tổng chi tháng 11/2026 bao nhiêu? | SUMMARY
+            Hi số dư | SUMMARY
+            Chào ngân sách còn 500k | BUDGET
+            So sánh chi 500k tháng 10 và tháng 11 | COMPARISON
+            Danh mục ăn uống 500k | CATEGORIES
+            Xu hướng danh mục ăn uống 500k | CATEGORY_TREND
+            Gợi ý tiết kiệm 500k | ADVICE
+            Tổng chi 65000 | SUMMARY
+            Chi ăn uống hết 65k tháng này chưa? | SUMMARY
+            Nhận lương 10tr | UNKNOWN
+            Thu nhập 10tr | SUMMARY
+            Xóa ăn trưa 65k | UNSUPPORTED
+            Ăn trưa 65k user 999 | UNSUPPORTED
+            Tổng chi 2024-02 | SUMMARY
+            Tổng thu năm 2026 | UNKNOWN
+            """)
+    void preservesQueriesIncomeAndRefusals(String message, String intent) {
+        var result = nlu.interpret(new AiChatRequest(message, "2026-11"));
+        assertThat(result.intent()).isEqualTo(intent);
+        assertThat(result.expense()).isNull();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"Ăn trưa", "Ăn trưa 65", "Ăn trưa 0k", "Ăn trưa -65k",
+            "Ăn trưa 65k và cafe 30k", "Ăn trưa 10000000000000", "Ăn trưa 65.123456k",
+            "Ăn trưa 65.1.2k", "Ăn trưa 2026-11-18", "Ăn trưa 18/11/2026", "Ăn trưa tháng 11/2026"})
+    void doesNotSuggestInvalidAmbiguousAmountsOrDates(String message) {
+        var result = nlu.interpret(new AiChatRequest(message, "2026-11"));
+        assertThat(result.intent()).isNotEqualTo("CREATE_EXPENSE");
+        assertThat(result.expense()).isNull();
     }
 
     @Test void unicodeDecomposedAndCompatibility() {
