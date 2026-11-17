@@ -1,5 +1,10 @@
 package com.smartexpense.backend.service;
 
+import jakarta.mail.Multipart;
+import jakarta.mail.Part;
+import jakarta.mail.Session;
+import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeMessage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -13,6 +18,7 @@ import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Properties;
 import java.util.concurrent.*;
 
 import static org.assertj.core.api.Assertions.*;
@@ -20,16 +26,46 @@ import static org.mockito.Mockito.*;
 
 class SmtpPasswordResetEmailSenderTests {
     @Test
-    void mailContainsOnlyConfiguredOriginRecipientTokenAndExpiry() {
-        JavaMailSender mail = mock(JavaMailSender.class);
+    void mailContainsConfiguredHeadersAndUtf8PlainTextAndHtmlAlternatives() throws Exception {
+        JavaMailSender mail = mockMimeMail();
         sender(mail, "https://finance.example.test/").sendResetLink("private@example.test", "reset-token");
-        ArgumentCaptor<SimpleMailMessage> message = ArgumentCaptor.forClass(SimpleMailMessage.class);
-        verify(mail).send(message.capture());
-        assertThat(message.getValue().getFrom()).isEqualTo("noreply@example.test");
-        assertThat(message.getValue().getTo()).containsExactly("private@example.test");
-        assertThat(message.getValue().getSubject()).isEqualTo("Đặt lại mật khẩu SmartExpense");
-        assertThat(message.getValue().getText()).contains("https://finance.example.test/reset-password?token=reset-token",
-                "30 phút", "bỏ qua email").doesNotContain("password_hash");
+        ArgumentCaptor<MimeMessage> captured = ArgumentCaptor.forClass(MimeMessage.class);
+        verify(mail).send(captured.capture());
+        MimeMessage message = captured.getValue();
+        message.saveChanges();
+        assertThat(((InternetAddress) message.getFrom()[0]).getAddress()).isEqualTo("noreply@example.test");
+        assertThat(((InternetAddress) message.getFrom()[0]).getPersonal()).isEqualTo("SmartExpense");
+        assertThat(message.getAllRecipients()).extracting(Object::toString).containsExactly("private@example.test");
+        assertThat(message.getSubject()).isEqualTo("Đặt lại mật khẩu SmartExpense");
+        assertThat(body(message, "text/plain")).contains("https://finance.example.test/reset-password?token=reset-token",
+                "30 phút", "bỏ qua email").doesNotContain("password_hash", "<html");
+        assertThat(body(message, "text/html")).contains("lang=\"vi\"", "Đặt lại mật khẩu", "30 phút", "Dùng một lần",
+                "href=\"https://finance.example.test/reset-password?token=reset-token\"", "Mật khẩu hiện tại vẫn được giữ nguyên.")
+                .doesNotContain("{{resetLink}}", "private@example.test", "password_hash", "<script", "<img");
+        verify(mail, never()).send(any(SimpleMailMessage.class));
+    }
+
+    @Test
+    void htmlEscapesLinkWithoutChangingPlainTextFallback() throws Exception {
+        JavaMailSender mail = mockMimeMail();
+        String token = "qa<token>\"&";
+        sender(mail, "https://finance.example.test").sendResetLink("private@example.test", token);
+        ArgumentCaptor<MimeMessage> captured = ArgumentCaptor.forClass(MimeMessage.class);
+        verify(mail).send(captured.capture());
+        captured.getValue().saveChanges();
+        assertThat(body(captured.getValue(), "text/html")).contains("qa&lt;token&gt;&quot;&amp;")
+                .doesNotContain("qa<token>", "{{resetLink}}");
+        assertThat(body(captured.getValue(), "text/plain")).contains("?token=" + token);
+    }
+
+    @Test
+    void smtpFailureDoesNotExposeRecipientTokenOrCause() {
+        JavaMailSender mail = mockMimeMail();
+        doThrow(new MailSendException("private@example.test reset-token internal connection"))
+                .when(mail).send(any(MimeMessage.class));
+        assertThatThrownBy(() -> sender(mail, "https://finance.example.test")
+                .sendResetLink("private@example.test", "reset-token"))
+                .isInstanceOf(IllegalStateException.class).hasMessage("Password reset email delivery failed").hasNoCause();
     }
 
     @ParameterizedTest
@@ -44,7 +80,7 @@ class SmtpPasswordResetEmailSenderTests {
 
     @Test
     void localhostHttpAllowedOnlyOutsideProduction() {
-        JavaMailSender mail = mock(JavaMailSender.class);
+        JavaMailSender mail = mockMimeMail();
         assertThatCode(() -> sender(mail, "http://localhost:5173").sendResetLink("private@example.test", "reset-token"))
                 .doesNotThrowAnyException();
         StandardEnvironment env = new StandardEnvironment(); env.setActiveProfiles("production");
@@ -71,7 +107,9 @@ class SmtpPasswordResetEmailSenderTests {
             String mime = received.substring(received.indexOf("DATA\n") + 5);
             var message = new jakarta.mail.internet.MimeMessage(jakarta.mail.Session.getInstance(new java.util.Properties()),
                     new ByteArrayInputStream(mime.getBytes(StandardCharsets.UTF_8)));
-            assertThat(message.getContent().toString()).contains("http://localhost:5173/reset-password?token=reset-token", "30 phút");
+            assertThat(body(message, "text/plain")).contains("http://localhost:5173/reset-password?token=reset-token", "30 phút");
+            assertThat(body(message, "text/html")).contains("href=\"http://localhost:5173/reset-password?token=reset-token\"", "Đặt lại mật khẩu")
+                    .doesNotContain("{{resetLink}}");
         }
     }
 
@@ -85,6 +123,24 @@ class SmtpPasswordResetEmailSenderTests {
                             .isInstanceOf(IllegalStateException.class).hasMessage("Password reset email delivery failed")
                             .hasNoCause());
         }
+    }
+
+    private static JavaMailSender mockMimeMail() {
+        JavaMailSender mail = mock(JavaMailSender.class);
+        when(mail.createMimeMessage()).thenReturn(new MimeMessage(Session.getInstance(new Properties())));
+        return mail;
+    }
+
+    private static String body(Part part, String type) throws Exception {
+        if (part.isMimeType(type)) return (String) part.getContent();
+        if (part.isMimeType("multipart/*")) {
+            Multipart parts = (Multipart) part.getContent();
+            for (int index = 0; index < parts.getCount(); index++) {
+                String found = body(parts.getBodyPart(index), type);
+                if (!found.isEmpty()) return found;
+            }
+        }
+        return "";
     }
 
     private static JavaMailSenderImpl transport(int port, int timeout) {
