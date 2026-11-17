@@ -480,7 +480,7 @@ test('Giao diện Chatbot & XSS Safety: render đầy đủ tiêu đề, 4 câu 
   assert.match(emptyOpenHtml, /Xem câu hỏi gợi ý phía trước/)
   assert.match(emptyOpenHtml, /Xem thêm câu hỏi gợi ý/)
   assert.match(emptyOpenHtml, /cursor-grab/)
-  assert.match(emptyOpenHtml, /Chưa có cuộc trò chuyện nào/)
+  assert.match(emptyOpenHtml, /Bạn muốn tìm hiểu gì về thu chi\?/)
   for (const question of AI_SUGGESTED_QUESTIONS) {
     assert.ok(
       emptyOpenHtml.includes(question),
@@ -801,6 +801,21 @@ test('D13 UI giữ hai bộ chọn tháng tiếng Việt, keyboard label, loadin
   assert.equal(pickers.length, 2)
   assert.ok(pickers.every((picker) => !/\sdisabled(?:=|\s|>)/.test(picker)))
   assert.doesNotMatch(html, /type="month"/)
+})
+
+test('trợ lý hướng dẫn chọn tháng bằng ngôn ngữ người dùng, không lộ mã hoặc định dạng kỹ thuật', () => {
+  for (const month of ['', 'không hợp lệ', '1899-12']) {
+    const validation = validateAiChatRequest({ message: 'Tôi đã chi bao nhiêu?', month })
+    assert.equal(validation.valid, false)
+    assert.match(validation.message, /chọn.*tháng/i)
+    assert.doesNotMatch(validation.message, /YYYY|1900|2100|P1/)
+  }
+  for (const month of ['', '2026-11', '1900-01']) {
+    const html = render(AiAssistantPanelView, { open: true, month, compareMonth: '' })
+    assert.match(html, /Tháng so sánh \(tùy chọn\)/)
+    assert.doesNotMatch(html, /P1|1900–2100|YYYY-MM|kỳ gốc/)
+    assert.match(html, /text-slate-500 dark:text-slate-400/)
+  }
 })
 
 test('D13 tên danh mục và reply HTML chỉ render text, không thực thi XSS', () => {

@@ -27,6 +27,24 @@ test('modal EXPENSE không hiển thị category INCOME', () => {
   const html = render({ initialType: 'EXPENSE' })
   assert.ok(html.includes('TEST_EXPENSE') && !html.includes('TEST_INCOME'))
 })
+
+test('dropdown danh mục có nền/chữ riêng cho Light/Dark, lỗi vẫn báo bằng viền và thông báo', () => {
+  const html = render({ initialDate: '9999-12-31' })
+  const select = html.match(/<select[^>]*id="transaction-category"[^>]*>/)[0]
+  assert.ok(select.includes('color-scheme:light') && select.includes('dark:[color-scheme:dark]'))
+  const options = html.slice(html.indexOf(select)).split('</select>')[0].match(/<option[^>]*>/g)
+  assert.ok(options.length > 1)
+  for (const option of options) {
+    assert.ok(option.includes('bg-white') && option.includes('text-slate-900'))
+    assert.ok(option.includes('dark:bg-[#1E293B]') && option.includes('dark:text-slate-100'))
+    assert.doesNotMatch(option, /rose-/)
+  }
+  const invalidInput = html.match(/<input[^>]*id="transaction-date"[^>]*>/)[0]
+  assert.match(invalidInput, /aria-invalid="true"/)
+  assert.ok(invalidInput.includes('border-rose-400') && invalidInput.includes('dark:text-slate-100'))
+  assert.doesNotMatch(invalidInput, /text-rose-/)
+  assert.match(html, /id="transaction-date-error"[^>]*role="alert"/)
+})
 test('đang tải danh mục khóa submit, không thông báo là chưa có danh mục', () => {
   const html = render({ categories: [], categoriesLoading: true })
   assert.match(html, /<button[^>]*type="submit"[^>]*disabled=""/)
