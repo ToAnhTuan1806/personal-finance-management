@@ -22,25 +22,21 @@
 
 ---
 
-## SmartExpense 2.0 — Tài liệu và kế hoạch hiện hành
+## Trạng thái và tài liệu hiện hành — 18/11/2026
 
-SmartExpense 2.0 phát triển tiếp MVP hiện có. [SRS 2.3](docs/SmartExpense_SRS_v2.docx) và [Master Plan](docs/SmartExpense_QuanTriDuAn.xlsx) được cập nhật lịch ngày 08/11/2026 theo [Trello](https://trello.com/b/RAHIOc4b/smartexpense-personal-finance-management). Việc xác thực nguồn không thay cho review API/schema hoặc chữ ký của thành viên.
+SmartExpense 2.0 phát triển tiếp MVP, phục vụ ghi thu/chi, quản lý ngân sách và theo dõi tài chính theo tháng. Phiên bản đối chiếu là `dev 88be77a3a582f0f5b5654ed66ae70270783d80a1` (PR #77), đã tích hợp BE `d771331`, FE `d8dd82b` và DB/QA `e8b785b`.
 
-- SRS giữ 12 nhóm FR-01–FR-12. Master Plan giữ 45 mã task gốc để truy vết; số task/trạng thái baseline không đại diện cho tiến độ hiện tại trên Trello.
-- Sprint 1: **27–30/10**; Sprint 2: **02–06/11**; Sprint 3: **09–12/11/2026**, tổng 13 ngày làm việc T2–T6. **13/11 là ngày bảo vệ, không xếp phát triển.**
-- Sprint 3 có 12 thẻ D10–D13 và 3 thẻ Forgot Password theo kế hoạch. D14/D15 đã được lưu trữ và gộp vào D13 ngày 12/11; không còn mốc phát triển 16/11. Xem [lịch Sprint 3 và nguồn từng thẻ](docs/smartexpense-2.0/SPRINT_3_PLAN.md).
+[CI của đúng SHA](https://github.com/ToAnhTuan1806/personal-finance-management/actions/runs/44107981081) và [CD của đúng SHA](https://github.com/ToAnhTuan1806/personal-finance-management/actions/runs/44107981199) đều SUCCESS. Đây là trạng thái pipeline; kiểm tra tài nguyên/container VPS, backup production và email reset tới hộp thư thật vẫn cần người phụ trách xác nhận.
 
-| Thành viên | Vai trò | Nhánh | Số mã task gốc |
-| --- | --- | --- | --- |
-| Tô Anh Tuấn | Backend + Documentation | feature/tuan | 15 |
-| Trần Thị Thu Trang | Frontend | feature/trang | 15 |
-| Phạm Hương Quỳnh | Database + QA + DevOps | feature/quynh | 15 |
+Mở [mục lục tài liệu](docs/README.md), [API hiện hành](docs/smartexpense-2.0/API_CONTRACT.md) và [kiến trúc, ERD, kiểm thử, release/rollback](docs/smartexpense-2.0/RELEASE_D16_D18.md). Bản bàn giao này chỉ cập nhật tài liệu, không sửa API, schema hoặc cấu hình triển khai.
 
-FE/BE dùng [API Contract](docs/smartexpense-2.0/API_CONTRACT.md): phân biệt API hiện có và API dự kiến, kèm DTO/validation và các điểm cần chốt. Các đề xuất kỹ thuật vẫn chờ review; lưu ý thay đổi dữ liệu nằm ở mục [Migration, backup và rollback](#migration-backup-và-rollback).
+| Thành viên | Vai trò | Nhánh |
+| --- | --- | --- |
+| Tô Anh Tuấn | Backend + Documentation | feature/tuan |
+| Trần Thị Thu Trang | Frontend | feature/trang |
+| Phạm Hương Quỳnh | Database + QA + DevOps | feature/quynh |
 
-Đối chiếu ngày 08/11/2026: cả 15 thẻ BE/FE/DB của D05–D09 trên Trello ở Done. Baseline `dev` SHA `0bee997` đạt **779 Backend + 417 Frontend PASS**, lint/build và CI PASS. UI D07 đã PASS theo xác nhận kiểm thử thủ công của người dùng. Bản sửa D06 concurrency trong working tree đạt **795/795 Backend PASS**, 0 fail/error/skipped, D03 gate 55/55 PASS và 103/103 test tập trung. Frontend không thay đổi trong patch này. Xem [review Sprint 2 trước merge main](docs/qa/SPRINT_2_REVIEW.md) về bản sửa và workflow tự deploy khi push `main`; CI của baseline không thay cho CI của patch mới.
-
-Mã hiện tại đã tích hợp Quick Add, Calendar, icon/màu danh mục, ngân sách danh mục và mẫu định kỳ kèm Preview/Apply thủ công (D01–D09). Báo cáo nhiều tháng, CSV và Forgot Password nằm trong kế hoạch Sprint 3; chưa coi là đã triển khai chỉ từ lịch Trello. Tài liệu MVP giai đoạn 19–23/10/2026 được giữ làm lịch sử ở cuối trang.
+[SRS 2.3](docs/SmartExpense_SRS_v2.docx) và [Master Plan](docs/SmartExpense_QuanTriDuAn.xlsx) là nguồn phạm vi/kế hoạch đã lập, không tự cập nhật theo tiến độ code. Lịch Sprint 3 ngày 08/11 đã chuyển vào [kho lịch sử](docs/archive/README.md); các mốc và số test cũ không phải trạng thái bản tích hợp hiện tại. Không suy ra nghiệm thu hoặc trạng thái Trello từ việc cập nhật README.
 
 ## 🌐 Trải nghiệm Trực tuyến (Live Demo)
 
@@ -56,7 +52,7 @@ Mã hiện tại đã tích hợp Quick Add, Calendar, icon/màu danh mục, ng�
 
 - **Tổng quan thu chi:** Hiển thị tức thời Tổng thu nhập, Tổng chi tiêu và Số dư khả dụng trong tháng được chọn.
 - **Biểu đồ phân bổ chi tiêu (Donut Chart):** Trực quan hóa tỷ trọng chi tiêu theo từng danh mục với màu sắc phân biệt rõ ràng.
-- **Biểu đồ dòng tiền (Area Chart):** Hiển thị thu nhập và chi tiêu theo ngày trong tháng được chọn; báo cáo so sánh nhiều tháng thuộc FR-09 của kế hoạch 2.0.
+- **Biểu đồ dòng tiền (Area Chart):** Hiển thị thu nhập và chi tiêu theo ngày trong tháng được chọn; Reports hỗ trợ so sánh tối đa 6 tháng liên tiếp.
 - **Danh sách giao dịch gần đây:** Truy xuất nhanh các giao dịch phát sinh mới nhất.
 
 ### 2. 📂 Quản lý Danh mục Thu - Chi (Category Management)
@@ -79,13 +75,31 @@ Mã hiện tại đã tích hợp Quick Add, Calendar, icon/màu danh mục, ng�
 - **Thanh tiến độ & cảnh báo thông minh:**
   - 🟢 **An toàn (Safe):** Sử dụng dưới 80% ngân sách.
   - 🟡 **Cảnh báo (Warning):** Sử dụng từ 80% đến dưới 100% ngân sách.
-  - 🔴 **Vượt ngân sách (Over Budget):** Sử dụng từ 100% trở lên.
+  - 🔵 **Chạm hạn mức (At Limit):** Chi đúng bằng hạn mức, chưa vượt.
+  - 🔴 **Vượt ngân sách (Over Budget):** Chi lớn hơn hạn mức.
+
+So ngưỡng bằng tiền trước khi làm tròn tỷ lệ; Monthly Budget chỉ trả `exceeded=true` khi `spentAmount > amountLimit`.
 
 ### 5. 🔐 Bảo mật & Cô lập Dữ liệu (Security & Multi-Tenancy)
 
 - Xác thực người dùng bằng **JSON Web Token (JWT)** chuẩn HMAC-SHA256.
 - Mật khẩu người dùng được băm an toàn bằng thuật toán **BCrypt**.
 - Cơ chế cô lập đa người dùng: Mỗi người dùng chỉ xem, sửa và xóa được dữ liệu thuộc quyền sở hữu của chính mình.
+
+---
+
+### 6. Calendar, Reports và CSV
+
+- Calendar chọn tháng/năm, hiển thị tổng ngày và danh sách giao dịch; ngày trống không có pager giả.
+- Reports so sánh 1–6 tháng, tổng thu/chi/số dư và phân bổ danh mục; tháng rỗng vẫn được trả đủ.
+- CSV xuất toàn bộ giao dịch khớp bộ lọc đã áp dụng, không chỉ trang đang xem; tối đa 10.000 dòng, vượt giới hạn trả lỗi.
+
+### 7. Giao dịch định kỳ và trợ lý tài chính
+
+- Mẫu định kỳ có Preview/Apply thủ công, chống ghi nhận trùng cùng kỳ; chưa có scheduler tự chạy.
+- Các intent thống kê dùng dữ liệu Backend theo JWT owner. Chỉ ADVICE gọi Gemini cho lời khuyên chung, không gửi dữ liệu tài chính hoặc câu hỏi gốc.
+- Quên/đặt lại mật khẩu dùng token một lần có hạn; reset thành công thu hồi JWT cũ. Thông báo gửi mail thành công không chứng minh đã nhận thư.
+- Giao dịch và định kỳ giữ tối đa 2 chữ số thập phân. Robot 3D lazy load, có SVG fallback và kiểm soát tự tải khi tab ẩn/Save-Data/reduced motion.
 
 ---
 
@@ -155,6 +169,7 @@ Mã hiện tại đã tích hợp Quick Add, Calendar, icon/màu danh mục, ng�
 ### Yêu cầu tiên quyết
 
 - Backend trực tiếp: **JDK 21** và MySQL 8 local có database/user riêng; cổng **8080** còn trống.
+- Frontend trực tiếp và kiểm thử: Node.js cùng npm; dùng npm ci để cài đúng dependency theo lockfile.
 - Chạy cả hệ thống hoặc test MySQL: **Docker Desktop/Linux engine** hoặc Docker Engine kèm Compose v2.20+; cổng Frontend **8088** còn trống.
 
 ### 1. Clone mã nguồn
@@ -274,43 +289,44 @@ Truy cập ứng dụng tại: [http://localhost:8088](http://localhost:8088)
 
 ## 🧪 Kiểm Thử & Đảm Bảo Chất Lượng (QA & Testing)
 
-Dự án được kiểm thử toàn diện ở nhiều cấp độ:
+Kết quả đã xác minh ngày 17/11/2026: **1.279 Backend PASS**, **617 Frontend PASS**, 0 fail/error/skipped; D03 MySQL **55/55** là tập con Backend. Script backup/restore đạt **22/22**, HTTP/SQL/restore local **13/13**, checksum 8 bảng sau restore khớp. Đây là các lượt/tập con khác nhau, không cộng thành một tổng.
 
-### 1. Bộ kiểm thử tích hợp tự động (Smoke Test Suite)
+JaCoCo overall line 97,3314%; Sonar New Code Coverage 95,3%, New Issues 0, Quality Gate OK. Cảnh báo CSRF vẫn OPEN để review thủ công. Chi tiết phiên bản và giới hạn tại [bản bàn giao kỹ thuật](docs/smartexpense-2.0/RELEASE_D16_D18.md); không có lượt test mới chỉ để sửa tài liệu ngày 18/11.
 
-Bộ script PowerShell gồm 27 test cases bao quát toàn bộ chức năng:
+Từ `backend/`, cần JDK 21 và Docker Engine local để chạy MySQL Testcontainers:
 
 ```powershell
-powershell.exe -ExecutionPolicy Bypass -File scripts\smoke-test.ps1
+.\gradlew.bat test verifyD03IntegrationTests jacocoTestReport --no-daemon --max-workers=1 --console=plain
 ```
 
-*Kết quả được README MVP báo cáo trước đây:* **27/27 kịch bản PASS**; chưa chạy lại trong lượt đồng bộ tài liệu D01. Báo cáo lịch sử bao quát toàn bộ luồng Hạ tầng, Nginx Gateway, Xác thực JWT, Nghiệp vụ CRUD và Phân quyền đa người dùng.
+Đối chiếu từng testcase ở `backend/build/test-results/test/`; integration bị skip không được tính PASS. JaCoCo HTML/XML ở `backend/build/reports/jacoco/test/`. Khi cần kết quả chạy mới thay vì UP-TO-DATE, thêm `--rerun-tasks`; artifact build có thể bị ghi đè.
 
-### 2. Kiểm thử API bằng Postman Collection
+Từ `frontend/`:
 
-Bộ sưu tập Postman đầy đủ cho toàn bộ API endpoints (Auth, Categories, Transactions, Monthly Budgets, Dashboard) được đặt tại:
+```powershell
+npm.cmd ci
+npm.cmd test
+npm.cmd run lint
+$env:VITE_API_URL = '/api'
+npm.cmd run build
+```
 
-- [docs/postman/SmartExpense_Postman_Collection.json](docs/postman/SmartExpense_Postman_Collection.json)
-- [docs/postman/README_POSTMAN.md](docs/postman/README_POSTMAN.md)
+`VITE_API_URL=/api` dùng cho bản build được reverse proxy như CI/production. Build còn cảnh báo chunk lớn; không đổi threshold để che cảnh báo.
 
-### 3. Tự động hóa CI/CD Pipeline
+[Postman Collection MVP](docs/postman/README_POSTMAN.md) và `scripts/smoke-test.ps1` là công cụ bổ trợ lịch sử, không bao phủ toàn bộ API 2.0. Không dùng tài khoản/dữ liệu thật để chạy fixture hoặc cleanup.
 
-- **CI Pipeline (`.github/workflows/ci.yml`):** Tự động kích hoạt khi push/PR vào `dev`, `main` để kiểm tra lint, unit test Gradle và build kiểm thử.
-- **CD Pipeline (`.github/workflows/cd.yml`):** Build/push image lên GHCR và triển khai qua SSH khi push dev/main hoặc chạy thủ công. CI và CD hiện độc lập; chờ CI đúng SHA, review release và pin image là công việc FR-12 còn cần thực hiện. Chưa có bằng chứng để cam kết zero-downtime.
-
----
+CI có Backend Test & Build, Frontend Lint & Build và Docker Packaging Check. CD tự chạy độc lập theo workflow hiện có; CI xanh không thay cho review release, backup và kiểm tra đúng môi trường. Không cam kết zero-downtime khi chưa đo.
 
 ## Migration, backup và rollback
 
-**Chưa xác nhận migration 2.0 được duyệt hoặc áp dụng trên VPS.** Quỳnh phụ trách DB/QA/DevOps, phối hợp Tuấn review trước khi đổi schema/cấu hình. D06 có [SQL V002 đề xuất và hướng dẫn pre/post-check, backup/restore, rollback](database/migrations/README.md), đã kiểm thử trên MySQL cô lập; không có runner tự áp dụng vào VPS.
+Schema hiện tại có 8 bảng. Chuỗi migration đã kiểm thử cô lập: MVP trong test resources → V002 → V003 → V004 → V005 → V006; repository không có V001. Hướng dẫn SQL nằm tại [database/migrations/README.md](database/migrations/README.md). Kết quả test không chứng minh migration đã được duyệt hoặc áp dụng trên VPS.
 
-- Hiện Hibernate dùng `ddl-auto=update`. Đề xuất version: V001 baseline MVP, V002 icon/color, V003 category_budgets, V004 recurring_templates, V005 recurring_applications. Runner, SQL/FK và việc chuyển sang `validate` còn chờ duyệt (Q10); không để Hibernate và migration cùng đổi schema. Seed không phải migration; DB đã có phải kiểm tra baseline, không chạy CREATE chồng hoặc reset volume.
-- Mỗi version cần pre/post-check, checksum và lịch sử chạy; version đã áp dụng không sửa nội dung. Khi lỗi dừng kiểm tra trạng thái thực, không giả định ROLLBACK hoàn tác được mọi DDL.
-- Giữ FK/owner và unique ngân sách user/category/kỳ, recurring template/kỳ. FK tồn tại riêng lẻ không chứng minh cùng owner; cần kiểm tra ở service hoặc composite FK được duyệt. Apply định kỳ lưu giao dịch+marker trong một transaction; chống trùng cả request đồng thời. Rule xóa/giữ marker xem API Contract, chưa duyệt (Q06/Q07).
-- Trước migration: backup có checksum, exit code 0 và file không rỗng; restore thử vào container riêng rồi đối chiếu số bản ghi/FK/tổng tiền. Dùng dữ liệu tổng hợp, không copy production vào test. Các script mặc định trỏ stack chính: phải truyền rõ container test, không dùng volume chính.
-- Công cụ có sẵn: [backup-db.ps1](scripts/backup-db.ps1), [restore-db.ps1](scripts/restore-db.ps1), [test-db-scripts.ps1](scripts/test-db-scripts.ps1). Dump dùng `--databases`, có thể chứa CREATE/USE tên nguồn; chỉ đổi tham số DbName không bảo đảm đổi đích restore. Kiểm tra dump và dùng container cô lập. Cách tạo snapshot nhất quán, quyền/credential và thời gian lưu backup cần DB review; không đưa dump/secret vào Git.
-- Rollback ưu tiên dừng phần tính năng lỗi/đổi lại phiên bản ứng dụng và giữ schema bổ sung; không drop bảng có dữ liệu hoặc xóa marker kỳ. Inverse SQL cần kiểm thử/phê duyệt. Nếu phải restore: dừng ghi, xác minh đúng đích/backup; dữ liệu sau mốc backup có thể mất. Không cam kết zero-downtime/RPO/RTO khi chưa đo; không tự restore production.
-- CI phải đạt cho đúng commit, release cần review và pin image SHA (Q14). CI/CD hiện chưa có gate này. Phần này là hướng dẫn ngắn, không cấp quyền migration, deploy hoặc xác nhận kết quả kiểm thử.
+- `application.properties` hiện mặc định Hibernate `ddl-auto=update`; test migration dùng schema riêng/validate. Chuyển production sang runner hoặc `validate` cần kế hoạch và review riêng; không để hai cơ chế cùng thay đổi schema.
+- Version SQL đã áp dụng cần giữ checksum/lịch sử; MySQL DDL không phải lúc nào cũng rollback được. Không chạy CREATE/seed chồng hoặc xóa volume để xử lý lỗi đăng nhập.
+- Giữ FK và ownership, unique ngân sách user/category/kỳ và mẫu/kỳ. Apply lưu transaction cùng marker nguyên tử; xóa giao dịch giữ marker với transaction_id=null, không cho apply lại hoặc xóa mẫu đã áp dụng.
+- [backup-db.ps1](scripts/backup-db.ps1), [restore-db.ps1](scripts/restore-db.ps1), [test-db-scripts.ps1](scripts/test-db-scripts.ps1) trên bản dev đã chốt dùng byte stream và snapshot InnoDB. Truyền rõ container/schema test; không dùng stack/volume chính làm fixture.
+- Dump dùng `--databases`, chứa CREATE/USE tên nguồn. Chỉ đổi `-DbName` không đổi mọi đích bên trong dump; kiểm tra trước và restore thử trên container cô lập. Backup cần exit code 0, file không rỗng và checksum; giữ dump/credential ngoài Git.
+- Trước thay đổi production, người phụ trách chốt backup/checksum, image digest trước/sau, dung lượng và cửa sổ thao tác. Rollback ưu tiên image đã duyệt; restore DB cần dừng ghi, đánh giá tương thích và rủi ro mất dữ liệu sau backup. Không tự restore production hoặc cam kết RPO/RTO chưa đo.
 
 ---
 
@@ -342,12 +358,12 @@ personal-finance-management/
 │   ├── postman/                 # Postman Collection & Hướng dẫn test API
 │   │   ├── README_POSTMAN.md
 │   │   └── SmartExpense_Postman_Collection.json
-│   ├── SmartExpense_SRS_v2.docx # SRS 2.2, nguồn hiện hành SmartExpense 2.0
-│   ├── SmartExpense_QuanTriDuAn.xlsx # Master Plan 45 task / 15 ngày
+│   ├── SmartExpense_SRS_v2.docx # SRS 2.3; lịch kế hoạch ngày 08/11 là lịch sử
+│   ├── SmartExpense_QuanTriDuAn.xlsx # Master Plan gốc, giữ mã task để truy vết
 │   ├── smartexpense-2.0/
 │   │   └── API_CONTRACT.md      # API hiện có/dự kiến cho FE/BE
-│   ├── SmartExpense_SRS.docx    # SRS MVP lịch sử, giữ nguyên
-│   └── BaoCao_SmartExpense_Project_Proposal.docx # Proposal MVP lịch sử, giữ nguyên
+│   ├── README.md              # Mục lục tài liệu hiện hành
+│   └── archive/               # SRS/Proposal MVP và lịch Sprint 3 cũ
 ├── frontend/
 │   ├── Dockerfile               # Multi-stage Dockerfile (Vite Build + Nginx)
 │   ├── nginx.conf               # Cấu hình Nginx container & Reverse Proxy /api
@@ -374,16 +390,13 @@ personal-finance-management/
 
 ## 📚 Danh Mục Tài Liệu Kỹ Thuật Chi Tiết
 
-1. [SRS SmartExpense 2.0 — nội dung phiên bản 2.2](docs/SmartExpense_SRS_v2.docx) — nguồn phạm vi hiện hành, ngày 27/10/2026.
-2. [Master Plan](docs/SmartExpense_QuanTriDuAn.xlsx) — 45 task, 3 thành viên, 27/10–16/11/2026.
-3. [API Contract](docs/smartexpense-2.0/API_CONTRACT.md) — endpoint/DTO hiện có và dự kiến; các điểm chưa duyệt ghi ngay trong tài liệu.
-4. [Migration, backup và rollback](#migration-backup-và-rollback) — lưu ý dữ liệu và vận hành trước triển khai.
-5. [API & Postman MVP](docs/postman/README_POSTMAN.md) — bộ hướng dẫn hiện có, chưa phải collection nghiệm thu đủ FR 2.0.
-6. [SRS MVP lịch sử](docs/SmartExpense_SRS.docx) và [Project Proposal MVP lịch sử](docs/BaoCao_SmartExpense_Project_Proposal.docx) — giữ nguyên giai đoạn 19–23/10/2026.
+1. [Mục lục tài liệu](docs/README.md) — điểm vào cho phạm vi hiện hành và hồ sơ lịch sử.
+2. [SRS 2.3](docs/SmartExpense_SRS_v2.docx), [Master Plan](docs/SmartExpense_QuanTriDuAn.xlsx) — nguồn yêu cầu/kế hoạch gốc, không thay tiến độ đã kiểm chứng.
+3. [API Contract](docs/smartexpense-2.0/API_CONTRACT.md) — endpoint/DTO hiện có, tách rõ đề xuất chưa triển khai.
+4. [Bàn giao kỹ thuật](docs/smartexpense-2.0/RELEASE_D16_D18.md) — kiến trúc/ERD/Auth/AI, kiểm thử và release/rollback.
+5. [Mục lục QA](docs/qa/README.md) — snapshot theo từng ngày, giữ kết quả và evidence lịch sử.
+6. [Tài liệu lưu trữ](docs/archive/README.md) — SRS/Proposal MVP và lịch Sprint 3 cũ, không dùng làm trạng thái release hiện tại.
 
 ---
 
-<p align="center">
-  <strong>SmartExpense Team – Personal Finance Management</strong><br>
-  MVP là nền tảng hiện có; SmartExpense 2.0 đang được phát triển và cần nghiệm thu theo SRS 2.2.
-</p>
+<p align="center"><strong>SmartExpense Team – Personal Finance Management</strong></p>
