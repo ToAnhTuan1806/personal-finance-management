@@ -7,6 +7,8 @@ import { MemoryRouter } from 'react-router'
 import { createServer } from 'vite'
 import axios from 'axios'
 import client, { createApiClient } from '../src/api/axiosClient.js'
+import transactionService from '../src/services/transactionService.js'
+import { localToday } from '../src/utils/transactionForm.js'
 import { createSessionStore } from '../src/auth/session.js'
 import {
   AI_CHAT_TIMEOUT_MS,
@@ -16,7 +18,9 @@ import {
   formatAiReplyForDisplay,
   getAiChatErrorMessage,
   normalizeAiChatResponse,
+  normalizeSuggestedExpense,
   getAiSuggestedQuestions,
+  getAiResponseSummary,
   normalizeAiContext,
   validateAiChatRequest,
   getDefaultCompareMonth,
@@ -480,7 +484,7 @@ test('Giao diện Chatbot & XSS Safety: render đầy đủ tiêu đề, 4 câu 
   assert.match(emptyOpenHtml, /Xem câu hỏi gợi ý phía trước/)
   assert.match(emptyOpenHtml, /Xem thêm câu hỏi gợi ý/)
   assert.match(emptyOpenHtml, /cursor-grab/)
-  assert.match(emptyOpenHtml, /Bạn muốn tìm hiểu gì về thu chi\?/)
+  assert.match(emptyOpenHtml, /Bạn muốn ghi khoản chi hay xem thu chi\?/)
   for (const question of AI_SUGGESTED_QUESTIONS) {
     assert.ok(
       emptyOpenHtml.includes(question),
@@ -878,7 +882,7 @@ const unknownResponse = () => ({ reply: 'Mình hỗ trợ 6 khả năng; thử m
 test('NLU UNKNOWN hiển thị hướng dẫn, không giả số liệu hoặc nhãn kỳ thống kê', () => {
   const html = render(AiStructuredResponseCard, { message: { ...normalizeAiChatResponse(unknownResponse()), role: 'assistant' } })
   assert.match(html, /Cần làm rõ/)
-  assert.match(html, /Xin chào! Mình có thể giúp bạn/)
+  assert.match(html, /Mình chưa hiểu rõ/)
   assert.doesNotMatch(html, /SUMMARY|CATEGORIES|BUDGET|ADVICE|COMPARISON|CATEGORY_TREND/)
   assert.doesNotMatch(html, /Kỳ thống kê|0 ₫|NaN|Infinity/)
   assert.equal(getAiSuggestedQuestions({ lastIntent: 'UNKNOWN' }).length, 3)
@@ -1008,4 +1012,279 @@ test('NLU chart số dư âm/zero không NaN và context UI dùng kỳ thành c�
   assert.match(html, /Biểu đồ so sánh thu chi/); assert.doesNotMatch(html, /NaN|Infinity/)
   const panel = render(AiAssistantPanelView, { open: true, context: { intent: 'SUMMARY', month: '2024-02' } })
   assert.match(panel, /Ngữ cảnh hội thoại/); assert.match(panel, /Tháng 02\/2024/)
+})
+
+const expenseResponse = (overrides = {}) => ({
+  reply: 'Mình đã soạn sẵn giao dịch chi tiêu bên dưới, bạn hãy kiểm tra và xác nhận lưu nhé!',
+  period: '2026-11', intent: 'CREATE_EXPENSE',
+  suggestedExpense: { amount: 65000, categoryId: 1, categoryName: 'Ăn uống',
+    note: 'Ăn trưa 65k tiền mặt', transactionDate: localToday(), type: 'EXPENSE', ...overrides },
+})
+
+test('GREETING nhận response không số liệu, hiển thị lời chào và gợi ý ghi chi/tra cứu', () => {
+  const response = normalizeAiChatResponse({ reply: 'Xin chào! Mình có thể giúp bạn ghi chi tiêu.', period: '2026-11', intent: 'GREETING' })
+  assert.equal(response.intent, 'GREETING')
+  assert.equal(response.stats, null)
+  assert.equal(response.budget, null)
+  assert.equal(response.comparison, null)
+  assert.deepEqual(response.topCategories, [])
+  const html = render(AiStructuredResponseCard, { message: { ...response, role: 'assistant' } })
+  assert.match(html, /Xin chào!/)
+  assert.doesNotMatch(html, /Kỳ thống kê|Số liệu tổng hợp|Thẻ xác nhận chi tiêu|0 ₫/)
+  assert.deepEqual(getAiSuggestedQuestions({ lastIntent: 'GREETING' }),
+    ['Số dư tháng này bao nhiêu?', 'Ngân sách tháng này còn bao nhiêu?', 'Danh mục nào tôi chi nhiều nhất?'])
+})
+
+for (const intent of ['GREETING', 'CREATE_EXPENSE']) {
+  for (const [field, value] of Object.entries({ stats: { totalIncome: 1, totalExpense: 0, balance: 1 },
+    budget: {}, comparison: {}, topCategories: [{ categoryId: 1 }] })) {
+    test(`${intent} từ chối số liệu ${field}`, () => {
+      assert.throws(() => normalizeAiChatResponse({ ...expenseResponse(), intent, [field]: value }), { code: 'INVALID_API_RESPONSE' })
+    })
+  }
+}
+
+test('CREATE_EXPENSE chuẩn hóa dữ liệu số, null và type mặc định; không giữ field thừa', () => {
+  const input = expenseResponse({ amount: '65000', categoryId: '1', categoryName: ' Ăn uống ', type: undefined, userId: 999 })
+  const response = normalizeAiChatResponse(input)
+  assert.deepEqual(response.suggestedExpense, { amount: 65000, categoryId: 1, categoryName: 'Ăn uống',
+    note: 'Ăn trưa 65k tiền mặt', transactionDate: localToday(), type: 'EXPENSE' })
+  assert.equal(response.stats, null)
+  assert.deepEqual(response.topCategories, [])
+  assert.equal(normalizeSuggestedExpense({ ...input.suggestedExpense, categoryId: null, categoryName: null }).categoryId, null)
+  assert.equal(normalizeSuggestedExpense({ ...input.suggestedExpense, categoryId: null, categoryName: null }).categoryName, null)
+  assert.throws(() => normalizeAiChatResponse({ ...input, intent: 'GREETING' }), { code: 'INVALID_API_RESPONSE' })
+  assert.throws(() => normalizeAiChatResponse({ ...input, suggestedExpense: null }), { code: 'INVALID_API_RESPONSE' })
+})
+
+for (const [field, values] of Object.entries({
+  amount: [0, -1, NaN, Infinity, null, '', ' ', true, [], {}, 'abc', 0.001, 10000000000000],
+  categoryId: [0, -1, 1.5, true, '', [], {}, Number.MAX_SAFE_INTEGER + 1],
+  categoryName: [5, {}, []], note: [null, 1, 'a'.repeat(501)],
+  transactionDate: ['2026-02-30', '2026-02-29', '2026-2-18', '18/11/2026', '', null],
+  type: ['INCOME', 'INVALID', 1],
+})) {
+  for (const [index, value] of values.entries()) {
+    test(`CREATE_EXPENSE từ chối ${field} sai kiểu/miền giá trị #${index + 1}`, () => {
+      assert.throws(() => normalizeAiChatResponse(expenseResponse({ [field]: value })), { code: 'INVALID_API_RESPONSE' })
+    })
+  }
+}
+
+test('Action Card hiển thị tiền/danh mục/ngày/ghi chú, theme và hai hành động; không render HTML từ API', () => {
+  const message = { ...normalizeAiChatResponse(expenseResponse()), role: 'assistant', id: 'expense-1' }
+  const html = render(AiStructuredResponseCard, { message })
+  assert.match(html, /aria-label="Thẻ xác nhận chi tiêu"/)
+  assert.match(html, /65\.000 ₫/)
+  assert.match(html, /Ăn uống/)
+  assert.match(html, new RegExp(localToday()))
+  assert.match(html, /Ăn trưa 65k tiền mặt/)
+  assert.match(html, /Xác nhận lưu/)
+  assert.match(html, /Hủy/)
+  assert.match(html, /dark:bg-amber-950\/20/)
+  assert.doesNotMatch(html, /Kỳ thống kê|Số liệu tổng hợp thu chi/)
+  const unsafe = { ...message, suggestedExpense: { ...message.suggestedExpense,
+    note: '<script>evil()</script>', categoryName: '<img src=x onerror="evil()">' } }
+  const safeHtml = render(AiStructuredResponseCard, { message: unsafe })
+  assert.doesNotMatch(safeHtml, /<script>evil|<img src=x/)
+  assert.match(safeHtml, /&lt;script&gt;/)
+})
+
+async function expenseHarness(t, overrides = {}) {
+  const store = createSessionStore(memory()); store.authenticate(makeUser('expense-owner'), 0)
+  const controller = createAiChatController({ sessionStore: store, getDefaultMonth: () => '2026-11',
+    sendChat: async () => normalizeAiChatResponse(expenseResponse(overrides)) })
+  t.after(() => controller.destroy())
+  const message = await controller.askQuestion('Ăn trưa 65k tiền mặt')
+  return { store, controller, id: message.id,
+    message: () => controller.getSnapshot().messages.find(item => item.id === message.id),
+    tree: (create) => AiStructuredResponseCard({ message: controller.getSnapshot().messages.find(item => item.id === message.id),
+      onConfirmExpense: id => controller.confirmExpense(id, create), onCancelExpense: id => controller.cancelExpense(id) }) }
+}
+
+const actionButton = (tree, label) => elements(tree).find(node => node.type === 'button'
+  && [node.props.children].flat(Infinity).some(child => typeof child === 'string' && child.trim() === label))
+
+test('Action Card lưu đúng payload một lần, loading, thành công và đóng/mở không cho lưu lại', async (t) => {
+  const h = await expenseHarness(t)
+  assert.equal(h.message().suggestedExpense.amount, 65000)
+  assert.equal(h.controller.getSnapshot().context, null)
+  let finish; const calls = []
+  const create = payload => { calls.push(payload); return new Promise(resolve => { finish = resolve }) }
+  const button = actionButton(h.tree(create), 'Xác nhận lưu')
+  const first = button.props.onClick()
+  const duplicate = button.props.onClick()
+  assert.equal(calls.length, 1)
+  assert.deepEqual(calls[0], { amount: 65000, categoryId: 1, transactionDate: localToday(), note: 'Ăn trưa 65k tiền mặt', type: 'EXPENSE' })
+  const loading = render(AiStructuredResponseCard, { message: h.message() })
+  assert.match(loading, /aria-busy="true"/)
+  assert.match(loading, /Đang lưu/)
+  assert.match(loading, /motion-reduce:animate-none/)
+  h.controller.cancelExpense(h.id)
+  assert.equal(h.message().expenseStatus, 'saving')
+  finish({ id: 123 })
+  await first; await duplicate
+  assert.equal(h.message().expenseStatus, 'saved')
+  h.controller.closePanel(); h.controller.openPanel()
+  const saved = render(AiStructuredResponseCard, { message: h.message() })
+  assert.match(saved, /Đã lưu giao dịch vào sổ chi tiêu!/)
+  assert.equal(actionButton(h.tree(create), 'Xác nhận lưu'), undefined)
+  assert.equal(actionButton(h.tree(create), 'Hủy'), undefined)
+  await h.controller.confirmExpense(h.id, create)
+  assert.equal(calls.length, 1)
+})
+
+test('Action Card gọi transactionService.createTransaction và chỉ báo thành công sau HTTP POST', async (t) => {
+  const h = await expenseHarness(t)
+  const previous = client.defaults.adapter; t.after(() => { client.defaults.adapter = previous })
+  const calls = []
+  client.defaults.adapter = async config => {
+    calls.push(config)
+    return makeResponse(config, { id: 55, ...JSON.parse(config.data) }, 201)
+  }
+  await actionButton(h.tree(transactionService.createTransaction), 'Xác nhận lưu').props.onClick()
+  assert.equal(calls.length, 1)
+  assert.equal(calls[0].url, '/transactions')
+  assert.equal(calls[0].method, 'post')
+  assert.deepEqual(JSON.parse(calls[0].data), { amount: 65000, categoryId: 1,
+    transactionDate: localToday(), note: 'Ăn trưa 65k tiền mặt', type: 'EXPENSE' })
+  assert.equal(h.message().expenseStatus, 'saved')
+})
+
+test('Action Card lỗi mạng có thông báo an toàn và Thử lại; lần sau lưu thành công', async (t) => {
+  const h = await expenseHarness(t); let calls = 0
+  const create = async () => { if (++calls === 1) throw new Error('PRIVATE_NETWORK_DETAIL'); return { id: 1 } }
+  await actionButton(h.tree(create), 'Xác nhận lưu').props.onClick()
+  assert.equal(h.message().expenseStatus, 'error')
+  const html = render(AiStructuredResponseCard, { message: h.message() })
+  assert.match(html, /role="alert"/)
+  assert.match(html, /Không thể kết nối máy chủ/)
+  assert.match(html, /Thử lại/)
+  assert.doesNotMatch(html, /PRIVATE_NETWORK_DETAIL/)
+  await actionButton(h.tree(create), 'Thử lại').props.onClick()
+  assert.equal(calls, 2)
+  assert.equal(h.message().expenseStatus, 'saved')
+})
+
+test('Action Card Hủy không gọi API, giữ trạng thái hủy sau đóng/mở và không cho xác nhận lại', async (t) => {
+  const h = await expenseHarness(t); let calls = 0
+  const create = async () => { calls++ }
+  actionButton(h.tree(create), 'Hủy').props.onClick()
+  h.controller.closePanel(); h.controller.openPanel()
+  assert.match(render(AiStructuredResponseCard, { message: h.message() }), /Đã hủy bỏ đề xuất/)
+  assert.equal(actionButton(h.tree(create), 'Xác nhận lưu'), undefined)
+  await h.controller.confirmExpense(h.id, create)
+  assert.equal(calls, 0)
+})
+
+test('Action Card chưa phân loại hướng dẫn chọn danh mục, chặn POST thiếu categoryId', async (t) => {
+  const h = await expenseHarness(t, { categoryId: null, categoryName: null }); let calls = 0
+  const tree = h.tree(async () => { calls++ })
+  assert.equal(actionButton(tree, 'Xác nhận lưu').props.disabled, true)
+  assert.match(render(AiStructuredResponseCard, { message: h.message() }), /Chưa phân loại/)
+  assert.match(render(AiStructuredResponseCard, { message: h.message() }), /Mở biểu mẫu ghi khoản chi/)
+  await actionButton(tree, 'Xác nhận lưu').props.onClick()
+  assert.equal(calls, 0)
+})
+
+for (const reset of ['clear', 'logout', 'switch-owner', 'destroy']) {
+  test(`Action Card bỏ kết quả lưu cũ sau ${reset}`, async (t) => {
+    const h = await expenseHarness(t); let finish
+    const saving = h.controller.confirmExpense(h.id, () => new Promise(resolve => { finish = resolve }))
+    if (reset === 'clear') h.controller.clearConversation()
+    if (reset === 'logout' || reset === 'switch-owner') h.store.clear()
+    if (reset === 'switch-owner') h.store.authenticate(makeUser('other-owner'), h.store.getSnapshot().revision)
+    if (reset === 'destroy') h.controller.destroy()
+    const before = h.controller.getSnapshot()
+    finish({ id: 10 }); await saving
+    assert.equal(h.controller.getSnapshot(), before)
+    if (reset !== 'destroy') assert.deepEqual(h.controller.getSnapshot().messages, [])
+  })
+}
+
+
+test('Lời chào dùng hướng dẫn nhập tự do, kể cả khi Backend cũ còn trả ví dụ 65k', () => {
+  const html = render(AiStructuredResponseCard, { message: { role: 'assistant', intent: 'GREETING',
+    reply: 'Xin chào! Thử Ăn trưa 65k tiền mặt hoặc Đổ xăng 80k.', period: '2026-11' } })
+  assert.match(html, /nội dung \+ số tiền/)
+  assert.match(html, /xác nhận trước khi lưu/)
+  assert.doesNotMatch(html, /65k|80k|Thẻ xác nhận chi tiêu/)
+  assert.doesNotMatch(getAiSuggestedQuestions({ lastIntent: 'GREETING' }).join(' '), /\d+(?:k|tr)/i)
+})
+
+test('Hội thoại chi tiêu → ê → xin chào → chi tiêu mới chỉ tạo đúng hai thẻ', async () => {
+  const store = createSessionStore(memory()); store.authenticate(makeUser('A'), 0)
+  const answers = [expenseResponse(), { reply: 'Xin chào', period: '2026-11', intent: 'GREETING' },
+    { reply: 'Xin chào', period: '2026-11', intent: 'GREETING' }, expenseResponse({ amount: 120000, note: 'Ăn tối 120k' })]
+  const calls = []
+  const controller = createAiChatController({ sessionStore: store, getDefaultMonth: () => '2026-11',
+    sendChat: async payload => { calls.push(payload); return normalizeAiChatResponse(answers.shift()) } })
+  for (const question of ['Ăn trưa 65k tiền mặt', 'ê', 'xin chào', 'Ăn tối 120k']) await controller.askQuestion(question)
+  const messages = controller.getSnapshot().messages.filter(m => m.role === 'assistant')
+  assert.equal(messages.length, 4)
+  assert.equal(messages.filter(m => m.suggestedExpense).length, 2)
+  assert.equal(messages[0].suggestedExpense.amount, 65000)
+  assert.equal(messages[1].suggestedExpense, undefined)
+  assert.equal(messages[2].suggestedExpense, undefined)
+  assert.equal(messages[3].suggestedExpense.amount, 120000)
+  assert.deepEqual(calls.map(p => p.message), ['Ăn trưa 65k tiền mặt', 'ê', 'xin chào', 'Ăn tối 120k'])
+  assert.ok(calls.every(p => p.context === undefined))
+  controller.destroy()
+})
+
+test('So sánh hiển thị kết luận ngắn từ số liệu API, giữ biểu đồ và số liệu đầy đủ trong details đóng', () => {
+  const data = p2Response('CATEGORY_TREND')
+  data.reply = 'ĐOẠN DÀI LẶP SỐ LIỆU\n'.repeat(30)
+  const normalized = normalizeAiChatResponse(data)
+  const summary = getAiResponseSummary(normalized)
+  assert.match(summary, /Chi tiêu tăng 10,4 ₫ \(102,97%\)/)
+  assert.match(summary, /Tăng nhiều nhất: Ăn uống/)
+  assert.ok(summary.length < 200)
+  const html = render(AiStructuredResponseCard, { message: { ...normalized, role: 'assistant' } })
+  assert.doesNotMatch(html, /ĐOẠN DÀI LẶP/)
+  assert.match(html, /<details[^>]*><summary[^>]*>Xem số liệu và biểu đồ/)
+  assert.match(html, /Xem thêm 1 danh mục/)
+  assert.doesNotMatch(html, /<details[^>]* open/)
+  assert.match(html, /Biểu đồ so sánh thu chi/)
+  assert.match(html, /Mới phát sinh/)
+})
+
+test('Tóm tắt không suy ra tăng khi không có danh mục tăng hoặc % khi kỳ gốc bằng 0', () => {
+  const data = p2Response('CATEGORY_TREND')
+  data.comparison.delta.totalExpense = -10.4
+  data.comparison.expenseChangePercent = -102.97
+  data.comparison.categoryTrends = data.comparison.categoryTrends.filter(c => c.delta <= 0)
+  assert.match(getAiResponseSummary(data), /giảm 10,4 ₫ \(102,97%\)/)
+  assert.match(getAiResponseSummary(data), /Không có danh mục nào tăng/)
+  data.comparison.expenseChangePercent = null
+  assert.doesNotMatch(getAiResponseSummary(data), /%/)
+})
+
+test('Tóm tắt ngân sách ưu tiên cảnh báo vượt hạn mức, không suy ra budget khi thiếu dữ liệu', () => {
+  assert.match(getAiResponseSummary({ intent: 'BUDGET', budget: { status: 'SET', monthly: {
+    exceeded: true, remainingAmount: -250000.25 } } }), /vượt ngân sách 250.000,25 ₫/)
+  assert.equal(getAiResponseSummary({ intent: 'BUDGET', budget: null }), null)
+  assert.equal(getAiResponseSummary({ intent: 'ADVICE', stats: {} }), null)
+})
+
+test('Lời khuyên dài có bản xem trước và nút mở toàn bộ, vẫn escape HTML', () => {
+  const reply = '<script>evil()</script> ' + 'Theo dõi chi tiêu và ưu tiên khoản thiết yếu. '.repeat(25)
+  const html = render(AiStructuredResponseCard, { message: { role: 'assistant', intent: 'ADVICE', reply } })
+  assert.match(html, /Xem toàn bộ lời khuyên/)
+  assert.match(html, /&lt;script&gt;/)
+  assert.doesNotMatch(html, /<script>|<details[^>]* open/)
+  assert.match(html, /…/)
+})
+
+
+test('Xu hướng ưu tiên ba biến động lớn nhất, không lặp bảng tổng chi trước phần chi tiết', () => {
+  const response = p2Response('CATEGORY_TREND')
+  const html = render(AiStructuredResponseCard, { message: { ...normalizeAiChatResponse(response), role: 'assistant' } })
+  const preview = html.split('<details')[0]
+  assert.match(preview, /Thay đổi nhiều nhất/)
+  const categoryList = preview.split('aria-label="Danh mục nổi bật"')[1]
+  assert.ok(categoryList.indexOf('Đi lại') < categoryList.indexOf('Ăn uống'))
+  assert.ok(preview.includes('Mới phát sinh'))
+  assert.doesNotMatch(preview, /Tổng chi hai tháng|Biểu đồ so sánh|Kỳ thống kê/)
+  assert.match(html, /Không đổi/)
 })
