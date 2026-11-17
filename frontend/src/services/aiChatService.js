@@ -389,13 +389,15 @@ export function validateAiChatRequest({ message, month, compareMonth, context } 
   if (!isValidMonthString(trimmedMonth)) {
     return {
       valid: false,
-      message: 'Tháng thống kê phải có định dạng YYYY-MM (năm từ 1900 đến 2100).',
+      message: trimmedMonth
+        ? 'Tháng đã chọn chưa hợp lệ. Vui lòng chọn lại tháng trong lịch.'
+        : 'Vui lòng chọn tháng muốn xem trước khi gửi câu hỏi.',
     }
   }
 
   if (compareMonth !== undefined && compareMonth !== null
       && (!isValidMonthString(compareMonth) || compareMonth.trim() === trimmedMonth)) {
-    return { valid: false, message: 'Tháng so sánh phải hợp lệ (1900–2100) và khác tháng đang xem.' }
+    return { valid: false, message: 'Vui lòng chọn một tháng so sánh hợp lệ, khác với tháng đang xem.' }
   }
 
   let safeContext

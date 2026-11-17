@@ -30,6 +30,7 @@ import {
   createAiChatController,
   formatAiReplyForDisplay,
   getAiSuggestedQuestions,
+  getDefaultCompareMonth,
 } from "../../services/aiChatService.js";
 import AiRobotLauncher from "./AiRobotLauncher.jsx";
 import { getRobotState } from "./robotState.js";
@@ -554,7 +555,7 @@ export function AiAssistantPanelView({
               htmlFor="ai-chat-compare-month"
               className="block text-[11px] font-semibold text-slate-600 dark:text-slate-300"
             >
-              Tháng so sánh (kỳ gốc)
+              Tháng so sánh (tùy chọn)
             </label>
             <MonthPickerInput
               id="ai-chat-compare-month"
@@ -569,7 +570,7 @@ export function AiAssistantPanelView({
           </div>
         </div>
         <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
-          Tháng nói rõ trong câu hỏi được ưu tiên hơn tháng bạn chọn.
+          Nếu bạn nêu tháng trong câu hỏi, trợ lý sẽ xem dữ liệu của tháng đó.
         </p>
         {context && (
           <p
@@ -581,9 +582,12 @@ export function AiAssistantPanelView({
           </p>
         )}
         {!compareMonth && (
-          <p className="mt-1 text-[11px] text-amber-700 dark:text-amber-300">
-            Để trống: dùng tháng trước nếu nằm trong 1900–2100. Các câu hỏi P1
-            vẫn dùng tháng đang xem.
+          <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+            {!month
+              ? 'Chọn tháng muốn xem để bắt đầu. Bạn có thể chọn thêm một tháng để so sánh.'
+              : getDefaultCompareMonth(month)
+                ? 'Để trống để so sánh với tháng liền trước. Các câu hỏi về thu chi và ngân sách vẫn dùng tháng đang xem.'
+                : 'Chọn một tháng khác nếu bạn muốn so sánh. Bạn vẫn có thể hỏi về thu chi và ngân sách của tháng đang xem.'}
           </p>
         )}
       </div>
@@ -598,11 +602,10 @@ export function AiAssistantPanelView({
         {messages.length === 0 && !loading && (
           <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-4 text-center dark:border-slate-800 dark:bg-[#182234]">
             <p className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200">
-              Chưa có cuộc trò chuyện nào
+              Bạn muốn tìm hiểu gì về thu chi?
             </p>
             <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-              Chọn một câu hỏi gợi ý bên dưới hoặc nhập câu hỏi về thu chi, danh
-              mục và ngân sách trong kỳ đã chọn.
+              Chọn một câu hỏi gợi ý bên dưới hoặc nhập câu hỏi để bắt đầu nhé.
             </p>
           </div>
         )}
