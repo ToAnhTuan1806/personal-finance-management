@@ -78,7 +78,7 @@ export function isRecurringPreviewPeriodAllowed(year, month, currentYear, curren
 export function formatMoney(val) {
   const num = Number(val)
   if (isNaN(num)) return '0 ₫'
-  return new Intl.NumberFormat('vi-VN').format(Math.round(num)) + ' ₫'
+  return new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 2 }).format(num) + ' ₫'
 }
 
 /**
