@@ -38,6 +38,7 @@ import { getRobotState } from "./robotState.js";
 import aiMascotSprite from "../../assets/ai-assistant-mascot-sprite.png";
 import MonthPickerInput from "../ui/MonthPickerInput.jsx";
 import AiComparisonCard from "./AiComparisonCard.jsx";
+import AiAnalysisCard from "./AiAnalysisCard.jsx";
 import { AiCategoryChart } from "./AiFinancialCharts.jsx";
 import transactionService from "../../services/transactionService.js";
 
@@ -92,6 +93,7 @@ export function AiStructuredResponseCard({ message, onQuickAdd, onNavigate, onCo
     expenseStatus = "pending",
     expenseError,
   } = message;
+  if (message.analysis) return <AiAnalysisCard analysis={message.analysis} onNavigate={onNavigate} />;
   const isComparison = intent === "COMPARISON" || intent === "CATEGORY_TREND";
   const textReply = formatAiReplyForDisplay(
     typeof reply === "string" && reply ? reply : String(content || ""),

@@ -1,4 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useLocation } from 'react-router'
+import { parseTransactionSearch } from '../utils/transactionLinks.js'
 import {
   Plus,
   Download,
@@ -87,6 +89,7 @@ const formatDisplayDate = (value) => {
 }
 
 export function TransactionsPage({
+  search = '',
   initialTransactions = [],
   initialLoading = true,
   initialError = '',
@@ -115,17 +118,12 @@ export function TransactionsPage({
   const [categoryAttempt, setCategoryAttempt] = useState(0)
   const [categoryLoading, setCategoryLoading] = useState(true)
 
+  const entry = useMemo(() => parseTransactionSearch(search, currentMonth()), [search])
+  const previousSearch = useRef(search)
   const [datePickerOpen, setDatePickerOpen] = useState(false)
-  const [dateRange, setDateRange] = useState({
-    startDate: '',
-    endDate: '',
-  })
+  const [dateRange, setDateRange] = useState(entry.dateRange)
 
-  const [filters, setFilters] = useState({
-    month: currentMonth(),
-    type: '',
-    categoryId: '',
-  })
+  const [filters, setFilters] = useState(entry.filters)
   const [keyword, setKeyword] = useState('')
   const [searchKeyword, setSearchKeyword] = useState('')
 
@@ -139,6 +137,18 @@ export function TransactionsPage({
   const [saving, setSaving] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(null)
   const [deletingId, setDeletingId] = useState(null)
+
+  // Cập nhật khi bấm liên kết phân tích ngay trên trang giao dịch đang mở.
+  useEffect(() => {
+    if (previousSearch.current === search) return
+    previousSearch.current = search
+    setFilters(entry.filters)
+    setDateRange(entry.dateRange)
+    setKeyword('')
+    setSearchKeyword('')
+    setPage(0)
+    setLoading(true)
+  }, [search, entry])
 
   // Tải danh mục khi khởi tạo
   useEffect(() => {
@@ -905,6 +915,7 @@ export function TransactionsPage({
 
 export default function Transactions(props) {
   const toast = useToast()
-  return <TransactionsPage toast={toast} {...props} />
+  const { search } = useLocation()
+  return <TransactionsPage toast={toast} search={search} {...props} />
 }
 

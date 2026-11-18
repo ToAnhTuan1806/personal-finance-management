@@ -1,6 +1,7 @@
 import axiosClient from '../api/axiosClient.js'
 import { getApiErrorMessage, isRequestCancelled } from '../api/errors.js'
 import { session } from '../auth/session.js'
+import { AI_ANALYSIS_INTENTS, AI_ANALYSIS_QUESTIONS, normalizeAiAnalysis } from './aiAnalysis.js'
 import { isValidDate, transactionDateError } from '../utils/transactionForm.js'
 import {
   getCurrentVietnamMonth,
@@ -23,7 +24,7 @@ export const AI_SUGGESTED_QUESTIONS = [
   'Danh mục nào tăng chi tiêu nhiều nhất?',
 ]
 
-export const AI_CONTEXT_INTENTS = ['SUMMARY', 'CATEGORIES', 'BUDGET', 'ADVICE', 'COMPARISON', 'CATEGORY_TREND']
+export const AI_CONTEXT_INTENTS = ['SUMMARY', 'CATEGORIES', 'BUDGET', 'ADVICE', 'COMPARISON', 'CATEGORY_TREND', ...AI_ANALYSIS_INTENTS]
 
 export const AI_UNKNOWN_DISPLAY_REPLY =
   'Mình chưa hiểu rõ. Bạn muốn ghi khoản chi hay xem thu chi? Để ghi chi, hãy nhập nội dung và số tiền.'
@@ -126,7 +127,7 @@ export function getAiSuggestedQuestions({ context, lastIntent } = {}) {
   if (lastIntent === 'UNKNOWN' || lastIntent === 'UNSUPPORTED') {
     return [AI_SUGGESTED_QUESTIONS[0], AI_SUGGESTED_QUESTIONS[4], AI_SUGGESTED_QUESTIONS[5]]
   }
-  if (!context) return AI_SUGGESTED_QUESTIONS
+  if (!context || AI_ANALYSIS_INTENTS.includes(context.intent)) return [...AI_ANALYSIS_QUESTIONS, ...AI_SUGGESTED_QUESTIONS.slice(0, 3)]
   const period = formatShortMonthLabel(context.month)
   return [
     'Còn tháng trước thì sao?',
@@ -415,7 +416,10 @@ export function normalizeAiChatResponse(data) {
   }
 
   const intent = data.intent.trim()
-  const withoutStats = ['UNKNOWN', 'UNSUPPORTED', 'GREETING', 'CREATE_EXPENSE'].includes(intent)
+  const isAnalysis = AI_ANALYSIS_INTENTS.includes(intent)
+  const withoutStats = ['UNKNOWN', 'UNSUPPORTED', 'GREETING', 'CREATE_EXPENSE'].includes(intent) || isAnalysis
+  if (!isAnalysis && data.analysis != null) throw invalidResponse('Phân tích không khớp intent')
+  const analysis = isAnalysis ? normalizeAiAnalysis(data.analysis, intent, data.period) : null
   if (![...AI_CONTEXT_INTENTS, 'UNKNOWN', 'UNSUPPORTED', 'GREETING', 'CREATE_EXPENSE'].includes(intent)) {
     throw invalidResponse('Intent không thuộc API Contract')
   }
@@ -439,6 +443,7 @@ export function normalizeAiChatResponse(data) {
       ?? (['GREETING', 'CREATE_EXPENSE'].includes(intent) ? [] : data.topCategories)),
     budget: normalizeBudget(data.budget),
     ...(intent === 'CREATE_EXPENSE' ? { suggestedExpense: normalizeSuggestedExpense(data.suggestedExpense) } : {}),
+    ...(analysis ? { analysis } : {}),
   }
 }
 
@@ -715,6 +720,7 @@ export function createAiChatController({
         topCategories: response.topCategories,
         budget: response.budget,
         comparison: response.comparison ?? null,
+        ...(response.analysis ? { analysis: response.analysis } : {}),
         ...(response.suggestedExpense ? { suggestedExpense: response.suggestedExpense,
           expenseStatus: 'pending', expenseError: '' } : {}),
       }
