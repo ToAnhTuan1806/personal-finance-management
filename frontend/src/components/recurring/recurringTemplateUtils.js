@@ -5,7 +5,7 @@
  */
 
 export const DISCLAIMER_NOTICE =
-  'Mẫu giúp bạn lưu sẵn các khoản thu, chi lặp lại. Khi cần, hãy chọn “Kiểm tra trước khi ghi nhận” để xem lại thông tin trước khi thêm giao dịch vào sổ thu chi.'
+  'Mẫu đang bật tự ghi nhận giao dịch vào ngày đã đặt theo giờ Việt Nam, bắt đầu từ kỳ kế tiếp. Không ghi bù kỳ đã qua. Tắt mẫu để dừng tự động.'
 
 export const DAY_31_NOTICE =
   'Nếu tháng không có ngày 31, hệ thống sẽ dùng ngày cuối tháng.'

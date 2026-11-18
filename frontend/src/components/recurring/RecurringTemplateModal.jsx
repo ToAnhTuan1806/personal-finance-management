@@ -165,7 +165,7 @@ function RecurringTemplateModalContent({
               {isEditing ? 'Chỉnh sửa mẫu định kỳ' : 'Thêm mẫu định kỳ mới'}
             </h2>
             <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-              Thiết lập mẫu thu chi tự động gợi ý hằng tháng
+              Ghi nhận thu, chi theo lịch hằng tháng
             </p>
           </div>
           <button
@@ -384,12 +384,12 @@ function RecurringTemplateModalContent({
                   htmlFor="template-active-toggle"
                   className="cursor-pointer text-sm font-semibold text-slate-800 dark:text-slate-200"
                 >
-                  Kích hoạt mẫu này
+                  Tự động ghi nhận
                 </label>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
                   {form.active
-                    ? 'Đang bật: Sẵn sàng áp dụng cho các kỳ tới'
-                    : 'Đã tắt: Tạm dừng sử dụng mẫu này'}
+                    ? 'Bắt đầu từ ngày lặp kế tiếp sau hôm nay.'
+                    : 'Đã tạm dừng tự động ghi nhận.'}
                 </p>
               </div>
               <label className="relative inline-flex cursor-pointer items-center">
