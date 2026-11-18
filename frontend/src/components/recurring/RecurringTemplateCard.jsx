@@ -11,6 +11,7 @@ import CategoryBadge from '../category/CategoryBadge'
 import {
   DAY_31_NOTICE,
   formatDayOfMonth,
+  formatDisplayDate,
   formatMoney,
   isDay31,
 } from './recurringTemplateUtils'
@@ -154,6 +155,17 @@ export default function RecurringTemplateCard({
         <div className="mt-3 flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-300">
           <Calendar size={14} className="text-slate-400 shrink-0" />
           <span>{formatDayOfMonth(template.dayOfMonth)}</span>
+        </div>
+
+        <div className="mt-2 rounded-xl bg-blue-50 p-2.5 text-xs text-blue-800 dark:bg-blue-950/30 dark:text-blue-200">
+          <p className="font-semibold">{template.active ? 'Tự động ghi nhận' : 'Đã tạm dừng tự động'}</p>
+          {template.active && (
+            <p className="mt-1">
+              {template.nextRunDate ? <>
+                Lần tiếp theo: <time dateTime={template.nextRunDate} className="font-semibold tabular-nums">{formatDisplayDate(template.nextRunDate)}</time>
+              </> : 'Đang chuẩn bị lịch tự động…'}
+            </p>
+          )}
         </div>
 
         {/* Notice if Day 31 */}

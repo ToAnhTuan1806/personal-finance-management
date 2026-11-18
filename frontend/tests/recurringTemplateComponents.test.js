@@ -51,7 +51,7 @@ after(async () => {
 test('recurringTemplateUtils: nội dung hướng dẫn và cảnh báo ngày cuối tháng chính xác', () => {
   assert.equal(
     DISCLAIMER_NOTICE,
-    'Mẫu giúp bạn lưu sẵn các khoản thu, chi lặp lại. Khi cần, hãy chọn “Kiểm tra trước khi ghi nhận” để xem lại thông tin trước khi thêm giao dịch vào sổ thu chi.'
+    'Mẫu đang bật tự ghi nhận giao dịch vào ngày đã đặt theo giờ Việt Nam, bắt đầu từ kỳ kế tiếp. Không ghi bù kỳ đã qua. Tắt mẫu để dừng tự động.'
   )
   assert.equal(
     DAY_31_NOTICE,
@@ -289,7 +289,7 @@ test('RecurringTemplateModal: render form thêm mới với tiêu đề và các
   assert.match(html, /Số tiền định kỳ/)
   assert.match(html, /Ngày lặp hằng tháng/)
   assert.match(html, /Ghi chú \(tùy chọn\)/)
-  assert.match(html, /Kích hoạt mẫu này/)
+  assert.match(html, /Tự động ghi nhận/)
   assert.match(html, /Lưu mẫu/)
   assert.match(html, /inputMode="numeric"/)
   assert.doesNotMatch(html, /lucide-calendar/)
@@ -385,3 +385,25 @@ test('navigation: cấu hình đúng route /recurring-templates cho giao dịch 
   assert.ok(recurringNav.icon, 'Phải có Icon lucide')
 })
 
+
+
+test('Lịch tự động hiển thị ngày kế tiếp từ Backend, không yêu cầu xác nhận từng kỳ', () => {
+  const template = { id: 10, categoryId: 1, categoryName: 'Tiền điện', type: 'EXPENSE', amount: 1000000.25,
+    dayOfMonth: 18, active: true, nextRunDate: '2026-12-18' }
+  const html = render(RecurringTemplatesPage, { initialTemplates: [template], initialCategories: [{id: 1, name: 'Tiền điện', type: 'EXPENSE'}] })
+  assert.match(html, /Tự động ghi nhận/)
+  assert.match(html, /18\/12\/2026/)
+  assert.match(html, /1\.000\.000,25/)
+  assert.doesNotMatch(html, /Kiểm tra trước khi ghi nhận|Xác nhận áp dụng|Xác nhận ghi nhận/)
+  assert.match(html, /Không ghi bù kỳ đã qua/)
+})
+
+test('Mẫu tắt không hứa ngày chạy, mẫu chờ khởi tạo không tự đoán ngày', () => {
+  const base = { id: 11, categoryId: 1, categoryName: 'Lương', type: 'INCOME', amount: 18000000, dayOfMonth: 5 }
+  const off = render(RecurringTemplateCard, { template: { ...base, active: false, nextRunDate: '2026-12-05' } })
+  assert.match(off, /Đã tạm dừng tự động/)
+  assert.doesNotMatch(off, /Lần tiếp theo|05\/12\/2026/)
+  const pending = render(RecurringTemplateCard, { template: { ...base, active: true } })
+  assert.match(pending, /Đang chuẩn bị lịch tự động/)
+  assert.doesNotMatch(pending, /Lần tiếp theo/)
+})
