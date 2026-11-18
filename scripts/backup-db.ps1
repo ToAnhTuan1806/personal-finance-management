@@ -1,4 +1,4 @@
-# ==============================================================================
+﻿# ==============================================================================
 # SmartExpense - Database Backup Script (PowerShell)
 # ==============================================================================
 # Usage:
@@ -7,7 +7,9 @@
 
 param(
     [string]$BackupDir = "database/backups",
+    [ValidatePattern('^[A-Za-z0-9][A-Za-z0-9_.-]*$')]
     [string]$ContainerName = "smartexpense-mysql",
+    [ValidatePattern('^[A-Za-z0-9_]+$')]
     [string]$DbName = "personal_finance_db"
 )
 
@@ -28,19 +30,13 @@ Write-Host "Creating database backup for '$DbName' from container '$ContainerNam
 
 # Read the private credential without a hardcoded fallback or shell interpolation.
 . (Join-Path $PSScriptRoot 'Read-LocalEnvironment.ps1')
+. (Join-Path $PSScriptRoot 'Invoke-DatabaseTool.ps1')
 $dbRootPass = Get-SmartExpenseRootPassword
 $previousMysqlPwd = [Environment]::GetEnvironmentVariable('MYSQL_PWD', 'Process')
 [Environment]::SetEnvironmentVariable('MYSQL_PWD', $dbRootPass, 'Process')
 
 try {
-    # Execute mysqldump inside container
-    $cmd = "docker exec -i -e MYSQL_PWD $ContainerName mysqldump -u root --databases $DbName --routines --triggers"
-    cmd /c "$cmd > `"$partialDump`""
-    $dumpExitCode = $LASTEXITCODE
-    if ($dumpExitCode -ne 0) {
-        throw "mysqldump failed with exit code $dumpExitCode."
-    }
-    
+    Invoke-SmartExpenseDatabaseTool -ContainerName $ContainerName -DbName $DbName -Mode backup -FilePath $partialDump
     if (-not (Test-Path -LiteralPath $partialDump -PathType Leaf) -or
         (Get-Item -LiteralPath $partialDump).Length -eq 0) {
         throw "Backup file is empty or was not created."

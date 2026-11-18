@@ -1,4 +1,4 @@
-# Run only against a disposable local MySQL container, never production.
+﻿# Run only against a disposable local MySQL container, never production.
 param(
     [Parameter(Mandatory = $true)]
     [ValidatePattern('^smartexpense-(backup-qa|qa)-[A-Za-z0-9_.-]+$')]
@@ -92,6 +92,12 @@ try {
     Check 'Empty backup file returns failure' ($bad.code -ne 0)
     $bad = RunScript $restoreScript @('-BackupFile', $dumpDir, '-ContainerName', $ContainerName, '-DbName', $restoreDb)
     Check 'Directory cannot be used as a backup file' ($bad.code -ne 0)
+    foreach ($badName in @('bad&name', 'bad name', 'bad;name', 'bad"name')) {
+        $bad = RunScript $backupScript @('-BackupDir', $dumpDir, '-ContainerName', $ContainerName, '-DbName', $badName)
+        Check ('Backup rejects unsafe database name: ' + $badName) ($bad.code -ne 0)
+        $bad = RunScript $restoreScript @('-BackupFile', $restoreCopy, '-ContainerName', $badName, '-DbName', $restoreDb)
+        Check ('Restore rejects unsafe container name: ' + $badName) ($bad.code -ne 0)
+    }
     Check 'Failed operations preserve the valid backup' ((Get-FileHash -LiteralPath $goodDump).Hash -eq $originalHash)
 } finally {
     try {
@@ -99,6 +105,7 @@ try {
         $results | ConvertTo-Json -Depth 3 | Set-Content -LiteralPath (Join-Path $workDir 'results.json') -Encoding UTF8
         Write-Host ('Results saved in ' + (Join-Path $workDir 'results.json'))
     } finally {
+        Remove-Item -LiteralPath (Join-Path $workDir '.env') -Force -ErrorAction SilentlyContinue
         Pop-Location
     }
 }

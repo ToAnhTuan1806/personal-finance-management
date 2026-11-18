@@ -1,11 +1,14 @@
 import axiosClient from '../api/axiosClient.js'
-import { isRequestCancelled } from '../api/errors.js'
+import { getApiErrorMessage, isRequestCancelled } from '../api/errors.js'
 import { session } from '../auth/session.js'
+import { isValidDate, transactionDateError } from '../utils/transactionForm.js'
 import {
   getCurrentVietnamMonth,
   isValidMonthString,
   shiftMonthString,
   formatShortMonthLabel,
+  formatReportMoney,
+  formatReportPercent,
 } from '../components/reports/reportUtils.js'
 
 export const AI_CHAT_TIMEOUT_MS = 35000
@@ -23,7 +26,10 @@ export const AI_SUGGESTED_QUESTIONS = [
 export const AI_CONTEXT_INTENTS = ['SUMMARY', 'CATEGORIES', 'BUDGET', 'ADVICE', 'COMPARISON', 'CATEGORY_TREND']
 
 export const AI_UNKNOWN_DISPLAY_REPLY =
-  'Xin chào! Mình có thể giúp bạn xem tổng thu chi, phân tích danh mục, kiểm tra ngân sách, so sánh các tháng và gợi ý quản lý chi tiêu. Bạn hãy chọn một câu hỏi gợi ý bên dưới nhé.'
+  'Mình chưa hiểu rõ. Bạn muốn ghi khoản chi hay xem thu chi? Để ghi chi, hãy nhập nội dung và số tiền.'
+
+export const AI_GREETING_DISPLAY_REPLY =
+  'Xin chào! Bạn muốn ghi khoản chi hay xem thu chi?\nGhi chi theo mẫu: nội dung + số tiền + ghi chú (nếu có). Mình sẽ chờ bạn xác nhận trước khi lưu.'
 
 export const AI_UNSUPPORTED_DISPLAY_REPLY =
   'Yêu cầu này chưa nằm trong phạm vi trợ lý tài chính. Bạn có thể hỏi về thu chi, danh mục, ngân sách hoặc so sánh các tháng.'
@@ -42,9 +48,12 @@ const AI_TECHNICAL_LABELS = {
   SET: 'đã thiết lập',
   UNKNOWN: 'chưa xác định yêu cầu',
   UNSUPPORTED: 'chưa được hỗ trợ',
+  GREETING: 'lời chào',
+  CREATE_EXPENSE: 'soạn khoản chi',
 }
 
 export function formatAiReplyForDisplay(reply, intent) {
+  if (intent === 'GREETING') return AI_GREETING_DISPLAY_REPLY
   if (intent === 'UNKNOWN') return AI_UNKNOWN_DISPLAY_REPLY
   if (intent === 'UNSUPPORTED') return AI_UNSUPPORTED_DISPLAY_REPLY
 
@@ -53,6 +62,37 @@ export function formatAiReplyForDisplay(reply, intent) {
       text.replace(new RegExp(`\\b${technicalName}\\b`, 'g'), vietnameseLabel),
     String(reply || '')
   )
+}
+
+// Chỉ dùng structured fields đã xác thực để tóm tắt; không phân tích số từ reply.
+export function getAiResponseSummary(message) {
+  const { intent, stats, topCategories, budget, comparison } = message || {}
+  if (intent === 'SUMMARY' && stats) return 'Thu chi của bạn trong tháng:'
+  if (intent === 'CATEGORIES' && stats) {
+    if (stats.totalExpense === 0) return 'Kỳ này chưa có chi tiêu.'
+    return topCategories?.length
+      ? `Bạn chi nhiều nhất cho ${topCategories[0].categoryName}.`
+      : 'Chưa có dữ liệu phân bổ chi tiêu theo danh mục.'
+  }
+  if (intent === 'BUDGET' && budget) {
+    if (budget.status === 'NOT_SET') return 'Bạn chưa đặt ngân sách tháng. Hãy đặt hạn mức để theo dõi chi tiêu.'
+    const monthly = budget.monthly
+    if (monthly?.exceeded) return `Bạn đã vượt ngân sách ${formatReportMoney(Math.abs(monthly.remainingAmount))}. Hãy rà soát các khoản có thể hoãn.`
+    if (monthly?.remainingAmount === 0) return 'Bạn đã dùng hết hạn mức tháng. Cân nhắc trước khi chi thêm.'
+    return 'Ngân sách tháng vẫn còn. Xem số tiền còn lại bên dưới.'
+  }
+  if (['COMPARISON', 'CATEGORY_TREND'].includes(intent) && comparison) {
+    const delta = comparison.delta.totalExpense
+    const change = delta === 0 ? 'không đổi'
+      : `${delta > 0 ? 'tăng' : 'giảm'} ${formatReportMoney(Math.abs(delta))}`
+    const percent = delta !== 0 && comparison.expenseChangePercent !== null
+      ? ` (${formatReportPercent(Math.abs(comparison.expenseChangePercent))})` : ''
+    const summary = `Chi tiêu ${change}${percent} so với tháng ${formatShortMonthLabel(comparison.baseMonth)}.`
+    if (intent !== 'CATEGORY_TREND') return summary
+    const highest = comparison.categoryTrends.reduce((best, item) => item.delta > (best?.delta ?? 0) ? item : best, null)
+    return `${summary}\n${highest ? `Tăng nhiều nhất: ${highest.categoryName}.` : 'Không có danh mục nào tăng chi tiêu.'}`
+  }
+  return null
 }
 
 function isAiFollowUp(message) {
@@ -80,6 +120,9 @@ export function getAiResponseContext(response) {
 }
 
 export function getAiSuggestedQuestions({ context, lastIntent } = {}) {
+  if (lastIntent === 'GREETING') {
+    return ['Số dư tháng này bao nhiêu?', 'Ngân sách tháng này còn bao nhiêu?', 'Danh mục nào tôi chi nhiều nhất?']
+  }
   if (lastIntent === 'UNKNOWN' || lastIntent === 'UNSUPPORTED') {
     return [AI_SUGGESTED_QUESTIONS[0], AI_SUGGESTED_QUESTIONS[4], AI_SUGGESTED_QUESTIONS[5]]
   }
@@ -328,6 +371,30 @@ export function normalizeAiComparison(value, targetMonth) {
   }
 }
 
+export function normalizeSuggestedExpense(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+    throw invalidResponse('Thiếu đề xuất chi tiêu hợp lệ')
+  }
+  const number = (value, field) => {
+    if (!['number', 'string'].includes(typeof value) || String(value).trim() === '') {
+      throw invalidResponse(`Trường ${field} của đề xuất chi tiêu không hợp lệ`)
+    }
+    return toFiniteNumber(value, field)
+  }
+  const amount = number(raw.amount, 'amount')
+  const categoryId = raw.categoryId == null ? null : number(raw.categoryId, 'categoryId')
+  const type = raw.type == null ? 'EXPENSE' : raw.type
+  if (amount <= 0 || !/^\d{1,13}(?:\.\d{1,2})?$/.test(String(amount))
+      || (categoryId !== null && (!Number.isSafeInteger(categoryId) || categoryId <= 0))
+      || (raw.categoryName != null && typeof raw.categoryName !== 'string')
+      || typeof raw.note !== 'string' || raw.note.length > 500
+      || !isValidDate(raw.transactionDate) || type !== 'EXPENSE') {
+    throw invalidResponse('Thông tin đề xuất chi tiêu không hợp lệ')
+  }
+  return { amount, categoryId, categoryName: raw.categoryName?.trim() || null,
+    note: raw.note, transactionDate: raw.transactionDate, type }
+}
+
 export function normalizeAiChatResponse(data) {
   if (!data || typeof data !== 'object' || Array.isArray(data)) {
     throw invalidResponse('Phản hồi trợ lý AI không đúng cấu trúc đối tượng')
@@ -347,12 +414,17 @@ export function normalizeAiChatResponse(data) {
     throw invalidResponse('Phản hồi trợ lý AI thiếu trường intent')
   }
 
-  if (![...AI_CONTEXT_INTENTS, 'UNKNOWN', 'UNSUPPORTED'].includes(data.intent.trim())) {
+  const intent = data.intent.trim()
+  const withoutStats = ['UNKNOWN', 'UNSUPPORTED', 'GREETING', 'CREATE_EXPENSE'].includes(intent)
+  if (![...AI_CONTEXT_INTENTS, 'UNKNOWN', 'UNSUPPORTED', 'GREETING', 'CREATE_EXPENSE'].includes(intent)) {
     throw invalidResponse('Intent không thuộc API Contract')
   }
-  if (['UNKNOWN', 'UNSUPPORTED'].includes(data.intent.trim())
+  if (withoutStats
       && (data.stats != null || data.budget != null || data.comparison != null || data.topCategories?.length)) {
     throw invalidResponse('Phản hồi không xác định không được chứa số liệu')
+  }
+  if (intent !== 'CREATE_EXPENSE' && data.suggestedExpense != null) {
+    throw invalidResponse('Đề xuất chi tiêu phải thuộc intent CREATE_EXPENSE')
   }
   const comparison = ['COMPARISON', 'CATEGORY_TREND'].includes(data.intent.trim())
     ? normalizeAiComparison(data.comparison, data.period) : null
@@ -361,10 +433,12 @@ export function normalizeAiChatResponse(data) {
     comparison,
     reply: data.reply.trim(),
     period: data.period,
-    intent: data.intent.trim(),
+    intent,
     stats: normalizeStats(data.stats),
-    topCategories: normalizeTopCategories(data.topCategories),
+    topCategories: normalizeTopCategories(data.topCategories
+      ?? (['GREETING', 'CREATE_EXPENSE'].includes(intent) ? [] : data.topCategories)),
     budget: normalizeBudget(data.budget),
+    ...(intent === 'CREATE_EXPENSE' ? { suggestedExpense: normalizeSuggestedExpense(data.suggestedExpense) } : {}),
   }
 }
 
@@ -517,6 +591,7 @@ export function createAiChatController({
   let sequence = 0
   let activeController = null
   let activeRequestId = 0
+  let destroyed = false
 
   const initialSession = sessionStore.getSnapshot()
   let trackedRevision = initialSession.revision
@@ -640,6 +715,8 @@ export function createAiChatController({
         topCategories: response.topCategories,
         budget: response.budget,
         comparison: response.comparison ?? null,
+        ...(response.suggestedExpense ? { suggestedExpense: response.suggestedExpense,
+          expenseStatus: 'pending', expenseError: '' } : {}),
       }
 
       activeController = null
@@ -675,6 +752,10 @@ export function createAiChatController({
       return null
     }
   }
+
+  const updateExpense = (id, patch) => publish({
+    messages: state.messages.map(message => message.id === id ? { ...message, ...patch } : message),
+  })
 
   return {
     getSnapshot: () => state,
@@ -737,7 +818,46 @@ export function createAiChatController({
       }
       return sendPromptInternal(target)
     },
+    async confirmExpense(id, createTransaction) {
+      const message = state.messages.find(item => item.id === id && item.intent === 'CREATE_EXPENSE')
+      const snap = sessionStore.getSnapshot()
+      if (destroyed || !snap.user || !message?.suggestedExpense
+          || ['saving', 'saved', 'cancelled'].includes(message.expenseStatus)) return null
+      let payload
+      try {
+        const expense = normalizeSuggestedExpense(message.suggestedExpense)
+        if (expense.categoryId === null) throw new Error('Vui lòng chọn danh mục trong biểu mẫu ghi khoản chi mới.')
+        const dateError = transactionDateError(expense.transactionDate)
+        if (dateError) throw new Error(dateError)
+        const { amount, categoryId, transactionDate, note, type } = expense
+        payload = { amount, categoryId, transactionDate, note, type }
+      } catch (error) {
+        updateExpense(id, { expenseStatus: 'error', expenseError: error.code === 'INVALID_API_RESPONSE'
+          ? 'Đề xuất chi tiêu không hợp lệ. Vui lòng nhập lại yêu cầu.' : error.message })
+        return null
+      }
+      // Cập nhật đồng bộ trước khi gọi API để chặn cả hai lần bấm trong cùng lượt sự kiện.
+      updateExpense(id, { expenseStatus: 'saving', expenseError: '' })
+      const isCurrent = () => !destroyed && sessionStore.getSnapshot().revision === snap.revision
+        && sessionStore.getSnapshot().user?.id === snap.user.id && state.messages.some(item => item.id === id)
+      try {
+        const result = await createTransaction(payload)
+        if (!isCurrent()) return null
+        updateExpense(id, { expenseStatus: 'saved', expenseError: '' })
+        return result
+      } catch (error) {
+        if (isCurrent()) updateExpense(id, { expenseStatus: 'error', expenseError: getApiErrorMessage(error)
+          || 'Chưa lưu được giao dịch. Vui lòng kiểm tra và thử lại.' })
+        return null
+      }
+    },
+    cancelExpense(id) {
+      const message = state.messages.find(item => item.id === id && item.intent === 'CREATE_EXPENSE')
+      if (!message || ['saving', 'saved', 'cancelled'].includes(message.expenseStatus)) return
+      updateExpense(id, { expenseStatus: 'cancelled', expenseError: '' })
+    },
     destroy() {
+      destroyed = true
       abortActiveRequest()
       unsubscribeSession()
       listeners.clear()
