@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Data
 @NoArgsConstructor
@@ -20,4 +21,10 @@ public class RecurringTemplateResponse {
     private Integer dayOfMonth;
     private String note;
     private boolean active;
+    private LocalDate nextRunDate;
+
+    public RecurringTemplateResponse(Long id, Long categoryId, String categoryName, TransactionType type,
+                                     BigDecimal amount, Integer dayOfMonth, String note, boolean active) {
+        this(id, categoryId, categoryName, type, amount, dayOfMonth, note, active, null);
+    }
 }

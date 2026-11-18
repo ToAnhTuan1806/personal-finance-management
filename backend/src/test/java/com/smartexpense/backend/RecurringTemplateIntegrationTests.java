@@ -322,12 +322,12 @@ class RecurringTemplateIntegrationTests extends RecurringTemplateMySqlTestSuppor
                 .containsExactlyInAnyOrder("users", "categories", "transactions", "monthly_budgets", "category_budgets", "recurring_templates", "recurring_applications", "password_reset_tokens");
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM information_schema.referential_constraints WHERE constraint_schema=DATABASE()", Integer.class)).isEqualTo(11);
         try (var connection = jdbc.getDataSource().getConnection()) {
-            ApplicationSchemaAssertions.assertSchema(connection, true, true, true, true);
+            ApplicationSchemaAssertions.assertCurrentSchema(connection);
         }
         assertThat(jdbc.queryForList("SELECT CONCAT(column_name,':',column_type,':',is_nullable) FROM information_schema.columns "
                 + "WHERE table_schema=DATABASE() AND table_name='recurring_templates'", String.class))
                 .containsExactlyInAnyOrder("id:bigint:NO", "user_id:bigint:NO", "category_id:bigint:NO",
-                        "type:varchar(20):NO", "amount:decimal(15,2):NO", "day_of_month:int:NO", "note:varchar(500):YES", "active:tinyint(1):NO");
+                        "type:varchar(20):NO", "amount:decimal(15,2):NO", "day_of_month:int:NO", "note:varchar(500):YES", "active:tinyint(1):NO", "next_run_date:date:YES");
         assertThat(jdbc.queryForList("SELECT CONCAT(column_name,'->',referenced_table_name,'.',referenced_column_name) "
                 + "FROM information_schema.key_column_usage WHERE table_schema=DATABASE() AND table_name='recurring_templates' "
                 + "AND referenced_table_name IS NOT NULL", String.class))
@@ -406,7 +406,7 @@ class RecurringTemplateIntegrationTests extends RecurringTemplateMySqlTestSuppor
 
     private RecurringTemplateResponse create(User owner, Map<String, Object> input) throws Exception {
         var response = call(owner, HttpMethod.POST, BASE, input).andExpect(status().isCreated()).andReturn().getResponse();
-        assertThat(json.readTree(response.getContentAsString(StandardCharsets.UTF_8)).size()).isEqualTo(8);
+        assertThat(json.readTree(response.getContentAsString(StandardCharsets.UTF_8)).size()).isEqualTo(9);
         return json.readValue(response.getContentAsString(StandardCharsets.UTF_8), RecurringTemplateResponse.class);
     }
 

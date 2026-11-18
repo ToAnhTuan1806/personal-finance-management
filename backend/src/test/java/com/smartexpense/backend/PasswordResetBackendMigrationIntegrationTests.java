@@ -66,6 +66,7 @@ class PasswordResetBackendMigrationIntegrationTests {
                 owner = jdbc.queryForObject("SELECT id FROM users", Long.class);
                 legacy = jdbc.queryForMap("SELECT id,full_name,email,password_hash,created_at FROM users WHERE id=?", owner);
                 apply(connection, V006);
+                RecurringAutomationMigrationTestSupport.apply(connection);
                 assertThat(jdbc.queryForMap("SELECT id,full_name,email,password_hash,created_at FROM users WHERE id=?", owner)).isEqualTo(legacy);
                 assertThat(jdbc.queryForObject("SELECT auth_version FROM users WHERE id=?", Long.class, owner)).isZero();
                 assertThat(jdbc.queryForList("SELECT column_name,column_type,is_nullable FROM information_schema.columns WHERE table_schema=DATABASE() AND table_name='password_reset_tokens'")).hasSize(6);
@@ -81,7 +82,7 @@ class PasswordResetBackendMigrationIntegrationTests {
             try (var context = new SpringApplicationBuilder(BackendApplication.class, IsolatedDataSource.class)
                     .properties(Map.of("app.jwt.secret", Base64.getEncoder().encodeToString(key), "app.jwt.expiration", "600", "logging.level.root", "WARN"))
                     .run("--spring.config.location=optional:classpath:/d12-migration-isolated.properties", "--server.address=127.0.0.1", "--server.port=0",
-                            "--spring.jpa.hibernate.ddl-auto=validate", "--spring.jpa.generate-ddl=false", "--spring.sql.init.mode=never",
+                            "--app.recurring.automatic-enabled=false", "--spring.jpa.hibernate.ddl-auto=validate", "--spring.jpa.generate-ddl=false", "--spring.sql.init.mode=never",
                             "--spring.jpa.properties.jakarta.persistence.schema-generation.database.action=none", "--spring.jpa.open-in-view=false")) {
                 context.getBean(EntityManagerFactory.class).unwrap(org.hibernate.SessionFactory.class).getSchemaManager().validateMappedObjects();
                 var reset = context.getBean(PasswordResetService.class); reset.resetPassword(raw, "NewPassword123!", "127.0.0.1");

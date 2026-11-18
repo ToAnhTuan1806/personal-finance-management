@@ -65,6 +65,7 @@ class CategoryBudgetMigrationIntegrationTests {
                 apply(connection, migrations.get(2));
                 apply(connection, migrations.get(3));
                 D12MigrationTestSupport.apply(connection);
+                RecurringAutomationMigrationTestSupport.apply(connection);
             }
             byte[] key = new byte[32];
             new SecureRandom().nextBytes(key);
@@ -73,7 +74,7 @@ class CategoryBudgetMigrationIntegrationTests {
                     .properties(Map.of("app.jwt.secret", Base64.getEncoder().encodeToString(key),
                             "app.jwt.expiration", "600", "logging.level.root", "WARN"))
                     .run("--spring.config.location=optional:classpath:/d07-unused.properties", "--server.port=0",
-                            "--server.address=127.0.0.1", "--spring.jpa.hibernate.ddl-auto=validate",
+                            "--server.address=127.0.0.1", "--app.recurring.automatic-enabled=false", "--spring.jpa.hibernate.ddl-auto=validate",
                             "--spring.jpa.generate-ddl=false", "--spring.sql.init.mode=never",
                             "--spring.jpa.properties.jakarta.persistence.schema-generation.database.action=none",
                             "--spring.jpa.open-in-view=false")) {

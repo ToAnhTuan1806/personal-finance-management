@@ -44,6 +44,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
         "spring.datasource.url=jdbc:disabled:d08-contract-tests",
         "spring.jpa.hibernate.ddl-auto=none"
 })
+@org.springframework.test.context.TestPropertySource(properties = "app.recurring.automatic-enabled=false")
 class RecurringTemplateContractTests {
 
     private static final String JWT_KEY = randomJwtKey();
@@ -160,7 +161,7 @@ class RecurringTemplateContractTests {
                 new BigDecimal("3000000.00"), 31, null, false);
         Map<String, Object> fields = json.readValue(json.writeValueAsString(response), new TypeReference<>() {});
         assertThat(fields.keySet()).containsExactlyInAnyOrder(
-                "id", "categoryId", "categoryName", "type", "amount", "dayOfMonth", "note", "active");
+                "id", "categoryId", "categoryName", "type", "amount", "dayOfMonth", "note", "active", "nextRunDate");
         assertThat(fields.get("note")).isNull();
         assertThat(fields.get("active")).isEqualTo(false);
     }

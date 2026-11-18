@@ -34,6 +34,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 
 // D09 không kế thừa harness JPA-create: bắt buộc SQL MVP -> V002 -> V003 -> V004 -> V005 trước Spring.
+@org.springframework.test.context.TestPropertySource(properties = "app.recurring.automatic-enabled=false")
 abstract class RecurringApplicationMySqlTestSupport {
     static final List<String> LEGACY_TABLES = List.of("users", "categories", "transactions", "monthly_budgets", "category_budgets", "recurring_templates");
     private static final String DATABASE = "se_d09_test_" + UUID.randomUUID().toString().replace("-", "");
@@ -101,6 +102,7 @@ abstract class RecurringApplicationMySqlTestSupport {
             apply(connection, migrations.get(3));
             assertThat(snapshot(jdbc)).isEqualTo(before);
             D12MigrationTestSupport.apply(connection);
+            RecurringAutomationMigrationTestSupport.apply(connection);
             legacyRows = snapshot(jdbc);
         }
     }

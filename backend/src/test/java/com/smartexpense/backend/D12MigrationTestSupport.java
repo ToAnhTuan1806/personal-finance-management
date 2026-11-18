@@ -31,7 +31,7 @@ final class D12MigrationTestSupport {
     }
 
     // Test migration lịch sử vẫn giữ nguyên schema/snapshot của version đó.
-    // Chỉ phần validate Entity hiện tại dùng container mới với toàn bộ chuỗi V002 -> V006.
+    // Chỉ phần validate Entity hiện tại dùng container mới với toàn bộ chuỗi V002 -> V007.
     static void validateCurrentMappings(List<Class<?>> entities) throws Exception {
         String database = "se_d12_validation_" + UUID.randomUUID().toString().replace("-", "");
         String password = UUID.randomUUID().toString();
@@ -65,6 +65,8 @@ final class D12MigrationTestSupport {
                     applyFile(connection, Path.of("../database/migrations", file));
                 apply(connection);
                 ApplicationSchemaAssertions.assertSchema(connection, true, true, true, true);
+                RecurringAutomationMigrationTestSupport.apply(connection);
+                ApplicationSchemaAssertions.assertCurrentSchema(connection);
             }
             var registry = new StandardServiceRegistryBuilder().applySettings(Map.of(
                     "hibernate.connection.url", mysql.getJdbcUrl(), "hibernate.connection.username", mysql.getUsername(),

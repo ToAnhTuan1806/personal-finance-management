@@ -39,6 +39,7 @@ import static org.assertj.core.api.Assertions.*;
         "spring.datasource.url=jdbc:disabled:d09-contract-tests",
         "spring.jpa.hibernate.ddl-auto=none"
 })
+@org.springframework.test.context.TestPropertySource(properties = "app.recurring.automatic-enabled=false")
 class RecurringApplicationContractTests {
     private static final String JWT_KEY = randomKey();
     @Autowired Validator validator;
