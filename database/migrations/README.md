@@ -1,3 +1,9 @@
+# V007 — lịch tự động giao dịch định kỳ (11/2026)
+
+File mới: `V007__recurring_automation_schedule.sql`, chạy một lần sau V006 và trước Backend tự động định kỳ. Chỉ thêm cột lịch nullable và index; không ghi thu/chi hoặc ghi bù kỳ cũ. Hướng dẫn, kiểm thử và thứ tự phát hành: [RECURRING_AUTOMATION.md](../../docs/qa/RECURRING_AUTOMATION.md).
+
+Phần D06 bên dưới được giữ làm tài liệu lịch sử của migration V002.
+
 # D06 — migration đề xuất, chờ Hương Quỳnh/DB/QA duyệt
 
 Hiện chưa có Flyway/Liquibase, migration runner hoặc bảng history được duyệt; Hibernate đang dùng ddl-auto=update. V001 baseline/V002 metadata mới là kế hoạch trong README, không được coi V001 đã chạy. V002__category_icon_color.sql là bản đề xuất trên feature/tuan; Quỳnh chốt version để tránh trùng công việc D06-DB. Không thay đổi feature/quynh, CD hoặc cấu hình production trong gói này.
