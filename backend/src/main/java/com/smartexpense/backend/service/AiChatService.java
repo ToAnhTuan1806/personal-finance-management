@@ -24,6 +24,7 @@ public class AiChatService {
     private final AiFinancialReplyFormatter replies;
     private final AiQueryInterpreter interpreter;
     private final CategoryRepository categories;
+    private final AiFinancialAnalysisService analyses;
 
     public AiChatResponse chat(Long userId, AiChatRequest request) {
         if (request.message() == null || request.message().isBlank() || request.message().length() > 500
@@ -40,7 +41,7 @@ public class AiChatService {
         if (request.context() != null) {
             validateMonth(request.context().month(), "context.month");
             if (request.context().compareMonth() != null) validateMonth(request.context().compareMonth(), "context.compareMonth");
-            if (request.context().intent() == null || !request.context().intent().matches("SUMMARY|CATEGORIES|BUDGET|ADVICE|COMPARISON|CATEGORY_TREND")) {
+            if (request.context().intent() == null || !request.context().intent().matches("SUMMARY|CATEGORIES|BUDGET|ADVICE|COMPARISON|CATEGORY_TREND|SPENDING_INSIGHT|BUDGET_FORECAST|PURCHASE_SIMULATION")) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "context.intent không hợp lệ");
             }
         }
@@ -72,6 +73,10 @@ public class AiChatService {
                     + "kiểm tra ngân sách (BUDGET); tư vấn chung (ADVICE); so sánh hai tháng (COMPARISON); xu hướng danh mục (CATEGORY_TREND)."
                     + "\nBạn có thể hỏi:\n1. Tổng chi tháng này bao nhiêu?\n2. So sánh thu chi tháng này với tháng trước."
                     + "\n3. Danh mục nào tăng chi tiêu nhiều nhất?", month, intent, null, List.of(), null);
+        }
+        if (List.of("SPENDING_INSIGHT", "BUDGET_FORECAST", "PURCHASE_SIMULATION").contains(intent)) {
+            var analysis = analyses.analyze(userId, query);
+            return new AiChatResponse(analysis.summary(), month, intent, null, List.of(), null, null, null, analysis);
         }
         if (intent.equals("COMPARISON") || intent.equals("CATEGORY_TREND")) {
             var result = finances.loadComparison(userId, month, query.compareMonth());

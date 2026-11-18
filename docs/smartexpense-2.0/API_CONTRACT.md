@@ -2,6 +2,8 @@
 
 > **Đối chiếu ngày 18/11/2026:** mô tả mã nguồn đã tích hợp tại `dev 88be77a3a582f0f5b5654ed66ae70270783d80a1`. Đây là cập nhật tài liệu, không đổi endpoint, DTO/JSON, schema hoặc Auth. Calendar, Reports, CSV, định kỳ, Forgot/Reset Password và AI đã có trong bản tích hợp; việc gửi email tới hộp thư thật và vận hành VPS vẫn cần xác nhận riêng.
 
+> **Bổ sung đang phát triển:** mục “Phân tích chi tiêu, dự báo và mô phỏng” bên dưới mô tả mở rộng API trong working tree, chưa nằm trong SHA đối chiếu nêu trên.
+
 Nguồn yêu cầu: [SRS 2.3](../SmartExpense_SRS_v2.docx) và [Master Plan](../SmartExpense_QuanTriDuAn.xlsx). Lịch Sprint 3 trong các nguồn này là snapshot ngày 08/11. Xem [bàn giao kỹ thuật và release](RELEASE_D16_D18.md), [mục lục tài liệu](../README.md). Các mục đề xuất chưa triển khai được giữ riêng ở mục 4.
 
 ## 1. Quy ước chung
@@ -525,6 +527,47 @@ Năm được tính luôn 1900–2100; tháng 1–12. Tháng trong câu sai ho�
 Ví dụ picker `2026-11`, message `Tổng chi tháng 2/2024?` → SUMMARY, `period=2024-02`, reply nêu tháng 2/2024 và stats lấy SQL tháng đó. Message `So sánh danh mục tháng 12/2025 và tháng 1/2026` → CATEGORY_TREND, baseMonth=2025-12, targetMonth/period=2026-01. Message `Tổng thu năm nay` → UNKNOWN, stats=null và nêu rõ không có thống kê cả năm.
 
 **Phối hợp FE bắt buộc trước tích hợp NLU:** `frontend/src/services/aiChatService.js` hiện kiểm tra `data.period===requestedMonth` và `comparison.baseMonth===requestedCompareMonth`. Những guard này sẽ báo INVALID_API_RESPONSE khi NLU hợp lệ override picker. FE cần chấp nhận kỳ trả từ Backend sau khi validate cấu trúc/miền giá trị và quan hệ `comparison.targetMonth===period`, giữ sequence/abort/session guards để chặn response cũ. Render kỳ thực tế từ response; không gắn nhãn số liệu bằng picker. Muốn follow-up phải gửi context chủ động; Backend không tự nhớ phiên chat. Task BE này không sửa FE; không dùng lại kết quả Browser QA P2 cũ để tuyên bố NLU Live PASS.
+
+### Phân tích chi tiêu, dự báo và mô phỏng — nâng cấp ngày 18/11/2026
+
+Phần này mô tả thay đổi đang phát triển trên `feature/tuan`, phối hợp giao diện `feature/trang`; chưa xác nhận đã triển khai production. Giữ endpoint `POST /api/ai/chat`, JWT owner, giới hạn request/rate và cách xử lý lỗi hiện có. Ba intent mới tính bằng truy vấn nội bộ, không gọi Gemini, không gửi dữ liệu hoặc câu hỏi tới provider và không tạo/sửa giao dịch.
+
+| Intent | Câu hỏi mẫu | Kết quả |
+| --- | --- | --- |
+| `SPENDING_INSIGHT` | `Vì sao tháng này tôi chi nhiều?` | So sánh chi tiêu, tối đa 3 danh mục biến động và 3 giao dịch lớn để rà soát. |
+| `BUDGET_FORECAST` | `Dự báo ngân sách tháng này` | Ước chi cuối tháng, phần ngân sách ước còn và mức còn/ngày sau khoản định kỳ. |
+| `PURCHASE_SIMULATION` | `Nếu mua tai nghe 1,2 triệu thì sao?` | Phần ngân sách còn sau khoản mua và chi định kỳ; thêm dự báo khi đủ dữ liệu. |
+
+Đây vẫn là nhận diện theo quy tắc, chưa phải hiểu mọi câu tự nhiên. Ưu tiên chặn yêu cầu ngoài phạm vi trước, sau đó nhận diện mô phỏng → dự báo → giải thích biến động; các đường nghiệp vụ cũ được giữ. Số tiền mô phỏng dùng parser tiền hiện có (k/nghìn/tr/triệu, tối đa 2 số lẻ); thiếu, không hợp lệ hoặc có nhiều số tiền thì trả `NEEDS_AMOUNT`. Không lấy lại số tiền từ context hay đề xuất trước. `context.intent` nhận thêm ba intent này; context chỉ mang kỳ/intent, không mang số tiền hoặc owner.
+
+Response giữ `intent`, `period`, `reply` và các field cũ, thêm `analysis` chỉ khi có phân tích. Với ba intent mới: `stats`, `budget`, `comparison`, `suggestedExpense` là null; `topCategories` rỗng. `reply` bằng `analysis.summary`, giao diện render một thẻ phân tích, không lặp reply/biểu đồ. Các constructor cũ của response giữ tương thích; response cũ không có field `analysis`.
+
+| Field của `analysis` | Hợp đồng |
+| --- | --- |
+| `kind`, `status` | kind bằng intent; status mô tả khả năng tính, không phải lỗi HTTP. |
+| `title`, `summary` | Tiêu đề ngắn và kết luận từ số liệu Backend. |
+| `asOf` | Ngày chốt theo `Asia/Ho_Chi_Minh`. |
+| `startDate`, `endDate` | Khoảng dữ liệu gồm cả hai ngày; tháng phải khớp `period`. |
+| `metrics` | Tối đa 3 `{label,value,format:"MONEY"}`; value BigDecimal/JSON number, có thể âm. |
+| `highlights` | Tối đa 3 điểm cần chú ý. |
+| `drivers` | Tối đa 3 `{categoryId,categoryName,previousAmount,currentAmount,delta}`. |
+| `evidence` | Tối đa 3 `{id,date,categoryName,note,amount}`; giao dịch EXPENSE của đúng owner trong kỳ/danh mục đứng đầu, xếp amount DESC, date DESC, id DESC. |
+| `transactionFilter` | null hoặc `{startDate,endDate,categoryId}`; categoryId có thể null để xem toàn bộ chi trong khoảng. Không chứa URL bên ngoài. |
+| `assumptions` | Cách tính và giới hạn, giao diện thu gọn mặc định. |
+
+`SPENDING_INSIGHT` có `READY` hoặc `NO_DATA`. Tháng hiện tại so từ ngày 1 tới hôm nay với cùng số ngày ở kỳ đối chiếu (giới hạn bởi độ dài tháng); tháng đã qua dùng cả tháng. Kỳ gốc mặc định tháng trước, có thể dùng compareMonth hoặc hai tháng rõ trong câu theo NLU hiện có. Tháng tương lai/kỳ gốc ngoài miền hợp lệ không được coi là số chi bằng 0. Danh mục xếp theo chiều biến động tổng chi; tổng không đổi thì theo trị tuyệt đối delta. Khi kỳ gốc bằng 0 không tính phần trăm. Giao dịch lớn là dữ liệu để rà soát, không khẳng định nguyên nhân ngoài dữ liệu; danh mục giảm về 0 có thể không có evidence kỳ hiện tại.
+
+Dự báo/mô phỏng chỉ tính cho tháng hiện tại theo giờ Việt Nam. Các status khác trả HTTP 200: `NOT_CURRENT_MONTH`, `NEEDS_AMOUNT` (chỉ mô phỏng), `BUDGET_NOT_SET`, `INSUFFICIENT_DATA`, `READY`. Chưa đặt ngân sách khác với hạn mức bằng 0. Tháng khác không tự dùng ngân sách tháng hiện tại.
+
+Gọi S là tổng EXPENSE đã ghi từ đầu tháng tới hết hôm nay; R là tổng mẫu EXPENSE đang bật, đúng owner/type, có nextRunDate từ hôm nay tới cuối tháng và chưa có marker kỳ đó; V là chi đã ghi trừ các transaction liên kết recurring_applications; d là số ngày từ đầu tháng gồm hôm nay, n là số ngày còn lại sau hôm nay, L là hạn mức tổng tháng.
+
+- Dự chi = `S + R + V × n / d` (phần dự phóng làm tròn HALF_UP 2 số lẻ).
+- Ước còn = `L − dự chi`; còn/ngày = `max(L − S − R, 0) / n` làm tròn DOWN 2 số lẻ; cuối tháng là 0.
+- Mô phỏng khoản A: còn theo khoản đã biết = `L − S − R − A`; nếu đủ dữ liệu, ước còn cuối tháng = `L − dự chi − A`.
+- Chỉ dự phóng khi đã qua ít nhất 7 ngày và có chi thường ngày dương trong ít nhất 3 ngày. Ngày cuối tháng không cần dự phóng, chỉ cộng các khoản đã biết. Nếu thiếu dữ liệu, không đưa ra dự báo giả.
+- Không tính mẫu tắt/quá hạn/chưa có ngày chạy/khác owner hoặc kỳ đã ghi. Khoản định kỳ đã ghi không bị nhân theo nhịp chi thường ngày. Khoản nhập tay chưa liên kết mẫu vẫn được coi là chi thường ngày; khoản đã xóa nhưng giữ marker không bị coi là chưa ghi.
+
+Truy vấn phân tích dùng transaction read-only REPEATABLE_READ; chỉ đọc dữ liệu JWT owner. Các số này là hạn mức/sổ SmartExpense, không phải số dư ngân hàng. Chưa tính ngân sách danh mục hoặc mục tiêu tiết kiệm trong mô phỏng. Không có migration mới; cần schema V007 vốn có của tính năng định kỳ. QA và giới hạn xác nhận: [AI_ANALYSIS.md](../qa/AI_ANALYSIS.md).
 
 ### Reports D10 — hợp đồng triển khai theo nhiệm vụ SE2-D10-BE
 

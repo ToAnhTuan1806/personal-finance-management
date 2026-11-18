@@ -45,7 +45,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(AiChatController.class)
 @ExtendWith(OutputCaptureExtension.class)
-@Import({AiNluTestConfiguration.class, AiQueryInterpreter.class, AiChatService.class, AiFinancialContextService.class, AiRateLimiter.class, ReportService.class,
+@Import({AiNluTestConfiguration.class, AiQueryInterpreter.class, AiChatService.class, AiFinancialContextService.class, AiFinancialAnalysisService.class, AiRateLimiter.class, ReportService.class,
         BudgetService.class, CategoryBudgetService.class, AiFinancialReplyFormatter.class, SecurityConfig.class, JwtConfig.class,
         ApiSecurityExceptionHandler.class})
 class AiChatApiTests {
@@ -63,6 +63,8 @@ class AiChatApiTests {
     @MockitoBean CategoryRepository categories;
     @MockitoBean UserRepository users;
     @MockitoBean AiProvider provider;
+    @MockitoBean RecurringTemplateRepository recurring;
+    @MockitoBean java.time.Clock analysisClock;
     private long owner;
     private String token;
 
@@ -74,6 +76,23 @@ class AiChatApiTests {
         owner = OWNERS.incrementAndGet(); token = bearer(false);
         when(users.findAuthVersionById(owner)).thenReturn(Optional.of(0L));
         when(provider.explain(anyString(), any())).thenReturn("Hãy theo dõi chi tiêu và ưu tiên khoản thiết yếu; gợi ý chỉ để tham khảo.");
+    }
+
+    @ParameterizedTest
+    @CsvSource(delimiter=';', value={"Vì sao tháng này tôi chi nhiều?;SPENDING_INSIGHT;NO_DATA",
+            "Dự báo ngân sách tháng này;BUDGET_FORECAST;BUDGET_NOT_SET",
+            "Nếu mua tai nghe 1200k thì sao?;PURCHASE_SIMULATION;BUDGET_NOT_SET"})
+    void analysisIntentsUseOwnerDataAndNeverCallProviderOrWrite(String message,String intent,String status) throws Exception {
+        when(analysisClock.withZone(any())).thenReturn(java.time.Clock.fixed(
+                Instant.parse("2026-11-12T05:00:00Z"),java.time.ZoneId.of("Asia/Ho_Chi_Minh")));
+        var response=ask(message);
+        assertThat(response.intent()).isEqualTo(intent);
+        assertThat(response.analysis().kind()).isEqualTo(intent);
+        assertThat(response.analysis().status()).isEqualTo(status);
+        assertThat(response.suggestedExpense()).isNull();assertThat(response.stats()).isNull();
+        verifyNoInteractions(provider);
+        verify(transactions,never()).save(any());verify(recurring,never()).save(any());
+        verify(monthly,never()).save(any());verify(categoryBudgets,never()).save(any());
     }
 
     @ParameterizedTest

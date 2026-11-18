@@ -31,6 +31,19 @@ public interface RecurringTemplateRepository extends JpaRepository<RecurringTemp
     List<Long> findAutomaticCandidateIds(@Param("today") LocalDate today,
                                          @Param("afterId") long afterId, Pageable pageable);
 
+    @Query("""
+        select coalesce(sum(t.amount), 0) from RecurringTemplate t
+        where t.user.id = :userId and t.active = true
+          and t.type = com.smartexpense.backend.enums.TransactionType.EXPENSE
+          and t.category.user.id = :userId and t.category.type = t.type
+          and t.nextRunDate >= :startDate and t.nextRunDate < :endDate
+          and not exists (select a.id from RecurringApplication a where a.template.id = t.id
+                          and a.year = :year and a.month = :month)
+        """)
+    java.math.BigDecimal sumPendingExpenses(@Param("userId") Long userId,
+            @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate,
+            @Param("year") int year, @Param("month") int month);
+
     @EntityGraph(attributePaths = "category")
     Page<RecurringTemplate> findByUserIdOrderByIdDesc(Long userId, Pageable pageable);
 
