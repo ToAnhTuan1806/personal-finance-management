@@ -11,7 +11,13 @@ import java.util.List;
 public record AiChatResponse(String reply, String period, String intent, Stats stats,
                              List<TopCategory> topCategories, Budget budget,
                              @JsonInclude(JsonInclude.Include.NON_NULL) Comparison comparison,
-                             @JsonInclude(JsonInclude.Include.NON_NULL) SuggestedExpense suggestedExpense) {
+                             @JsonInclude(JsonInclude.Include.NON_NULL) SuggestedExpense suggestedExpense,
+                             @JsonInclude(JsonInclude.Include.NON_NULL) AiAnalysis analysis) {
+    public AiChatResponse(String reply, String period, String intent, Stats stats,
+                          List<TopCategory> topCategories, Budget budget, Comparison comparison,
+                          SuggestedExpense suggestedExpense) {
+        this(reply, period, intent, stats, topCategories, budget, comparison, suggestedExpense, null);
+    }
     public AiChatResponse(String reply, String period, String intent, Stats stats,
                           List<TopCategory> topCategories, Budget budget, Comparison comparison) {
         this(reply, period, intent, stats, topCategories, budget, comparison, null);

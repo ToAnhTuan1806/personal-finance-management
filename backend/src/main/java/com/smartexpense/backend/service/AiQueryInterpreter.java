@@ -45,7 +45,13 @@ public class AiQueryInterpreter {
     public record Expense(BigDecimal amount, String categoryKeyword, String note) {
         @Override public String toString() { return "Expense[redacted]"; }
     }
-    public record Query(String intent, String month, String compareMonth, boolean annual, Expense expense) {
+    public record Purchase(BigDecimal amount) {
+        @Override public String toString() { return "Purchase[redacted]"; }
+    }
+    public record Query(String intent, String month, String compareMonth, boolean annual, Expense expense, Purchase purchase) {
+        public Query(String intent, String month, String compareMonth, boolean annual, Expense expense) {
+            this(intent, month, compareMonth, annual, expense, null);
+        }
         public Query(String intent, String month, String compareMonth, boolean annual) {
             this(intent, month, compareMonth, annual, null);
         }
@@ -98,6 +104,16 @@ public class AiQueryInterpreter {
                 : advice && financial ? "ADVICE"
                 : has(text, "chi tieu|tong chi|chi.*bao nhieu|chi.*thang|thu nhap|tong thu|thu chi|so du|\\b(tien|income|expense|balance)\\b") ? "SUMMARY" : "UNKNOWN";
 
+        // Các phép phân tích/mô phỏng chỉ đọc đi trước nhận diện bản nháp chi tiêu.
+        if (has(text, "mo phong|neu .*\\bmua\\b|neu (toi )?chi|gia su.*(mua|chi)|(?:du )?dinh mua")) {
+            intent = "PURCHASE_SIMULATION";
+        } else if (has(text, "du bao|du kien|nguy co.*vuot|con duoc chi|moi ngay.*(chi|tieu)|cuoi thang.*(vuot|con lai|con bao nhieu)")) {
+            intent = "BUDGET_FORECAST";
+        } else if (has(text, "vi sao|tai sao|giai thich|nguyen nhan|^sao ")
+                && has(text, "chi|tieu|ngan sach|danh muc|an uong")) {
+            intent = "SPENDING_INSIGHT";
+        }
+
         if (!financial && !category && !comparison && !trend && !advice
                 && !has(text, "\\d|so du|han muc|\\b(luong|dong|vnd)\\b")
                 && has(text, "\\b(hello|helo|heelo|hey|hi|chao|xin chao|alo)\\b|^(e|bot oi|tro ly oi)[!.? ]*$")) {
@@ -149,7 +165,7 @@ public class AiQueryInterpreter {
         }
         boolean annual = has(text, "nam nay|ca nam|hang nam|nam \\d{4}") && periods.isEmpty();
         if (annual) return new Query("UNKNOWN", request.month(), null, true);
-        if (periods.size() > 2 || (periods.size() == 2 && !comparison && !trend)) {
+        if (periods.size() > 2 || (periods.size() == 2 && !comparison && !trend && !intent.equals("SPENDING_INSIGHT"))) {
             return new Query("UNKNOWN", request.month(), null, false);
         }
         boolean followup = has(text, "^(con |the |vay |va )");
@@ -159,7 +175,7 @@ public class AiQueryInterpreter {
         String base = request.compareMonth();
         if (base == null && followup && request.context() != null) base = request.context().compareMonth();
         if (periods.size() == 2) {
-            intent = category ? "CATEGORY_TREND" : "COMPARISON";
+            if (!intent.equals("SPENDING_INSIGHT")) intent = category ? "CATEGORY_TREND" : "COMPARISON";
             month = periods.stream().max(YearMonth::compareTo).orElseThrow().toString();
             base = periods.stream().min(YearMonth::compareTo).orElseThrow().toString();
         }
@@ -169,10 +185,22 @@ public class AiQueryInterpreter {
             validate(YearMonth.parse(base));
             if (base.equals(month)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Hai kỳ so sánh phải khác nhau");
         }
+        if (intent.equals("SPENDING_INSIGHT") && month.equals(base)) base = null;
+        if (intent.equals("PURCHASE_SIMULATION")) {
+            return new Query(intent, month, base, false, null, new Purchase(singleAmount(text)));
+        }
         return new Query(intent, month, base, false);
     }
 
     private static Expense expense(String text, String note) {
+        BigDecimal amount = singleAmount(text);
+        if (amount == null) return null;
+        String keyword = EXPENSE_CATEGORIES.stream().filter(item -> item.words().matcher(text).find())
+                .map(item -> item.names().getFirst()).findFirst().orElse(null);
+        return new Expense(amount, keyword, note);
+    }
+
+    private static BigDecimal singleAmount(String text) {
         // Không nhầm năm/tháng/ngày thành số tiền nguyên không có đơn vị.
         String amounts = text.replaceAll("\\b\\d{1,2}/\\d{1,2}/\\d{4}\\b", " ");
         amounts = MONTHS.matcher(amounts).replaceAll(" ").replaceAll("\\bnam \\d{4}\\b", " ");
@@ -198,10 +226,7 @@ public class AiQueryInterpreter {
                     || value.stripTrailingZeros().scale() > 2) return null;
             amount = value;
         }
-        if (amount == null) return null;
-        String keyword = EXPENSE_CATEGORIES.stream().filter(item -> item.words().matcher(text).find())
-                .map(item -> item.names().getFirst()).findFirst().orElse(null);
-        return new Expense(amount, keyword, note);
+        return amount;
     }
 
     private static boolean has(String text, String expression) { return Pattern.compile(expression).matcher(text).find(); }

@@ -98,6 +98,7 @@ So ngưỡng bằng tiền trước khi làm tròn tỷ lệ; Monthly Budget ch�
 
 - Mẫu định kỳ đang bật tự ghi nhận vào sổ theo ngày lặp, giờ Việt Nam; bắt đầu từ kỳ sắp tới, không ghi bù. Hiển thị ngày ghi nhận tiếp theo và cho phép tạm dừng. Chống ghi trùng cùng kỳ; cần migration V007 trước khi triển khai Backend mới. Xem [contract tự động định kỳ](docs/smartexpense-2.0/API_CONTRACT.md#tự-động-ghi-nhận-định-kỳ-nâng-cấp-tháng-112026).
 - Các intent thống kê dùng dữ liệu Backend theo JWT owner. Chỉ ADVICE gọi Gemini cho lời khuyên chung, không gửi dữ liệu tài chính hoặc câu hỏi gốc.
+- Nâng cấp chatbot đang phát triển: giải thích biến động chi với giao dịch liên quan, dự báo ngân sách có tính lịch định kỳ, và thử tác động một khoản mua. Các phép tính chỉ đọc, xử lý nội bộ; giao diện dùng thẻ ngắn với chi tiết mở rộng. Xem [contract và kiểm thử](docs/qa/AI_ANALYSIS.md); chưa xác nhận triển khai production.
 - Quên/đặt lại mật khẩu dùng token một lần có hạn; reset thành công thu hồi JWT cũ. Thông báo gửi mail thành công không chứng minh đã nhận thư.
 - Giao dịch và định kỳ giữ tối đa 2 chữ số thập phân. Robot 3D lazy load, có SVG fallback và kiểm soát tự tải khi tab ẩn/Save-Data/reduced motion.
 

@@ -163,6 +163,41 @@ public interface TransactionRepository
         BigDecimal getTotalAmount();
     }
 
+    @Query("""
+        select t.id as id, t.transactionDate as date, c.name as categoryName,
+               t.note as note, t.amount as amount
+        from Transaction t join t.category c
+        where t.user.id = :userId and t.type = com.smartexpense.backend.enums.TransactionType.EXPENSE
+          and c.id = :categoryId and t.transactionDate >= :startDate and t.transactionDate < :endDate
+        order by t.amount desc, t.transactionDate desc, t.id desc
+        """)
+    List<ExpenseEvidence> findAnalysisEvidence(@Param("userId") Long userId,
+            @Param("categoryId") Long categoryId, @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate, Pageable pageable);
+
+    interface ExpenseEvidence {
+        Long getId();
+        LocalDate getDate();
+        String getCategoryName();
+        String getNote();
+        BigDecimal getAmount();
+    }
+
+    @Query("""
+        select coalesce(sum(t.amount), 0) as amount, count(distinct t.transactionDate) as activeDays
+        from Transaction t
+        where t.user.id = :userId and t.type = com.smartexpense.backend.enums.TransactionType.EXPENSE
+          and t.transactionDate >= :startDate and t.transactionDate < :endDate
+          and not exists (select a.id from RecurringApplication a where a.transaction.id = t.id)
+        """)
+    VariableSpending summarizeVariableSpending(@Param("userId") Long userId,
+            @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
+    interface VariableSpending {
+        BigDecimal getAmount();
+        Long getActiveDays();
+    }
+
     // Kiểm tra danh mục đã có giao dịch hay chưa
     boolean existsByCategoryId(Long categoryId);
 }
