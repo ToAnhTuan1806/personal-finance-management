@@ -21,7 +21,8 @@ final class ApplicationSchemaAssertions {
     enum D08ValidationMode {
         NONE,
         HIBERNATE_MAPPED,
-        MIGRATION_V004
+        MIGRATION_V004,
+        MIGRATION_V007
     }
 
     enum D09ValidationMode {
@@ -75,6 +76,11 @@ final class ApplicationSchemaAssertions {
         assertSchema(connection, d07, d08 ? D08ValidationMode.MIGRATION_V004 : D08ValidationMode.NONE,
                 d09 ? D09ValidationMode.MIGRATION_V005 : D09ValidationMode.NONE, d12);
         if (d12) assertPasswordResetTokens(connection);
+    }
+
+    static void assertCurrentSchema(Connection connection) throws SQLException {
+        assertSchema(connection, true, D08ValidationMode.MIGRATION_V007, D09ValidationMode.MIGRATION_V005, true);
+        assertPasswordResetTokens(connection);
     }
 
     static void assertPasswordResetTokens(Connection connection) throws SQLException {
@@ -190,6 +196,14 @@ final class ApplicationSchemaAssertions {
                     SELECT CONCAT(column_name,':',column_type,':',is_nullable) FROM information_schema.columns
                     WHERE table_schema=DATABASE() AND table_name='recurring_templates' ORDER BY column_name
                     """);
+            boolean automatic = d08Mode == D08ValidationMode.HIBERNATE_MAPPED || d08Mode == D08ValidationMode.MIGRATION_V007;
+            if (automatic) {
+                assertThat(cols).contains("next_run_date:date:YES");
+                cols = cols.stream().filter(column -> !column.startsWith("next_run_date:")).toList();
+                assertThat(values(connection, "SELECT GROUP_CONCAT(column_name ORDER BY seq_in_index) FROM information_schema.statistics "
+                        + "WHERE table_schema=DATABASE() AND table_name='recurring_templates' GROUP BY index_name"))
+                        .contains("active,next_run_date,id");
+            }
             assertThat(cols).hasSize(8);
 
             List<String> indexes = values(connection, """
@@ -211,7 +225,7 @@ final class ApplicationSchemaAssertions {
                 assertThat(parts[2]).isIn("RESTRICT", "NO ACTION");
             }
 
-            if (d08Mode == D08ValidationMode.MIGRATION_V004) {
+            if (d08Mode == D08ValidationMode.MIGRATION_V004 || d08Mode == D08ValidationMode.MIGRATION_V007) {
                 // Kiểm tra nghiêm ngặt schema migration V004 thật
                 assertThat(cols).containsExactly(
                         "active:tinyint(1):NO",

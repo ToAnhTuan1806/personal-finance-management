@@ -594,7 +594,7 @@ Không trả token/JWT/user/email/ID trong hai response. FE gọi hai API này k
 
 **Token và transaction:** SecureRandom 32 bytes → Base64 URL-safe không padding (43 ký tự); DB chỉ lưu SHA-256 lowercase hex 64 ký tự. Thời hạn đúng 30 phút từ thời điểm cấp; `now >= expires_at` bị từ chối. Clock được inject, DATETIME(6) lưu giờ UTC (không theo múi giờ mặc định của server). Mọi đường cấp/reset khóa hàng User trước rồi mới khóa/ghi token. Reset đọc lại token bằng `SELECT ... FOR UPDATE` sau khóa User, cập nhật password/version/used_at trong cùng transaction; hai request cùng token chỉ một thành công, lỗi DB rollback toàn bộ. Cấp token mới vô hiệu các token chưa dùng trước đó; `used_at` được dùng chung để đánh dấu tiêu thụ hoặc vô hiệu, không phải lịch sử xác nhận người dùng đã reset.
 
-**Handoff D12-DB — Quỳnh sở hữu duy nhất** `database/migrations/V006__create_password_reset_tokens.sql`, Backend không tạo SQL thay thế. Contract: `password_reset_tokens(id BIGINT PK AUTO_INCREMENT, user_id BIGINT NOT NULL FK users(id), token_hash CHAR(64) NOT NULL UNIQUE, expires_at DATETIME(6) NOT NULL, created_at DATETIME(6) NOT NULL, used_at DATETIME(6) NULL)` và `users.auth_version BIGINT NOT NULL DEFAULT 0`. V006 dùng FK RESTRICT và index `user_id`, giữ dữ liệu users hiện có. Trước khi hợp nhất branch có thể kiểm thử bằng snapshot SQL nguyên bản trong thư mục build cô lập. `PasswordResetBackendMigrationIntegrationTests` bắt buộc SQL thật từ schema MVP → V002–V006 trên MySQL 8, validate mapping và test reset; thiếu SQL phải FAIL, không skip hoặc thay bằng Hibernate DDL. Harness D06–D09 áp V006 trước khi khởi động Backend hiện tại; test schema lịch sử giữ nguyên kiểm tra từng version, phần validate Entity hiện tại dùng schema V002–V006 cô lập riêng. Bộ test DB `PasswordResetMigrationIntegrationTests` thuộc Quỳnh được giữ riêng để tránh trùng tên với bộ BE. Không xác nhận migration đã được áp dụng production từ kết quả kiểm thử local.
+**Handoff D12-DB — Quỳnh sở hữu duy nhất** `database/migrations/V006__create_password_reset_tokens.sql`, Backend không tạo SQL thay thế. Contract: `password_reset_tokens(id BIGINT PK AUTO_INCREMENT, user_id BIGINT NOT NULL FK users(id), token_hash CHAR(64) NOT NULL UNIQUE, expires_at DATETIME(6) NOT NULL, created_at DATETIME(6) NOT NULL, used_at DATETIME(6) NULL)` và `users.auth_version BIGINT NOT NULL DEFAULT 0`. V006 dùng FK RESTRICT và index `user_id`, giữ dữ liệu users hiện có. Trước khi hợp nhất branch có thể kiểm thử bằng snapshot SQL nguyên bản trong thư mục build cô lập. `PasswordResetBackendMigrationIntegrationTests` bắt buộc SQL thật từ schema MVP → V002–V007 trên MySQL 8, validate mapping và test reset; thiếu SQL phải FAIL, không skip hoặc thay bằng Hibernate DDL. Harness D06–D09 áp V006 và V007 trước khi khởi động Backend hiện tại; test schema lịch sử giữ nguyên kiểm tra từng version, phần validate Entity hiện tại dùng schema V002–V007 cô lập riêng. Bộ test DB `PasswordResetMigrationIntegrationTests` thuộc Quỳnh được giữ riêng để tránh trùng tên với bộ BE. Không xác nhận migration đã được áp dụng production từ kết quả kiểm thử local.
 
 **JWT:** login phát thêm claim số nguyên `auth_version`. JWT trước D12 thiếu claim được coi là 0; chỉ dùng được khi version DB còn 0. Reset thành công tăng version; JWT cũ ở mọi session bị trả **401 UNAUTHORIZED**, JWT mới sau login bằng mật khẩu mới hoạt động. User bị xóa bị từ chối. Giữ HS256, subject user ID dương và validator thời hạn mặc định. Sau các bước này, decoder chạy đúng **một scalar SELECT auth_version theo PK User/request JWT hợp lệ**, không fetch dữ liệu tài chính hoặc cache version; token sai chữ ký/thời hạn/claim không query DB. Đây là chi phí bổ sung có giới hạn để vô hiệu ngay sau commit; cần đo latency/pool trên môi trường tích hợp trước khi scale. Không thêm session/refresh token.
 
@@ -620,7 +620,7 @@ Khi thiếu SMTP/from/FE URL, Auth khác vẫn chạy; worker không tạo token
 
 API mới yêu cầu JWT, ID dương, input hợp lệ; lỗi chung theo mục 1. Category/template khác owner trả 404; category thuộc owner nhưng sai type trả 400.
 
-Các endpoint định kỳ đã có ở RecurringTemplateController. Owner luôn từ JWT; không có scheduler chạy tự động. Quy tắc chặn xóa/đổi type danh mục khi chỉ có budget/template chưa được mở rộng thành CATEGORY_IN_USE; xem đề xuất ở mục 4.
+Các endpoint định kỳ đã có ở RecurringTemplateController. Owner của API luôn từ JWT; scheduler tự động lấy owner từ mẫu đã lưu. Quy tắc chặn xóa/đổi type danh mục khi chỉ có budget/template chưa được mở rộng thành CATEGORY_IN_USE; xem đề xuất ở mục 4.
 
 | Method | Đường dẫn | Request | Thành công / lỗi nghiệp vụ |
 | --- | --- | --- | --- |
@@ -632,19 +632,29 @@ Các endpoint định kỳ đã có ở RecurringTemplateController. Owner luôn
 | GET | `/recurring-templates/{id}/preview` | Query year,month bắt buộc | 200 Preview, không ghi dữ liệu |
 | POST | `/recurring-templates/{id}/apply` | `{year,month}` | 201 Application; 400 ngày tương lai; 409 CONFLICT inactive/đã áp dụng/race |
 
+### Tự động ghi nhận định kỳ (nâng cấp tháng 11/2026)
+
+- Mẫu `active=true` tự tạo giao dịch thu/chi vào `nextRunDate`, không cần mở trình duyệt hoặc xác nhận từng tháng. Đây là ghi sổ SmartExpense; không có lệnh thanh toán ngân hàng.
+- `nextRunDate` là trường response chỉ đọc, ISO `yyyy-MM-dd` hoặc null. Khi tạo, bật lại hoặc đổi ngày lặp, lịch bắt đầu vào ngày lặp **sau hôm nay** theo `Asia/Ho_Chi_Minh`. Nếu ngày lặp trùng hôm nay, bắt đầu tháng sau. Sửa số tiền/ghi chú/danh mục mà không đổi ngày giữ lịch hiện tại. Tắt mẫu xóa ngày chạy; bật lại tính lịch mới.
+- Mẫu cũ có ngày chạy null được khởi tạo từ kỳ sắp tới. Nếu server bỏ lỡ ngày chạy thì bỏ qua kỳ đã qua và chuyển sang kỳ sắp tới, không ghi bù. Ngày 29–31 vượt số ngày của tháng được lấy ngày cuối tháng; tháng sau vẫn dùng ngày lặp gốc.
+- Backend quét mỗi 60 giây, lần đầu sau 1 giây, tính ngày theo giờ Việt Nam. Thời điểm ghi nhận nằm trong ngày đến hạn khi dịch vụ hoạt động; không cam kết đúng một giây cụ thể. Kỳ hỗ trợ 1900–2100 như API hiện có.
+- Khóa hàng mẫu khi xử lý hoặc sửa/tắt/xóa; UNIQUE `(template_id,year,month)` bảo vệ cả chạy đồng thời nhiều instance và API Apply cũ. Giao dịch, marker và ngày chạy tiếp theo cùng commit/rollback. Mẫu lỗi được thử ở lượt sau trong ngày; các mẫu khác tiếp tục. Xóa giao dịch vẫn giữ marker nên không sinh lại khoản đã xóa.
+- API Preview/Apply cũ giữ để tương thích. Giao diện chính bỏ nút ghi nhận thủ công, hiển thị ngày tiếp theo và công tắc bật/tắt; làm mới lịch khi lấy focus hoặc mỗi phút khi trang đang hiển thị.
+- Cần migration DB **V007** trước khi chạy binary mới. Các tùy chọn vận hành: `app.recurring.automatic-enabled` mặc định true, `app.recurring.delay-ms=60000`, `app.recurring.initial-delay-ms=1000`. Tắt worker không thay thế yêu cầu migration vì JPA vẫn ánh xạ cột mới.
+
 ### DTO và hành vi hiện có
 
 Ký hiệu `...Input` giữ các field của Input tương ứng. ID/tiền/tỷ lệ/year/month của kỳ là số; fromMonth/toMonth và month trong báo cáo là string YYYY-MM. active/canApply/alreadyApplied là boolean; reasonCode/status là string. Input bắt buộc, trừ note (null hoặc ≤500), metadata Category và query có dấu ?. Response trả note=null khi trống. Phân trang mẫu dùng cùng giới hạn page/size hiện có.
 
 ```text
 TemplateInput = { categoryId, type, amount, dayOfMonth, note?, active }
-Template = { id, categoryName, ...TemplateInput }
+Template = { id, categoryName, ...TemplateInput, nextRunDate }
 Preview = { templateId, year, month, transactionDate, categoryId, categoryName,
   type, amount, note, alreadyApplied, canApply, reasonCode }
 Application = { id, templateId, year, month, transactionId, transaction:Transaction }
 ```
 
-- **Định kỳ (FR-08):** dayOfMonth 1–31, category cùng owner/type, active bắt buộc; ngày vượt tháng lấy ngày cuối. Preview inactive/đã áp dụng vẫn 200, canApply=false, reasonCode ưu tiên ALREADY_APPLIED rồi TEMPLATE_INACTIVE; hợp lệ trả null. Apply kiểm tra lại, lưu transaction+marker nguyên tử. Cùng mẫu/năm/tháng: một request 201, lần sau/đồng thời 409. Không scheduler; sửa mẫu không sửa giao dịch cũ. Xóa giao dịch giữ marker (transaction_id=null), không apply lại; mẫu đã áp dụng bị chặn DELETE và có thể tắt.
+- **Định kỳ (FR-08):** dayOfMonth 1–31, category cùng owner/type, active bắt buộc; ngày vượt tháng lấy ngày cuối. Preview inactive/đã áp dụng vẫn 200, canApply=false, reasonCode ưu tiên ALREADY_APPLIED rồi TEMPLATE_INACTIVE; hợp lệ trả null. Apply kiểm tra lại, lưu transaction+marker nguyên tử. Cùng mẫu/năm/tháng: một request 201, lần sau/đồng thời 409. Scheduler dùng cùng luồng lưu và UNIQUE; sửa mẫu không sửa giao dịch cũ. Xóa giao dịch giữ marker (transaction_id=null), không apply lại; mẫu đã áp dụng bị chặn DELETE và có thể tắt.
 
 **D09 — chốt cho FE/BE:** year từ 1900–2100, month từ 1–12, bắt buộc ở cả hai API. Preview có thứ tự reasonCode `ALREADY_APPLIED` → `TEMPLATE_INACTIVE` → `FUTURE_DATE`; hợp lệ là null. `FUTURE_DATE` nghĩa là ngày do `RecurringTemplateDates` tính lớn hơn hôm nay theo `Asia/Ho_Chi_Minh` (Clock có thể inject), trả 200 với canApply=false và không ghi database. Apply kiểm tra lại cùng quy tắc: ngày tương lai trả **400 VALIDATION_ERROR**, message "Ngày giao dịch không được lớn hơn ngày hiện tại."; inactive/đã áp dụng hoặc thua race UNIQUE trả **409 CONFLICT** theo ApiError hiện tại (không dùng reasonCode làm code lỗi HTTP). POST thành công trả 201 Application. Không retry tự động trong transaction thất bại; transaction và marker cùng rollback khi ghi lỗi. Mẫu có bất kỳ marker nào bị chặn DELETE với **409 CONFLICT**, message `TEMPLATE_IN_USE`; xóa giao dịch giữ marker nhờ V005 `ON DELETE SET NULL`, vẫn chặn apply lại và xóa mẫu. Category không tồn tại/khác owner trả 404, sai type trả 400. D09 không thay đổi việc tạo/sửa mẫu cho các kỳ tương lai của D08.
 
@@ -654,7 +664,7 @@ Application = { id, templateId, year, month, transactionId, transaction:Transact
 
 - `/reports/categories` riêng cùng DTO CategoryReport/categoryShare chưa có trong Controller. Reports hiện dùng `/reports/monthly` theo contract D10; không gọi endpoint đề xuất này trên FE.
 - Rule CATEGORY_IN_USE cho danh mục chỉ có budget/template là đề xuất, chưa thay rule transaction 409 CONFLICT hiện có. Không suy ra composite owner FK hoặc cascade tài chính từ mô tả này.
-- Chưa có Idempotency-Key với storage/TTL/replay, refresh token, scheduler định kỳ hoặc API admin/deploy/theme mới. Cần thiết kế và duyệt riêng trước triển khai.
+- Chưa có Idempotency-Key với storage/TTL/replay, refresh token hoặc API admin/deploy/theme mới. Cần thiết kế và duyệt riêng trước triển khai.
 - Filter keyword hiện dùng LIKE theo repository; thay đổi `%`/`_` thành tìm literal sẽ đổi semantics, cần task/contract riêng. Không tự coi ghi chú đề xuất cũ là code đã có.
 - CSV trong Reports đã tích hợp bằng chuyển khoảng tháng sang range ngày. Cross-origin đọc Content-Disposition vẫn cần cấu hình expose header được review; same-origin `/api` không cần mở rộng CORS.
 - DB/QA và người vận hành còn chốt migration runner/ddl-auto, backup production, image digest/rollback và kiểm tra VPS. Xem [Migration, backup và rollback](../../README.md#migration-backup-và-rollback) cùng [bàn giao kỹ thuật](RELEASE_D16_D18.md).

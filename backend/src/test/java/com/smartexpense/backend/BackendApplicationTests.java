@@ -76,6 +76,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "spring.jpa.hibernate.ddl-auto=none"
 })
 @AutoConfigureMockMvc(print = MockMvcPrint.NONE)
+@org.springframework.test.context.TestPropertySource(properties = "app.recurring.automatic-enabled=false")
 class BackendApplicationTests {
 
     private static final byte[] TEST_KEY = randomKey();

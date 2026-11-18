@@ -24,6 +24,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 
 // Dùng lại cấu hình MySQL cô lập của D03; mỗi lớp test khởi động container mới và xóa khi kết thúc.
+@org.springframework.test.context.TestPropertySource(properties = "app.recurring.automatic-enabled=false")
 abstract class MySqlIntegrationTestSupport {
 
     private static final String DATABASE = "se_d03_test_" + UUID.randomUUID().toString().replace("-", "");

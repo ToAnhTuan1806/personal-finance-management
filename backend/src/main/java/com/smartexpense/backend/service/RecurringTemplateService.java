@@ -8,6 +8,10 @@ import com.smartexpense.backend.repository.CategoryRepository;
 import com.smartexpense.backend.repository.RecurringApplicationRepository;
 import com.smartexpense.backend.repository.RecurringTemplateRepository;
 import lombok.RequiredArgsConstructor;
+import java.time.Clock;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import com.smartexpense.backend.util.RecurringTemplateDates;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
@@ -22,6 +26,7 @@ public class RecurringTemplateService {
     private final RecurringTemplateRepository templateRepository;
     private final CategoryRepository categoryRepository;
     private final RecurringApplicationRepository applicationRepository;
+    private final Clock clock;
 
     @Transactional(readOnly = true)
     public Page<RecurringTemplateResponse> getAll(Long userId, Boolean active, int page, int size) {
@@ -53,7 +58,7 @@ public class RecurringTemplateService {
 
     @Transactional
     public RecurringTemplateResponse update(Long id, RecurringTemplateRequest request, Long userId) {
-        RecurringTemplate template = findOwnedTemplate(id, userId);
+        RecurringTemplate template = findOwnedTemplateForUpdate(id, userId);
         Category category = findMatchingCategory(request, userId);
         // Chỉ thay đổi sau khi cả template và category đã vượt kiểm tra owner/type.
         applyRequest(template, request, category);
@@ -62,12 +67,18 @@ public class RecurringTemplateService {
 
     @Transactional
     public void delete(Long id, Long userId) {
-        RecurringTemplate template = findOwnedTemplate(id, userId);
+        RecurringTemplate template = findOwnedTemplateForUpdate(id, userId);
         if (applicationRepository.existsByTemplateIdAndTemplateUserId(id, userId)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "TEMPLATE_IN_USE");
         }
         // FK RESTRICT của V005 vẫn bảo vệ lịch sử nếu apply commit sau precheck này.
         templateRepository.delete(template);
+    }
+
+    private RecurringTemplate findOwnedTemplateForUpdate(Long id, Long userId) {
+        if (id == null || id <= 0) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ID phải là số nguyên dương");
+        return templateRepository.findByIdAndUserIdForUpdate(id, userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Không tìm thấy mẫu giao dịch định kỳ"));
     }
 
     private RecurringTemplate findOwnedTemplate(Long id, Long userId) {
@@ -89,6 +100,12 @@ public class RecurringTemplateService {
     }
 
     private void applyRequest(RecurringTemplate template, RecurringTemplateRequest request, Category category) {
+        boolean keepSchedule = template.isActive() && Boolean.TRUE.equals(request.getActive())
+                && java.util.Objects.equals(template.getDayOfMonth(), request.getDayOfMonth())
+                && template.getNextRunDate() != null;
+        if (!Boolean.TRUE.equals(request.getActive())) template.setNextRunDate(null);
+        else if (!keepSchedule) template.setNextRunDate(RecurringTemplateDates.nextAfter(
+                LocalDate.now(clock.withZone(ZoneId.of("Asia/Ho_Chi_Minh"))), request.getDayOfMonth()));
         template.setCategory(category);
         template.setType(request.getType());
         template.setAmount(request.getAmount());
@@ -100,6 +117,6 @@ public class RecurringTemplateService {
     private RecurringTemplateResponse toResponse(RecurringTemplate template) {
         return new RecurringTemplateResponse(template.getId(), template.getCategory().getId(),
                 template.getCategory().getName(), template.getType(), template.getAmount(),
-                template.getDayOfMonth(), template.getNote(), template.isActive());
+                template.getDayOfMonth(), template.getNote(), template.isActive(), template.getNextRunDate());
     }
 }

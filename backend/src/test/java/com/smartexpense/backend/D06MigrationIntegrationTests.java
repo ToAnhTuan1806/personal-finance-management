@@ -65,6 +65,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @Import(D06MigrationIntegrationTests.TestDataSource.class)
+@org.springframework.test.context.TestPropertySource(properties = "app.recurring.automatic-enabled=false")
 class D06MigrationIntegrationTests {
 
     private static final String DATABASE = "se_d06_migration_" + UUID.randomUUID().toString().replace("-", "");
@@ -198,6 +199,9 @@ class D06MigrationIntegrationTests {
             assertThat(keysHash(connection)).isEqualTo(beforeKeys);
             ApplicationSchemaAssertions.assertSchema(connection, true, true, true, true);
         }
+        try (Connection connection = connect(SOURCE)) {
+            RecurringAutomationMigrationTestSupport.apply(connection);
+        }
         initialized = true;
     }
 
@@ -258,7 +262,7 @@ class D06MigrationIntegrationTests {
             assertAppearanceColumns(connection);
             assertThat(dataHash(connection)).isEqualTo(beforeData);
             assertThat(keysHash(connection)).isEqualTo(beforeKeys);
-            ApplicationSchemaAssertions.assertSchema(connection, true, true, true, true);
+            ApplicationSchemaAssertions.assertCurrentSchema(connection);
             assertThat(rows(connection, "SELECT COUNT(*) FROM categories WHERE icon IS NULL AND color IS NULL"))
                     .containsExactly(List.of("4"));
         }
@@ -311,7 +315,7 @@ class D06MigrationIntegrationTests {
             assertAppearanceColumns(connection);
             assertThat(dataHash(connection)).isEqualTo(beforeData);
             assertThat(keysHash(connection)).isEqualTo(beforeKeys);
-            ApplicationSchemaAssertions.assertSchema(connection, true, true, true, true);
+            ApplicationSchemaAssertions.assertCurrentSchema(connection);
         }
     }
 
@@ -367,6 +371,10 @@ class D06MigrationIntegrationTests {
             assertThat(keysHash(connection)).isEqualTo(beforeKeys);
             ApplicationSchemaAssertions.assertSchema(connection, true, true, true, true);
         }
+        try (Connection connection = connect(RESTORE)) {
+            RecurringAutomationMigrationTestSupport.apply(connection);
+            ApplicationSchemaAssertions.assertCurrentSchema(connection);
+        }
         try (HikariDataSource pool = pool(RESTORE)) {
             var registry = new StandardServiceRegistryBuilder()
                     .applySetting("hibernate.connection.datasource", pool)
@@ -397,7 +405,7 @@ class D06MigrationIntegrationTests {
         try (Connection connection = connect(SOURCE)) {
             connection.setAutoCommit(false);
             try {
-                ApplicationSchemaAssertions.assertSchema(connection, true, true, true, true);
+                ApplicationSchemaAssertions.assertCurrentSchema(connection);
                 try (var statement = connection.createStatement()) {
                     statement.executeUpdate("INSERT INTO category_budgets (user_id,category_id,year,month,amount_limit) VALUES (1,2,2026,10,100.00)");
                     assertSqlViolation(() -> statement.executeUpdate(

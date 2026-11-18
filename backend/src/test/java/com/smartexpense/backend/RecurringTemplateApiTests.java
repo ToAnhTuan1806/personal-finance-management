@@ -53,6 +53,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "spring.jpa.hibernate.ddl-auto=none"
 })
 @AutoConfigureMockMvc(print = MockMvcPrint.NONE)
+@org.springframework.test.context.TestPropertySource(properties = "app.recurring.automatic-enabled=false")
 class RecurringTemplateApiTests {
 
     private static final String BASE = "/api/recurring-templates";
@@ -104,6 +105,7 @@ class RecurringTemplateApiTests {
         template.setActive(true);
         when(categories.findByIdAndUserId(101L, 1L)).thenReturn(Optional.of(category));
         when(templates.findByIdAndUserId(501L, 1L)).thenReturn(Optional.of(template));
+        when(templates.findByIdAndUserIdForUpdate(501L, 1L)).thenReturn(Optional.of(template));
         when(templates.saveAndFlush(any())).thenAnswer(call -> {
             RecurringTemplate saved = call.getArgument(0);
             if (saved.getId() == null) saved.setId(503L);
@@ -127,7 +129,7 @@ class RecurringTemplateApiTests {
                 .andExpect(jsonPath("$.dayOfMonth").value(31))
                 .andExpect(jsonPath("$.note").value("Rent"))
                 .andExpect(jsonPath("$.active").value(true)).andReturn();
-        assertThat(json.readTree(created.getResponse().getContentAsString()).size()).isEqualTo(8);
+        assertThat(json.readTree(created.getResponse().getContentAsString()).size()).isEqualTo(9);
         var saved = org.mockito.ArgumentCaptor.forClass(RecurringTemplate.class);
         verify(templates).saveAndFlush(saved.capture());
         assertThat(saved.getValue().getUser()).isSameAs(category.getUser());
@@ -228,7 +230,8 @@ class RecurringTemplateApiTests {
     @CsvSource({"GET,501,2", "PUT,501,2", "DELETE,501,2", "GET,999,1", "PUT,999,1", "DELETE,999,1"})
     void missingAndForeignTemplatesAreIndistinguishable(String method, long id, long owner) throws Exception {
         error(as(endpoint(method, id), owner), 404, "RESOURCE_NOT_FOUND");
-        verify(templates).findByIdAndUserId(id, owner);
+        if (method.equals("GET")) verify(templates).findByIdAndUserId(id, owner);
+        else verify(templates).findByIdAndUserIdForUpdate(id, owner);
         verify(templates, never()).saveAndFlush(any());
         verify(templates, never()).delete(any());
         verifyNoInteractions(categories);
@@ -247,7 +250,7 @@ class RecurringTemplateApiTests {
         assertUnchanged();
         if (method.equals("PUT")) {
             var order = inOrder(templates, categories);
-            order.verify(templates).findByIdAndUserId(501L, 1L);
+            order.verify(templates).findByIdAndUserIdForUpdate(501L, 1L);
             order.verify(categories).findByIdAndUserId(categoryId, 1L);
         }
     }

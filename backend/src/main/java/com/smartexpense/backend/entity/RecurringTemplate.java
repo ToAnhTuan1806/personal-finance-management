@@ -7,9 +7,11 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Entity
-@Table(name = "recurring_templates")
+@Table(name = "recurring_templates", indexes = @Index(name = "idx_recurring_templates_active_next_run",
+        columnList = "active,next_run_date,id"))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -42,4 +44,7 @@ public class RecurringTemplate {
 
     @Column(nullable = false)
     private boolean active;
+
+    @Column(name = "next_run_date")
+    private LocalDate nextRunDate;
 }

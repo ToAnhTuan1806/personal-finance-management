@@ -3,8 +3,6 @@ package com.smartexpense.backend;
 import com.github.dockerjava.api.model.ExposedPort;
 import com.github.dockerjava.api.model.PortBinding;
 import com.github.dockerjava.api.model.Ports;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
@@ -277,33 +275,11 @@ class PasswordResetMigrationIntegrationTests {
         guard(SOURCE);
         ClassLoader originalCl = Thread.currentThread().getContextClassLoader();
         Thread.currentThread().setContextClassLoader(loader);
-        var bootstrap = new org.hibernate.boot.registry.BootstrapServiceRegistryBuilder()
-                .applyClassLoader(loader)
-                .build();
-        var registry = new StandardServiceRegistryBuilder(bootstrap).applySettings(Map.of(
-                "hibernate.connection.url", SOURCE.getJdbcUrl(),
-                "hibernate.connection.username", USER,
-                "hibernate.connection.password", SOURCE.getPassword(),
-                "hibernate.connection.driver_class", "com.mysql.cj.jdbc.Driver",
-                "hibernate.hbm2ddl.auto", "validate",
-                "hibernate.show_sql", "false")).build();
         try {
-            var sources = new MetadataSources(registry);
-            sources.addAnnotatedClass(userClass);
-            sources.addAnnotatedClass(tokenClass);
-            sources.addAnnotatedClass(categoryClass);
-            sources.addAnnotatedClass(transactionClass);
-            sources.addAnnotatedClass(monthlyBudgetClass);
-            sources.addAnnotatedClass(categoryBudgetClass);
-            sources.addAnnotatedClass(recurringTemplateClass);
-            sources.addAnnotatedClass(recurringAppClass);
-
-            try (var factory = sources.buildMetadata().buildSessionFactory()) {
-                factory.getSchemaManager().validateMappedObjects();
-            }
-            System.out.println("D12 HIBERNATE VALIDATE: ALL 8 ENTITIES (including PasswordResetToken and User.authVersion) VALIDATED 100% PASS!");
+            // Schema lịch sử SOURCE giữ nguyên V006; mapping hiện tại validate trên MySQL riêng đến V007.
+            D12MigrationTestSupport.validateCurrentMappings(List.of(userClass, tokenClass, categoryClass,
+                    transactionClass, monthlyBudgetClass, categoryBudgetClass, recurringTemplateClass, recurringAppClass));
         } finally {
-            StandardServiceRegistryBuilder.destroy(registry);
             Thread.currentThread().setContextClassLoader(originalCl);
         }
     }
