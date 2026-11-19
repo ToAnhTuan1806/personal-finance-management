@@ -49,6 +49,8 @@ import { Card, CardContent } from '../components/ui/card'
 import AnimatedGradientText from '../components/motion/AnimatedGradientText'
 import ShinyText from '../components/motion/ShinyText'
 import { getGreetingName } from '../utils/greetingName.js'
+import { GOLDEN_PIG_IMAGE } from '../utils/savingsChallenges.js'
+import { getSavingsReward } from '../services/savingsChallengeService.js'
 
 const formatMoney = (amount) =>
   new Intl.NumberFormat('vi-VN', {
@@ -108,6 +110,14 @@ function ErrorSection({ message }) {
 
 function AuthenticatedDashboard() {
   const { user } = useAuth()
+  const [useGoldenPig, setUseGoldenPig] = useState(false)
+  useEffect(() => {
+    const controller = new AbortController()
+    getSavingsReward({ signal: controller.signal }).then((reward) => {
+      if (!controller.signal.aborted) setUseGoldenPig(reward.useGoldenPig)
+    }).catch(() => { /* Giữ linh vật mặc định nếu chưa tải được lựa chọn. */ })
+    return () => controller.abort()
+  }, [user?.id])
   const { openQuickAdd, mutationVersion } = useQuickAdd()
   const { openAssistant } = useOutletContext() ?? {}
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth)
@@ -342,7 +352,13 @@ function AuthenticatedDashboard() {
               <Link to="/budgets"><ShinyText>Xem ngân sách</ShinyText><ArrowRight size={15} /></Link>
             </Button>
           </CardContent>
-          <img className="se-hero-art" src="/images/savings-pig.png" alt="" width={550} height={408} decoding="async" />
+          <img
+            className="se-hero-art"
+            src={useGoldenPig ? GOLDEN_PIG_IMAGE : '/images/savings-pig.png'}
+            alt={useGoldenPig ? 'Heo Vàng' : ''}
+            width={550} height={useGoldenPig ? 550 : 408}
+            decoding="async"
+          />
         </Card>
 
         <div aria-label="Thao tác nhanh" className="grid grid-cols-2 gap-3 sm:grid-cols-4">

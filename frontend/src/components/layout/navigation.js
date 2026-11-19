@@ -1,4 +1,4 @@
-import { ArrowLeftRight, BarChart3, CalendarDays, CirclePlus, LayoutDashboard, Repeat, Tags, Wallet } from 'lucide-react'
+import { ArrowLeftRight, BarChart3, CalendarDays, CirclePlus, LayoutDashboard, Repeat, Tags, Trophy, Wallet } from 'lucide-react'
 
 // D04 thêm lịch tháng; chi tiết ngày được triển khai riêng ở D05.
 // Nguồn duy nhất cho Sidebar (nhãn đầy đủ) và Bottom Navigation trên điện thoại.
@@ -13,15 +13,16 @@ export const navigation = [
   { path: '/categories', label: 'Quản lý danh mục', mobileLabel: 'Danh mục', icon: Tags, authRequired: true },
   { path: '/budgets', label: 'Ngân sách hàng tháng', mobileLabel: 'Ngân sách', icon: Wallet, authRequired: true },
   { path: '/recurring-templates', label: 'Giao dịch định kỳ', mobileLabel: 'Định kỳ', icon: Repeat, authRequired: true },
+  { path: '/savings-challenges', label: 'Thử thách tiết kiệm', mobileLabel: 'Thử thách', icon: Trophy, authRequired: true },
   { path: '/reports', label: 'Báo cáo tài chính', mobileLabel: 'Báo cáo', icon: BarChart3, authRequired: true },
 ]
 
 export const mobilePrimaryNavigation = navigation.filter((item) => item.mobilePrimary)
 export const mobileMoreNavigation = navigation.filter((item) => !item.mobilePrimary)
 
-// Ghi nhanh giữ ở Header và Bottom Navigation; Sidebar chỉ nhóm 7 mục còn lại.
+// Ghi nhanh giữ ở Header và Bottom Navigation; Sidebar chia các mục còn lại theo nhóm.
 export const sidebarGroups = [
-  { label: 'THEO DÕI', paths: ['/', '/transactions', '/calendar', '/reports'] },
+  { label: 'THEO DÕI', paths: ['/', '/transactions', '/calendar', '/reports', '/savings-challenges'] },
   { label: 'CẤU HÌNH', paths: ['/categories', '/budgets', '/recurring-templates'] },
 ].map(({ label, paths }) => ({ label, items: paths.map((path) => navigation.find((item) => item.path === path)) }))
 

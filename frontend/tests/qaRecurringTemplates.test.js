@@ -246,8 +246,8 @@ test('QA-D08-07: Accessibility - Dialog xóa chuẩn role="alertdialog" và nhã
   assert.match(pageHtml, /aria-label="Bật tắt mẫu định kỳ Bảo hiểm"/)
 })
 
-test('QA-D08-08: Giữ đủ 8 route điều hướng và 5 mục trên MobileNavigation (grid-cols-5)', async () => {
-  assert.equal(navigation.length, 8, 'Giữ đủ 8 route trong cấu hình điều hướng chung')
+test('QA-D08-08: Giữ đủ 9 route điều hướng và 5 mục trên MobileNavigation (grid-cols-5)', async () => {
+  assert.equal(navigation.length, 9, 'Giữ đủ 9 route trong cấu hình điều hướng chung')
   const quickAddItem = navigation.find((item) => item.path === '/quick-add')
   const transactionsItem = navigation.find((item) => item.path === '/transactions')
   const recurringItem = navigation.find((item) => item.path === '/recurring-templates')
@@ -260,7 +260,7 @@ test('QA-D08-08: Giữ đủ 8 route điều hướng và 5 mục trên MobileNa
   assert.equal(recurringItem?.authRequired, true)
 
   assert.equal(mobilePrimaryNavigation.length, 4, 'Mobile primary navigation gồm 4 route chính')
-  assert.equal(mobileMoreNavigation.length, 4, 'Menu Khác trên mobile gồm 4 route phụ')
+  assert.ok(mobileMoreNavigation.some((item) => item.path === '/savings-challenges'), 'Thử thách tiết kiệm có trong menu Khác')
   assert.equal(isMobileMoreRoute('/categories'), true)
   assert.equal(isMobileMoreRoute('/budgets'), true)
   assert.equal(isMobileMoreRoute('/recurring-templates'), true)
