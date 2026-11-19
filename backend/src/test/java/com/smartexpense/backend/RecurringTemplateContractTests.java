@@ -9,6 +9,7 @@ import com.smartexpense.backend.repository.CategoryRepository;
 import com.smartexpense.backend.repository.MonthlyBudgetRepository;
 import com.smartexpense.backend.repository.RecurringTemplateRepository;
 import com.smartexpense.backend.repository.RecurringApplicationRepository;
+import com.smartexpense.backend.repository.SavingsChallengeRepository;
 import com.smartexpense.backend.repository.TransactionRepository;
 import com.smartexpense.backend.repository.UserRepository;
 import jakarta.validation.Validator;
@@ -58,6 +59,7 @@ class RecurringTemplateContractTests {
     @MockitoBean CategoryBudgetRepository categoryBudgets;
     @MockitoBean RecurringTemplateRepository recurringTemplates;
     @MockitoBean RecurringApplicationRepository recurringApplications;
+    @MockitoBean SavingsChallengeRepository savingsChallenges;
     @MockitoBean com.smartexpense.backend.service.PasswordResetService passwordReset;
 
     @DynamicPropertySource

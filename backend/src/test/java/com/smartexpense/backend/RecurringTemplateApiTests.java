@@ -73,6 +73,7 @@ class RecurringTemplateApiTests {
     @MockitoBean CategoryBudgetRepository categoryBudgets;
     @MockitoBean RecurringTemplateRepository templates;
     @MockitoBean RecurringApplicationRepository recurringApplications;
+    @MockitoBean SavingsChallengeRepository savingsChallenges;
     @MockitoBean com.smartexpense.backend.service.PasswordResetService passwordReset;
 
     private Category category;

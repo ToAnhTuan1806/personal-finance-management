@@ -15,6 +15,7 @@ import com.smartexpense.backend.repository.CategoryBudgetRepository;
 import com.smartexpense.backend.repository.MonthlyBudgetRepository;
 import com.smartexpense.backend.repository.RecurringTemplateRepository;
 import com.smartexpense.backend.repository.RecurringApplicationRepository;
+import com.smartexpense.backend.repository.SavingsChallengeRepository;
 import com.smartexpense.backend.repository.TransactionRepository;
 import com.smartexpense.backend.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -95,6 +96,7 @@ class BackendApplicationTests {
     @MockitoBean CategoryBudgetRepository categoryBudgets;
     @MockitoBean RecurringTemplateRepository recurringTemplates;
     @MockitoBean RecurringApplicationRepository recurringApplications;
+    @MockitoBean SavingsChallengeRepository savingsChallenges;
     @MockitoBean com.smartexpense.backend.service.PasswordResetService passwordReset;
 
     private String password;
