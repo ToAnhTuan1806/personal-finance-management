@@ -104,7 +104,7 @@ public class RecurringTemplateService {
                 && java.util.Objects.equals(template.getDayOfMonth(), request.getDayOfMonth())
                 && template.getNextRunDate() != null;
         if (!Boolean.TRUE.equals(request.getActive())) template.setNextRunDate(null);
-        else if (!keepSchedule) template.setNextRunDate(RecurringTemplateDates.nextAfter(
+        else if (!keepSchedule) template.setNextRunDate(RecurringTemplateDates.nextOnOrAfter(
                 LocalDate.now(clock.withZone(ZoneId.of("Asia/Ho_Chi_Minh"))), request.getDayOfMonth()));
         template.setCategory(category);
         template.setType(request.getType());
