@@ -51,7 +51,7 @@ after(async () => {
 test('recurringTemplateUtils: nội dung hướng dẫn và cảnh báo ngày cuối tháng chính xác', () => {
   assert.equal(
     DISCLAIMER_NOTICE,
-    'Mẫu đang bật tự ghi nhận giao dịch vào ngày đã đặt theo giờ Việt Nam, bắt đầu từ kỳ kế tiếp. Không ghi bù kỳ đã qua. Tắt mẫu để dừng tự động.'
+    'Mẫu đang bật tự ghi thu chi vào ngày đã đặt theo giờ Việt Nam. Khi đặt lịch, giao dịch bắt đầu từ tháng này nếu ngày lặp là hôm nay hoặc chưa đến. Không ghi bù kỳ đã qua.'
   )
   assert.equal(
     DAY_31_NOTICE,
