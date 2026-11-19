@@ -33,7 +33,7 @@ export default function MonthCalendar({ data, selectedDate, today, onSelect }) {
   const days = new Map(data.days.map((day) => [day.date, day]))
   const rows = Array.from({ length: cells.length / 7 }, (_, index) => cells.slice(index * 7, index * 7 + 7))
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-[#182234]">
+    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-card">
       <table className="w-full table-fixed border-collapse text-center">
         <caption className="sr-only">Lịch thu chi tháng {data.month} năm {data.year}; đơn vị đồng</caption>
         <thead className="bg-slate-50 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-300">

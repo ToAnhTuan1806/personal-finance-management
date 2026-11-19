@@ -217,10 +217,10 @@ test('D15 Reports: toàn kỳ rỗng có empty state, không kết luận cân b
   const html = render(ReportsPage, { initialReport: report, initialLoading: false })
   assert.match(html, /Chưa có phát sinh thu – chi/)
   assert.doesNotMatch(html, /Thu – chi cân bằng|Tiết kiệm \d|recharts-responsive-container/)
-  assert.match(html, /dark:bg-slate-900/)
+  assert.match(html, /border-dashed border-border bg-muted/)
 })
 
-test('D15 Reports: loading/error ẩn KPI và kết luận cũ dù còn report trong state', () => {
+test('D15 Reports: loading/error ẩn số liệu và kết luận cũ dù còn report trong state', () => {
   for (const props of [{ initialLoading: true }, { initialLoading: false, initialError: 'Không tải được báo cáo' }]) {
     const html = render(ReportsPage, { initialReport: reportFor('2026-01', 12345.67), ...props })
     assert.doesNotMatch(html, /12\.345,67|Thu – chi cân bằng|recharts-responsive-container/)
@@ -234,7 +234,7 @@ test('D15 Reports: bảng mobile cuộn ngang bằng bàn phím, giữ số ti�
   assert.match(html, /whitespace-nowrap/)
   assert.match(html, /min-w-\[520px\]/)
   assert.match(html, /1\.234\.567\.890\.123,45/)
-  assert.match(html, /dark:bg-\[#182234\]/)
+  assert.match(html, /dark:bg-card/)
 })
 
 test('D15 Budgets: tiền lẻ của số vượt không bị làm tròn hoặc cắt trên mobile', () => {

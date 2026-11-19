@@ -333,7 +333,8 @@ test('Reports bỏ legend Donut lặp, giữ tên/màu/số tiền/tỷ trọng 
   const html = render(CategoryBreakdownSection, { report: sampleReport })
   assert.doesNotMatch(html, /se097-legend|Bật hoặc tắt danh mục chi tiêu/)
   assert.match(html, /<svg[^>]*role="img"[^>]*aria-label="[^"]*Ăn uống/)
-  const colors = ['#F97316', '#0EA5E9', '#10B981']
+  const colors = [...html.matchAll(/stroke="(#[a-f0-9]{6})"/gi)].map((match) => match[1])
+  assert.equal(new Set(colors).size, sampleReport.expensesByCategory.length)
   const rows = [...html.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/g)].map((match) => match[1])
   for (const [index, category] of sampleReport.expensesByCategory.entries()) {
     const row = rows.find((value) => value.includes(category.categoryName))
@@ -359,7 +360,7 @@ test('thẻ biểu đồ cột xếp nội dung từ trên xuống, giữ vùng 
   assert.match(html, /role="region" aria-label="Cuộn ngang bảng thu chi theo tháng" tabindex="0"/)
 })
 
-test('ReportsPage: render đầy đủ bộ lọc (mặc định 3 tháng, tối đa 6 tháng), 3 thẻ KPI, biểu đồ cột và bảng danh mục', () => {
+test('ReportsPage: render đầy đủ bộ lọc (mặc định 3 tháng, tối đa 6 tháng), biểu đồ cột và bảng danh mục', () => {
   const html = render(ReportsPage, {
     anchorMonth: '2026-11',
     initialReport: sampleReport,
@@ -367,16 +368,26 @@ test('ReportsPage: render đầy đủ bộ lọc (mặc định 3 tháng, tối
   })
 
   assert.match(html, /Báo cáo thu – chi &amp; Thống kê/)
-  assert.match(html, /Phân tích đa kỳ \(tối đa 6 tháng\)/)
-  assert.match(html, /Tổng thu nhập/)
-  assert.match(html, /Tổng chi tiêu/)
-  assert.match(html, /Chênh lệch thu – chi/)
+  assert.match(html, /Chọn tối đa 6 tháng/)
+  assert.doesNotMatch(html, /Chênh lệch thu – chi/)
+  assert.match(html, /Chi tiêu đã ghi tháng 11\/2026 giảm 52,25% so với tháng 10\/2026/)
+  assert.match(html, /Tổng cộng/)
   assert.match(html, /46\.500\.000 ₫/)
   assert.match(html, /35\.500\.000 ₫/)
   assert.match(html, /\+11\.000\.000 ₫/)
   assert.match(html, /3 tháng gần nhất/)
   assert.match(html, /6 tháng gần nhất/)
 })
+
+test('MonthlyComparisonChart describes recorded spending without dividing by zero', () => {
+  const current = sampleReport.months[2]
+  const previous = { ...sampleReport.months[1], totalExpense: 0, balance: sampleReport.months[1].totalIncome }
+  const report = { ...sampleReport, months: [sampleReport.months[0], previous, current] }
+  const html = render(MonthlyComparisonChart, { report })
+  assert.match(html, /Có chi tiêu trong tháng 11\/2026\. Tháng 10\/2026 chưa ghi nhận khoản chi/)
+  assert.doesNotMatch(html, /(?:tăng|giảm) \d[\d,.]*%/)
+})
+
 
 test('MonthPickerInput: trigger hiển thị tiếng Việt và không dùng lịch tháng gốc của trình duyệt', () => {
   const html = render(MonthPickerInput, {
@@ -422,7 +433,7 @@ test('MonthPickerPanel: tháng bắt buộc không có nút xóa và popup đổ
   })
 
   assert.doesNotMatch(html, /Xóa lựa chọn/)
-  assert.match(html, /bg-white text-slate-800 dark:border-slate-700 dark:bg-\[#182234\]/)
+  assert.match(html, /bg-white text-slate-800 dark:border-slate-700 dark:bg-card/)
   assert.match(html, /aria-label="Tháng 11 năm 2026" aria-pressed="true"/)
 })
 
@@ -464,7 +475,7 @@ test('Responsive & Accessibility: các vùng biểu đồ/bảng có min-w-0, ov
   assert.match(html, /overflow-x-auto/)
   assert.match(html, /min-h-10/)
   assert.match(html, /focus-visible:ring-2/)
-  assert.match(html, /dark:bg-\[#182234\]/)
+  assert.match(html, /dark:bg-card/)
 })
 
 test('Kiểm chứng Dashboard CashFlow: tháng có 0, 1, 8, 9 và hơn 100 giao dịch đều tính đúng dòng tiền', async () => {

@@ -8,7 +8,7 @@ export default function ProtectedRoute() {
   // Chờ Backend xác minh JWT
   if (loading) {
     return (
-      <div className="min-h-72 flex items-center justify-center bg-slate-50 dark:bg-[#0B1220] dark:text-slate-200">
+      <div className="min-h-72 flex items-center justify-center bg-slate-50 dark:bg-background dark:text-slate-200">
         <div className="flex flex-col items-center gap-3.5">
           <div className="h-10 w-10 animate-spin rounded-full border-3 border-blue-600 border-t-transparent shadow-sm" />
           <p className="text-sm font-medium text-slate-600 animate-pulse">

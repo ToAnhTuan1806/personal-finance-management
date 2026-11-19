@@ -321,7 +321,7 @@ function RecurringPreviewModalContent({
         aria-modal="true"
         aria-labelledby="preview-modal-title"
         tabIndex={-1}
-        className="w-full max-w-md rounded-2xl border border-slate-100 bg-white shadow-2xl dark:border-slate-800 dark:bg-[#182234]"
+        className="w-full max-w-md rounded-2xl border border-slate-100 bg-white shadow-2xl dark:border-slate-800 dark:bg-card"
       >
         {/* ── Header ── */}
         <div className="flex items-center justify-between border-b border-slate-100 p-5 dark:border-slate-800">

@@ -3,11 +3,11 @@
 .se040 {
   --se-ease: cubic-bezier(.2, .8, .2, 1);
   --se-spring: cubic-bezier(.34, 1.45, .64, 1);
-  --se-ink: #16151b;
-  --se-page: #f4f2ee;
-  --se-highlight: rgba(244, 242, 238, .15);
-  --se-accent: #6a57f2;
-  --se-gradient: linear-gradient(120deg, #7b61ff, #3d8bff 55%, #1fb89a);
+  --se-ink: var(--brand-forest);
+  --se-page: var(--palette-canvas);
+  --se-highlight: rgb(187 247 208 / .2);
+  --se-accent: var(--palette-soft);
+  --se-gradient: linear-gradient(120deg, var(--se-accent), #a7efbe);
   --se-rail-width: 76px;
 
   position: fixed;
@@ -28,13 +28,48 @@
   width: var(--se-rail-width);
   padding: 12px 10px;
   border-radius: 24px;
-  background: var(--se-ink);
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 12% 0%, rgb(134 239 172 / .15), transparent 36%),
+    radial-gradient(ellipse at 90% 83%, rgb(126 219 134 / .2), transparent 42%),
+    var(--brand-sidebar);
+  box-shadow: 0 10px 28px rgb(15 74 53 / .15);
   color: var(--se-page);
   overflow: visible;
   pointer-events: auto;
-  transition: width .6s var(--se-spring);
+  transition: width .25s var(--se-ease);
 }
 
+.se040-rail::before {
+  position: absolute;
+  right: 10px;
+  bottom: 62px;
+  left: 10px;
+  z-index: -1;
+  height: min(30%, 208px);
+  background: url('/images/sidebar-sprouts.png') center bottom / contain no-repeat;
+  opacity: .86;
+  content: '';
+  pointer-events: none;
+}
+
+@media (max-width: 1023px) {
+  .se040-rail::before {
+    opacity: .35;
+  }
+}
+
+@media (min-width: 1024px) {
+  .se040:not(.is-expanded) .se040-rail::before {
+    display: none;
+  }
+}
+
+@media (max-height: 740px) {
+  .se040-rail::before {
+    display: none;
+  }
+}
 .se040-top {
   display: flex;
   align-items: center;
@@ -45,42 +80,23 @@
   transition: padding-right .3s;
 }
 
-.se040.is-expanded .se040-top {
-  padding-right: 44px;
+@media (min-width: 1024px) {
+  .se040.is-expanded .se040-top {
+    padding-right: 36px;
+  }
 }
 
 .se040-logo {
-  display: grid;
   flex: none;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  margin-left: 10px;
-  border-radius: 11px;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(6, 182, 212, 0.2));
-  border: 1px solid rgba(99, 102, 241, 0.4);
-  box-shadow: 0 4px 14px -2px rgba(59, 130, 246, 0.35);
-  overflow: hidden;
-  padding: 3px;
-  transition: all 0.25s ease;
-}
-
-.se040-logo-img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  display: block;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
-  transition: transform 0.25s ease;
+  width: 42px;
+  height: 42px;
+  margin-left: 7px;
+  filter: drop-shadow(0 4px 8px rgb(9 47 29 / .28));
+  transition: transform .25s var(--se-ease);
 }
 
 .se040-top:hover .se040-logo {
-  border-color: rgba(6, 182, 212, 0.6);
-  box-shadow: 0 6px 18px -2px rgba(6, 182, 212, 0.45);
-}
-
-.se040-top:hover .se040-logo-img {
-  transform: scale(1.08);
+  transform: translateY(-1px) rotate(-5deg);
 }
 
 .se040-name {
@@ -129,7 +145,7 @@
 .se040-toggle:hover {
   background: var(--se-accent);
   border-color: var(--se-accent);
-  color: white;
+  color: var(--se-ink);
   transform: scale(1.1);
 }
 
@@ -177,10 +193,10 @@
   margin: 0;
   padding: 4px 8px;
   overflow: hidden;
-  color: #94a3b8;
-  font-size: 9px;
+  color: #bde5cd;
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: .04em;
+  letter-spacing: .08em;
   white-space: nowrap;
 }
 
@@ -194,18 +210,8 @@
 }
 
 .se040-item.is-active {
-  background: var(--se-highlight);
-}
-
-.se040-item.is-active::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 12px;
-  bottom: 12px;
-  width: 3px;
-  border-radius: 4px;
   background: var(--se-gradient);
+  color: var(--se-ink);
 }
 
 .se040-tooltip {
@@ -273,9 +279,9 @@
   padding-left: 16px;
   border-radius: 15px;
   color: inherit;
-  opacity: .62;
+  opacity: .95;
   text-decoration: none;
-  transition: opacity .25s;
+  transition: opacity .25s, background-color .25s;
 }
 
 .se040-item:hover,
@@ -284,12 +290,16 @@
   opacity: 1;
 }
 
+.se040-item:not(.is-active):is(:hover, :focus-visible) {
+  background-color: var(--se-highlight);
+}
+
 .se040-item.is-locked {
-  opacity: .5;
+  opacity: .74;
 }
 
 .se040-item.is-locked:hover {
-  opacity: .8;
+  opacity: 1;
 }
 
 .se040-lock-icon {
@@ -343,7 +353,8 @@
   height: 52px;
   padding: 0 10px;
   border-radius: 16px;
-  background: rgba(255, 255, 255, .08);
+  border: 1px solid rgb(195 248 194 / .19);
+  background: color-mix(in srgb, var(--brand-forest) 85%, transparent);
   user-select: none;
   transition: background .2s, border-color .2s;
 }
@@ -353,7 +364,7 @@
 }
 
 .se040-profile:hover {
-  background: rgba(255, 255, 255, .15);
+  background: var(--palette-deep);
 }
 
 .se040-user-menu {
@@ -362,7 +373,7 @@
   left: 0;
   right: 0;
   min-width: 190px;
-  background: #182234;
+  background: var(--brand-forest);
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 16px;
   padding: 12px;
@@ -432,8 +443,8 @@
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: linear-gradient(145deg, #7b61ff, #2f8fe0);
-  color: white;
+  background: var(--se-gradient);
+  color: var(--se-ink);
 }
 
 .se040-profile-info {
@@ -576,13 +587,13 @@
   }
 
   .se040-extras-link.is-primary {
-    border-color: #2563eb;
-    background: #2563eb;
+    border-color: var(--palette-deep);
+    background: var(--palette-deep);
     color: #fff;
   }
 
   .se040-extras-link.is-primary:hover {
-    background: #1d4ed8;
+    background: var(--brand-forest);
   }
 
   /* Màn hình rất thấp (ví dụ xoay ngang): cho cả Drawer cuộn để vẫn chạm được mọi mục */
@@ -615,23 +626,6 @@
     border: 0;
     background: rgba(0, 0, 0, .45);
     pointer-events: auto;
-  }
-}
-
-/* Ánh xạ màu cho Dark Mode */
-:root[data-theme="dark"] .se040,
-.dark .se040 {
-  --se-ink: #101928;
-  --se-page: #f8fafc;
-  --se-highlight: rgba(255, 255, 255, .12);
-  --se-accent: #60a5fa;
-  --se-gradient: linear-gradient(120deg, #60a5fa, #3b82f6 55%, #34d399);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .se040 {
-    --se-ink: #101928;
-    --se-page: #f8fafc;
   }
 }
 

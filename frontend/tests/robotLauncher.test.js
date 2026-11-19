@@ -26,13 +26,13 @@ before(async () => {
 })
 after(async () => { await vite?.close() })
 
-test('D14 SSR: button ngữ nghĩa và SVG có ngay, không cần WebGL/Three engine', () => {
+test('D14 SSR: button ngữ nghĩa và ảnh mascot có ngay', () => {
   const html = renderToStaticMarkup(createElement(Widget))
   assert.match(html, /<button[^>]*id="ai-assistant-launcher"/)
   assert.match(html, /aria-label="Mở Trợ lý tài chính"/)
   assert.match(html, /aria-expanded="false"/)
   assert.match(html, /data-robot-state="IDLE"/)
-  assert.match(html, /<svg/)
+  assert.match(html, /<img[^>]*chat-mascot\.png/)
   assert.doesNotMatch(html, /<canvas/)
 })
 

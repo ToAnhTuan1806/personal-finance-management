@@ -8,15 +8,15 @@
 .se030,
 .se039,
 .se070-host {
-  --fin-surface: #ffffff;
-  --fin-surface-2: #f5f3ef;
-  --fin-ink: #16151b;
-  --fin-muted: #8e8a97;
-  --fin-line: rgba(22, 21, 27, .12);
-  --fin-accent: #6a57f2;
-  --fin-accent-soft: rgba(106, 87, 242, .12);
-  --fin-mint: #119c72;
-  --fin-danger: #d93a55;
+  --fin-surface: var(--surface);
+  --fin-surface-2: var(--surface-secondary);
+  --fin-ink: var(--text-primary);
+  --fin-muted: var(--text-secondary);
+  --fin-line: var(--border-color);
+  --fin-accent: var(--brand-primary);
+  --fin-accent-soft: var(--brand-soft);
+  --fin-mint: var(--finance-income);
+  --fin-danger: var(--finance-expense);
   --fin-warn: #d6731e;
   --fin-ease: cubic-bezier(.2, .8, .2, 1);
   --fin-spring: cubic-bezier(.34, 1.45, .64, 1);
@@ -344,7 +344,7 @@
 .se030-cell.is-start .se030-day,
 .se030-cell.is-end .se030-day {
   background: var(--fin-accent);
-  color: white;
+  color: var(--brand-on-primary);
   font-weight: 760;
   animation: se030-pick .4s var(--fin-spring);
 }
@@ -425,9 +425,9 @@
   left: 5px;
   width: calc((100% - 10px) / var(--se039-count));
   border-radius: 999px;
-  background: var(--fin-ink);
+  background: var(--brand-soft);
   transform: translateX(calc(var(--se039-index) * 100%));
-  box-shadow: 0 8px 16px -10px rgba(40, 30, 80, .4);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand-ring) 18%, transparent);
   transition:
     transform .5s var(--fin-spring),
     width .5s var(--fin-spring);
@@ -451,7 +451,7 @@
 }
 
 .se039-tab.is-active {
-  color: var(--fin-surface);
+  color: var(--brand-ink);
 }
 
 /* =========================================
@@ -595,15 +595,15 @@
 .dark .se030,
 .dark .se039,
 .dark .se070-host {
-  --fin-surface: #182234;
-  --fin-surface-2: #1e293b;
-  --fin-ink: #f8fafc;
-  --fin-muted: #94a3b8;
-  --fin-line: #334155;
-  --fin-accent: #60a5fa;
-  --fin-accent-soft: rgba(96, 165, 250, .15);
-  --fin-mint: #34d399;
-  --fin-danger: #fb7185;
+  --fin-surface: var(--surface);
+  --fin-surface-2: var(--surface-secondary);
+  --fin-ink: var(--text-primary);
+  --fin-muted: var(--text-secondary);
+  --fin-line: var(--border-color);
+  --fin-accent: var(--brand-primary);
+  --fin-accent-soft: var(--brand-soft);
+  --fin-mint: var(--finance-income);
+  --fin-danger: var(--finance-expense);
   --fin-warn: #fbbf24;
 }
 

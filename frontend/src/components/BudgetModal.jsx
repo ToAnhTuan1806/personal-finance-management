@@ -59,7 +59,7 @@ function BudgetModalContent({
         role="dialog"
         aria-modal="true"
         aria-labelledby="budget-modal-title"
-        className="w-full max-w-md rounded-2xl bg-white dark:bg-[#182234] p-6 shadow-2xl border border-slate-100 dark:border-slate-800 transition-colors"
+        className="w-full max-w-md rounded-2xl bg-white dark:bg-card p-6 shadow-2xl border border-slate-100 dark:border-slate-800 transition-colors"
       >
         <div className="mb-4 flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
           <div>

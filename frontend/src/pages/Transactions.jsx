@@ -1,4 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useLocation } from 'react-router'
+import { parseTransactionSearch } from '../utils/transactionLinks.js'
 import {
   Plus,
   Download,
@@ -9,13 +11,9 @@ import {
   Search,
   RotateCcw,
   AlertCircle,
-  ArrowUpRight,
-  ArrowDownRight,
-  Wallet,
   CalendarRange,
-  Filter,
+  Coins,
   Loader2,
-  FileQuestion,
 } from 'lucide-react'
 
 import TransactionModal from '../components/TransactionModal'
@@ -23,6 +21,7 @@ import PillTabs from '../components/ui/PillTabs'
 import DateRangePicker from '../components/ui/DateRangePicker'
 import MonthPickerInput from '../components/ui/MonthPickerInput'
 import AsyncState from '../components/ui/AsyncState'
+import { Button } from '../components/ui/button'
 import { useToast } from '../contexts/ToastContext'
 import { useQuickAdd } from '../contexts/QuickAddContext'
 import CategoryBadge from '../components/category/CategoryBadge'
@@ -87,6 +86,7 @@ const formatDisplayDate = (value) => {
 }
 
 export function TransactionsPage({
+  search = '',
   initialTransactions = [],
   initialLoading = true,
   initialError = '',
@@ -115,17 +115,12 @@ export function TransactionsPage({
   const [categoryAttempt, setCategoryAttempt] = useState(0)
   const [categoryLoading, setCategoryLoading] = useState(true)
 
+  const entry = useMemo(() => parseTransactionSearch(search, currentMonth()), [search])
+  const previousSearch = useRef(search)
   const [datePickerOpen, setDatePickerOpen] = useState(false)
-  const [dateRange, setDateRange] = useState({
-    startDate: '',
-    endDate: '',
-  })
+  const [dateRange, setDateRange] = useState(entry.dateRange)
 
-  const [filters, setFilters] = useState({
-    month: currentMonth(),
-    type: '',
-    categoryId: '',
-  })
+  const [filters, setFilters] = useState(entry.filters)
   const [keyword, setKeyword] = useState('')
   const [searchKeyword, setSearchKeyword] = useState('')
 
@@ -139,6 +134,18 @@ export function TransactionsPage({
   const [saving, setSaving] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(null)
   const [deletingId, setDeletingId] = useState(null)
+
+  // Cập nhật khi bấm liên kết phân tích ngay trên trang giao dịch đang mở.
+  useEffect(() => {
+    if (previousSearch.current === search) return
+    previousSearch.current = search
+    setFilters(entry.filters)
+    setDateRange(entry.dateRange)
+    setKeyword('')
+    setSearchKeyword('')
+    setPage(0)
+    setLoading(true)
+  }, [search, entry])
 
   // Tải danh mục khi khởi tạo
   useEffect(() => {
@@ -336,105 +343,75 @@ export function TransactionsPage({
     (c) => !filters.type || c.type === filters.type
   )
 
-  // Tính tổng thu/chi nhanh trên trang hiện tại
-  const pageIncome = transactions
-    .filter((t) => t.type === 'INCOME')
-    .reduce((sum, t) => sum + Number(t.amount || 0), 0)
-
-  const pageExpense = transactions
-    .filter((t) => t.type === 'EXPENSE')
-    .reduce((sum, t) => sum + Number(t.amount || 0), 0)
-
-  const pageBalance = pageIncome - pageExpense
-
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100">
-            Quản lý giao dịch
-          </h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            Theo dõi dòng tiền, thu nhập và chi tiêu hằng ngày của bạn.
-          </p>
+    <div className="space-y-4 sm:space-y-5">
+      <section
+        aria-labelledby="transactions-heading"
+        className="space-y-4 rounded-3xl border border-border bg-linear-to-br from-card via-card to-amber-50 px-4 py-4 shadow-panel sm:px-6 sm:py-5 dark:to-amber-950/25"
+      >
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="grid size-11 shrink-0 place-items-center rounded-2xl border border-amber-200 bg-amber-100 text-amber-800 dark:border-amber-800/70 dark:bg-amber-900/45 dark:text-amber-200">
+              <Coins size={22} aria-hidden="true" />
+            </span>
+            <h1 id="transactions-heading" className="text-xl font-extrabold tracking-tight text-foreground sm:text-2xl">
+              Quản lý giao dịch
+            </h1>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              id="transactions-export-csv-btn"
+              variant="outline"
+              onClick={handleExportCsv}
+              disabled={exporting}
+              aria-busy={exporting}
+            >
+              {exporting ? (
+                <Loader2 size={16} className="animate-spin text-primary motion-reduce:animate-none" aria-hidden="true" />
+              ) : (
+                <Download size={16} className="text-primary" aria-hidden="true" />
+              )}
+              Tải CSV
+            </Button>
+            <Button onClick={handleAdd}>
+              <Plus size={17} aria-hidden="true" />
+              Thêm giao dịch
+            </Button>
+          </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
-          <button
-            type="button"
-            id="transactions-export-csv-btn"
-            onClick={handleExportCsv}
-            disabled={exporting}
-            aria-busy={exporting}
-            className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-xs transition-all hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-[#182234] dark:text-slate-200 dark:hover:bg-slate-800"
+        <div className="grid min-w-0 items-center gap-3 md:grid-cols-[minmax(0,1fr)_minmax(16rem,22rem)]">
+          <form
+            role="search"
+            aria-label="Tìm kiếm giao dịch"
+            onSubmit={handleSearch}
+            className="flex min-w-0 items-center gap-2"
           >
-            {exporting ? (
-              <Loader2 size={18} className="animate-spin text-blue-600 dark:text-blue-400" aria-hidden="true" />
-            ) : (
-              <Download size={18} className="text-blue-600 dark:text-blue-400" aria-hidden="true" />
-            )}
-            <span>Tải CSV</span>
-          </button>
+            <div className="relative min-w-0 flex-1">
+              <Search size={16} aria-hidden="true" className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <input
+                id="search-keyword"
+                type="search"
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
+                placeholder="Tìm theo ghi chú"
+                aria-label="Tìm kiếm theo ghi chú"
+                className="min-h-11 w-full rounded-xl border border-border bg-card py-2.5 pr-3 pl-10 text-sm text-foreground placeholder:text-muted-foreground focus:border-ring"
+              />
+            </div>
+            <Button type="submit" variant="outline" className="px-3">
+              Tìm kiếm
+            </Button>
+          </form>
 
-          <button
-            type="button"
-            onClick={handleAdd}
-            className="flex min-h-10 items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 shadow-md shadow-blue-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 active:scale-95 transition-all"
-          >
-            <Plus size={18} aria-hidden="true" />
-            <span>Thêm giao dịch</span>
-          </button>
+          <PillTabs
+            label="Lọc loại giao dịch"
+            options={transactionTypeOptions}
+            value={filters.type}
+            onChange={(value) => changeFilter('type', value)}
+          />
         </div>
-      </div>
-
-      {/* Summary Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="rounded-2xl bg-white p-5 shadow-xs border border-slate-200/80 dark:border-slate-800 dark:bg-[#182234] flex items-center gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 shrink-0">
-            <ArrowUpRight size={24} />
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              Thu nhập (Trang này)
-            </p>
-            <p className="text-lg font-black text-emerald-600 dark:text-emerald-400 truncate mt-0.5">
-              +{formatMoney(pageIncome)}
-            </p>
-          </div>
-        </div>
-
-        <div className="rounded-2xl bg-white p-5 shadow-xs border border-slate-200/80 dark:border-slate-800 dark:bg-[#182234] flex items-center gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-50 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400 shrink-0">
-            <ArrowDownRight size={24} />
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              Chi tiêu (Trang này)
-            </p>
-            <p className="text-lg font-black text-rose-600 dark:text-rose-400 truncate mt-0.5">
-              -{formatMoney(pageExpense)}
-            </p>
-          </div>
-        </div>
-
-        <div className="rounded-2xl bg-white p-5 shadow-xs border border-slate-200/80 dark:border-slate-800 dark:bg-[#182234] flex items-center gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400 shrink-0">
-            <Wallet size={24} />
-          </div>
-          <div className="min-w-0">
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              Chênh lệch ròng (Trang này)
-            </p>
-            <p className={`text-lg font-black truncate mt-0.5 ${
-              pageBalance >= 0 ? 'text-blue-700 dark:text-blue-400' : 'text-rose-600 dark:text-rose-400'
-            }`}>
-              {pageBalance >= 0 ? '+' : ''}{formatMoney(pageBalance)}
-            </p>
-          </div>
-        </div>
-      </div>
-
+      </section>
       {/* Thông báo lỗi */}
       {exportError && (
         <div
@@ -466,57 +443,30 @@ export function TransactionsPage({
         </div>
       )}
 
-      {/* Bộ lọc giao dịch */}
-      <div className="rounded-2xl bg-white p-5 shadow-sm border border-slate-200/80 dark:border-slate-800 dark:bg-[#182234] space-y-4">
-        <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
-          <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200 font-bold text-sm">
-            <Filter size={16} className="text-blue-600 dark:text-blue-400" />
-            <span>Bộ lọc & Tìm kiếm</span>
-          </div>
-
-          <button
-            type="button"
-            onClick={handleResetFilters}
-            className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 transition-colors"
-          >
-            <RotateCcw size={13} />
-            <span>Đặt lại bộ lọc</span>
-          </button>
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <div>
-            <label htmlFor="filter-month" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+      <section aria-label="Bộ lọc thời gian và danh mục" className="space-y-3 rounded-2xl border border-border bg-card px-4 py-3 shadow-panel sm:px-5">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+          <div className="flex min-w-32 flex-1 flex-wrap items-center gap-x-2 gap-y-1 sm:flex-none">
+            <label htmlFor="filter-month" className="text-xs font-semibold text-muted-foreground">
               Tháng
             </label>
-            <MonthPickerInput
-              id="filter-month"
-              value={filters.month}
-              onChange={(e) => changeFilter('month', e.target.value)}
-            />
+            <div className="min-w-0 flex-1 sm:w-40">
+              <MonthPickerInput
+                id="filter-month"
+                value={filters.month}
+                onChange={(e) => changeFilter('month', e.target.value)}
+              />
+            </div>
           </div>
 
-          <div>
-            <p className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
-              Loại giao dịch
-            </p>
-            <PillTabs
-              label="Lọc loại giao dịch"
-              options={transactionTypeOptions}
-              value={filters.type}
-              onChange={(value) => changeFilter('type', value)}
-            />
-          </div>
-
-          <div>
-            <label htmlFor="filter-category" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+          <div className="flex min-w-32 flex-1 flex-wrap items-center gap-x-2 gap-y-1 sm:flex-none">
+            <label htmlFor="filter-category" className="text-xs font-semibold text-muted-foreground">
               Danh mục
             </label>
             <select
               id="filter-category"
               value={filters.categoryId}
               onChange={(e) => changeFilter('categoryId', e.target.value)}
-              className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#1E293B] p-2.5 text-sm text-slate-800 dark:text-slate-100 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900/40 transition-all"
+              className="min-h-10 min-w-0 w-full flex-1 rounded-xl border border-border bg-card px-2.5 py-2 text-sm text-foreground focus:border-ring sm:w-48 sm:flex-none"
             >
               <option value="">Tất cả danh mục</option>
               {filteredCategories.map((c) => (
@@ -526,84 +476,55 @@ export function TransactionsPage({
               ))}
             </select>
           </div>
-        </div>
 
-        {/* Lọc theo khoảng ngày (Lucian #030) */}
-        <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setDatePickerOpen((prev) => !prev)}
-              aria-expanded={datePickerOpen}
-              className="flex items-center gap-2 rounded-xl
-                border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#1E293B] px-4 py-2.5
-                text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-xs"
-            >
-              <CalendarRange size={18} className="text-blue-600 dark:text-blue-400" />
-              <span>Lọc theo khoảng ngày</span>
-            </button>
-
-            {dateRange.startDate && dateRange.endDate && (
-              <span className="rounded-lg bg-blue-50 dark:bg-blue-950/60 px-3 py-1.5 text-xs font-semibold text-blue-700 dark:text-blue-300 border border-blue-200/80 dark:border-blue-800">
-                {formatDisplayDate(dateRange.startDate)} → {formatDisplayDate(dateRange.endDate)}
-              </span>
-            )}
-          </div>
-
-          {datePickerOpen && (
-            <div className="mt-3">
-              <DateRangePicker
-                startDate={dateRange.startDate}
-                endDate={dateRange.endDate}
-                onApply={(range) => {
-                  setDateRange(range)
-                  setFilters((prev) => ({ ...prev, month: '' }))
-                  setPage(0)
-                  setDatePickerOpen(false)
-                }}
-                onClear={() => {
-                  setDateRange({
-                    startDate: '',
-                    endDate: '',
-                  })
-                  setFilters((prev) => ({
-                    ...prev,
-                    month: currentMonth(),
-                  }))
-                  setPage(0)
-                  setDatePickerOpen(false)
-                }}
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Tìm kiếm theo ghi chú */}
-        <form onSubmit={handleSearch} className="flex flex-wrap items-center gap-2 pt-1">
-          <div className="relative min-w-0 flex-1">
-            <input
-              id="search-keyword"
-              value={keyword}
-              onChange={(e) => setKeyword(e.target.value)}
-              placeholder="Tìm kiếm giao dịch theo nội dung ghi chú..."
-              aria-label="Tìm kiếm giao dịch"
-              className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#1E293B] py-2.5 pl-10 pr-4 text-sm text-slate-800 dark:text-slate-100 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900/40 transition-all"
-            />
-            <Search size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-          </div>
-          <button
-            type="submit"
-            className="flex items-center gap-2 rounded-xl bg-slate-800 dark:bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-900 dark:hover:bg-blue-700 active:scale-95 transition-all shadow-xs"
+          <Button
+            variant="outline"
+            onClick={() => setDatePickerOpen((prev) => !prev)}
+            aria-expanded={datePickerOpen}
+            className="min-h-10 px-3 text-xs"
           >
-            <Search size={15} />
-            <span>Tìm kiếm</span>
-          </button>
-        </form>
-      </div>
+            <CalendarRange size={16} className="text-primary" aria-hidden="true" />
+            Lọc theo khoảng ngày
+          </Button>
 
+          {dateRange.startDate && dateRange.endDate && (
+            <span className="rounded-lg bg-accent px-2.5 py-1.5 text-xs font-semibold text-accent-foreground">
+              {formatDisplayDate(dateRange.startDate)} → {formatDisplayDate(dateRange.endDate)}
+            </span>
+          )}
+
+          <Button
+            variant="ghost"
+            onClick={handleResetFilters}
+            className="ml-auto min-h-10 px-2 text-xs text-muted-foreground"
+          >
+            <RotateCcw size={14} aria-hidden="true" />
+            Đặt lại bộ lọc
+          </Button>
+        </div>
+
+        {datePickerOpen && (
+          <DateRangePicker
+            startDate={dateRange.startDate}
+            endDate={dateRange.endDate}
+            onApply={(range) => {
+              setDateRange(range)
+              setFilters((prev) => ({ ...prev, month: '' }))
+              setPage(0)
+              setDatePickerOpen(false)
+            }}
+            onClear={() => {
+              setDateRange({ startDate: '', endDate: '' })
+              setFilters((prev) => ({ ...prev, month: currentMonth() }))
+              setPage(0)
+              setDatePickerOpen(false)
+            }}
+          />
+        )}
+      </section>
       {/* Bảng danh sách giao dịch */}
-      <div className="overflow-hidden rounded-2xl bg-white dark:bg-[#182234] shadow-sm border border-slate-200/80 dark:border-slate-800">
-        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 px-6 py-4">
+      <div className="overflow-hidden rounded-2xl bg-white dark:bg-card shadow-sm border border-slate-200/80 dark:border-slate-800">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3.5 sm:px-6">
           <div className="flex items-center gap-2">
             <h2 className="font-bold text-slate-800 dark:text-slate-100 text-base">
               Danh sách giao dịch
@@ -614,9 +535,9 @@ export function TransactionsPage({
           </div>
 
           {searchKeyword && (
-            <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+            <div className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
               <span>Đang lọc theo:</span>
-              <span className="font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 px-2 py-0.5 rounded-md">"{searchKeyword}"</span>
+              <span className="min-w-0 truncate rounded-md bg-accent px-2 py-0.5 font-semibold text-accent-foreground" title={searchKeyword}>"{searchKeyword}"</span>
             </div>
           )}
         </div>
@@ -629,12 +550,18 @@ export function TransactionsPage({
         ) : error ? (
           <AsyncState message={error} onRetry={() => { setLoading(true); setReloadKey((previous) => previous + 1) }} />
         ) : transactions.length === 0 ? (
-          <div className="py-16 text-center">
-            <div className="h-14 w-14 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 flex items-center justify-center mx-auto mb-3">
-              <FileQuestion size={28} />
-            </div>
-            <p className="font-bold text-slate-700 dark:text-slate-200">Không có giao dịch phù hợp</p>
-            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 max-w-sm mx-auto">
+          <div className="px-4 py-10 text-center">
+            <img
+              src="/images/transaction-search.png"
+              alt=""
+              width={256}
+              height={256}
+              decoding="async"
+              loading="lazy"
+              className="mx-auto mb-3 size-28 object-contain"
+            />
+            <p className="font-bold text-foreground">Không có giao dịch phù hợp</p>
+            <p className="mx-auto mt-1 max-w-sm text-xs text-muted-foreground">
               Thử thay đổi tháng, danh mục hoặc bấm nút "Thêm giao dịch" để ghi nhận khoản thu chi mới.
             </p>
           </div>
@@ -677,7 +604,7 @@ export function TransactionsPage({
                     </div>
 
                     {t.note && (
-                      <p className="text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-[#1E293B]/70 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800">
+                      <p className="text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-muted/70 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800">
                         {t.note}
                       </p>
                     )}
@@ -713,7 +640,7 @@ export function TransactionsPage({
             {/* Desktop Layout: Bảng cuộn ngang */}
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full min-w-[700px] text-left text-sm">
-                <thead className="bg-slate-50/80 dark:bg-[#1E293B]/60 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800">
+                <thead className="bg-slate-50/80 dark:bg-muted/60 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800">
                   <tr>
                     <th className="py-3.5 px-6">Ngày</th>
                     <th className="py-3.5 px-6">Danh mục</th>
@@ -794,7 +721,7 @@ export function TransactionsPage({
 
         {/* Phân trang: chỉ ẩn khi đã tải thành công và thực sự không có giao dịch */}
         {(loading || error || totalElements > 0) && (
-        <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 px-6 py-4 bg-slate-50/50 dark:bg-[#1E293B]/30">
+        <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 px-6 py-4 bg-slate-50/50 dark:bg-muted/30">
           <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
             Trang {totalPages === 0 ? 0 : page + 1} / {totalPages} (Tổng {totalElements} giao dịch)
           </span>
@@ -803,7 +730,7 @@ export function TransactionsPage({
             <button
               onClick={() => { setLoading(true); setPage((p) => Math.max(0, p - 1)) }}
               disabled={page === 0 || loading}
-              className="flex items-center gap-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1E293B] px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-2xs"
+              className="flex items-center gap-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-muted px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-2xs"
               aria-label="Trang trước"
             >
               <ChevronLeft size={16} />
@@ -812,7 +739,7 @@ export function TransactionsPage({
             <button
               onClick={() => { setLoading(true); setPage((p) => p + 1) }}
               disabled={loading || page + 1 >= totalPages}
-              className="flex items-center gap-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#1E293B] px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-2xs"
+              className="flex items-center gap-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-muted px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-2xs"
               aria-label="Trang tiếp theo"
             >
               <span>Sau</span>
@@ -846,7 +773,7 @@ export function TransactionsPage({
           aria-modal="true"
           aria-labelledby="delete-tx-dialog-title"
         >
-          <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-[#182234] p-6 shadow-2xl border border-slate-100 dark:border-slate-800">
+          <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-card p-6 shadow-2xl border border-slate-100 dark:border-slate-800">
             <div className="flex items-center gap-3 mb-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 shrink-0">
                 <AlertCircle size={24} />
@@ -905,6 +832,7 @@ export function TransactionsPage({
 
 export default function Transactions(props) {
   const toast = useToast()
-  return <TransactionsPage toast={toast} {...props} />
+  const { search } = useLocation()
+  return <TransactionsPage toast={toast} search={search} {...props} />
 }
 

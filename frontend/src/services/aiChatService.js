@@ -1,6 +1,8 @@
 import axiosClient from '../api/axiosClient.js'
 import { getApiErrorMessage, isRequestCancelled } from '../api/errors.js'
 import { session } from '../auth/session.js'
+import { AI_LOCAL_REPLY, getAiLocalReply, getAiLocalAdviceFallback } from './aiLocalReplies.js'
+import { AI_ANALYSIS_INTENTS, AI_ANALYSIS_QUESTIONS, normalizeAiAnalysis } from './aiAnalysis.js'
 import { isValidDate, transactionDateError } from '../utils/transactionForm.js'
 import {
   getCurrentVietnamMonth,
@@ -23,10 +25,10 @@ export const AI_SUGGESTED_QUESTIONS = [
   'Danh mục nào tăng chi tiêu nhiều nhất?',
 ]
 
-export const AI_CONTEXT_INTENTS = ['SUMMARY', 'CATEGORIES', 'BUDGET', 'ADVICE', 'COMPARISON', 'CATEGORY_TREND']
+export const AI_CONTEXT_INTENTS = ['SUMMARY', 'CATEGORIES', 'BUDGET', 'ADVICE', 'COMPARISON', 'CATEGORY_TREND', ...AI_ANALYSIS_INTENTS]
 
 export const AI_UNKNOWN_DISPLAY_REPLY =
-  'Mình chưa hiểu rõ. Bạn muốn ghi khoản chi hay xem thu chi? Để ghi chi, hãy nhập nội dung và số tiền.'
+  'Mình chưa hiểu câu hỏi này. Bạn thử viết rõ hơn điều muốn biết nhé.'
 
 export const AI_GREETING_DISPLAY_REPLY =
   'Xin chào! Bạn muốn ghi khoản chi hay xem thu chi?\nGhi chi theo mẫu: nội dung + số tiền + ghi chú (nếu có). Mình sẽ chờ bạn xác nhận trước khi lưu.'
@@ -126,7 +128,7 @@ export function getAiSuggestedQuestions({ context, lastIntent } = {}) {
   if (lastIntent === 'UNKNOWN' || lastIntent === 'UNSUPPORTED') {
     return [AI_SUGGESTED_QUESTIONS[0], AI_SUGGESTED_QUESTIONS[4], AI_SUGGESTED_QUESTIONS[5]]
   }
-  if (!context) return AI_SUGGESTED_QUESTIONS
+  if (!context || AI_ANALYSIS_INTENTS.includes(context.intent)) return [...AI_ANALYSIS_QUESTIONS, ...AI_SUGGESTED_QUESTIONS.slice(0, 3)]
   const period = formatShortMonthLabel(context.month)
   return [
     'Còn tháng trước thì sao?',
@@ -415,7 +417,10 @@ export function normalizeAiChatResponse(data) {
   }
 
   const intent = data.intent.trim()
-  const withoutStats = ['UNKNOWN', 'UNSUPPORTED', 'GREETING', 'CREATE_EXPENSE'].includes(intent)
+  const isAnalysis = AI_ANALYSIS_INTENTS.includes(intent)
+  const withoutStats = ['UNKNOWN', 'UNSUPPORTED', 'GREETING', 'CREATE_EXPENSE'].includes(intent) || isAnalysis
+  if (!isAnalysis && data.analysis != null) throw invalidResponse('Phân tích không khớp intent')
+  const analysis = isAnalysis ? normalizeAiAnalysis(data.analysis, intent, data.period) : null
   if (![...AI_CONTEXT_INTENTS, 'UNKNOWN', 'UNSUPPORTED', 'GREETING', 'CREATE_EXPENSE'].includes(intent)) {
     throw invalidResponse('Intent không thuộc API Contract')
   }
@@ -426,7 +431,8 @@ export function normalizeAiChatResponse(data) {
   if (intent !== 'CREATE_EXPENSE' && data.suggestedExpense != null) {
     throw invalidResponse('Đề xuất chi tiêu phải thuộc intent CREATE_EXPENSE')
   }
-  const comparison = ['COMPARISON', 'CATEGORY_TREND'].includes(data.intent.trim())
+  if (data.geminiPreview != null && intent !== 'UNKNOWN') throw invalidResponse('Bản xem trước không khớp intent')
+  const comparison = ['COMPARISON', 'CATEGORY_TREND'].includes(intent)
     ? normalizeAiComparison(data.comparison, data.period) : null
 
   return {
@@ -439,6 +445,8 @@ export function normalizeAiChatResponse(data) {
       ?? (['GREETING', 'CREATE_EXPENSE'].includes(intent) ? [] : data.topCategories)),
     budget: normalizeBudget(data.budget),
     ...(intent === 'CREATE_EXPENSE' ? { suggestedExpense: normalizeSuggestedExpense(data.suggestedExpense) } : {}),
+    ...(analysis ? { analysis } : {}),
+    ...(data.geminiPreview != null ? { geminiPreview: normalizeGeminiPreview(data.geminiPreview) } : {}),
   }
 }
 
@@ -568,13 +576,18 @@ export function getAiChatErrorMessage(error) {
 }
 
 export async function sendAiChatMessage({ message, month, compareMonth, context } = {}, options = {}) {
-  const { apiClient = axiosClient, ...requestOptions } = options
+  const { apiClient = axiosClient, previewOpenQuestions = false, autoSendGemini = false, ...requestOptions } = options
   const validation = validateAiChatRequest({ message, month, compareMonth, context })
   if (!validation.valid) {
     throw invalidRequest(validation.message)
   }
 
-  const response = await apiClient.post('/ai/chat', validation.payload, {
+  const payload = {
+    ...validation.payload,
+    ...(previewOpenQuestions && { previewOpenQuestions: true }),
+    ...(previewOpenQuestions && autoSendGemini && { autoSendGemini: true }),
+  }
+  const response = await apiClient.post('/ai/chat', payload, {
     ...requestOptions,
     timeout: AI_CHAT_TIMEOUT_MS,
   })
@@ -582,10 +595,35 @@ export async function sendAiChatMessage({ message, month, compareMonth, context 
   return normalizeAiChatResponse(response.data)
 }
 
+const geminiPreviewId = /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i
+
+function normalizeGeminiPreview(value) {
+  const { id, text } = value || {}
+  if (typeof id !== 'string' || !geminiPreviewId.test(id) || typeof text !== 'string' || !text.trim()) {
+    throw invalidResponse('Bản xem trước Gemini không hợp lệ')
+  }
+  return { id, text }
+}
+
+export async function sendApprovedAiGemini(previewId, options = {}) {
+  const { apiClient = axiosClient, ...requestOptions } = options
+  if (typeof previewId !== 'string' || !geminiPreviewId.test(previewId)) {
+    throw invalidRequest('Vui lòng xem trước nội dung muốn gửi tới Gemini.')
+  }
+  const response = await apiClient.post('/ai/chat/gemini/approve', { previewId }, {
+    ...requestOptions,
+    timeout: AI_CHAT_TIMEOUT_MS,
+  })
+  return normalizeAiChatResponse(response.data)
+}
+
 export function createAiChatController({
   sessionStore = session,
   sendChat = sendAiChatMessage,
+  approveGeminiRequest = sendApprovedAiGemini,
+  preferenceStorage,
   getDefaultMonth = getCurrentVietnamMonth,
+  now = () => new Date(),
 } = {}) {
   const listeners = new Set()
   let sequence = 0
@@ -597,6 +635,17 @@ export function createAiChatController({
   let trackedRevision = initialSession.revision
   let trackedUserId = initialSession.user?.id ?? null
 
+  const geminiPreferenceKey = (userId) => 'smartexpense.gemini-auto.' + userId
+  const getPreferenceStorage = () => preferenceStorage ?? globalThis.localStorage
+  const readGeminiAutoSend = (userId) => {
+    if (userId == null) return false
+    try {
+      return getPreferenceStorage()?.getItem(geminiPreferenceKey(userId)) === 'true'
+    } catch {
+      return false
+    }
+  }
+
   const initialState = () => {
     const month = getDefaultMonth()
     return {
@@ -604,6 +653,8 @@ export function createAiChatController({
       month,
       compareMonth: getDefaultCompareMonth(month),
       draft: '',
+      geminiAutoSend: readGeminiAutoSend(trackedUserId),
+      geminiPreview: null,
       messages: [],
       loading: false,
       error: '',
@@ -647,15 +698,26 @@ export function createAiChatController({
     }
   })
 
-  const sendPromptInternal = async (rawMessage, { preserveDraftOnSuccess = false } = {}) => {
+  const syncGeminiPreference = (event) => {
+    if (trackedUserId == null || (event.key !== null && event.key !== geminiPreferenceKey(trackedUserId))) return
+    const geminiAutoSend = readGeminiAutoSend(trackedUserId)
+    if (geminiAutoSend !== state.geminiAutoSend) publish({ geminiAutoSend, geminiPreview: null })
+  }
+  globalThis.window?.addEventListener('storage', syncGeminiPreference)
+
+  const sendPromptInternal = async (rawMessage, { preserveDraftOnSuccess = false, approvedPreviewId } = {}) => {
     if (state.loading) return null
 
     const snap = sessionStore.getSnapshot()
     const requestRevision = snap.revision
     const requestUserId = snap.user?.id ?? null
     const targetMonth = state.month
+    const message = typeof rawMessage === 'string' ? rawMessage.trim() : ''
+    const localReply = !approvedPreviewId && message && message.length <= MAX_AI_MESSAGE_LENGTH
+      ? getAiLocalReply(message, snap.user, now)
+      : null
 
-    const validation = validateAiChatRequest({
+    const validation = (localReply || approvedPreviewId) ? { valid: true, payload: { message } } : validateAiChatRequest({
       message: rawMessage,
       month: targetMonth,
       compareMonth: state.context && isAiFollowUp(rawMessage) ? undefined : state.compareMonth || undefined,
@@ -677,23 +739,36 @@ export function createAiChatController({
       period: cleanMonth,
     }
 
-    const controller = new AbortController()
+    const controller = localReply ? null : new AbortController()
     activeController = controller
     const requestId = ++activeRequestId
 
     publish({
-      loading: true,
+      loading: !localReply,
       error: '',
       lastFailedMessage: '',
       draft: preserveDraftOnSuccess ? state.draft : '',
+      geminiPreview: null,
       messages: [...state.messages, userMessage],
     })
 
     try {
-      const response = await sendChat(
-        validation.payload,
-        { signal: controller.signal }
-      )
+      let response
+      if (approvedPreviewId) {
+        response = await approveGeminiRequest(approvedPreviewId, { signal: controller.signal })
+      } else if (localReply) {
+        response = { reply: localReply, intent: AI_LOCAL_REPLY }
+      } else {
+        const autoSendGemini = readGeminiAutoSend(requestUserId)
+        try {
+          response = await sendChat(validation.payload, { signal: controller.signal, previewOpenQuestions: true, autoSendGemini })
+        } catch (error) {
+          if (autoSendGemini || isRequestCancelled(error)) throw error
+          const fallback = getAiLocalAdviceFallback(error)
+          if (!fallback) throw error
+          response = { reply: fallback, intent: AI_LOCAL_REPLY }
+        }
+      }
 
       const currentSnap = sessionStore.getSnapshot()
       if (
@@ -701,6 +776,18 @@ export function createAiChatController({
         currentSnap.revision !== requestRevision ||
         (currentSnap.user?.id ?? null) !== requestUserId
       ) {
+        return null
+      }
+
+      if (!approvedPreviewId && response.geminiPreview) {
+        activeController = null
+        const draft = state.draft || cleanMessage
+        publish({
+          loading: false,
+          draft,
+          geminiPreview: draft.trim() === cleanMessage ? response.geminiPreview : null,
+          messages: state.messages.filter(item => item.id !== userMessage.id),
+        })
         return null
       }
 
@@ -715,6 +802,7 @@ export function createAiChatController({
         topCategories: response.topCategories,
         budget: response.budget,
         comparison: response.comparison ?? null,
+        ...(response.analysis ? { analysis: response.analysis } : {}),
         ...(response.suggestedExpense ? { suggestedExpense: response.suggestedExpense,
           expenseStatus: 'pending', expenseError: '' } : {}),
       }
@@ -725,8 +813,10 @@ export function createAiChatController({
         error: '',
         lastFailedMessage: '',
         messages: [...state.messages, assistantMessage],
-        context: getAiResponseContext(response),
-        lastIntent: response.intent,
+        ...(response.intent !== AI_LOCAL_REPLY && {
+          context: getAiResponseContext(response),
+          lastIntent: response.intent,
+        }),
       })
 
       return assistantMessage
@@ -775,6 +865,7 @@ export function createAiChatController({
     setDraft(value) {
       publish({
         draft: typeof value === 'string' ? value : '',
+        geminiPreview: null,
         ...(state.error ? { error: '' } : {}),
       })
     },
@@ -782,23 +873,45 @@ export function createAiChatController({
       if (typeof monthValue !== 'string' || monthValue === state.month) return
       abortActiveRequest()
       publish({ month: monthValue, compareMonth: getDefaultCompareMonth(monthValue),
-        loading: false, error: '', lastFailedMessage: '' })
+        loading: false, geminiPreview: null, error: '', lastFailedMessage: '' })
     },
     setCompareMonth(compareMonth) {
       if (typeof compareMonth !== 'string' || compareMonth === state.compareMonth) return
       abortActiveRequest()
-      publish({ compareMonth, loading: false, error: '', lastFailedMessage: '' })
+      publish({ compareMonth, loading: false, geminiPreview: null, error: '', lastFailedMessage: '' })
     },
     clearConversation() {
       abortActiveRequest()
       publish({
         context: null,
         lastIntent: '',
+        geminiPreview: null,
         messages: [],
         loading: false,
         error: '',
         lastFailedMessage: '',
       })
+    },
+    setGeminiAutoSend(enabled) {
+      if (state.loading || trackedUserId == null) return
+      const geminiAutoSend = enabled === true
+      try {
+        const storage = getPreferenceStorage()
+        const key = geminiPreferenceKey(trackedUserId)
+        if (geminiAutoSend) storage.setItem(key, 'true')
+        else storage.removeItem(key)
+        publish({ geminiAutoSend, geminiPreview: null, error: '' })
+      } catch {
+        publish({ error: 'Trình duyệt không lưu được tùy chọn Gemini.' })
+      }
+    },
+    cancelGeminiPreview() {
+      publish({ geminiPreview: null })
+    },
+    confirmGeminiPreview() {
+      const preview = state.geminiPreview
+      if (!preview || state.loading) return Promise.resolve(null)
+      return sendPromptInternal(preview.text, { approvedPreviewId: preview.id })
     },
     submitDraft() {
       return sendPromptInternal(state.draft)
@@ -860,6 +973,7 @@ export function createAiChatController({
       destroyed = true
       abortActiveRequest()
       unsubscribeSession()
+      globalThis.window?.removeEventListener('storage', syncGeminiPreference)
       listeners.clear()
     },
   }

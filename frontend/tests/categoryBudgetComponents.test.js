@@ -78,7 +78,7 @@ test('categoryBudgetUtils.getBudgetDisplayStatus: phân biệt dưới, bằng v
 test('categoryBudgetUtils.getStatusConfig: nhãn tiếng Việt và màu sắc phù hợp', () => {
   const safe = getStatusConfig('SAFE')
   assert.equal(safe.label, 'Trong ngân sách')
-  assert.ok(safe.barColor.includes('bg-emerald'))
+  assert.equal(safe.barColor, 'bg-brand-progress')
 
   assert.equal(getStatusConfig('WARNING').label, 'Trong ngân sách')
   const warning = getStatusConfig('WARNING', { clarifyWarning: true })

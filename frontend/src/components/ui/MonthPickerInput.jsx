@@ -122,7 +122,7 @@ export function MonthPickerPanel({
     : 'border-slate-200 bg-white text-slate-800 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100'
   const surfaceClass = isDarkPanel
     ? 'border-white/15 bg-slate-900 text-white'
-    : 'border-slate-200 bg-white text-slate-800 dark:border-slate-700 dark:bg-[#182234] dark:text-slate-100'
+    : 'border-slate-200 bg-white text-slate-800 dark:border-slate-700 dark:bg-card dark:text-slate-100'
   const iconButtonClass = isDarkPanel
     ? 'text-slate-300 hover:bg-white/10'
     : 'text-slate-500 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700'
@@ -391,15 +391,15 @@ export default function MonthPickerInput({
           isDarkPanel
             ? 'rounded-xl border border-white/20 bg-slate-900/60 px-3.5 py-2 text-xs font-bold text-white focus:border-blue-400 focus:ring-2 focus:ring-blue-400 sm:text-sm'
             : isCompact
-              ? 'rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-xs font-semibold text-slate-800 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-[#1E293B] dark:text-slate-100'
-              : 'rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-800 shadow-2xs focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-[#1E293B] dark:text-slate-100 dark:focus:ring-blue-900/40'
-        } ${disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:border-blue-400 dark:hover:border-blue-500'} ${className}`}
+              ? 'rounded-lg border border-border bg-card px-2.5 py-1 text-xs font-semibold text-foreground focus:border-ring focus:ring-2 focus:ring-ring'
+              : 'rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-800 shadow-2xs focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-muted dark:text-slate-100 dark:focus:ring-blue-900/40'
+        } ${disabled ? 'cursor-not-allowed opacity-60' : `cursor-pointer ${isCompact ? 'hover:border-ring/60' : 'hover:border-blue-400 dark:hover:border-blue-500'}`} ${className}`}
       >
         <span className="truncate select-none">{displayLabel}</span>
         <Calendar
           size={isCompact ? 13 : 16}
           className={`pointer-events-none ml-2 shrink-0 ${
-            isDarkPanel ? 'text-blue-200' : 'text-slate-400 dark:text-slate-500'
+            isDarkPanel ? 'text-blue-200' : isCompact ? 'text-muted-foreground' : 'text-slate-400 dark:text-slate-500'
           }`}
           aria-hidden="true"
         />

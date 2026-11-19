@@ -1,0 +1,39 @@
+.ai-chat-window {
+  --ai-chat-bottom: calc(var(--mobile-nav-height) + env(safe-area-inset-bottom) + .4rem);
+  inset-inline: .5rem;
+  bottom: var(--ai-chat-bottom);
+  top: .75rem;
+  max-height: 44rem;
+  margin-top: auto;
+}
+
+@media (min-width: 1024px) {
+  .ai-chat-window {
+    --ai-chat-bottom: 7rem;
+    inset-inline: auto 1.5rem;
+    width: min(29rem, calc(100vw - 3rem));
+    top: 2rem;
+    max-height: 43rem;
+  }
+}
+
+.ai-chat-header {
+  background: var(--brand-hero);
+}
+
+.ai-chat-period-body {
+  max-height: min(33dvh, 12rem);
+  overflow-y: auto;
+}
+
+.ai-chat-mascot {
+  transform-origin: center 80%;
+  transition: transform .2s ease-out;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  #ai-assistant-launcher .ai-chat-mascot[data-mood="happy"],
+  #ai-assistant-launcher .ai-chat-mascot[data-mood="wink"] {
+    transform: translateY(-2px) rotate(-7deg);
+  }
+}

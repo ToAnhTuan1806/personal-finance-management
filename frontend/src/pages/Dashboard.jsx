@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router'
+import { Link, useOutletContext } from 'react-router'
 import {
   PlusCircle,
   AlertCircle,
@@ -14,10 +14,10 @@ import {
   Layers,
   PieChart,
   ArrowRight,
-  Sparkles,
   ShieldCheck,
   Target,
-  Zap,
+  Bot,
+  CalendarDays,
 } from 'lucide-react'
 import {
   ResponsiveContainer,
@@ -38,13 +38,17 @@ import dashboardService from '../services/dashboardService'
 import useDashboardMonths from '../components/dashboard/useDashboardMonths.js'
 import MonthlyDelta from '../components/dashboard/MonthlyDelta.jsx'
 import BudgetUsage from '../components/budget/BudgetUsage.jsx'
-import { formatMoney as formatBudgetMoney, getBudgetRemaining } from '../components/budget/categoryBudgetUtils.js'
+import { formatMoney as formatBudgetMoney, getBudgetRemaining, getBudgetUsagePercentage } from '../components/budget/categoryBudgetUtils.js'
 import { getMonthlyTransactions, getTransactions } from '../services/transactionService'
 import { getBudget } from '../services/budgetService'
 import { buildDailyCashFlow, formatCashFlowTick } from '../utils/cashFlow'
-import walletLogo from '../assets/wallet-logo.png'
 import { useQuickAdd } from '../contexts/QuickAddContext'
 import { getApiErrorMessage } from '../api/errors'
+import { Button } from '../components/ui/button'
+import { Card, CardContent } from '../components/ui/card'
+import AnimatedGradientText from '../components/motion/AnimatedGradientText'
+import ShinyText from '../components/motion/ShinyText'
+import { getGreetingName } from '../utils/greetingName.js'
 
 const formatMoney = (amount) =>
   new Intl.NumberFormat('vi-VN', {
@@ -105,6 +109,7 @@ function ErrorSection({ message }) {
 function AuthenticatedDashboard() {
   const { user } = useAuth()
   const { openQuickAdd, mutationVersion } = useQuickAdd()
+  const { openAssistant } = useOutletContext() ?? {}
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth)
 
   const [categoryExpenses, setCategoryExpenses] = useState(null)
@@ -279,126 +284,83 @@ function AuthenticatedDashboard() {
     }
   }, [categoryExpenses, summary])
 
-  // Chỉ hiển thị tên từ tài khoản đã được Backend xác thực.
-  const displayName =
-    user?.fullName || 'Bạn'
+  const greetingName = getGreetingName(user?.fullName)
 
   const totalIncome = Number(summary?.totalIncome || 0)
   const totalExpense = Number(summary?.totalExpense || 0)
-  const balance = Number(summary?.balance || totalIncome - totalExpense)
+  const balance = Number(summary?.balance ?? (totalIncome - totalExpense))
   const savingRate = totalIncome > 0 && balance > 0 ? (balance / totalIncome) * 100 : 0
+  const budgetUsed = budget ? getBudgetUsagePercentage(budget) : 0
+  const budgetRemaining = budget ? getBudgetRemaining(budget) : null
   const expenseRate = totalIncome > 0 ? ((totalExpense / totalIncome) * 100).toFixed(1).replace('.', ',') : '0'
 
   return (
-    <div className="space-y-7 animate-fade-in">
-      {/* 1. Header Dashboard */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 p-6 sm:p-8 text-white shadow-xl shadow-blue-900/10">
-        <div className="pointer-events-none absolute -right-12 -top-12 h-64 w-64 rounded-full bg-blue-500/20 blur-3xl" />
-        <div className="pointer-events-none absolute -left-12 -bottom-12 h-64 w-64 rounded-full bg-indigo-500/15 blur-3xl" />
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="wrap-break-word text-[clamp(1.55rem,3.25vw,2.4rem)] font-extrabold tracking-tight">
+            Xin chào, <AnimatedGradientText>{greetingName}</AnimatedGradientText>!
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Theo dõi dòng tiền và kế hoạch chi tiêu của {formatMonth(selectedMonth)}.
+          </p>
+        </div>
+        <div className="inline-flex max-w-full items-center rounded-xl border border-border bg-card p-0.5 shadow-panel">
+          <Button variant="ghost" className="size-10 min-h-10 px-0" onClick={handlePrevMonth} disabled={!canGoPrevious} aria-label="Tháng trước">
+            <ChevronLeft size={17} />
+          </Button>
+          <MonthPickerInput id="dashboard-month-picker" value={selectedMonth}
+            min={`${MIN_REPORT_YEAR}-01`} max={latestMonth}
+            allowClear={false} aria-label="Chọn tháng và năm thống kê"
+            onChange={(event) => {
+              if (!event.target.value) return
+              setSelectedMonth(event.target.value)
+              setLoading(true)
+            }} className="min-w-32 border-0 bg-transparent shadow-none" />
+          <Button variant="ghost" className="size-10 min-h-10 px-0" onClick={handleNextMonth} disabled={!canGoNext} aria-label="Tháng sau">
+            <ChevronRight size={17} />
+          </Button>
+        </div>
+      </div>
 
-        <div className="relative z-10 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-          <div className="space-y-1.5">
-            <span className="inline-flex items-center gap-2 rounded-full border border-blue-400/25 bg-blue-500/20 px-3 py-1 text-xs font-semibold text-blue-200 backdrop-blur-md">
-              <Sparkles size={14} className="text-amber-300" />
-              <span>Xin chào, {displayName}</span>
-            </span>
-
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-              Tổng quan
-            </h1>
-
-            <p className="text-xs sm:text-sm text-slate-300 font-medium">
-              Thu nhập, chi tiêu và số dư của bạn trong {formatMonth(selectedMonth)}.
+      <section aria-label="Tình hình tài chính và thao tác nhanh" className="grid gap-3 xl:grid-cols-[1.35fr_1fr]">
+        <Card className="se-hero relative isolate min-h-[11rem] justify-center overflow-hidden py-0">
+          <CardContent className="relative z-10 max-w-[66%] py-5 sm:max-w-[68%]">
+            <p className="text-xs font-semibold text-accent-foreground">Kế hoạch chi tiêu</p>
+            <h3 className="mt-1 text-xl leading-tight font-bold tracking-tight sm:text-2xl">
+              {loading ? 'Đang tải ngân sách' : budgetError ? 'Chưa tải được ngân sách'
+                : !budget ? 'Lên hạn mức cho tháng của bạn'
+                : budgetRemaining < 0 ? 'Chi tiêu đã vượt hạn mức'
+                : 'Bạn vẫn đang trong hạn mức'}
+            </h3>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {!loading && budget
+                ? `${formatBudgetMoney(Math.abs(budgetRemaining))} ${budgetRemaining < 0 ? 'vượt ngân sách' : 'còn trong ngân sách'}`
+                : 'Xem tiến độ và chủ động điều chỉnh chi tiêu.'}
             </p>
-          </div>
+            <Button asChild className="se-action mt-4 min-h-9 rounded-full px-3.5 text-xs">
+              <Link to="/budgets"><ShinyText>Xem ngân sách</ShinyText><ArrowRight size={15} /></Link>
+            </Button>
+          </CardContent>
+          <img className="se-hero-art" src="/images/savings-pig.png" alt="" width={550} height={408} decoding="async" />
+        </Card>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <Link
-              to="/transactions"
-              className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-xs sm:text-sm font-bold text-white shadow-md shadow-blue-500/25 transition-all hover:bg-blue-500 active:scale-95"
-            >
-              <PlusCircle size={17} />
-              <span>Thêm giao dịch</span>
-            </Link>
-
-            {/* Bộ chọn tháng cải tiến với nút điều hướng ‹ › */}
-            <div className="flex items-center rounded-xl border border-white/15 bg-white/10 p-1 backdrop-blur-md">
-              <button
-                type="button"
-                onClick={handlePrevMonth}
-                disabled={!canGoPrevious}
-                aria-label="Tháng trước"
-                title="Tháng trước"
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-white hover:bg-white/10 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
-              >
-                <ChevronLeft size={16} />
-              </button>
-
-              <MonthPickerInput id="dashboard-month-picker" value={selectedMonth}
-                min={`${MIN_REPORT_YEAR}-01`} max={latestMonth} theme="dark-panel" panelTheme="default"
-                allowClear={false} aria-label="Chọn tháng và năm thống kê"
-                onChange={(event) => {
-                  if (!event.target.value) return
-                  setSelectedMonth(event.target.value)
-                  setLoading(true)
-                }} className="min-w-32 border-0 bg-transparent shadow-none" />
-
-              <button
-                type="button"
-                onClick={handleNextMonth}
-                disabled={!canGoNext}
-                aria-label="Tháng sau"
-                title="Tháng sau"
-                className="flex h-8 w-8 items-center justify-center rounded-lg text-white hover:bg-white/10 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
-              >
-                <ChevronRight size={16} />
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 2. Thao tác nhanh */}
-      <section className="flex flex-wrap items-center justify-between gap-3.5 rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-[#182234]">
-        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-          <Zap size={16} className="text-amber-500" />
-          <span>Thao tác nhanh</span>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={() => openQuickAdd('EXPENSE')}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-rose-50 px-3.5 py-2 text-xs font-bold text-rose-600 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-400 dark:hover:bg-rose-900/40 transition-colors"
-          >
-            <ArrowUpRight size={15} />
-            <span>+ Thêm chi tiêu</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => openQuickAdd('INCOME')}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-50 px-3.5 py-2 text-xs font-bold text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-400 dark:hover:bg-emerald-900/40 transition-colors"
-          >
-            <ArrowDownRight size={15} />
-            <span>+ Thêm thu nhập</span>
-          </button>
-
-          <Link
-            to="/budgets"
-            className="inline-flex items-center gap-1.5 rounded-xl bg-slate-100 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition-colors"
-          >
-            <Target size={15} />
-            <span>Ngân sách</span>
-          </Link>
-
-          <Link
-            to="/categories"
-            className="inline-flex items-center gap-1.5 rounded-xl bg-slate-100 px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition-colors"
-          >
-            <Layers size={15} />
-            <span>Danh mục</span>
-          </Link>
+        <div aria-label="Thao tác nhanh" className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <Button variant="outline" className="se-dashboard-action" onClick={() => openQuickAdd('EXPENSE')}>
+            <span className="se-action-icon"><PlusCircle size={23} /></span>
+            <span>Thêm chi tiêu</span>
+          </Button>
+          <Button variant="outline" className="se-dashboard-action" onClick={() => openQuickAdd('INCOME')}>
+            <span className="se-action-icon"><ArrowDownRight size={23} /></span>
+            <span>Thêm thu nhập</span>
+          </Button>
+          <Button asChild variant="outline" className="se-dashboard-action">
+            <Link to="/calendar"><span className="se-action-icon"><CalendarDays size={23} /></span><span>Lịch thu chi</span></Link>
+          </Button>
+          {openAssistant && <Button variant="outline" className="se-dashboard-action" onClick={openAssistant}>
+            <span className="se-action-icon"><Bot size={23} /></span>
+            <span>Hỏi trợ lý</span>
+          </Button>}
         </div>
       </section>
 
@@ -428,7 +390,7 @@ function AuthenticatedDashboard() {
       {/* 4. Ba thẻ KPI ngang hàng (Thu nhập, Chi tiêu, Số dư) */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         {/* Thu nhập */}
-        <div className="relative overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-sm dark:border-slate-800 dark:bg-[#182234] transition-all hover:shadow-md">
+        <div className="relative overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-sm dark:border-slate-800 dark:bg-card transition-all hover:shadow-md">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Thu nhập
@@ -450,7 +412,7 @@ function AuthenticatedDashboard() {
         </div>
 
         {/* Chi tiêu */}
-        <div className="relative overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-sm dark:border-slate-800 dark:bg-[#182234] transition-all hover:shadow-md">
+        <div className="relative overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-sm dark:border-slate-800 dark:bg-card transition-all hover:shadow-md">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Chi tiêu
@@ -472,7 +434,7 @@ function AuthenticatedDashboard() {
         </div>
 
         {/* Số dư - Nổi bật nhất */}
-        <div className="relative overflow-hidden rounded-2xl border-2 border-blue-500/40 bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-purple-500/10 p-5 sm:p-6 shadow-md dark:border-blue-500/40 dark:from-[#182234] dark:to-[#1E293B] transition-all hover:shadow-lg">
+        <div className="relative overflow-hidden rounded-2xl border-2 border-blue-500/40 bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-indigo-500/10 p-5 sm:p-6 shadow-md dark:border-blue-500/40 dark:from-card dark:to-muted transition-all hover:shadow-lg">
           <div className="flex items-center justify-between">
             <span className="text-xs font-black uppercase tracking-wider text-blue-600 dark:text-blue-400">
               Số dư
@@ -495,10 +457,10 @@ function AuthenticatedDashboard() {
         </div>
       </div>
 
-      {/* 5. Biểu đồ Thu - chi trong tháng & Biểu đồ Donut */}
+      {/* Ngân sách và cơ cấu chi tiêu */}
       {loading ? (
         <div
-          className="flex min-h-72 items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-[#182234]"
+          className="flex min-h-72 items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-card"
           role="status"
         >
           <Loader2 size={24} className="animate-spin text-blue-600 dark:text-blue-400" />
@@ -507,9 +469,93 @@ function AuthenticatedDashboard() {
           </span>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-          {/* Biểu đồ xu hướng thu - chi */}
-          <section className="flex flex-col justify-between rounded-3xl border border-slate-200/90 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-[#182234]">
+        <>
+          <div className="grid gap-4 xl:grid-cols-2">
+            <Card className="p-5 sm:p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400">
+                    <Target size={19} />
+                  </div>
+                  <div>
+                    <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                      Tiến độ ngân sách
+                    </h2>
+                    <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                      {budgetError ? 'Không tải được hạn mức' : budget ? `Hạn mức chi tiêu ${formatMonth(selectedMonth)}` : 'Chưa thiết lập hạn mức'}
+                    </p>
+                  </div>
+                </div>
+                <Link
+                  to="/budgets"
+                  className="text-xs font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 inline-flex items-center gap-1"
+                >
+                  <span>{budget ? 'Quản lý ngân sách' : 'Thiết lập ngay'}</span>
+                  <ChevronRight size={15} />
+                </Link>
+              </div>
+
+              {budgetError ? <ErrorSection message={budgetError} /> : budget ? (
+                <div className="space-y-4">
+                  <div className="flex flex-wrap items-center gap-5 sm:flex-nowrap">
+                    <div aria-hidden="true" className="se-budget-ring shrink-0" style={{ '--budget-angle': `${Math.min(100, Math.max(0, budgetUsed)) * 3.6}deg` }}>
+                      <div className="se-budget-ring-label">
+                        <strong>{budgetUsed.toLocaleString('vi-VN', { maximumFractionDigits: 1 })}%</strong>
+                        <span>Đã dùng</span>
+                      </div>
+                    </div>
+                    <dl className="min-w-0 flex-1 space-y-3 text-sm">
+                      <div className="flex flex-wrap justify-between gap-x-4">
+                        <dt className="text-muted-foreground">Đã chi</dt>
+                        <dd className="font-bold tabular-nums">{formatMoney(budget.spentAmount ?? totalExpense)}</dd>
+                      </div>
+                      <div className="flex flex-wrap justify-between gap-x-4">
+                        <dt className="text-muted-foreground">Hạn mức</dt>
+                        <dd className="font-bold tabular-nums">{formatBudgetMoney(budget.amountLimit)}</dd>
+                      </div>
+                      <div className="flex flex-wrap justify-between gap-x-4 border-t border-border pt-3">
+                        <dt className="text-muted-foreground">Còn lại</dt>
+                        <dd className={`font-bold tabular-nums ${budgetRemaining < 0 ? 'text-expense' : 'text-income'}`}>{formatBudgetMoney(budgetRemaining)}</dd>
+                      </div>
+                    </dl>
+                  </div>
+
+                  {/* Thanh tiến độ */}
+                  <BudgetUsage budget={budget} />
+                </div>
+              ) : (
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 rounded-2xl bg-blue-50/60 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/40">
+                  <div className="space-y-1 text-center sm:text-left">
+                    <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                      Chưa có ngân sách cho {formatMonth(selectedMonth)}
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Thiết lập hạn mức chi tiêu để kiểm soát dòng tiền và nhận cảnh báo khi chạm ngưỡng chi tiêu.
+                    </p>
+                  </div>
+                  <Link
+                    to="/budgets"
+                    className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-blue-700 transition-colors"
+                  >
+                    <PlusCircle size={15} />
+                    <span>Thiết lập ngân sách</span>
+                  </Link>
+                </div>
+              )}
+            </Card>
+
+            {categoryExpenses !== null ? (
+              <ExpenseDonutChart
+                data={categoryExpenses}
+                compact
+                title="Chi tiêu theo danh mục"
+                subtitle={`Tháng ${selectedMonth.split('-')[1]}/${selectedMonth.split('-')[0]}`}
+              />
+            ) : (
+              <ErrorSection message="Không tải được biểu đồ chi tiêu theo danh mục." />
+            )}
+          </div>
+          <section className="flex flex-col justify-between rounded-3xl border border-slate-200/90 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-card">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
@@ -519,7 +565,7 @@ function AuthenticatedDashboard() {
                   Thu – chi trong tháng
                 </h2>
               </div>
-              <div className="flex items-center gap-3 text-xs font-semibold">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold">
                 <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
                   <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" /> Thu nhập
                 </span>
@@ -537,23 +583,23 @@ function AuthenticatedDashboard() {
                   <AreaChart data={dailyTrend} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
                     <defs>
                       <linearGradient id="trendIncome" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#10B981" stopOpacity={0.35} />
-                        <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+                        <stop offset="5%" stopColor="var(--finance-income)" stopOpacity={0.35} />
+                        <stop offset="95%" stopColor="var(--finance-income)" stopOpacity={0} />
                       </linearGradient>
                       <linearGradient id="trendExpense" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#EF4444" stopOpacity={0.35} />
-                        <stop offset="95%" stopColor="#EF4444" stopOpacity={0} />
+                        <stop offset="5%" stopColor="var(--finance-expense)" stopOpacity={0.35} />
+                        <stop offset="95%" stopColor="var(--finance-expense)" stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <XAxis
                       dataKey="date"
-                      stroke="#94a3b8"
+                      stroke="var(--text-secondary)"
                       fontSize={11}
                       tickLine={false}
                       axisLine={{ stroke: '#cbd5e1', strokeWidth: 0.5 }}
                     />
                     <YAxis
-                      stroke="#94a3b8"
+                      stroke="var(--text-secondary)"
                       fontSize={11}
                       tickLine={false}
                       axisLine={{ stroke: '#cbd5e1', strokeWidth: 0.5 }}
@@ -573,7 +619,7 @@ function AuthenticatedDashboard() {
                       type="monotone"
                       dataKey="income"
                       name="Thu nhập"
-                      stroke="#10B981"
+                      stroke="var(--finance-income)"
                       strokeWidth={2.5}
                       fillOpacity={1}
                       fill="url(#trendIncome)"
@@ -582,7 +628,7 @@ function AuthenticatedDashboard() {
                       type="monotone"
                       dataKey="expense"
                       name="Chi tiêu"
-                      stroke="#EF4444"
+                      stroke="var(--finance-expense)"
                       strokeWidth={2.5}
                       fillOpacity={1}
                       fill="url(#trendExpense)"
@@ -615,96 +661,13 @@ function AuthenticatedDashboard() {
               </button>
             </div>
           </section>
-
-          {/* Biểu đồ Donut */}
-          {categoryExpenses !== null ? (
-            <ExpenseDonutChart
-              data={categoryExpenses}
-              title="Chi tiêu theo danh mục"
-              subtitle={`Tháng ${selectedMonth.split('-')[1]}/${selectedMonth.split('-')[0]}`}
-            />
-          ) : (
-            <ErrorSection message="Không tải được biểu đồ chi tiêu theo danh mục." />
-          )}
-        </div>
+        </>
       )}
-
-      {/* 6. Card Ngân sách tháng này */}
-      <section className="rounded-3xl border border-slate-200/90 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-[#182234]">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400">
-              <Target size={19} />
-            </div>
-            <div>
-              <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
-                Ngân sách tháng này
-              </h2>
-              <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                {budgetError ? 'Không tải được hạn mức' : budget ? `Hạn mức chi tiêu ${formatMonth(selectedMonth)}` : 'Chưa thiết lập hạn mức'}
-              </p>
-            </div>
-          </div>
-          <Link
-            to="/budgets"
-            className="text-xs font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 inline-flex items-center gap-1"
-          >
-            <span>{budget ? 'Quản lý ngân sách' : 'Thiết lập ngay'}</span>
-            <ChevronRight size={15} />
-          </Link>
-        </div>
-
-        {budgetError ? <ErrorSection message={budgetError} /> : budget ? (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-[#1E293B] border border-slate-100 dark:border-slate-800">
-              <div>
-                <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Đã chi tiêu</p>
-                <p className="text-lg font-black text-slate-900 dark:text-slate-100 mt-1">
-                  {formatMoney(budget.spentAmount ?? totalExpense)}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Hạn mức ngân sách</p>
-                <p className="text-lg font-black text-slate-900 dark:text-slate-100 mt-1">
-                  {formatBudgetMoney(budget.amountLimit)}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Còn lại khả dụng</p>
-                <p className="text-lg font-black text-emerald-600 dark:text-emerald-400 mt-1">
-                  {formatBudgetMoney(Math.max(0, getBudgetRemaining(budget)))}
-                </p>
-              </div>
-            </div>
-
-            {/* Thanh tiến độ */}
-            <BudgetUsage budget={budget} />
-          </div>
-        ) : (
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 rounded-2xl bg-blue-50/60 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/40">
-            <div className="space-y-1 text-center sm:text-left">
-              <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                Chưa có ngân sách cho {formatMonth(selectedMonth)}
-              </p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Thiết lập hạn mức chi tiêu để kiểm soát dòng tiền và nhận cảnh báo khi chạm ngưỡng chi tiêu.
-              </p>
-            </div>
-            <Link
-              to="/budgets"
-              className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-blue-700 transition-colors"
-            >
-              <PlusCircle size={15} />
-              <span>Thiết lập ngân sách</span>
-            </Link>
-          </div>
-        )}
-      </section>
 
       {/* 7. Giao dịch gần đây + Điểm nhấn tháng này */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Danh sách giao dịch */}
-        <section className="rounded-3xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-sm lg:col-span-2 dark:border-slate-800 dark:bg-[#182234]">
+        <section className="rounded-3xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-sm lg:col-span-2 dark:border-slate-800 dark:bg-card">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4 dark:border-slate-800">
             <div>
               <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
@@ -804,7 +767,7 @@ function AuthenticatedDashboard() {
         </section>
 
         {/* Điểm nhấn tháng này (thay cho Thông tin tài chính) */}
-        <aside className="flex flex-col gap-4 rounded-3xl border border-slate-200/90 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-[#182234]">
+        <aside className="flex flex-col gap-4 rounded-3xl border border-slate-200/90 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-card">
           <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
             Điểm nhấn tháng này
           </h2>
@@ -812,7 +775,7 @@ function AuthenticatedDashboard() {
           {financialInsights ? (
             <>
               {/* Danh mục chi nhiều nhất */}
-              <div className="rounded-2xl bg-slate-50 p-4 border border-slate-100 dark:bg-[#1E293B] dark:border-slate-800/80">
+              <div className="rounded-2xl bg-slate-50 p-4 border border-slate-100 dark:bg-muted dark:border-slate-800/80">
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                     Danh mục chi nhiều nhất
@@ -836,7 +799,7 @@ function AuthenticatedDashboard() {
               </div>
 
               {/* Danh mục đã phát sinh chi tiêu */}
-              <div className="rounded-2xl bg-slate-50 p-4 border border-slate-100 dark:bg-[#1E293B] dark:border-slate-800/80">
+              <div className="rounded-2xl bg-slate-50 p-4 border border-slate-100 dark:bg-muted dark:border-slate-800/80">
                 <div className="flex items-center justify-between gap-2">
                   <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                     Danh mục đã phát sinh chi tiêu
@@ -857,7 +820,7 @@ function AuthenticatedDashboard() {
               </div>
 
               {/* Chi tiêu trung bình */}
-              <div className="rounded-2xl bg-slate-50 p-4 border border-slate-100 dark:bg-[#1E293B] dark:border-slate-800/80">
+              <div className="rounded-2xl bg-slate-50 p-4 border border-slate-100 dark:bg-muted dark:border-slate-800/80">
                 <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   Chi trung bình mỗi ngày
                 </p>
@@ -872,7 +835,7 @@ function AuthenticatedDashboard() {
               </div>
             </>
           ) : (
-            <div className="flex flex-1 flex-col items-center justify-center text-center p-6 rounded-2xl bg-slate-50 border border-slate-100 dark:bg-[#1E293B] dark:border-slate-800/80">
+            <div className="flex flex-1 flex-col items-center justify-center text-center p-6 rounded-2xl bg-slate-50 border border-slate-100 dark:bg-muted dark:border-slate-800/80">
               <PieChart size={28} className="text-slate-400 mb-2" />
               <p className="font-bold text-sm text-slate-800 dark:text-slate-200">
                 Chưa có dữ liệu phân tích
@@ -896,101 +859,94 @@ function AuthenticatedDashboard() {
   )
 }
 
+const GUEST_EXPENSE_OPTIONS = [150_000, 500_000, 1_500_000]
+
+function GuestBudgetDemo({ budget }) {
+  const [extraExpense, setExtraExpense] = useState(0)
+  const projectedBudget = { ...budget, spentAmount: budget.spentAmount + extraExpense }
+  const remaining = getBudgetRemaining(projectedBudget)
+  const percentage = getBudgetUsagePercentage(projectedBudget)
+  const barWidth = Math.min(100, percentage)
+  const overBudget = remaining < 0
+
+  return (
+    <section aria-labelledby="guest-budget-title" className="min-w-0 rounded-[1.5rem] border border-amber-100 bg-card p-4 shadow-sm sm:p-6 dark:border-border">
+      <p className="text-xs font-semibold text-muted-foreground">Dữ liệu minh họa</p>
+      <h2 id="guest-budget-title" className="mt-1 text-xl font-extrabold text-card-foreground sm:text-2xl">
+        Thử một khoản chi
+      </h2>
+      <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+        Đã chi <strong className="font-semibold text-card-foreground">{formatMoney(budget.spentAmount)}</strong>
+        {' trên ngân sách '}
+        <strong className="font-semibold text-card-foreground">{formatMoney(budget.amountLimit)}</strong>.
+      </p>
+
+      <fieldset className="mt-4 min-w-0">
+        <legend className="mb-2 text-sm font-semibold text-card-foreground">Bạn muốn chi thêm bao nhiêu?</legend>
+        <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
+          {GUEST_EXPENSE_OPTIONS.map((amount) => (
+            <label key={amount} className="relative min-w-0">
+              <input
+                type="radio"
+                name="guest-extra-expense"
+                value={amount}
+                checked={extraExpense === amount}
+                onChange={() => setExtraExpense(amount)}
+                className="peer sr-only"
+              />
+              <span className="flex min-h-11 cursor-pointer items-center justify-center rounded-xl border border-border px-1 text-center text-xs font-semibold tabular-nums text-card-foreground transition-colors hover:bg-accent peer-checked:border-primary peer-checked:bg-accent peer-checked:text-accent-foreground peer-focus-visible:ring-2 peer-focus-visible:ring-ring peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-card motion-reduce:transition-none sm:text-sm">
+                {formatMoney(amount)}
+              </span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
+      <div className="mt-4 space-y-2.5 rounded-xl bg-muted p-3.5">
+        <div role="status" className={overBudget ? 'text-expense' : 'text-income'}>
+          <p className="text-xs font-semibold">{overBudget ? 'Vượt ngân sách' : 'Còn trong ngân sách'}</p>
+          <p className="mt-0.5 text-xl font-extrabold tabular-nums sm:text-2xl">{formatMoney(Math.abs(remaining))}</p>
+        </div>
+        <div
+          role="progressbar"
+          aria-label="Tỷ lệ sử dụng ngân sách dự kiến"
+          aria-valuenow={barWidth}
+          aria-valuetext={(percentage / 100).toLocaleString('vi-VN', { style: 'percent', maximumFractionDigits: 1 })}
+          className="h-2 w-full overflow-hidden rounded-full bg-border"
+        >
+          <div
+            className={'h-full rounded-full transition-[width,background-color] duration-300 motion-reduce:transition-none ' + (overBudget ? 'bg-rose-500 dark:bg-rose-400' : 'bg-brand-progress')}
+            style={{ width: barWidth + '%' }}
+          />
+        </div>
+      </div>
+    </section>
+  )
+}
+
 function GuestDashboard() {
-  const { transactions, totalIncome, totalExpense, balance, savingRate, categoryExpenses, budget } = landingPreview
-  const savingLabel = savingRate.toLocaleString('vi-VN', { maximumFractionDigits: 1 })
+  const { transactions, categoryExpenses, budget } = landingPreview
   return (
     <div className="space-y-10 animate-fade-in">
-      {/* 1. Hero Banner 2 cột trực quan */}
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-700 via-indigo-700 to-slate-900 p-5 sm:p-8 lg:p-12 text-white shadow-xl shadow-blue-600/15">
-        <div className="pointer-events-none absolute -right-16 -top-16 h-80 w-80 rounded-full bg-cyan-400/20 blur-3xl" />
-        <div className="pointer-events-none absolute -left-16 -bottom-16 h-80 w-80 rounded-full bg-indigo-500/25 blur-3xl" />
-
-        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-          {/* Cột trái: Nội dung chính */}
-          <div className="lg:col-span-7 space-y-5">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3.5 py-1.5 text-xs font-bold backdrop-blur-md">
-              <Sparkles size={14} className="text-amber-300" />
-              <span>Theo dõi thu chi mỗi ngày</span>
-            </div>
-
-            <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight leading-snug">
-              Nắm rõ từng đồng tiền, chi tiêu có kế hoạch hơn
-            </h1>
-
-            <p className="text-sm sm:text-base text-blue-100 leading-relaxed">
-              Ghi lại thu chi mỗi ngày, đặt ngân sách theo tháng và xem biểu đồ chi tiêu rõ ràng trên điện thoại hoặc máy tính.
-            </p>
-
-            <div className="flex flex-wrap items-center gap-3.5 pt-2">
-              <Link
-                to="/register"
-                className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-blue-700 shadow-lg shadow-black/10 hover:bg-blue-50 transition-all active:scale-95"
-              >
-                <span>Đăng ký miễn phí</span>
-                <ArrowRight size={17} />
+      <section aria-labelledby="guest-hero-title" className="grid items-center gap-4 rounded-3xl border border-amber-100 bg-linear-to-br from-[#fff9ee] via-[#fffcf6] to-[#fff1dc] p-4 sm:gap-6 sm:p-8 lg:grid-cols-2 lg:gap-10 lg:p-10 dark:border-border dark:from-[#272c22] dark:via-[#202822] dark:to-[#20261a]">
+        <div className="min-w-0">
+          <h1 id="guest-hero-title" className="max-w-[18ch] text-3xl font-extrabold leading-tight tracking-tight text-foreground sm:text-4xl xl:text-5xl">
+            Biết mình còn bao nhiêu trước khi chi
+          </h1>
+          <p className="mt-3 max-w-md text-sm leading-relaxed text-muted-foreground sm:text-base">
+            Ghi thu chi hằng ngày và xem mỗi khoản mua ảnh hưởng thế nào đến ngân sách tháng.
+          </p>
+          <div className="mt-3 flex items-center justify-between gap-2 sm:mt-5">
+            <Button asChild>
+              <Link to="/register">
+                Đăng ký miễn phí
+                <ArrowRight size={16} aria-hidden="true" />
               </Link>
-
-              <Link
-                to="/login"
-                className="inline-flex items-center gap-2 rounded-xl border border-white/30 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur-md hover:bg-white/20 transition-all active:scale-95"
-              >
-                <span>Đăng nhập</span>
-              </Link>
-            </div>
-          </div>
-
-          {/* Cột phải: Mockup Dashboard mini lấp đầy khoảng trống */}
-          <div className="lg:col-span-5 flex justify-center">
-            <div className="w-full max-w-sm rounded-2xl border border-white/20 bg-white/10 p-3.5 sm:p-5 backdrop-blur-xl shadow-2xl space-y-4">
-              <div className="flex items-center justify-between gap-1.5 border-b border-white/10 pb-3">
-                <div className="flex items-center gap-2 min-w-0">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/20 overflow-hidden p-1">
-                    <img
-                      src={walletLogo}
-                      alt="SmartExpense"
-                      className="h-full w-full object-contain"
-                      onError={(e) => {
-                        e.currentTarget.onerror = null
-                        e.currentTarget.src = '/Vi.png'
-                      }}
-                    />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-bold text-white leading-tight truncate">SmartExpense</p>
-                    <p className="text-[10px] text-blue-200 truncate">Tổng quan tháng 11</p>
-                  </div>
-                </div>
-                <span className="shrink-0 rounded-full bg-emerald-400/20 px-2 py-0.5 text-[9px] sm:text-[10px] font-bold text-emerald-300">
-                  {savingLabel}% tiết kiệm
-                </span>
-              </div>
-              <p className="-mt-1 text-[10px] font-semibold text-blue-200/90">Dữ liệu minh họa</p>
-
-              <div>
-                <p className="text-[11px] font-medium text-blue-200 uppercase tracking-wider">Số dư khả dụng</p>
-                <p className="text-2xl font-black text-white mt-0.5">{formatMoney(balance)}</p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2.5 pt-1">
-                <div className="rounded-xl bg-white/10 p-2.5">
-                  <div className="flex items-center gap-1 text-[10px] text-emerald-300 font-bold">
-                    <ArrowDownRight size={12} />
-                    <span>Thu nhập</span>
-                  </div>
-                  <p className="text-xs font-extrabold text-white mt-1">{formatMoney(totalIncome)}</p>
-                </div>
-                <div className="rounded-xl bg-white/10 p-2.5">
-                  <div className="flex items-center gap-1 text-[10px] text-rose-300 font-bold">
-                    <ArrowUpRight size={12} />
-                    <span>Chi tiêu</span>
-                  </div>
-                  <p className="text-xs font-extrabold text-white mt-1">{formatMoney(totalExpense)}</p>
-                </div>
-              </div>
-            </div>
+            </Button>
+            <img src="/images/savings-pig.png" alt="" width={550} height={408} decoding="async" className="h-auto w-24 min-w-0 max-w-[42%] sm:w-40 xl:w-48" />
           </div>
         </div>
+        <GuestBudgetDemo budget={budget} />
       </section>
 
       {/* 2. Bốn tính năng cốt lõi (Grid items-stretch bằng nhau) */}
@@ -1005,7 +961,7 @@ function GuestDashboard() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-stretch">
-          <div className="flex flex-col justify-between h-full rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-[#182234] transition-all hover:-translate-y-1">
+          <div className="flex flex-col justify-between h-full rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-card transition-all hover:-translate-y-1">
             <div>
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400 mb-3.5">
                 <ArrowUpRight size={22} />
@@ -1019,7 +975,7 @@ function GuestDashboard() {
             </div>
           </div>
 
-          <div className="flex flex-col justify-between h-full rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-[#182234] transition-all hover:-translate-y-1">
+          <div className="flex flex-col justify-between h-full rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-card transition-all hover:-translate-y-1">
             <div>
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-purple-50 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400 mb-3.5">
                 <Layers size={22} />
@@ -1033,7 +989,7 @@ function GuestDashboard() {
             </div>
           </div>
 
-          <div className="flex flex-col justify-between h-full rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-[#182234] transition-all hover:-translate-y-1">
+          <div className="flex flex-col justify-between h-full rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-card transition-all hover:-translate-y-1">
             <div>
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400 mb-3.5">
                 <Wallet size={22} />
@@ -1047,7 +1003,7 @@ function GuestDashboard() {
             </div>
           </div>
 
-          <div className="flex flex-col justify-between h-full rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-[#182234] transition-all hover:-translate-y-1">
+          <div className="flex flex-col justify-between h-full rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-card transition-all hover:-translate-y-1">
             <div>
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400 mb-3.5">
                 <PieChart size={22} />
@@ -1066,86 +1022,18 @@ function GuestDashboard() {
       {/* 3. Bản xem trước giao diện Dashboard */}
       <section className="space-y-4">
         <div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
-              Xem thử giao diện
-            </h2>
-            <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-[11px] font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300">
-              Dữ liệu minh họa
-            </span>
-          </div>
-          <p className="mt-0.5 text-xs sm:text-[13px] text-slate-600 dark:text-slate-300 font-medium">
-            Đây là dữ liệu minh họa. Số liệu thật của bạn sẽ hiện sau khi đăng nhập.
-          </p>
+          <h2 className="text-lg font-bold text-foreground">Xem thử giao diện</h2>
+          <p className="mt-0.5 text-sm text-muted-foreground">Biểu đồ và giao dịch minh họa của cùng một tháng.</p>
         </div>
 
-        {/* 3 Thẻ Metric Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="rounded-2xl border border-emerald-100 bg-emerald-50/50 p-5 dark:border-emerald-950/40 dark:bg-emerald-950/20">
-            <div className="flex items-center justify-between text-xs font-bold text-emerald-700 dark:text-emerald-400">
-              <span>Tổng thu nhập</span>
-              <ArrowDownRight size={18} />
-            </div>
-            <p className="mt-2 text-2xl font-black text-emerald-800 dark:text-emerald-300">
-              {formatMoney(totalIncome)}
-            </p>
-            <p className="mt-1.5 text-xs sm:text-[13px] text-emerald-700/80 dark:text-emerald-400/80 font-medium">
-              Tổng hợp các khoản thu trong tháng
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-rose-100 bg-rose-50/50 p-5 dark:border-rose-950/40 dark:bg-rose-950/20">
-            <div className="flex items-center justify-between text-xs font-bold text-rose-700 dark:text-rose-400">
-              <span>Tổng chi tiêu</span>
-              <ArrowUpRight size={18} />
-            </div>
-            <p className="mt-2 text-2xl font-black text-rose-800 dark:text-rose-300">
-              {formatMoney(totalExpense)}
-            </p>
-            <p className="mt-1.5 text-xs sm:text-[13px] text-rose-700/80 dark:text-rose-400/80 font-medium">
-              Phân loại chi tiết theo từng danh mục
-            </p>
-          </div>
-
-          <div className="rounded-2xl border-2 border-blue-500/30 bg-blue-50/60 p-5 dark:border-blue-500/30 dark:bg-blue-950/30">
-            <div className="flex items-center justify-between text-xs font-bold text-blue-700 dark:text-blue-400">
-              <span>Số dư</span>
-              <Wallet size={18} />
-            </div>
-            <p className="mt-2 text-2xl font-black text-blue-800 dark:text-blue-300">
-              {formatMoney(balance)}
-            </p>
-            <p className="mt-1.5 text-xs sm:text-[13px] text-blue-700/80 dark:text-blue-400/80 font-medium">
-              Đã tiết kiệm {savingLabel}% thu nhập
-            </p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <ExpenseDonutChart data={categoryExpenses} title="Chi tiêu theo danh mục" subtitle="Minh họa · Tháng 11/2026" />
-          <section aria-labelledby="preview-budget-title" className="space-y-5 rounded-2xl border border-slate-200/90 bg-white p-5 shadow-sm sm:p-6 dark:border-slate-800 dark:bg-[#182234]">
-            <div>
-              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Minh họa · Tháng 11/2026</p>
-              <h3 id="preview-budget-title" className="mt-1 text-lg font-bold text-slate-900 dark:text-slate-100">Ngân sách hàng tháng</h3>
-            </div>
-            <p className="text-sm text-slate-600 dark:text-slate-300">Đã chi <strong>{formatMoney(budget.spentAmount)}</strong> / {formatMoney(budget.amountLimit)}</p>
-            <BudgetUsage budget={budget} />
-            <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">Còn lại: {formatMoney(getBudgetRemaining(budget))}</p>
-            <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">Thử bật hoặc tắt danh mục trong biểu đồ để xem tỷ trọng. Dữ liệu minh họa chỉ nằm trên trang này, không lưu vào tài khoản.</p>
-          </section>
-        </div>
-
-        {/* Bảng giao dịch mẫu & Card bảo mật */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 rounded-2xl border border-slate-200/90 bg-white p-3.5 sm:p-6 shadow-sm dark:border-slate-800 dark:bg-[#182234]">
+          <div className="min-w-0 rounded-2xl border border-slate-200/90 bg-white p-3.5 shadow-sm sm:p-6 dark:border-slate-800 dark:bg-card">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4 dark:border-slate-800">
               <div>
                 <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
                   Giao dịch minh họa tháng 11/2026
                 </h3>
-                <p className="text-xs sm:text-[13px] text-slate-600 dark:text-slate-300 font-medium">
-                  Toàn bộ giao dịch dùng để tính số liệu minh họa
-                </p>
               </div>
               <Link
                 to="/login"
@@ -1178,37 +1066,21 @@ function GuestDashboard() {
               })}
             </ul>
           </div>
+        </div>
 
-          {/* Callout box bảo mật */}
-          <div className="rounded-2xl border border-blue-100 bg-gradient-to-b from-blue-50/80 to-indigo-50/40 p-6 shadow-sm dark:border-blue-900/30 dark:from-[#182234] dark:to-[#1E293B] flex flex-col justify-between space-y-6">
-            <div className="space-y-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-white shadow-md shadow-blue-500/25">
-                <ShieldCheck size={26} />
-              </div>
-              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
-                Bảo vệ dữ liệu tài chính của bạn
-              </h3>
-              <p className="text-xs sm:text-[13px] text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
-                SmartExpense sử dụng xác thực đăng nhập và phân quyền tài khoản để bảo vệ thông tin thu chi cá nhân.
-              </p>
-            </div>
-
-            <div className="space-y-2.5">
-              <Link
-                to="/register"
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white shadow-sm hover:bg-blue-700 transition-colors active:scale-95"
-              >
-                <span>Đăng ký miễn phí</span>
-                <ArrowRight size={16} />
-              </Link>
-              <Link
-                to="/login"
-                className="flex w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition-colors"
-              >
-                Đã có tài khoản? Đăng nhập
-              </Link>
-            </div>
+        <div className="flex flex-wrap items-center gap-4 rounded-2xl border border-border bg-card p-4 sm:p-6">
+          <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-accent text-accent-foreground">
+            <ShieldCheck size={22} aria-hidden="true" />
           </div>
+          <div className="min-w-0 flex-1 basis-52">
+            <h3 className="font-bold text-card-foreground">Bảo vệ dữ liệu tài chính của bạn</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              SmartExpense dùng xác thực đăng nhập và phân quyền tài khoản để bảo vệ thông tin thu chi cá nhân.
+            </p>
+          </div>
+          <Button asChild>
+            <Link to="/register">Đăng ký miễn phí <ArrowRight size={16} aria-hidden="true" /></Link>
+          </Button>
         </div>
       </section>
     </div>

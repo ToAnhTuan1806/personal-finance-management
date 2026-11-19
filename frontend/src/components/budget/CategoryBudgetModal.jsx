@@ -85,7 +85,7 @@ function CategoryBudgetModalContent({
         role="dialog"
         aria-modal="true"
         aria-labelledby="category-budget-modal-title"
-        className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-slate-100 transition-colors dark:border-slate-800 dark:bg-[#182234]"
+        className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-slate-100 transition-colors dark:border-slate-800 dark:bg-card"
       >
         {/* Header */}
         <div className="mb-5 flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
@@ -148,7 +148,7 @@ function CategoryBudgetModalContent({
                     ${
                       fieldErrors.categoryId
                         ? 'border-red-500 bg-red-50 text-rose-900 focus:border-red-600 dark:bg-rose-950/30 dark:text-rose-200'
-                        : 'border-slate-300 bg-white text-slate-800 focus:border-blue-600 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-[#1E293B] dark:text-slate-100'
+                        : 'border-slate-300 bg-white text-slate-800 focus:border-blue-600 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-muted dark:text-slate-100'
                     }`}
                 >
                   {expenseCategories.length === 0 ? (

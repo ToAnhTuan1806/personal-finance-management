@@ -237,7 +237,7 @@ export default function Categories() {
         </div>
       )}
 
-      <div className="rounded-2xl bg-white dark:bg-[#182234] p-4 sm:p-6 shadow-sm border border-slate-200/80 dark:border-slate-800 overflow-hidden">
+      <div className="rounded-2xl bg-white dark:bg-card p-4 sm:p-6 shadow-sm border border-slate-200/80 dark:border-slate-800 overflow-hidden">
         <div className="mb-6">
           <PillTabs
             label="Lọc danh mục"
@@ -275,7 +275,7 @@ export default function Categories() {
               return (
                 <div
                   key={category.id}
-                  className="flex min-w-0 items-center justify-between gap-3 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-3 sm:p-4 bg-white dark:bg-[#1E293B]/70 hover:shadow-md hover:border-blue-200 dark:hover:border-blue-700/60 transition-all group min-h-[80px] sm:min-h-[88px]"
+                  className="flex min-w-0 items-center justify-between gap-3 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-3 sm:p-4 bg-white dark:bg-muted/70 hover:shadow-md hover:border-blue-200 dark:hover:border-blue-700/60 transition-all group min-h-[80px] sm:min-h-[88px]"
                 >
                   <CategoryBadge category={category} />
                   <div className="min-w-0 flex-1">
@@ -346,7 +346,7 @@ export default function Categories() {
           aria-modal="true"
           aria-labelledby="delete-dialog-title"
         >
-          <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-[#182234] p-6 shadow-2xl border border-slate-100 dark:border-slate-800">
+          <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-card p-6 shadow-2xl border border-slate-100 dark:border-slate-800">
             <div className="flex items-center gap-3 mb-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 shrink-0">
                 <AlertCircle size={24} />

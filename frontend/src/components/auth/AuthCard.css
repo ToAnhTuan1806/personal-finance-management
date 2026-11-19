@@ -1,15 +1,15 @@
 /* SmartExpense authentication shell */
 
 .se062-page {
-  --se062-page: #f4f7fb;
-  --se062-surface: #ffffff;
-  --se062-ink: #101828;
-  --se062-muted: #667085;
-  --se062-line: rgba(15, 23, 42, .16);
-  --se062-accent: #2563eb;
-  --se062-danger: #d92d4e;
-  --se062-mint: #07966f;
-  --se062-gradient: linear-gradient(135deg, #2563eb, #4f46e5 58%, #0d9488);
+  --se062-page: var(--app-bg);
+  --se062-surface: var(--surface);
+  --se062-ink: var(--text-primary);
+  --se062-muted: var(--text-secondary);
+  --se062-line: var(--border-color);
+  --se062-accent: var(--brand-primary);
+  --se062-danger: var(--finance-expense);
+  --se062-mint: var(--finance-income);
+  --se062-gradient: linear-gradient(135deg, var(--brand-forest), var(--palette-deep));
   --se062-ease: cubic-bezier(.2, .8, .2, 1);
   --se062-spring: cubic-bezier(.34, 1.45, .64, 1);
 
@@ -65,9 +65,9 @@
   padding: 38px 42px 32px;
   overflow: hidden;
   background:
-    radial-gradient(circle at 85% 10%, rgba(96, 165, 250, .42), transparent 30%),
-    radial-gradient(circle at 10% 88%, rgba(45, 212, 191, .22), transparent 34%),
-    linear-gradient(145deg, #111f4d 0%, #183b8f 48%, #2634a6 100%);
+    radial-gradient(circle at 85% 10%, rgb(134 239 172 / .22), transparent 30%),
+    radial-gradient(circle at 10% 88%, rgb(74 222 128 / .16), transparent 34%),
+    var(--brand-sidebar);
   color: #ffffff;
 }
 
@@ -92,8 +92,8 @@
   left: -85px;
   width: 260px;
   height: 260px;
-  background: rgba(45, 212, 191, .08);
-  border: 1px solid rgba(45, 212, 191, .15);
+  background: rgb(134 239 172 / .08);
+  border: 1px solid rgb(134 239 172 / .15);
 }
 
 .se062-brand-identity {
@@ -157,7 +157,7 @@
 
 .se062-eyebrow {
   margin: 0 0 12px;
-  color: #93c5fd;
+  color: #b4e8bf;
   font-size: 11px;
   font-weight: 800;
   letter-spacing: .16em;
@@ -248,8 +248,8 @@
   height: var(--bar-height);
   min-height: 12px;
   border-radius: 5px 5px 2px 2px;
-  background: linear-gradient(to top, rgba(96, 165, 250, .45), #60a5fa);
-  box-shadow: 0 6px 14px -7px rgba(96, 165, 250, .7);
+  background: linear-gradient(to top, rgba(123, 210, 153, .45), #8bddaa);
+  box-shadow: 0 6px 14px -7px rgba(123, 210, 153, .7);
 }
 
 .se062-preview-legend {
@@ -299,7 +299,7 @@
   line-height: 1.35;
 }
 
-.se062-benefits svg { color: #93c5fd; }
+.se062-benefits svg { color: #b4e8bf; }
 
 .se062-trust-note {
   position: relative;
@@ -448,9 +448,9 @@
   overflow: hidden;
   border: 0;
   border-radius: 13px;
-  background: #2563eb;
-  color: #ffffff;
-  box-shadow: 0 8px 20px -10px rgba(37, 99, 235, .72);
+  background: var(--brand-primary);
+  color: var(--brand-on-primary);
+  box-shadow: 0 8px 20px -10px color-mix(in srgb, var(--brand-ring) 65%, transparent);
   cursor: pointer;
   font-size: 15px;
   font-weight: 700;
@@ -466,14 +466,14 @@
 .se062-card.is-auth-flow .se062-action { margin-top: 20px; }
 
 .se062-action:hover:not(:disabled) {
-  background: #1d4ed8;
+  background: #124e36;
   box-shadow: 0 11px 24px -11px rgba(29, 78, 216, .85);
 }
 
 .se062-action:active:not(:disabled) { transform: scale(.98); }
 
 .se062-action:focus-visible {
-  outline: 2px solid #3b82f6;
+  outline: 2px solid #2a8760;
   outline-offset: 3px;
 }
 
@@ -483,7 +483,7 @@
 }
 
 .se062-action.busy {
-  background: #1d4ed8;
+  background: #124e36;
   cursor: wait;
 }
 
@@ -604,26 +604,26 @@
 
 :root[data-theme="dark"] .se062-page,
 .dark .se062-page {
-  --se062-page: #0b1220;
-  --se062-surface: #182234;
-  --se062-ink: #f8fafc;
-  --se062-muted: #94a3b8;
-  --se062-line: #334155;
-  --se062-accent: #60a5fa;
-  --se062-danger: #fb7185;
-  --se062-mint: #34d399;
+  --se062-page: var(--app-bg);
+  --se062-surface: var(--surface);
+  --se062-ink: var(--text-primary);
+  --se062-muted: var(--text-secondary);
+  --se062-line: var(--border-color);
+  --se062-accent: var(--brand-primary);
+  --se062-danger: var(--finance-expense);
+  --se062-mint: var(--finance-income);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .se062-page {
-    --se062-page: #0b1220;
-    --se062-surface: #182234;
-    --se062-ink: #f8fafc;
-    --se062-muted: #94a3b8;
-    --se062-line: #334155;
-    --se062-accent: #60a5fa;
-    --se062-danger: #fb7185;
-    --se062-mint: #34d399;
+    --se062-page: var(--app-bg);
+    --se062-surface: var(--surface);
+    --se062-ink: var(--text-primary);
+    --se062-muted: var(--text-secondary);
+    --se062-line: var(--border-color);
+    --se062-accent: var(--brand-primary);
+    --se062-danger: var(--finance-expense);
+    --se062-mint: var(--finance-income);
   }
 }
 

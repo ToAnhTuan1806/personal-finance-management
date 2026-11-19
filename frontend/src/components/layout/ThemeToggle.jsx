@@ -112,7 +112,7 @@ export default function ThemeToggle() {
           ref={menuRef}
           role="menu"
           aria-label="Tùy chọn giao diện"
-          className="absolute right-0 top-full z-50 mt-2 w-40 origin-top-right rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl transition-all dark:border-slate-800 dark:bg-[#182234]"
+          className="absolute right-0 top-full z-50 mt-2 w-40 origin-top-right rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl transition-all dark:border-slate-800 dark:bg-card"
         >
           <div className="px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
             Chế độ giao diện

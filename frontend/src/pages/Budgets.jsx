@@ -342,13 +342,23 @@ export default function Budgets() {
     <div className="space-y-6">
       {/* Tiêu đề và bộ chọn tháng */}
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100">
-            Ngân sách hàng tháng
-          </h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            Kiểm soát hạn mức chi tiêu và quản lý tài chính thông minh theo từng tháng.
-          </p>
+        <div className="flex min-w-0 items-center gap-3">
+          <img
+            src="/images/budget-target.png"
+            alt=""
+            width={192}
+            height={175}
+            decoding="async"
+            className="size-14 shrink-0 object-contain sm:size-16"
+          />
+          <div className="min-w-0">
+            <h1 className="text-2xl font-black tracking-tight text-foreground">
+              Ngân sách hàng tháng
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Kiểm soát hạn mức chi tiêu và quản lý tài chính thông minh theo từng tháng.
+            </p>
+          </div>
         </div>
 
         <div className="flex items-center gap-3">
@@ -410,13 +420,13 @@ export default function Budgets() {
       )}
 
       {!validMonth ? (
-        <div className="rounded-2xl bg-white dark:bg-[#182234] p-12 text-center border border-slate-200/80 dark:border-slate-800 shadow-sm">
+        <div className="rounded-2xl bg-white dark:bg-card p-12 text-center border border-slate-200/80 dark:border-slate-800 shadow-sm">
           <p className="text-sm font-semibold text-rose-600 dark:text-rose-400">
             Vui lòng chọn tháng hợp lệ từ năm 1900 đến 2100.
           </p>
         </div>
       ) : loading ? (
-        <div className="rounded-2xl bg-white dark:bg-[#182234] p-16 text-center border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col items-center justify-center gap-3">
+        <div className="rounded-2xl bg-white dark:bg-card p-16 text-center border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col items-center justify-center gap-3">
           <Loader2 className="h-8 w-8 animate-spin text-blue-600 dark:text-blue-400" />
           <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
             Đang tải dữ liệu ngân sách...
@@ -426,7 +436,7 @@ export default function Budgets() {
         <AsyncState message={error} onRetry={() => { setLoading(true); setReloadKey((previous) => previous + 1) }} />
       ) : !budget ? (
         // Chưa thiết lập ngân sách
-        <div className="rounded-2xl bg-white dark:bg-[#182234] p-12 text-center shadow-sm border border-slate-200/80 dark:border-slate-800">
+        <div className="rounded-2xl bg-white dark:bg-card p-12 text-center shadow-sm border border-slate-200/80 dark:border-slate-800">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 mb-4">
             <Wallet size={36} />
           </div>
@@ -455,7 +465,7 @@ export default function Budgets() {
         <>
           {/* Tổng quan ngân sách */}
           <div className="grid gap-4 md:grid-cols-3">
-            <div className="rounded-2xl bg-white dark:bg-[#182234] p-6 shadow-sm border border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
+            <div className="rounded-2xl bg-white dark:bg-card p-6 shadow-sm border border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
               <div>
                 <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   Hạn mức ngân sách
@@ -470,7 +480,7 @@ export default function Budgets() {
               </div>
             </div>
 
-            <div className="rounded-2xl bg-white dark:bg-[#182234] p-6 shadow-sm border border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
+            <div className="rounded-2xl bg-white dark:bg-card p-6 shadow-sm border border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
               <div>
                 <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   Đã chi trong tháng
@@ -485,7 +495,7 @@ export default function Budgets() {
               </div>
             </div>
 
-            <div className="rounded-2xl bg-white dark:bg-[#182234] p-6 shadow-sm border border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
+            <div className="rounded-2xl bg-white dark:bg-card p-6 shadow-sm border border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
               <div>
                 <p className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   Ngân sách còn lại
@@ -524,7 +534,7 @@ export default function Budgets() {
           </div>
 
           {/* Tiến độ sử dụng ngân sách */}
-          <div className="rounded-2xl bg-white dark:bg-[#182234] p-6 shadow-sm border border-slate-200/80 dark:border-slate-800">
+          <div className="rounded-2xl bg-white dark:bg-card p-6 shadow-sm border border-slate-200/80 dark:border-slate-800">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
@@ -658,7 +668,7 @@ export default function Budgets() {
                 setSuccess('')
                 setError('')
               }}
-              className="flex items-center gap-2 rounded-xl border border-rose-200 dark:border-rose-900/60 bg-white dark:bg-[#182234] px-5 py-2.5 font-semibold text-sm text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 active:scale-95 transition-all shadow-2xs"
+              className="flex items-center gap-2 rounded-xl border border-rose-200 dark:border-rose-900/60 bg-white dark:bg-card px-5 py-2.5 font-semibold text-sm text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 active:scale-95 transition-all shadow-2xs"
             >
               <Trash2 size={16} />
               <span>Xóa ngân sách</span>
@@ -727,7 +737,7 @@ export default function Budgets() {
             role="alertdialog"
             aria-modal="true"
             aria-labelledby="delete-budget-title"
-            className="w-full max-w-md rounded-2xl bg-white dark:bg-[#182234] p-6 shadow-2xl border border-slate-100 dark:border-slate-800"
+            className="w-full max-w-md rounded-2xl bg-white dark:bg-card p-6 shadow-2xl border border-slate-100 dark:border-slate-800"
           >
             <div className="flex items-center gap-3 mb-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 shrink-0">
@@ -806,7 +816,7 @@ export default function Budgets() {
                 setCategoryToDelete(null)
               }
             }}
-            className="w-full max-w-md rounded-2xl bg-white dark:bg-[#182234] p-6 shadow-2xl border border-slate-100 dark:border-slate-800"
+            className="w-full max-w-md rounded-2xl bg-white dark:bg-card p-6 shadow-2xl border border-slate-100 dark:border-slate-800"
           >
             <div className="flex items-center gap-3 mb-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 shrink-0">

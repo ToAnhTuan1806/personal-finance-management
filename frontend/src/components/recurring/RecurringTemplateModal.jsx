@@ -136,7 +136,7 @@ function RecurringTemplateModalContent({
     `w-full rounded-xl border p-2.5 text-sm outline-none transition-all ${
       errors[name]
         ? 'border-rose-400 bg-rose-50/50 text-rose-900 focus:border-rose-500 focus:ring-2 focus:ring-rose-200 dark:bg-rose-950/30 dark:text-rose-200 dark:focus:ring-rose-900/40'
-        : 'border-slate-300 bg-white text-slate-800 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-[#1E293B] dark:text-slate-100 dark:focus:ring-blue-900/40'
+        : 'border-slate-300 bg-white text-slate-800 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:border-slate-700 dark:bg-muted dark:text-slate-100 dark:focus:ring-blue-900/40'
     }`
 
   return (
@@ -153,7 +153,7 @@ function RecurringTemplateModalContent({
         role="dialog"
         aria-modal="true"
         aria-labelledby="recurring-template-modal-title"
-        className="max-h-[90dvh] w-full max-w-lg overflow-y-auto rounded-2xl border border-slate-100 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-[#182234]"
+        className="max-h-[90dvh] w-full max-w-lg overflow-y-auto rounded-2xl border border-slate-100 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-card"
       >
         {/* Header */}
         <div className="mb-5 flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
@@ -203,7 +203,7 @@ function RecurringTemplateModalContent({
                   onClick={() => handleTypeSelect('EXPENSE')}
                   className={`flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition-all ${
                     form.type === 'EXPENSE'
-                      ? 'border border-slate-200/60 bg-white text-rose-600 shadow-sm dark:border-slate-700 dark:bg-[#182234] dark:text-rose-400'
+                      ? 'border border-slate-200/60 bg-white text-rose-600 shadow-sm dark:border-slate-700 dark:bg-card dark:text-rose-400'
                       : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100'
                   }`}
                 >
@@ -218,7 +218,7 @@ function RecurringTemplateModalContent({
                   onClick={() => handleTypeSelect('INCOME')}
                   className={`flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition-all ${
                     form.type === 'INCOME'
-                      ? 'border border-slate-200/60 bg-white text-emerald-600 shadow-sm dark:border-slate-700 dark:bg-[#182234] dark:text-emerald-400'
+                      ? 'border border-slate-200/60 bg-white text-emerald-600 shadow-sm dark:border-slate-700 dark:bg-card dark:text-emerald-400'
                       : 'text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100'
                   }`}
                 >
@@ -378,7 +378,7 @@ function RecurringTemplateModalContent({
             </div>
 
             {/* Active Switch */}
-            <div className="flex items-center justify-between rounded-xl border border-slate-200/80 bg-slate-50/60 p-3.5 dark:border-slate-800 dark:bg-[#1E293B]/50">
+            <div className="flex items-center justify-between rounded-xl border border-slate-200/80 bg-slate-50/60 p-3.5 dark:border-slate-800 dark:bg-muted/50">
               <div>
                 <label
                   htmlFor="template-active-toggle"

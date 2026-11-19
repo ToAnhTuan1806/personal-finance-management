@@ -1,3 +1,4 @@
+import { EXPENSE_CHART_COLORS } from '../../utils/chartColors.js'
 import { useMemo } from 'react'
 import {
   AlertCircle,
@@ -14,16 +15,6 @@ import {
   formatShortMonthLabel,
 } from './reportUtils.js'
 
-const RANK_COLORS = [
-  '#F97316',
-  '#0EA5E9',
-  '#10B981',
-  '#EF4444',
-  '#8B5CF6',
-  '#F59E0B',
-  '#EC4899',
-  '#6366F1',
-]
 
 export default function CategoryBreakdownSection({
   report,
@@ -57,7 +48,7 @@ export default function CategoryBreakdownSection({
   return (
     <section
       aria-label="Phân bổ chi tiêu theo danh mục"
-      className="flex min-w-0 flex-col justify-between rounded-3xl border border-slate-200/90 bg-white p-4 sm:p-6 shadow-sm dark:border-slate-800 dark:bg-[#182234]"
+      className="flex min-w-0 flex-col justify-between rounded-3xl border border-slate-200/90 bg-white p-4 sm:p-6 shadow-sm dark:border-slate-800 dark:bg-card"
     >
       {loading ? (
         <div>
@@ -143,15 +134,9 @@ export default function CategoryBreakdownSection({
           </div>
 
           <div className="border-t border-slate-100 pt-4 dark:border-slate-800">
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                Bảng chi tiêu theo danh mục ({expensesByCategory.length} danh
-                mục)
-              </h3>
-              <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
-                Tổng chi danh mục: {formatReportMoney(totalCategoryExpense)}
-              </span>
-            </div>
+            <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Bảng chi tiêu theo danh mục ({expensesByCategory.length} danh mục)
+            </h3>
 
             <div role="region" aria-label="Cuộn ngang bảng chi tiêu theo danh mục" tabIndex={0} className="overflow-x-auto rounded-2xl border border-slate-200/80 focus-visible:outline-2 focus-visible:outline-blue-500 dark:border-slate-800">
               <table
@@ -176,7 +161,7 @@ export default function CategoryBreakdownSection({
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {expensesByCategory.map((item, index) => {
-                    const color = RANK_COLORS[index % RANK_COLORS.length]
+                    const color = EXPENSE_CHART_COLORS[index % EXPENSE_CHART_COLORS.length]
                     const percentage = calculateExpensePercentage(
                       item.totalAmount,
                       totalCategoryExpense

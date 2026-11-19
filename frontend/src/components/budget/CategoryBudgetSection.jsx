@@ -15,7 +15,7 @@ export default function CategoryBudgetSection({
   return (
     <section
       aria-labelledby="category-budget-section-title"
-      className="space-y-4 rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-6 shadow-sm transition-colors dark:border-slate-800 dark:bg-[#182234]"
+      className="space-y-4 rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-6 shadow-sm transition-colors dark:border-slate-800 dark:bg-card"
     >
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800/80">
