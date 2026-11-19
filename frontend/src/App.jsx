@@ -15,6 +15,7 @@ import QuickAdd from './pages/QuickAdd'
 import Calendar from './pages/Calendar'
 import RecurringTemplates from './pages/RecurringTemplates'
 import Reports from './pages/Reports'
+import SavingsChallenges from './pages/SavingsChallenges'
 import { useAuth } from './contexts/AuthContext'
 
 export default function App() {
@@ -42,6 +43,7 @@ export default function App() {
           <Route path="/budgets" element={<Budgets />} />
           <Route path="/recurring-templates" element={<RecurringTemplates />} />
           <Route path="/reports" element={<Reports />} />
+          <Route path="/savings-challenges" element={<SavingsChallenges />} />
         </Route>
       </Route>
 
