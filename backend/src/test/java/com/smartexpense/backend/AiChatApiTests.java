@@ -654,6 +654,123 @@ class AiChatApiTests {
         when(categoryBudgets.findAllByUserIdAndYearAndMonth(owner, 2026, 11)).thenReturn(List.of(categoryBudget));
     }
 
+    @Test
+    void geminiReviewIsOwnerBoundAndCanOnlyBeApprovedOnce() throws Exception {
+        when(analysisClock.instant()).thenReturn(Instant.parse("2026-11-12T05:00:00Z"));
+        var question = Map.of("message", "Dạo này tiền mình đi đâu là chính? email demo@example.test",
+                "month", "2026-11");
+        var preview = mvc.perform(post(ENDPOINT + "/gemini/preview")
+                        .header(HttpHeaders.AUTHORIZATION, token).contentType(MediaType.APPLICATION_JSON)
+                        .content(json.writeValueAsString(question)))
+                .andExpect(status().isOk()).andExpect(header().string("Cache-Control", "no-store"))
+                .andExpect(jsonPath("$.text").value("Dạo này tiền mình đi đâu là chính? email [email đã ẩn]"))
+                .andReturn().getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
+        verifyNoInteractions(transactions, provider);
+        String id = json.readTree(preview).path("id").asString();
+        String approval = json.writeValueAsString(Map.of("previewId", id));
+
+        long ownerId = owner;
+        owner = OWNERS.incrementAndGet();
+        when(users.findAuthVersionById(owner)).thenReturn(Optional.of(0L));
+        mvc.perform(post(ENDPOINT + "/gemini/approve").header(HttpHeaders.AUTHORIZATION, bearer(false))
+                        .contentType(MediaType.APPLICATION_JSON).content(approval))
+                .andExpect(status().isBadRequest());
+        owner = ownerId;
+        verifyNoInteractions(transactions, provider);
+
+        accuracyFixture();
+        when(provider.answerApproved(any())).thenReturn(new AiProvider.Answer(AiProvider.Action.CATEGORIES,
+                "Số tiền do Gemini tự đoán phải bị bỏ qua"));
+        mvc.perform(post(ENDPOINT + "/gemini/approve").header(HttpHeaders.AUTHORIZATION, token)
+                        .contentType(MediaType.APPLICATION_JSON).content(approval))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.intent").value("CATEGORIES"))
+                .andExpect(jsonPath("$.stats.totalExpense").value(2800000.35))
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("Gemini tự đoán"))));
+        mvc.perform(post(ENDPOINT + "/gemini/approve").header(HttpHeaders.AUTHORIZATION, token)
+                        .contentType(MediaType.APPLICATION_JSON).content(approval))
+                .andExpect(status().isBadRequest());
+        verify(provider).answerApproved(any());
+        verify(transactions).sumMonthlyAmountsByUserAndDateRange(ownerId, START, END);
+        verify(transactions, never()).save(any());
+    }
+
+    @Test
+    void geminiRejectsCredentialQuestionsAndExpiredPreviewsBeforeProvider() throws Exception {
+        Instant now = Instant.parse("2026-11-12T05:00:00Z");
+        when(analysisClock.instant()).thenReturn(now);
+        mvc.perform(post(ENDPOINT + "/gemini/preview").header(HttpHeaders.AUTHORIZATION, token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json.writeValueAsString(Map.of("message", "Mật khẩu của tôi là ví dụ", "month", "2026-11"))))
+                .andExpect(status().isBadRequest());
+
+        var preview = mvc.perform(post(ENDPOINT + "/gemini/preview").header(HttpHeaders.AUTHORIZATION, token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json.writeValueAsString(Map.of("message", "Giải thích quỹ dự phòng", "month", "2026-11"))))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
+
+        when(analysisClock.instant()).thenReturn(now.plusSeconds(120));
+        mvc.perform(post(ENDPOINT + "/gemini/approve").header(HttpHeaders.AUTHORIZATION, token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json.writeValueAsString(Map.of("previewId", json.readTree(preview).path("id").asString()))))
+                .andExpect(status().isBadRequest());
+        verifyNoInteractions(transactions, provider);
+    }
+
+    @Test
+    void singleSendRoutesOpenQuestionsToPreviewAndGarbageToClarification() throws Exception {
+        when(analysisClock.instant()).thenReturn(Instant.parse("2026-11-12T05:00:00Z"));
+        for (String question : List.of("Giờ tôi nên quản lý chi tiêu như thế nào?", "Dạo này tiền mình đi đâu là chính?")) {
+            var payload = Map.of("message", question, "month", "2026-11", "previewOpenQuestions", true);
+            mvc.perform(post(ENDPOINT).header(HttpHeaders.AUTHORIZATION, token)
+                            .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(payload)))
+                    .andExpect(status().isOk()).andExpect(jsonPath("$.intent").value("UNKNOWN"))
+                    .andExpect(jsonPath("$.geminiPreview.text").value(question))
+                    .andExpect(jsonPath("$.stats").value(org.hamcrest.Matchers.nullValue()));
+        }
+
+        mvc.perform(post(ENDPOINT).header(HttpHeaders.AUTHORIZATION, token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"message\":\"dsadas\",\"month\":\"2026-11\",\"previewOpenQuestions\":true}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.intent").value("UNKNOWN"))
+                .andExpect(jsonPath("$.geminiPreview").doesNotExist())
+                .andExpect(jsonPath("$.stats").value(org.hamcrest.Matchers.nullValue()));
+        verifyNoInteractions(provider, transactions);
+    }
+
+    @Test
+    void autoSendReturnsGeminiReplyDirectlyAndKeepsExplicitStatisticsLocal() throws Exception {
+        accuracyFixture();
+        when(provider.answerApproved(any())).thenReturn(new AiProvider.Answer(AiProvider.Action.REPLY,
+                "Hãy lập quỹ dự phòng vừa sức."));
+        var payload = new HashMap<String, Object>(Map.of("message", "Khi nào nên lập quỹ dự phòng?",
+                "month", "2026-11", "previewOpenQuestions", true, "autoSendGemini", true));
+        mvc.perform(post(ENDPOINT).header(HttpHeaders.AUTHORIZATION, token)
+                        .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(payload)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.intent").value("ADVICE"))
+                .andExpect(jsonPath("$.reply").value("Hãy lập quỹ dự phòng vừa sức."))
+                .andExpect(jsonPath("$.geminiPreview").doesNotExist());
+
+        payload.put("message", "Tổng chi tiêu tháng 11/2026 là bao nhiêu?");
+        mvc.perform(post(ENDPOINT).header(HttpHeaders.AUTHORIZATION, token)
+                        .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(payload)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.intent").value("SUMMARY"))
+                .andExpect(jsonPath("$.stats.totalExpense").value(2800000.35));
+        verify(provider).answerApproved(any());
+        verifyNoMoreInteractions(provider);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"Mật khẩu của tôi có an toàn không?", "Làm quỹ dự phòng như thế nào? demo@example.test"})
+    void autoSendRejectsSensitiveQuestionsBeforeCallingGemini(String question) throws Exception {
+        var payload = Map.of("message", question, "month", "2026-11",
+                "previewOpenQuestions", true, "autoSendGemini", true);
+        mvc.perform(post(ENDPOINT).header(HttpHeaders.AUTHORIZATION, token)
+                        .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(payload)))
+                .andExpect(status().isBadRequest());
+        verifyNoInteractions(provider, transactions);
+    }
+
     private AiChatResponse ask(String message) throws Exception {
         String body = mvc.perform(post(ENDPOINT).header(HttpHeaders.AUTHORIZATION, token).contentType(MediaType.APPLICATION_JSON)
                         .content(json.writeValueAsString(Map.of("message", message, "month", "2026-11"))))

@@ -224,6 +224,30 @@ class GeminiAiProviderTests {
                 });
     }
 
+    @Test
+    void sendsExactlyTheReviewedTextWithOnlyAllowedActions() throws Exception {
+        var reviews = new AiGeminiReviews();
+        var now = Instant.parse("2026-11-12T05:00:00Z");
+        var preview = reviews.prepare(42L, new com.smartexpense.backend.dto.ai.AiChatRequest(
+                "Tư vấn chi phí tháng 11/2026, email demo@example.test, 125k và 0901234567", "2026-11"), now);
+        assertThat(calls).hasValue(0);
+        response = json.writeValueAsString(java.util.Map.of(
+                "status", "completed", "steps", List.of(java.util.Map.of("type", "model_output",
+                        "content", List.of(java.util.Map.of("type", "text", "text",
+                                "{\"action\":\"CATEGORIES\",\"text\":\"Không tin dữ liệu này\"}"))))));
+
+        var provider = provider("test-key", "test-model", Duration.ofSeconds(3));
+        var decision = provider.answerApproved(reviews.consume(42L, preview.id(), now).approvedQuestion());
+        assertThat(decision.action()).isEqualTo(AiProvider.Action.CATEGORIES);
+        assertThat(decision.text()).isEmpty();
+        var sent = json.readTree(body.get());
+        assertThat(sent.path("input").asString()).isEqualTo(preview.text())
+                .doesNotContain("demo@example.test", "125k", "0901234567");
+        assertThat(sent.has("tools")).isFalse();
+        assertThat(sent.has("previous_interaction_id")).isFalse();
+        assertThat(sent.path("response_format").path("mime_type").asString()).isEqualTo("application/json");
+    }
+
     private GeminiAiProvider provider(String key, String model, Duration timeout) {
         return new GeminiAiProvider(HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(1)).build(), json, key, model,
                 URI.create("http://127.0.0.1:" + server.getAddress().getPort() + "/interactions"), timeout);

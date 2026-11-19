@@ -402,6 +402,21 @@ Ví dụ response SUMMARY tháng trống:
 
 Reply ví dụ là kết quả định dạng Backend, không phải bằng chứng gọi Gemini. Chỉ ADVICE cần reply thực từ provider: thiếu key/model hoặc provider lỗi **không trả thành công giả**. Ba intent thống kê vẫn trả dữ liệu/reply Backend khi Gemini chưa cấu hình hoặc không khả dụng, không giả vờ có nội dung AI.
 
+### Hỏi Gemini có xem trước
+
+Giao diện dùng một nút **Gửi** với `POST /api/ai/chat` và cờ tùy chọn `previewOpenQuestions: true`. Khi câu hỏi mở cần Gemini, backend trả `intent: UNKNOWN` kèm `geminiPreview: {id,text}` để hiển thị xác nhận. Yêu cầu tra cứu rõ ràng vẫn trả kết quả nội bộ. Endpoint xem trước riêng tiếp tục hỗ trợ các phiên bản giao diện trước.
+
+| Bước | Endpoint | Body | Phản hồi |
+| --- | --- | --- | --- |
+| Xem trước | `POST /api/ai/chat/gemini/preview` | `{message,month,compareMonth?}` | `{id,text}`. Chỉ lọc và chuẩn bị văn bản ở SmartExpense. |
+| Xác nhận | `POST /api/ai/chat/gemini/approve` | `{previewId}` | `AiChatResponse` theo cấu trúc có sẵn. |
+
+Hai bước yêu cầu JWT và phản hồi dùng `Cache-Control: no-store`. ID bản xem trước thuộc người dùng hiện tại, hết hạn sau 120 giây và dùng đúng một lần. Mỗi tài khoản có một bản chờ trong bộ nhớ của tiến trình. Khi đổi phiên bản backend hoặc bộ cân bằng chuyển sang tiến trình khác, người dùng cần xem trước lại. Bản hết hạn, khác chủ hoặc đã dùng nhận 400. Hạn mức chatbot được áp dụng khi xác nhận.
+
+Sau khi xác nhận, Gemini nhận đúng văn bản đã hiển thị cùng hướng dẫn cấu trúc. Bộ lọc xử lý các mẫu phổ biến như email, liên kết, chuỗi số và số tiền có đơn vị. Người dùng xem lại văn bản trước khi gửi. Profile, dữ liệu giao dịch, JWT và lịch sử phiên do hệ thống lưu được xử lý trong SmartExpense. Gemini chỉ trả câu trả lời chung hoặc chọn một thao tác đọc trong danh sách cố định. Backend xác định chủ tài khoản và kỳ, đọc số liệu và tự định dạng phản hồi.
+
+Người dùng có thể bật **Tự động hỏi Gemini** trong cài đặt trợ lý. Tùy chọn được ghi nhớ theo tài khoản trên trình duyệt và mặc định tắt. Khi đã bật, giao diện gửi hai cờ `previewOpenQuestions: true` và `autoSendGemini: true` cùng yêu cầu đã xác thực. Với câu hỏi mở, backend kiểm tra nội dung, gọi Gemini trong hạn mức và trả thẳng `AiChatResponse`. Chế độ này từ chối câu hỏi chứa mẫu thông tin đăng nhập, email, liên kết, mã hoặc dãy số định danh. Số tiền có đơn vị được che theo bộ lọc có sẵn. Hồ sơ, dữ liệu giao dịch và lịch sử chat do ứng dụng lưu được xử lý trong SmartExpense. Khi tắt hoặc không gửi cờ `autoSendGemini`, luồng xem trước tiếp tục áp dụng.
+
 #### Runtime Gemini, giới hạn và lỗi D11
 
 - Dùng Java HttpClient có sẵn, **Interactions REST v1** `https://generativelanguage.googleapis.com/v1/interactions`, `store=false`, không previous_interaction_id, không tools/background. Đọc `steps[type=model_output].content[type=text]` khi status=completed. Model bắt buộc do người chạy chọn qua **GEMINI_MODEL**, không đặt tên mặc định dễ lỗi thời; key chỉ từ **GEMINI_API_KEY** ở môi trường tiến trình Backend. Không thêm dependency hoặc sửa cấu hình production.

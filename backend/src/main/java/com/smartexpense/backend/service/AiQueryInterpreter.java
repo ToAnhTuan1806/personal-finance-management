@@ -102,7 +102,8 @@ public class AiQueryInterpreter {
                 : has(text, "ngan sach|han muc|budget|vuot") ? "BUDGET"
                 : category || has(text, "chi.*(nhieu nhat|cao nhat)") ? "CATEGORIES"
                 : advice && financial ? "ADVICE"
-                : has(text, "chi tieu|tong chi|chi.*bao nhieu|chi.*thang|thu nhap|tong thu|thu chi|so du|\\b(tien|income|expense|balance)\\b") ? "SUMMARY" : "UNKNOWN";
+                : has(text, "chi tieu|tong chi|chi.*bao nhieu|chi.*thang|thu nhap|tong thu|thu chi|so du|\\b(income|expense|balance)\\b")
+                || (!Boolean.TRUE.equals(request.previewOpenQuestions()) && has(text, "\\btien\\b")) ? "SUMMARY" : "UNKNOWN";
 
         // Các phép phân tích/mô phỏng chỉ đọc đi trước nhận diện bản nháp chi tiêu.
         if (has(text, "mo phong|neu .*\\bmua\\b|neu (toi )?chi|gia su.*(mua|chi)|(?:du )?dinh mua")) {

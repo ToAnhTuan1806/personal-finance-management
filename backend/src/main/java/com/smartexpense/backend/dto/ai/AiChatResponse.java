@@ -7,12 +7,19 @@ import com.smartexpense.backend.enums.TransactionType;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 public record AiChatResponse(String reply, String period, String intent, Stats stats,
                              List<TopCategory> topCategories, Budget budget,
                              @JsonInclude(JsonInclude.Include.NON_NULL) Comparison comparison,
                              @JsonInclude(JsonInclude.Include.NON_NULL) SuggestedExpense suggestedExpense,
-                             @JsonInclude(JsonInclude.Include.NON_NULL) AiAnalysis analysis) {
+                             @JsonInclude(JsonInclude.Include.NON_NULL) AiAnalysis analysis,
+                             @JsonInclude(JsonInclude.Include.NON_NULL) GeminiPreview geminiPreview) {
+    public AiChatResponse(String reply, String period, String intent, Stats stats,
+                          List<TopCategory> topCategories, Budget budget, Comparison comparison,
+                          SuggestedExpense suggestedExpense, AiAnalysis analysis) {
+        this(reply, period, intent, stats, topCategories, budget, comparison, suggestedExpense, analysis, null);
+    }
     public AiChatResponse(String reply, String period, String intent, Stats stats,
                           List<TopCategory> topCategories, Budget budget, Comparison comparison,
                           SuggestedExpense suggestedExpense) {
@@ -30,6 +37,9 @@ public record AiChatResponse(String reply, String period, String intent, Stats s
     public record SuggestedExpense(BigDecimal amount, Long categoryId, String categoryName, String note,
                                    LocalDate transactionDate, TransactionType type) {
         @Override public String toString() { return "SuggestedExpense[redacted]"; }
+    }
+    public record GeminiPreview(UUID id, String text) {
+        @Override public String toString() { return "GeminiPreview[redacted]"; }
     }
     public record Stats(BigDecimal totalIncome, BigDecimal totalExpense, BigDecimal balance) { }
     public record Comparison(String baseMonth, String targetMonth, Stats base, Stats target, Stats delta,
