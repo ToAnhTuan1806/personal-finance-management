@@ -106,19 +106,37 @@ class RecurringAutomationIntegrationTests extends MySqlIntegrationTestSupport {
         assertThat(countApplications(id)).isEqualTo(1);
     }
 
-    @Test void newAndReenabledTemplatesSkipTodayAndPastDates() {
-        long id = create(expense,"10.01",18);
-        var request = request(expense,"10.01",18); request.setActive(false);
-        service.update(id,request,owner.getId());
+    @Test void newReenabledAndRescheduledTemplatesCanRunToday() {
+        long id = create(expense, "10.01", 18);
+        var request = request(expense, "10.01", 18);
+        request.setActive(false);
+        service.update(id, request, owner.getId());
+        long rescheduled = create(expense, "10.01", 24);
+
         due();
         assertThat(processor.process(id)).isEqualTo(RecurringAutomationProcessor.Result.INACTIVE);
         request.setActive(true);
-        assertThat(service.update(id,request,owner.getId()).getNextRunDate()).hasToString("2026-12-18");
-        long sameDay = create(expense,"10.01",18);
-        assertThat(templates.findById(sameDay).orElseThrow().getNextRunDate()).hasToString("2026-12-18");
-        now.set(Instant.parse("2026-12-19T05:00:00Z"));
-        assertThat(processor.process(id)).isEqualTo(RecurringAutomationProcessor.Result.SKIPPED_PAST);
-        assertThat(templates.findById(id).orElseThrow().getNextRunDate()).hasToString("2027-01-18");
+        assertThat(service.update(id, request, owner.getId()).getNextRunDate()).hasToString("2026-11-18");
+        assertThat(service.update(rescheduled, request, owner.getId()).getNextRunDate()).hasToString("2026-11-18");
+        long sameDay = create(expense, "10.01", 18);
+        assertThat(templates.findById(sameDay).orElseThrow().getNextRunDate()).hasToString("2026-11-18");
+
+        for (long templateId : List.of(id, rescheduled, sameDay)) {
+            assertThat(processor.process(templateId)).isEqualTo(RecurringAutomationProcessor.Result.APPLIED);
+            assertThat(processor.process(templateId)).isEqualTo(RecurringAutomationProcessor.Result.NOT_DUE);
+            assertThat(countApplications(templateId)).isEqualTo(1);
+        }
+        assertThat(balance(owner)).isEqualByComparingTo("-30.03");
+    }
+
+    @Test void skipsElapsedDatesWithoutLedgerWrites() {
+        long missed = create(expense, "10.01", 18);
+        now.set(Instant.parse("2026-11-19T05:00:00Z"));
+        long createdAfterDueDate = create(expense, "10.01", 18);
+        assertThat(templates.findById(createdAfterDueDate).orElseThrow().getNextRunDate()).hasToString("2026-12-18");
+        assertThat(processor.process(missed)).isEqualTo(RecurringAutomationProcessor.Result.SKIPPED_PAST);
+        assertThat(templates.findById(missed).orElseThrow().getNextRunDate()).hasToString("2026-12-18");
+        assertThat(countApplications(missed)).isZero();
         assertThat(balance(owner)).isEqualByComparingTo("0.00");
     }
 

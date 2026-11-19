@@ -10,6 +10,8 @@ import com.smartexpense.backend.util.RecurringTemplateDates;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import java.time.*;
 import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -32,10 +34,10 @@ class RecurringAutomationProcessorTests {
     }
 
     @ParameterizedTest
-    @CsvSource({"2026-11-18,18,2026-12-18", "2026-11-18,2,2026-12-02", "2026-11-18,19,2026-11-19",
-            "2027-01-31,31,2027-02-28", "2028-02-29,31,2028-03-31", "2026-12-31,1,2027-01-01"})
-    void nextDateIsStrictlyFutureAndUsesOriginalDay(String today, int day, String next) {
-        assertThat(RecurringTemplateDates.nextAfter(LocalDate.parse(today), day)).hasToString(next);
+    @CsvSource({"2026-11-18,18,2026-11-18", "2026-11-18,2,2026-12-02", "2026-11-18,19,2026-11-19",
+            "2027-01-31,31,2027-01-31", "2027-02-28,31,2027-02-28", "2028-02-29,31,2028-02-29", "2026-12-31,1,2027-01-01"})
+    void nextDateIncludesTodayAndUsesLastDayInShortMonths(String today, int day, String next) {
+        assertThat(RecurringTemplateDates.nextOnOrAfter(LocalDate.parse(today), day)).hasToString(next);
     }
 
     @Test void existingTemplateStartsInFutureWithoutLedgerWrites() {
@@ -50,6 +52,16 @@ class RecurringAutomationProcessorTests {
         assertThat(p.process(7L)).isEqualTo(RecurringAutomationProcessor.Result.SKIPPED_PAST);
         assertThat(template.getNextRunDate()).hasToString("2026-12-02");
         verifyNoInteractions(ledger, applications);
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = "2026-10-18")
+    void processesTodayWhenScheduleIsMissingOrFromAnEarlierPeriod(String next) {
+        var p = processor("2026-11-17T17:00:00Z", next, 18);
+        assertThat(p.process(7L)).isEqualTo(RecurringAutomationProcessor.Result.APPLIED);
+        assertThat(template.getNextRunDate()).hasToString("2026-12-18");
+        verify(ledger).apply(eq(7L), eq(42L), argThat(r -> r.getYear() == 2026 && r.getMonth() == 11));
     }
 
     @Test void dueUsesVietnamDateAndRestoresOriginalDayAfterFebruary() {

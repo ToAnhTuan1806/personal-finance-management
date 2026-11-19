@@ -34,18 +34,17 @@ public class RecurringAutomationProcessor {
         LocalDate today = LocalDate.now(clock.withZone(VIETNAM));
         if (today.getYear() < 1900 || today.getYear() > 2100) return Result.NOT_DUE;
         LocalDate date = template.getNextRunDate();
-        if (date == null) {
-            template.setNextRunDate(RecurringTemplateDates.nextAfter(today, template.getDayOfMonth()));
-            templates.saveAndFlush(template);
-            return Result.INITIALIZED;
+        boolean initializing = date == null;
+        if (initializing || date.isBefore(today)) {
+            // Bỏ qua kỳ quá khứ, nhưng vẫn xử lý trong lượt này nếu kỳ hiện tại đến hạn hôm nay.
+            date = RecurringTemplateDates.nextOnOrAfter(today, template.getDayOfMonth());
+            if (!today.equals(date)) {
+                template.setNextRunDate(date);
+                templates.saveAndFlush(template);
+                return initializing ? Result.INITIALIZED : Result.SKIPPED_PAST;
+            }
         }
         if (date.isAfter(today)) return Result.NOT_DUE;
-        if (date.isBefore(today)) {
-            // Lựa chọn sản phẩm: bỏ qua kỳ đã qua, không ghi bù khi khởi động lại.
-            template.setNextRunDate(RecurringTemplateDates.nextAfter(today, template.getDayOfMonth()));
-            templates.saveAndFlush(template);
-            return Result.SKIPPED_PAST;
-        }
         long ownerId = template.getUser().getId();
         boolean applied = applications.existsByTemplateIdAndTemplateUserIdAndYearAndMonth(
                 templateId, ownerId, date.getYear(), date.getMonthValue());
