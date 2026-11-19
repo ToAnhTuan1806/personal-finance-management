@@ -729,3 +729,17 @@ Application = { id, templateId, year, month, transactionId, transaction:Transact
 - SMTP nhận thư/reset thực tế và Gemini ADVICE phụ thuộc cấu hình/quota. Không xác nhận thành công bằng phản hồi forgot chung hoặc response thống kê do Backend tạo. Cảnh báo CSRF giữ OPEN để review có thẩm quyền, không bật/tắt bảo mật chỉ để vượt Quality Gate.
 
 FR-01 tài khoản, FR-02 danh mục, FR-03 Quick Add, FR-04 lịch, FR-05 giao dịch, FR-06 ngân sách tổng, FR-07 ngân sách danh mục, FR-08 định kỳ, FR-09 báo cáo và FR-10 CSV có contract triển khai ở trên. FR-11 UI/UX và FR-12 QA/DevOps yêu cầu kiểm thử/review; nội dung tài liệu không tự đổi trạng thái Trello hoặc ký nghiệm thu thay thành viên.
+
+## Thử thách tiết kiệm
+
+API dùng JWT của tài khoản hiện tại. Migration V008 tạo ba bảng thử thách, ghi nhận và lựa chọn linh vật. V008 cần có trên MySQL trước khi phiên bản Backend mới nhận yêu cầu cho thử thách. Tiền ghi nhận là số đồng nguyên dương tối đa 9.999.999.999.999.
+
+| Phương thức | Đường dẫn | Nội dung |
+| --- | --- | --- |
+| GET | /api/savings-challenges | Ngày hiện tại theo giờ Việt Nam, danh sách thử thách có ghi nhận và trạng thái phần thưởng. |
+| POST | /api/savings-challenges | Nhận id, title, target, days, level. Bắt đầu từ ngày hiện tại, ngày đầu tính vào thời hạn. |
+| POST | /api/savings-challenges/{id}/savings | Nhận id của lần ghi, amount, date, note tùy chọn. Trả thử thách đã cập nhật. |
+| POST | /api/savings-challenges/import | Chuyển thử thách cũ cùng startDate, endDate và danh sách savings đã lưu trong trình duyệt. |
+| GET / PUT | /api/savings-challenges/reward | Đọc hoặc đổi useGoldenPig. Đạt mục tiêu trong thời hạn mới mở khóa. |
+
+Cấp độ gồm easy, medium và hard. Ngày lập lịch và kiểm tra hạn theo Asia/Ho_Chi_Minh. Ghi nhận thường chỉ áp dụng cho thử thách đang diễn ra với ngày từ lúc bắt đầu đến ngày hiện tại. Ghi nhận cũ giữ ngày gốc khi người dùng chọn chuyển dữ liệu. ID tạo từ trình duyệt chỉ dùng trong phạm vi chủ tài khoản; gửi lại cùng ID và dữ liệu giữ đúng một bản ghi. Ghi nhận thuộc thử thách tiết kiệm riêng trong SmartExpense.

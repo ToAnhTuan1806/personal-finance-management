@@ -51,6 +51,7 @@ class RecurringApplicationContractTests {
     @MockitoBean CategoryBudgetRepository categoryBudgets;
     @MockitoBean RecurringTemplateRepository templates;
     @MockitoBean RecurringApplicationRepository recurringApplications;
+    @MockitoBean SavingsChallengeRepository savingsChallenges;
     @MockitoBean com.smartexpense.backend.service.PasswordResetService passwordReset;
 
     @DynamicPropertySource
