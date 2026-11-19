@@ -6,6 +6,7 @@ import AuthCard from '../components/auth/AuthCard'
 import FloatingInput from '../components/ui/FloatingInput'
 import '../styles/auth-background.css'
 import { getApiErrorMessage, isRequestCancelled } from '../api/errors'
+import { getGreetingName } from '../utils/greetingName.js'
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -158,7 +159,7 @@ export default function Login() {
       onShakeEnd={() => setShake(false)}
       onSubmit={handleSubmit}
       serverError={serverError}
-      successTitle={`Xin chào, ${user?.fullName || 'bạn'}!`}
+      successTitle={`Xin chào, ${getGreetingName(user?.fullName)}!`}
       successDescription="Đang chuyển đến Dashboard..."
     >
       {location.state?.message && (

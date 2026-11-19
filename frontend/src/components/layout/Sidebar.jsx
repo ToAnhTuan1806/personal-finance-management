@@ -12,7 +12,6 @@ import {
   UserPlus,
 } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
-import walletLogo from '../../assets/wallet-logo.png'
 import { ThemeSegmented } from './ThemeToggle'
 
 import './Sidebar.css'
@@ -148,17 +147,7 @@ export default function Sidebar({
           style={{ cursor: !expanded ? 'pointer' : 'default' }}
           title={!expanded ? 'Mở rộng Sidebar' : undefined}
         >
-          <div className="se040-logo" aria-hidden="true">
-            <img
-              src={walletLogo}
-              alt="SmartExpense"
-              className="se040-logo-img"
-              onError={(e) => {
-                e.currentTarget.onerror = null
-                e.currentTarget.src = '/Vi.png'
-              }}
-            />
-          </div>
+          <img src="/favicon.svg" alt="" className="se040-logo" />
           <span className="se040-name">SmartExpense</span>
 
           {mobileOpen && (
@@ -166,7 +155,7 @@ export default function Sidebar({
               type="button"
               onClick={onClose}
               aria-label="Đóng Sidebar"
-              className="ml-auto rounded-lg p-2.5 text-slate-300 hover:bg-white/10 lg:hidden"
+              className="ml-auto shrink-0 rounded-lg p-1.5 text-white hover:bg-white/10 lg:hidden"
             >
               <X size={18} />
             </button>

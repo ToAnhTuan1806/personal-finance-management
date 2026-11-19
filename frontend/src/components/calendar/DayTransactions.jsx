@@ -10,7 +10,7 @@ import { formatCalendarMoney } from '../../utils/calendar'
 export function DayTransactionsContent({ date, daySummary, page, result, onPage, onRetry, onAdd }) {
   const data = result?.data
   const buttonClass = 'min-h-11 rounded-xl border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-800 disabled:opacity-40 dark:border-slate-600 dark:text-slate-100'
-  return <section id="calendar-day-details" aria-labelledby="day-transactions-title" aria-busy={!result} className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-[#182234] sm:p-6">
+  return <section id="calendar-day-details" aria-labelledby="day-transactions-title" aria-busy={!result} className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-card sm:p-6">
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div className="min-w-0" aria-live="polite" aria-atomic="true">
         <h2 id="day-transactions-title" className="font-bold text-slate-900 dark:text-slate-100">Giao dịch ngày {date.split('-').reverse().join('/')}</h2>

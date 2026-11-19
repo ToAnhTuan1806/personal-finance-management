@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { calculateMonthlyDelta } from '../dashboard/monthlyInsights.js'
 import {
   Bar,
   BarChart,
@@ -20,8 +21,37 @@ import {
   formatReportMoney,
   formatReportPercent,
   formatShortMonthLabel,
+  shiftMonthString,
   summarizeReportMonths,
 } from './reportUtils.js'
+
+function describeExpenseChange(months, report) {
+  if (!report || report.from === report.to) return null
+  const latest = months.find((item) => item.month === report.to)
+  const previousMonth = shiftMonthString(report.to, -1)
+  const previous = months.find((item) => item.month === previousMonth)
+  if (!latest || !previous) return null
+
+  const latestLabel = formatShortMonthLabel(latest.month)
+  const previousLabel = formatShortMonthLabel(previous.month)
+  const change = calculateMonthlyDelta(latest.totalExpense, previous.totalExpense)
+
+  if (!latest.totalExpense) {
+    return previous.totalExpense ? `Tháng ${latestLabel} chưa ghi nhận khoản chi.` : null
+  }
+  if (change.percentage === null) {
+    return `Có chi tiêu trong tháng ${latestLabel}. Tháng ${previousLabel} chưa ghi nhận khoản chi.`
+  }
+  if (change.direction === 'unchanged') {
+    return `Chi tiêu đã ghi tháng ${latestLabel} bằng tháng ${previousLabel}.`
+  }
+
+  const direction = change.direction === 'increase' ? 'tăng' : 'giảm'
+  const difference = Math.abs(change.percentage) < 0.01
+    ? formatReportMoney(Math.abs(change.delta))
+    : formatReportPercent(Math.abs(change.percentage))
+  return `Chi tiêu đã ghi tháng ${latestLabel} ${direction} ${difference} so với tháng ${previousLabel}.`
+}
 
 export function MonthlyReportTooltip({ active, payload }) {
   if (!active || !Array.isArray(payload) || payload.length === 0) {
@@ -37,36 +67,36 @@ export function MonthlyReportTooltip({ active, payload }) {
 
   return (
     <div
-      className="min-w-52 rounded-2xl border border-slate-700/80 bg-[#182234] p-3.5 text-xs text-slate-100 shadow-xl"
+      className="min-w-52 rounded-2xl border border-border bg-card p-3.5 text-xs text-card-foreground shadow-xl"
       role="status"
     >
-      <p className="mb-2 border-b border-slate-700/70 pb-1.5 font-bold text-white">
+      <p className="mb-2 border-b border-border pb-1.5 font-bold">
         {formatMonthLabel(row.month)}
       </p>
       <div className="space-y-1.5">
         <div className="flex items-center justify-between gap-4">
-          <span className="flex items-center gap-1.5 text-emerald-400">
+          <span className="flex items-center gap-1.5 text-income">
             <span className="h-2 w-2 rounded-full bg-emerald-400" />
             Tổng thu
           </span>
-          <span className="font-bold text-emerald-300">
+          <span className="font-bold text-income">
             {formatReportMoney(totalIncome)}
           </span>
         </div>
         <div className="flex items-center justify-between gap-4">
-          <span className="flex items-center gap-1.5 text-rose-400">
+          <span className="flex items-center gap-1.5 text-expense">
             <span className="h-2 w-2 rounded-full bg-rose-400" />
             Tổng chi
           </span>
-          <span className="font-bold text-rose-300">
+          <span className="font-bold text-expense">
             {formatReportMoney(totalExpense)}
           </span>
         </div>
-        <div className="mt-1.5 flex items-center justify-between gap-4 border-t border-slate-700/70 pt-1.5">
-          <span className="font-semibold text-slate-300">Chênh lệch</span>
+        <div className="mt-1.5 flex items-center justify-between gap-4 border-t border-border pt-1.5">
+          <span className="font-semibold text-muted-foreground">Chênh lệch</span>
           <span
             className={`font-extrabold ${
-              balance >= 0 ? 'text-blue-300' : 'text-amber-300'
+              balance >= 0 ? 'text-primary' : 'text-expense'
             }`}
           >
             {balance > 0 ? '+' : ''}
@@ -108,6 +138,8 @@ export default function MonthlyComparisonChart({
     [months]
   )
 
+  const expenseInsight = !loading && !error ? describeExpenseChange(months, report) : null
+
   const rangeSubtitle =
     report?.from && report?.to
       ? `Kỳ báo cáo: ${formatShortMonthLabel(report.from)} – ${formatShortMonthLabel(report.to)}`
@@ -116,7 +148,7 @@ export default function MonthlyComparisonChart({
   return (
     <section
       aria-label="Biểu đồ cột thu chi theo từng tháng"
-      className="flex min-w-0 flex-col rounded-3xl border border-slate-200/90 bg-white p-4 sm:p-6 shadow-sm dark:border-slate-800 dark:bg-[#182234]"
+      className="flex min-w-0 flex-col rounded-3xl border border-slate-200/90 bg-white p-4 sm:p-6 shadow-sm dark:border-slate-800 dark:bg-card"
     >
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
@@ -139,6 +171,12 @@ export default function MonthlyComparisonChart({
           </span>
         </div>
       </div>
+
+      {expenseInsight && (
+        <p className="mb-3 rounded-xl border-l-2 border-primary bg-accent px-3 py-2.5 text-sm font-medium text-accent-foreground">
+          {expenseInsight}
+        </p>
+      )}
 
       {loading ? (
         <div
@@ -172,7 +210,7 @@ export default function MonthlyComparisonChart({
           )}
         </div>
       ) : !hasAnyActivity ? (
-        <div className="my-2 flex min-h-72 flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center dark:border-slate-800 dark:bg-slate-800/40">
+        <div className="my-2 flex min-h-72 flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-muted p-8 text-center">
           <BarChart3 size={32} className="mb-2.5 text-slate-400" />
           <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
             Chưa có phát sinh thu – chi trong khoảng thời gian đã chọn
@@ -336,11 +374,11 @@ export default function MonthlyComparisonChart({
                   )
                 })}
               </tbody>
-              <tfoot className="border-t-2 border-slate-200 bg-slate-50/90 font-bold dark:border-slate-700 dark:bg-slate-800/70">
+              <tfoot className="border-t-2 border-border bg-muted font-bold">
                 <tr>
-                  <td className="px-3.5 py-2.5 text-slate-900 dark:text-slate-100">
+                  <th scope="row" className="px-3.5 py-2.5 text-foreground">
                     Tổng cộng
-                  </td>
+                  </th>
                   <td className="px-3.5 py-2.5 text-right text-emerald-600 dark:text-emerald-400">
                     {formatReportMoney(totals.totalIncome)}
                   </td>

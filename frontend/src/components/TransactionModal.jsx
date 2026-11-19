@@ -111,7 +111,7 @@ function TransactionModalContent({
     `w-full rounded-xl border p-3 text-sm text-slate-800 dark:text-slate-100 outline-none transition-all ${
       error
         ? 'border-rose-400 bg-rose-50/50 dark:bg-rose-950/30 focus:border-rose-500 focus:ring-2 focus:ring-rose-200 dark:focus:ring-rose-900/40'
-        : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-[#1E293B] focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900/40'
+        : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-muted focus:border-blue-500 focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900/40'
     }`
 
   return (
@@ -128,7 +128,7 @@ function TransactionModalContent({
         role="dialog"
         aria-modal="true"
         aria-labelledby="transaction-modal-title"
-        className="max-h-[90dvh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white dark:bg-[#182234] p-6 shadow-2xl border border-slate-100 dark:border-slate-800"
+        className="max-h-[90dvh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white dark:bg-card p-6 shadow-2xl border border-slate-100 dark:border-slate-800"
       >
         <div className="mb-5 flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
           <div>
@@ -176,7 +176,7 @@ function TransactionModalContent({
                 onClick={() => handleTypeSelect('EXPENSE')}
                 className={`flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition-all ${
                   form.type === 'EXPENSE'
-                    ? 'bg-white dark:bg-[#182234] text-rose-600 dark:text-rose-400 shadow-sm border border-slate-200/60 dark:border-slate-700'
+                    ? 'bg-white dark:bg-card text-rose-600 dark:text-rose-400 shadow-sm border border-slate-200/60 dark:border-slate-700'
                     : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100'
                 }`}
               >
@@ -188,7 +188,7 @@ function TransactionModalContent({
                 onClick={() => handleTypeSelect('INCOME')}
                 className={`flex items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition-all ${
                   form.type === 'INCOME'
-                    ? 'bg-white dark:bg-[#182234] text-emerald-600 dark:text-emerald-400 shadow-sm border border-slate-200/60 dark:border-slate-700'
+                    ? 'bg-white dark:bg-card text-emerald-600 dark:text-emerald-400 shadow-sm border border-slate-200/60 dark:border-slate-700'
                     : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100'
                 }`}
               >
@@ -224,9 +224,9 @@ function TransactionModalContent({
               aria-invalid={!!errors.categoryId}
               aria-describedby={errors.categoryId ? 'transaction-category-error' : undefined}
             >
-              <option value="" className="bg-white text-slate-900 dark:bg-[#1E293B] dark:text-slate-100">Chọn danh mục</option>
+              <option value="" className="bg-white text-slate-900 dark:bg-muted dark:text-slate-100">Chọn danh mục</option>
               {availableCategories.map((c) => (
-                <option key={c.id} value={c.id} className="bg-white text-slate-900 dark:bg-[#1E293B] dark:text-slate-100">
+                <option key={c.id} value={c.id} className="bg-white text-slate-900 dark:bg-muted dark:text-slate-100">
                   {c.name}
                 </option>
               ))}

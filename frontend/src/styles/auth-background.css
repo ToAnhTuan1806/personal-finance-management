@@ -9,12 +9,7 @@
   justify-content: center;
   padding: 24px 16px;
 
-  background-image:
-    linear-gradient(
-      rgba(245, 247, 251, 0.45),
-      rgba(245, 247, 251, 0.65)
-    ),
-    url('/images/auth-bg.webp');
+  background: radial-gradient(ellipse at 76% 14%, var(--brand-soft), transparent 60%), var(--app-bg);
 
   background-position: center;
   background-size: cover;
@@ -54,12 +49,7 @@ html.dark .auth-page,
 html.dark .se062-page,
 .dark .auth-page,
 .dark .se062-page {
-  background-image:
-    linear-gradient(
-      rgba(7, 12, 26, 0.75),
-      rgba(7, 12, 26, 0.88)
-    ),
-    url('/images/auth-bg.webp');
+  background: radial-gradient(ellipse at 76% 14%, var(--brand-soft), transparent 60%), var(--app-bg);
 }
 
 :root[data-theme="dark"] .auth-card,
@@ -70,7 +60,7 @@ html.dark .se062-card,
 .dark .se062-card {
   background: color-mix(
     in srgb,
-    var(--se062-surface, #182234) 92%,
+    var(--se062-surface, var(--surface)) 92%,
     transparent
   );
   box-shadow:

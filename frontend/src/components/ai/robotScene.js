@@ -126,7 +126,7 @@ export function createRobotScene(canvas, {
     })
     const thinking = state === 'LOADING' && moving ? 0.9 + Math.sin(time * 2.2) * 0.1 : 1
     antenna.scale.setScalar(thinking)
-    const color = state === 'ERROR' ? 0xfbbf24 : state === 'SUCCESS' ? 0x5eead4 : 0x67e8f9
+    const color = state === 'ERROR' ? 0xfbbf24 : state === 'SUCCESS' ? 0xa2f79b : 0xc3f6a2
     eyeMaterial.color.setHex(color)
     lampMaterial.color.setHex(color)
   }
@@ -223,11 +223,11 @@ export function createRobotScene(canvas, {
     robot.name = 'smartexpense-robot'
     scene.add(robot)
 
-    const shell = material(new MeshStandardMaterial({ color: 0x3b82f6, roughness: 0.32, metalness: 0.15 }))
-    const detail = material(new MeshStandardMaterial({ color: 0x93c5fd, roughness: 0.4, metalness: 0.12 }))
-    const face = material(new MeshStandardMaterial({ color: 0x0f213e, roughness: 0.42 }))
-    eyeMaterial = material(new MeshBasicMaterial({ color: 0x67e8f9 }))
-    lampMaterial = material(new MeshBasicMaterial({ color: 0x67e8f9 }))
+    const shell = material(new MeshStandardMaterial({ color: 0x268857, roughness: 0.32, metalness: 0.15 }))
+    const detail = material(new MeshStandardMaterial({ color: 0x9be1a7, roughness: 0.4, metalness: 0.12 }))
+    const face = material(new MeshStandardMaterial({ color: 0x153c30, roughness: 0.42 }))
+    eyeMaterial = material(new MeshBasicMaterial({ color: 0xc3f6a2 }))
+    lampMaterial = material(new MeshBasicMaterial({ color: 0xc3f6a2 }))
     const mesh = (shape, surface, parent, x = 0, y = 0, z = 0) => {
       const item = new Mesh(shape, surface)
       item.position.set(x, y, z)

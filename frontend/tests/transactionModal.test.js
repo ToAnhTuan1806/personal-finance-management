@@ -36,7 +36,7 @@ test('dropdown danh mục có nền/chữ riêng cho Light/Dark, lỗi vẫn bá
   assert.ok(options.length > 1)
   for (const option of options) {
     assert.ok(option.includes('bg-white') && option.includes('text-slate-900'))
-    assert.ok(option.includes('dark:bg-[#1E293B]') && option.includes('dark:text-slate-100'))
+    assert.ok(option.includes('dark:bg-muted') && option.includes('dark:text-slate-100'))
     assert.doesNotMatch(option, /rose-/)
   }
   const invalidInput = html.match(/<input[^>]*id="transaction-date"[^>]*>/)[0]

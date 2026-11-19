@@ -2,7 +2,6 @@
 
 import { BarChart3, Check, PieChart, ShieldCheck, TrendingUp, WalletCards } from 'lucide-react'
 import { Link } from 'react-router'
-import walletLogo from '../../assets/wallet-logo.png'
 import './AuthCard.css'
 import '../../styles/auth-background.css'
 
@@ -11,13 +10,9 @@ function BrandIdentity({ compact = false }) {
     <div className={`se062-brand-identity ${compact ? 'is-compact' : ''}`}>
       <div className="se062-logo" aria-hidden="true">
         <img
-          src={walletLogo}
+          src="/favicon.svg"
           alt=""
           className="se062-logo-img"
-          onError={(event) => {
-            event.currentTarget.onerror = null
-            event.currentTarget.src = '/Vi.png'
-          }}
         />
       </div>
       <div>

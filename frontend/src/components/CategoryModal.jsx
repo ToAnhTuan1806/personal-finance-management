@@ -56,7 +56,7 @@ function CategoryModalContent({
       role="dialog"
       aria-modal="true"
       aria-labelledby="category-modal-title"
-      className="max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-2xl bg-white dark:bg-[#182234] p-4 sm:p-6 shadow-2xl border border-slate-100 dark:border-slate-800"
+      className="max-h-[90dvh] w-full max-w-md overflow-y-auto rounded-2xl bg-white dark:bg-card p-4 sm:p-6 shadow-2xl border border-slate-100 dark:border-slate-800"
     >
       <div className="mb-6 flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
         <h2
@@ -98,7 +98,7 @@ function CategoryModalContent({
             className={`w-full rounded-xl border p-3 text-sm outline-none transition
               ${fieldErrors.name
                 ? 'border-red-500 bg-red-50 dark:bg-rose-950/30 text-rose-900 dark:text-rose-200 focus:border-red-600'
-                : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-[#1E293B] text-slate-800 dark:text-slate-100 focus:border-blue-600 focus:ring-2 focus:ring-blue-500/20'}`}
+                : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-muted text-slate-800 dark:text-slate-100 focus:border-blue-600 focus:ring-2 focus:ring-blue-500/20'}`}
           />
           {fieldErrors.name && (
             <p id="category-name-error" role="alert" className="mt-1.5 text-xs font-medium text-red-600 dark:text-rose-400">
@@ -123,7 +123,7 @@ function CategoryModalContent({
               setFieldErrors((previous) => ({ ...previous, type: '', name: '' }))
               setError('')
             }}
-            className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-[#1E293B] text-slate-800 dark:text-slate-100 p-3 text-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+            className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-muted text-slate-800 dark:text-slate-100 p-3 text-sm focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
           >
             <option value="EXPENSE">Chi tiêu</option>
             <option value="INCOME">Thu nhập</option>

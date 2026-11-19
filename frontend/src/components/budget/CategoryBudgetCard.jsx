@@ -40,7 +40,7 @@ export default function CategoryBudgetCard({
       role="region"
       aria-label={`Ngân sách danh mục ${categoryName}`}
       data-budget-status={status}
-      className={`group flex flex-col justify-between rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-xs transition-all hover:border-blue-200 hover:shadow-md dark:border-slate-800 dark:bg-[#1E293B]/70 dark:hover:border-blue-700/60 ${status === 'SAFE' ? '' : status === 'OVER_BUDGET' ? 'ring-2 ring-rose-400 dark:ring-rose-500' : 'ring-2 ring-amber-400 dark:ring-amber-500'}`}
+      className={`group flex flex-col justify-between rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-xs transition-all hover:border-blue-200 hover:shadow-md dark:border-slate-800 dark:bg-muted/70 dark:hover:border-blue-700/60 ${status === 'SAFE' ? '' : status === 'OVER_BUDGET' ? 'ring-2 ring-rose-400 dark:ring-rose-500' : 'ring-2 ring-amber-400 dark:ring-amber-500'}`}
     >
       {/* Header: Category Badge, Name, Status, Actions */}
       <div>

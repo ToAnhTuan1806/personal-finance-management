@@ -484,7 +484,7 @@ test('Giao diện Chatbot & XSS Safety: render đầy đủ tiêu đề, 4 câu 
   assert.match(emptyOpenHtml, /Xem câu hỏi gợi ý phía trước/)
   assert.match(emptyOpenHtml, /Xem thêm câu hỏi gợi ý/)
   assert.match(emptyOpenHtml, /cursor-grab/)
-  assert.match(emptyOpenHtml, /Bạn muốn ghi khoản chi hay xem thu chi\?/)
+  assert.match(emptyOpenHtml, /Bạn muốn hỏi gì hôm nay\?/)
   for (const question of AI_SUGGESTED_QUESTIONS) {
     assert.ok(
       emptyOpenHtml.includes(question),
@@ -797,7 +797,8 @@ test('D13 UI giữ hai bộ chọn tháng tiếng Việt, keyboard label, loadin
   assert.match(html, /aria-label="Tháng đang xem"/)
   assert.match(html, /aria-label="Tháng so sánh"/)
   assert.match(html, /id="ai-chat-compare-month"/)
-  assert.match(html, /10.5rem/)
+  assert.match(html, /class="ai-chat-window /)
+  assert.match(html, /<details[^>]*>\s*<summary[^>]*>/)
   assert.match(html, /motion-reduce:animate-none/)
   const pickers = [...html.matchAll(/<button[^>]*data-month-picker-trigger="vi"[^>]*>/g)].map(
     (match) => match[0]
@@ -818,7 +819,7 @@ test('trợ lý hướng dẫn chọn tháng bằng ngôn ngữ người dùng, 
     const html = render(AiAssistantPanelView, { open: true, month, compareMonth: '' })
     assert.match(html, /Tháng so sánh \(tùy chọn\)/)
     assert.doesNotMatch(html, /P1|1900–2100|YYYY-MM|kỳ gốc/)
-    assert.match(html, /text-slate-500 dark:text-slate-400/)
+    assert.match(html, /text-muted-foreground/)
   }
 })
 
@@ -882,7 +883,7 @@ const unknownResponse = () => ({ reply: 'Mình hỗ trợ 6 khả năng; thử m
 test('NLU UNKNOWN hiển thị hướng dẫn, không giả số liệu hoặc nhãn kỳ thống kê', () => {
   const html = render(AiStructuredResponseCard, { message: { ...normalizeAiChatResponse(unknownResponse()), role: 'assistant' } })
   assert.match(html, /Cần làm rõ/)
-  assert.match(html, /Mình chưa hiểu rõ/)
+  assert.match(html, /Mình chưa hiểu câu hỏi này/)
   assert.doesNotMatch(html, /SUMMARY|CATEGORIES|BUDGET|ADVICE|COMPARISON|CATEGORY_TREND/)
   assert.doesNotMatch(html, /Kỳ thống kê|0 ₫|NaN|Infinity/)
   assert.equal(getAiSuggestedQuestions({ lastIntent: 'UNKNOWN' }).length, 3)
@@ -1287,4 +1288,219 @@ test('Xu hướng ưu tiên ba biến động lớn nhất, không lặp bảng 
   assert.ok(preview.includes('Mới phát sinh'))
   assert.doesNotMatch(preview, /Tổng chi hai tháng|Biểu đồ so sánh|Kỳ thống kê/)
   assert.match(html, /Không đổi/)
+})
+
+test('Trợ lý trả thứ/ngày theo giờ Việt Nam ngay cả khi chưa chọn tháng', async () => {
+  const store = createSessionStore(memory())
+  store.authenticate(makeUser('trang'), 0)
+  const controller = createAiChatController({
+    sessionStore: store,
+    now: () => new Date('2026-11-18T17:01:00Z'),
+    sendChat: () => assert.fail('Ngày hiện tại không cần API'),
+  })
+  try {
+    controller.setMonth('')
+    const result = await controller.askQuestion('Bot ơi, hôm nay thứ mấy vậy?')
+    assert.match(result.reply, /Thứ Năm, 19\/11\/2026.*giờ Việt Nam/i)
+    assert.equal(result.period, undefined)
+    assert.equal(controller.getSnapshot().error, '')
+  } finally {
+    controller.destroy()
+  }
+})
+
+test('Trợ lý luôn lấy thông tin từ tài khoản đang mở và xóa tin cũ khi đổi phiên', async () => {
+  const store = createSessionStore(memory())
+  store.authenticate(makeUser('trang'), 0)
+  const controller = createAiChatController({ sessionStore: store, sendChat: () => assert.fail('Hồ sơ không cần API') })
+  try {
+    const name = await controller.askQuestion('Tôi tên gì?')
+    assert.equal(name.reply, 'Họ và tên: User trang')
+    const email = await controller.askQuestion('Email đăng nhập của tôi là gì?')
+    assert.equal(email.reply, 'Email đăng nhập: trang@example.test')
+
+    store.clear()
+    const signedOut = await controller.askQuestion('Thông tin tài khoản của tôi?')
+    assert.match(signedOut.reply, /cần đăng nhập/)
+    assert.doesNotMatch(signedOut.reply, /trang/)
+    store.authenticate(makeUser('tuan'), store.getSnapshot().revision)
+    assert.deepEqual(controller.getSnapshot().messages, [])
+    const profile = await controller.askQuestion('Thông tin tài khoản của tôi?')
+    assert.match(profile.reply, /User tuan\nEmail đăng nhập: tuan@example.test/)
+
+    const html = render(AiStructuredResponseCard, { message: profile })
+    assert.match(html, /tuan@example\.test/)
+    assert.doesNotMatch(html, /Kỳ thống kê|Ghi khoản chi mới/)
+  } finally {
+    controller.destroy()
+  }
+})
+
+test('Gợi ý cắt giảm chi tiêu có sẵn, lỗi Gemini có dự phòng và lỗi giới hạn yêu cầu vẫn hiện đúng', async () => {
+  let attempts = 0
+  const controller = createAiChatController({
+    sessionStore: createSessionStore(memory()),
+    getDefaultMonth: () => '2026-11',
+    sendChat: async ({ message }) => {
+      attempts += 1
+      if (message === 'Tổng thu chi?') return { intent: 'SUMMARY', period: '2026-11', reply: 'Thu chi' }
+      const code = message === 'Tư vấn kế hoạch tiết kiệm' ? 'AI_NOT_CONFIGURED' : 'AI_RATE_LIMITED'
+      throw { response: { status: code === 'AI_NOT_CONFIGURED' ? 503 : 429, data: { code } } }
+    },
+  })
+  try {
+    await controller.askQuestion('Tổng thu chi?')
+    const context = controller.getSnapshot().context
+    const advice = await controller.askQuestion('giờ tôi nên cắt giảm chi tiêu như thế nào cho hợp lý')
+    assert.match(advice.reply, /Giữ riêng các khoản thiết yếu/)
+    assert.equal(attempts, 1)
+    assert.deepEqual(controller.getSnapshot().context, context)
+
+    const fallback = await controller.askQuestion('Tư vấn kế hoạch tiết kiệm')
+    assert.equal(fallback.reply, advice.reply)
+    assert.equal(controller.getSnapshot().error, '')
+    assert.equal(attempts, 2)
+
+    assert.equal(await controller.askQuestion('Danh mục nào tôi chi nhiều nhất?'), null)
+    assert.equal(controller.getSnapshot().error, AI_ERROR_MESSAGES.RATE_LIMIT)
+  } finally {
+    controller.destroy()
+  }
+})
+
+test('Trợ lý hướng dẫn các màn hình thật của SmartExpense qua nhiều cách hỏi', async () => {
+  const controller = createAiChatController({
+    sessionStore: createSessionStore(memory()),
+    sendChat: () => assert.fail('Hướng dẫn trong app không cần kết nối Gemini'),
+  })
+  try {
+    for (const [question, expected] of [
+      ['Tháng nào cũng muốn ghi tiền nhà tự động thì phải làm gì?', /Giao dịch định kỳ → Thêm mẫu/],
+      ['Mình vào đâu để đặt giới hạn chi?', /Thiết lập ngân sách/],
+      ['Tải file giao dịch ở chỗ nào vậy?', /Quản lý giao dịch.*Tải CSV/],
+      ['Cách xuất CSV trong phần báo cáo?', /Báo cáo tài chính.*Tải CSV/],
+      ['Làm sao tìm giao dịch theo ghi chú?', /tìm theo ghi chú/],
+      ['Làm thế nào để xem các khoản chi của từng ngày?', /Lịch thu chi/],
+    ]) {
+      assert.match((await controller.askQuestion(question)).reply, expected)
+    }
+  } finally {
+    controller.destroy()
+  }
+})
+
+test('Gemini chỉ nhận yêu cầu duyệt sau khi người dùng đã xem và xác nhận nội dung', async () => {
+  const store = createSessionStore(memory())
+  store.authenticate(makeUser('trang'), 0)
+  const preview = { id: '00000000-0000-4000-8000-000000000001', text: 'Khi nào nên lập quỹ dự phòng? [email đã ẩn]' }
+  const approvals = []
+  const controller = createAiChatController({
+    sessionStore: store,
+    getDefaultMonth: () => '2026-11',
+    sendChat: async (_, options) => {
+      assert.equal(options.previewOpenQuestions, true)
+      return normalizeAiChatResponse({
+        reply: 'Xem trước câu hỏi.', intent: 'UNKNOWN', period: '2026-11', topCategories: [], geminiPreview: preview,
+      })
+    },
+    approveGeminiRequest: async (id) => {
+      approvals.push(id)
+      return { intent: 'ADVICE', period: '2026-11', reply: 'Hãy bắt đầu với quỹ dự phòng vừa sức.' }
+    },
+  })
+  try {
+    await controller.confirmGeminiPreview()
+    assert.deepEqual(approvals, [])
+    controller.setDraft('Khi nào nên lập quỹ dự phòng? demo@example.test')
+    await controller.submitDraft()
+    assert.deepEqual(approvals, [])
+    assert.deepEqual(controller.getSnapshot().messages, [])
+
+    const html = render(AiAssistantPanelView, { open: true, geminiPreview: controller.getSnapshot().geminiPreview })
+    assert.match(html, /Nội dung gửi tới Google Gemini/)
+    assert.match(html, /Gửi tới Gemini/)
+    assert.match(html, /\[email đã ẩn\]/)
+    assert.doesNotMatch(html, /demo@example\.test/)
+
+    controller.setDraft('Câu hỏi đã sửa')
+    await controller.confirmGeminiPreview()
+    assert.deepEqual(approvals, [])
+    await controller.submitDraft()
+    controller.cancelGeminiPreview()
+    await controller.confirmGeminiPreview()
+    assert.deepEqual(approvals, [])
+
+    await controller.submitDraft()
+    const approved = await controller.confirmGeminiPreview()
+    await controller.confirmGeminiPreview()
+    assert.deepEqual(approvals, [preview.id])
+    assert.equal(controller.getSnapshot().messages[0].content, preview.text)
+    assert.match(approved.reply, /quỹ dự phòng/)
+  } finally {
+    controller.destroy()
+  }
+})
+
+
+test('Tự động hỏi Gemini được ghi nhớ theo tài khoản và có thể tắt', async () => {
+  const store = createSessionStore(memory())
+  const preferenceStorage = memory()
+  store.authenticate(makeUser('A'), 0)
+  const sent = []
+  const apiClient = {
+    post: async (url, body) => {
+      assert.equal(url, '/ai/chat')
+      sent.push(body)
+      const data = body.autoSendGemini
+        ? { intent: 'ADVICE', period: '2026-11', reply: 'Hãy lập quỹ dự phòng.', stats: { totalIncome: 0, totalExpense: 0, balance: 0 }, topCategories: [] }
+        : { intent: 'UNKNOWN', period: '2026-11', reply: 'Xem trước câu hỏi.', topCategories: [], geminiPreview: {
+            id: '00000000-0000-4000-8000-000000000001', text: body.message,
+          } }
+      return { data }
+    },
+  }
+  const options = {
+    sessionStore: store,
+    preferenceStorage,
+    getDefaultMonth: () => '2026-11',
+    sendChat: (payload, request) => sendAiChatMessage(payload, { ...request, apiClient }),
+    approveGeminiRequest: async () => assert.fail('Lượt gửi tự động không cần xác nhận'),
+  }
+  let controller = createAiChatController(options)
+  try {
+    const question = 'Khi nào nên lập quỹ dự phòng?'
+    controller.setDraft(question)
+    await controller.submitDraft()
+    assert.equal(sent.at(-1).previewOpenQuestions, true)
+    assert.equal(sent.at(-1).autoSendGemini, undefined)
+    assert.ok(controller.getSnapshot().geminiPreview)
+
+    controller.setGeminiAutoSend(true)
+    assert.equal(controller.getSnapshot().geminiPreview, null)
+    const response = await controller.submitDraft()
+    assert.equal(sent.at(-1).autoSendGemini, true)
+    assert.equal(controller.getSnapshot().geminiPreview, null)
+    assert.equal(response.reply, 'Hãy lập quỹ dự phòng.')
+
+    controller.destroy()
+    controller = createAiChatController(options)
+    assert.equal(controller.getSnapshot().geminiAutoSend, true)
+    store.clear()
+    assert.equal(controller.getSnapshot().geminiAutoSend, false)
+    store.authenticate(makeUser('B'), store.getSnapshot().revision)
+    controller.setDraft(question)
+    await controller.submitDraft()
+    assert.equal(sent.at(-1).autoSendGemini, undefined)
+    assert.ok(controller.getSnapshot().geminiPreview)
+
+    store.authenticate(makeUser('A'), store.getSnapshot().revision)
+    assert.equal(controller.getSnapshot().geminiAutoSend, true)
+    controller.setGeminiAutoSend(false)
+    controller.setDraft(question)
+    await controller.submitDraft()
+    assert.equal(sent.at(-1).autoSendGemini, undefined)
+    assert.ok(controller.getSnapshot().geminiPreview)
+  } finally {
+    controller.destroy()
+  }
 })

@@ -2,18 +2,8 @@
 
 import { useMemo, useState } from 'react'
 import RollingNumber from './RollingNumber'
+import { EXPENSE_CHART_COLORS } from '../../utils/chartColors.js'
 import './DashboardWidgets.css'
-
-const COLORS = [
-  '#F97316', // Ăn uống (Cam tươi)
-  '#0EA5E9', // Mua sắm (Xanh biển sáng)
-  '#10B981', // Đi lại (Xanh ngọc lục bảo)
-  '#EF4444', // Hóa đơn (Đỏ san hô)
-  '#8B5CF6', // Sức khỏe (Tím violet)
-  '#F59E0B', // Giáo dục / Học tập (Vàng hổ phách)
-  '#EC4899', // Giải trí (Hồng sen)
-  '#6366F1', // Khác (Xanh chàm)
-]
 
 const RADIUS = 88
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS
@@ -25,6 +15,7 @@ export default function ExpenseDonutChart({
   title = 'Chi tiêu theo danh mục',
   subtitle,
   showLegend = true,
+  compact = false,
 }) {
   const [excluded, setExcluded] = useState(() => new Set())
   const [hoveredId, setHoveredId] = useState(null)
@@ -36,7 +27,7 @@ export default function ExpenseDonutChart({
         id: String(item.id ?? item.categoryId ?? `item-${index}`),
         name: String(item.name ?? item.categoryName ?? 'Chưa phân loại'),
         amount: Number(item.amount ?? item.totalAmount ?? 0),
-        color: COLORS[index % COLORS.length],
+        color: EXPENSE_CHART_COLORS[index % EXPENSE_CHART_COLORS.length],
       }))
       .filter((item) =>
         Number.isFinite(item.amount) && item.amount > 0
@@ -123,7 +114,7 @@ export default function ExpenseDonutChart({
   }
 
   return (
-    <section className="se097" aria-label="Biểu đồ chi tiêu">
+    <section className={compact ? "se097 se097-compact" : "se097"} aria-label="Biểu đồ chi tiêu">
       <header className="se097-header">
         {subtitle && <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">{subtitle}</p>}
         <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">{title}</h2>
@@ -134,7 +125,7 @@ export default function ExpenseDonutChart({
           Chưa có dữ liệu chi tiêu trong kỳ này.
         </div>
       ) : (
-        <>
+        <div className="se097-content">
           <div className="se097-chart">
             <svg
               className="se097-svg"
@@ -249,7 +240,7 @@ export default function ExpenseDonutChart({
               )
             })}
           </div>}
-        </>
+        </div>
       )}
     </section>
   )

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, Outlet, useLocation, useNavigate } from 'react-router'
 import { LogOut, Menu, Plus } from 'lucide-react'
 
+import { Button } from '../ui/button'
 import Sidebar from './Sidebar'
 import GuestLayout from './GuestLayout'
 import { pageTitles } from './navigation'
@@ -27,6 +28,8 @@ function LayoutContent() {
   const [menuPath, setMenuPath] = useState(location.pathname)
   const menuTriggerRef = useRef(null)
   const restoreFocusRef = useRef(null)
+  const assistantRef = useRef(null)
+  const openAssistant = () => assistantRef.current?.open()
 
   // Đổi trang thì đóng Drawer, tránh Drawer tự mở lại hoặc còn mở sau khi điều hướng
   if (menuPath !== location.pathname) {
@@ -77,9 +80,9 @@ function LayoutContent() {
   // Lưu trạng thái Sidebar khi tải lại trang
   const [expanded, setExpanded] = useState(() => {
     try {
-      return localStorage.getItem('smartSidebarExpanded') === 'true'
+      return localStorage.getItem('smartSidebarExpanded') !== 'false'
     } catch {
-      return false
+      return true
     }
   })
 
@@ -99,7 +102,7 @@ function LayoutContent() {
   const currentTitle = pageTitles[location.pathname] || 'SmartExpense'
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#0B1220] transition-colors duration-200">
+    <div className="min-h-screen bg-background text-foreground">
       <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-2 focus:z-[80] focus:rounded-xl focus:bg-blue-600 focus:p-3 focus:text-white">Bỏ qua điều hướng</a>
       <Sidebar
         expanded={expanded}
@@ -113,17 +116,14 @@ function LayoutContent() {
       {/* Khi Drawer mở, phần nền không nhận focus/thao tác để focus không thoát khỏi menu */}
       <div
         inert={mobileOpen ? true : undefined}
-        className={`min-h-screen transition-[padding] duration-[600ms]
+        className={`min-h-screen transition-[padding] duration-200
           motion-reduce:transition-none
           ${expanded ? 'lg:pl-[244px]' : 'lg:pl-[100px]'}`}
-        style={{
-          transitionTimingFunction: 'cubic-bezier(.34,1.45,.64,1)',
-        }}
       >
         <header
           className="sticky top-0 z-30 flex h-16 items-center
             justify-between gap-2 border-b border-slate-200/80
-            bg-white/80 px-3 backdrop-blur-md sm:h-20 sm:gap-4 sm:px-8
+            bg-white/80 px-3 backdrop-blur-md sm:h-[68px] sm:gap-4 sm:px-8
             dark:border-slate-800/80 dark:bg-slate-900/80
             transition-colors duration-200 motion-reduce:transition-none"
         >
@@ -161,10 +161,10 @@ function LayoutContent() {
             <div className="hidden sm:block">
               <ThemeToggle />
             </div>
-            {isAuthenticated && <button type="button" onClick={() => openQuickAdd()}
-              aria-label="Mở Quick Add" className="flex min-h-10 min-w-10 items-center justify-center gap-1 rounded-xl bg-blue-600 px-2.5 py-2 text-sm font-semibold text-white hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900 sm:px-3">
+            {isAuthenticated && <Button onClick={() => openQuickAdd()}
+              aria-label="Mở Quick Add" className="min-w-11 gap-1 px-2.5 sm:px-3">
               <Plus size={18} aria-hidden="true" /><span className="hidden sm:inline">Ghi nhanh</span>
-            </button>}
+            </Button>}
 
             {isAuthenticated ? (
               <button
@@ -203,11 +203,12 @@ function LayoutContent() {
         </header>
 
         {/* Giữ nguyên các trang CRUD qua React Router */}
-        <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-7xl p-4 pb-28 sm:p-6 sm:pb-28 lg:p-8">
-          <Outlet />
+        <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-[90rem] p-4 pb-28 sm:p-6 sm:pb-28 lg:px-8">
+          <Outlet context={{ openAssistant }} />
         </main>
         {isAuthenticated && (
           <AiAssistantWidget
+            ref={assistantRef}
             mobileMenuOpen={mobileOpen}
             onQuickAdd={() => openQuickAdd('EXPENSE')}
           />

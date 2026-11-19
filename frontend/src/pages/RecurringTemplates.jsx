@@ -304,10 +304,15 @@ export default function RecurringTemplates({
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400">
-              <Repeat size={22} />
-            </div>
+          <div className="flex items-center gap-3">
+            <img
+              src="/images/recurring-calendar.png"
+              alt=""
+              width={224}
+              height={224}
+              decoding="async"
+              className="size-14 shrink-0 object-contain sm:size-16"
+            />
             <div>
               <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100">
                 Giao dịch định kỳ
@@ -498,7 +503,7 @@ export default function RecurringTemplates({
             aria-modal="true"
             aria-labelledby="delete-template-dialog-title"
             aria-describedby="delete-template-dialog-desc"
-            className="w-full max-w-sm rounded-2xl border border-slate-100 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-[#182234]"
+            className="w-full max-w-sm rounded-2xl border border-slate-100 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-card"
           >
             <div className="mb-4 flex items-center gap-3">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400">

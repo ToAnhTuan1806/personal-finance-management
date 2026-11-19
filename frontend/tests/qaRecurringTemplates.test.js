@@ -298,12 +298,12 @@ test('QA-D08-09: Chuẩn hóa dữ liệu API - Ghi chú rỗng gửi null, số
   assert.equal(body.note, null, 'Ghi chú rỗng phải chuyển thành null theo API contract')
 })
 
-test('QA-UI-POLISH: Đồng bộ copywriting GuestDashboard tháng 11, ẩn phân trang rỗng, Header backdrop-blur và Auth UI', async () => {
+test('QA-UI-POLISH: Nội dung GuestDashboard và dữ liệu minh họa, ẩn phân trang rỗng, Header backdrop-blur và Auth UI', async () => {
   const fs = await import('node:fs')
 
   const dashboardSrc = fs.readFileSync(new URL('../src/pages/Dashboard.jsx', import.meta.url), 'utf8')
-  assert.match(dashboardSrc, /Theo dõi thu chi mỗi ngày/)
-  assert.match(dashboardSrc, /Tổng quan tháng 11/)
+  assert.match(dashboardSrc, /Thử một khoản chi/)
+  assert.match(dashboardSrc, /Giao dịch minh họa tháng 11\/2026/)
   assert.match(dashboardSrc, /Dữ liệu minh họa/)
   const { landingPreview } = await import('../src/components/dashboard/landingPreview.js')
   assert.ok(landingPreview.transactions.some((item) => item.note === 'Lương tháng 11'))
@@ -317,7 +317,7 @@ test('QA-UI-POLISH: Đồng bộ copywriting GuestDashboard tháng 11, ẩn phâ
   assert.match(dashboardSrc, /Bảo vệ dữ liệu tài chính của bạn/)
   assert.match(
     dashboardSrc,
-    /SmartExpense sử dụng xác thực đăng nhập và phân quyền tài khoản để bảo vệ thông tin thu chi cá nhân\./
+    /SmartExpense dùng xác thực đăng nhập và phân quyền tài khoản để bảo vệ thông tin thu chi cá nhân\./
   )
   assert.doesNotMatch(dashboardSrc, /Tổng quan tháng 10/)
   assert.doesNotMatch(dashboardSrc, /Lương tháng 10/)
