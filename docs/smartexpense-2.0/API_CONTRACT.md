@@ -743,3 +743,25 @@ API dùng JWT của tài khoản hiện tại. Migration V008 tạo ba bảng th
 | GET / PUT | /api/savings-challenges/reward | Đọc hoặc đổi useGoldenPig. Đạt mục tiêu trong thời hạn mới mở khóa. |
 
 Cấp độ gồm easy, medium và hard. Ngày lập lịch và kiểm tra hạn theo Asia/Ho_Chi_Minh. Ghi nhận thường chỉ áp dụng cho thử thách đang diễn ra với ngày từ lúc bắt đầu đến ngày hiện tại. Ghi nhận cũ giữ ngày gốc khi người dùng chọn chuyển dữ liệu. ID tạo từ trình duyệt chỉ dùng trong phạm vi chủ tài khoản; gửi lại cùng ID và dữ liệu giữ đúng một bản ghi. Ghi nhận thuộc thử thách tiết kiệm riêng trong SmartExpense.
+
+### Ảnh mục tiêu của thử thách
+
+V009 thêm bảng savings_challenge_covers. GET /api/savings-challenges trả coverUploadEnabled và từng thử thách có hasCover. Ảnh được gửi tùy chọn trong coverImage khi tạo thử thách, dưới dạng JPEG đã thu nhỏ, cạnh tối đa 960 px và tối đa 220 KiB trước Base64. API kiểm tra kích thước và mã hóa lại pixel trước khi lưu, trong cùng transaction với thử thách. GET /api/savings-challenges/{id}/cover trả ảnh JPEG cho chủ thử thách, dùng JWT và Cache-Control no-store. Gửi lại cùng ID, dữ liệu và ảnh giữ đúng một thử thách.
+
+Trước khi áp dụng V009, trang vẫn tải và tạo thử thách qua V008 với coverUploadEnabled=false. Sau khi áp dụng V009 vào đúng MySQL, tải lại trang để thấy ô chọn ảnh.
+
+
+
+### Quỹ tiết kiệm theo thử thách
+
+V010 tạo bảng `savings_fund_movements`. Các ghi nhận có trước V010 tiếp tục tính vào tiến độ. Khoản nạp qua API quỹ mới tính vào số tiền dành riêng. `POST /{id}/savings` và `POST /import` giữ hành vi ghi nhận tiến độ để tương thích ứng dụng cũ.
+
+| Phương thức | Đường dẫn | Nội dung |
+| --- | --- | --- |
+| GET | /api/savings-challenges/funds | Trả `totalBalance`, `reservedBalance` và `availableBalance`. Trả 204 trước V010. |
+| POST | /api/savings-challenges/{id}/fund/deposits | Nhận `id`, `amount`, `date`, `note`. Dành tiền vào quỹ của thử thách đang diễn ra. |
+| POST | /api/savings-challenges/{id}/fund/withdrawals | Nhận `id`, `amount`, `note`. Trả tiền về số dư khả dụng vào ngày hiện tại theo giờ Việt Nam, kể cả khi thử thách đã kết thúc. |
+
+Số dư khả dụng bằng tổng thu trừ tổng chi đã ghi đến hôm nay, sau đó trừ tổng tiền đang giữ trong các quỹ. Khoản nạp/rút được lưu riêng với sổ thu chi. Không thể nạp vượt số dư khả dụng hoặc rút vượt số tiền đang giữ. Hai API ghi trả `{ challenge, funds, reward }` và dùng ID để xử lý gửi lại. Thử thách trả thêm `fundBalance`, `withdrawals` và `completedOn` khi đã đạt mục tiêu qua quỹ. Rút tiền làm giảm tiến độ hiện tại. Phần thưởng đã đạt được lưu lại.
+
+Overview trả `funds: null` trước khi áp dụng V010. Sau khi áp dụng V010, tải lại giao diện để bật chế độ nạp/rút quỹ.
