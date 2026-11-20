@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 @RequiredArgsConstructor
@@ -94,6 +95,38 @@ public class SavingsChallengeRepository {
                 INSERT INTO savings_preferences (user_id, use_golden_pig) VALUES (?, ?)
                 ON DUPLICATE KEY UPDATE use_golden_pig = ?
                 """, owner, enabled, enabled);
+    }
+
+    public boolean coversAvailable() {
+        return Boolean.TRUE.equals(jdbc.queryForObject("""
+                SELECT EXISTS (
+                    SELECT 1 FROM information_schema.tables
+                    WHERE table_schema = DATABASE() AND table_name = 'savings_challenge_covers'
+                )
+                """, Boolean.class));
+    }
+
+    public Set<Long> listCoverIds(long owner) {
+        return Set.copyOf(jdbc.queryForList("""
+                SELECT i.challenge_id FROM savings_challenge_covers i
+                JOIN savings_challenges c ON c.id = i.challenge_id WHERE c.user_id = ?
+                """, Long.class, owner));
+    }
+
+    public boolean hasCover(long challengeId) {
+        return Boolean.TRUE.equals(jdbc.queryForObject("""
+                SELECT EXISTS (SELECT 1 FROM savings_challenge_covers WHERE challenge_id = ?)
+                """, Boolean.class, challengeId));
+    }
+
+    public Optional<byte[]> findCover(long challengeId) {
+        return jdbc.query("SELECT image_bytes FROM savings_challenge_covers WHERE challenge_id = ?",
+                (rs, ignored) -> rs.getBytes("image_bytes"), challengeId).stream().findFirst();
+    }
+
+    public void insertCover(long challengeId, byte[] image) {
+        jdbc.update("INSERT INTO savings_challenge_covers (challenge_id, image_bytes) VALUES (?, ?)",
+                challengeId, image);
     }
 
     private static Saving saving(ResultSet rs) throws SQLException {

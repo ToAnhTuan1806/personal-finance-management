@@ -13,6 +13,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.MockMvcPrint;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -20,7 +21,13 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import javax.imageio.ImageIO;
 import javax.sql.DataSource;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.util.Base64;
+import java.math.BigDecimal;
 import java.time.*;
 import java.util.UUID;
 import java.util.concurrent.Executors;
@@ -46,6 +53,7 @@ class SavingsChallengeIntegrationTests extends MySqlIntegrationTestSupport {
             {"id":"challenge-1","title":"Quỹ mua sách","target":500000,"days":30,"level":"medium"}
             """;
     @Autowired DataSource dataSource;
+    @Autowired JdbcTemplate jdbc;
     @Autowired MockMvc mvc;
     @Autowired UserRepository users;
     @Autowired SavingsChallengeService service;
@@ -54,8 +62,10 @@ class SavingsChallengeIntegrationTests extends MySqlIntegrationTestSupport {
 
     @BeforeEach void setup() throws Exception {
         verifyMySqlConnection();
-        new ResourceDatabasePopulator(new FileSystemResource(
-                "../database/migrations/V008__create_savings_challenges.sql")).execute(dataSource);
+        applyMigration("V008__create_savings_challenges.sql");
+        // Fixture MySQL cô lập: mỗi ca tự chọn thời điểm áp dụng migration tùy chọn.
+        jdbc.execute("DROP TABLE IF EXISTS savings_challenge_covers");
+        jdbc.execute("DROP TABLE IF EXISTS savings_fund_movements");
         today("2026-11-19T17:00:00Z");
         owner = newUser();
     }
@@ -133,6 +143,173 @@ class SavingsChallengeIntegrationTests extends MySqlIntegrationTestSupport {
         assertThat(service.overview(owner.getId()).challenges().getFirst().savings()).hasSize(1);
     }
 
+
+    @Test void optionalCoverUsesPrivateEndpointAndCanBeRetried() throws Exception {
+        applyMigration("V009__create_savings_challenge_covers.sql");
+        mvc.perform(get(ENDPOINT).with(auth(owner))).andExpect(status().isOk())
+                .andExpect(jsonPath("$.coverUploadEnabled").value(true));
+        String cover = jpegData(40, 30);
+        String payload = withCover(START, cover);
+        for (int repeat = 0; repeat < 2; repeat++) {
+            mvc.perform(post(ENDPOINT).with(auth(owner)).contentType(MediaType.APPLICATION_JSON).content(payload))
+                    .andExpect(status().isOk()).andExpect(jsonPath("$.hasCover").value(true))
+                    .andExpect(jsonPath("$.coverImage").doesNotExist());
+        }
+        mvc.perform(post(ENDPOINT).with(auth(owner)).contentType(MediaType.APPLICATION_JSON)
+                .content(withCover(START, jpegData(41, 30)))).andExpect(status().isConflict());
+
+        var result = mvc.perform(get(ENDPOINT + "/challenge-1/cover").with(auth(owner)))
+                .andExpect(status().isOk()).andExpect(content().contentType(MediaType.IMAGE_JPEG))
+                .andExpect(header().string("Cache-Control", "no-store")).andReturn();
+        assertThat(ImageIO.read(new ByteArrayInputStream(result.getResponse().getContentAsByteArray())).getWidth())
+                .isEqualTo(40);
+        mvc.perform(get(ENDPOINT + "/challenge-1/cover")).andExpect(status().isUnauthorized());
+        mvc.perform(get(ENDPOINT + "/challenge-1/cover").with(auth(newUser()))).andExpect(status().isNotFound());
+        mvc.perform(get(ENDPOINT).with(auth(owner))).andExpect(status().isOk())
+                .andExpect(jsonPath("$.challenges.length()").value(1))
+                .andExpect(jsonPath("$.challenges[0].hasCover").value(true));
+        save(owner, "entry-with-cover", 100, "2026-11-20")
+                .andExpect(status().isOk()).andExpect(jsonPath("$.hasCover").value(true));
+    }
+
+    @Test void invalidCoverDoesNotCreateChallenge() throws Exception {
+        applyMigration("V009__create_savings_challenge_covers.sql");
+        for (String cover : new String[]{"data:image/jpeg;base64,bm90IGFuIGltYWdl", jpegData(961, 3)}) {
+            mvc.perform(post(ENDPOINT).with(auth(owner)).contentType(MediaType.APPLICATION_JSON)
+                    .content(withCover(START, cover))).andExpect(status().isBadRequest());
+        }
+        assertThat(service.overview(owner.getId()).challenges()).isEmpty();
+    }
+
+    @Test void creationWithoutCoverWorksBeforeV009() throws Exception {
+        mvc.perform(get(ENDPOINT).with(auth(owner))).andExpect(status().isOk())
+                .andExpect(jsonPath("$.coverUploadEnabled").value(false));
+        mvc.perform(post(ENDPOINT).with(auth(owner)).contentType(MediaType.APPLICATION_JSON)
+                .content(withCover(START, jpegData(40, 30)))).andExpect(status().isServiceUnavailable());
+        assertThat(service.overview(owner.getId()).challenges()).isEmpty();
+        start();
+        mvc.perform(get(ENDPOINT).with(auth(owner))).andExpect(status().isOk())
+                .andExpect(jsonPath("$.challenges[0].hasCover").value(false));
+    }
+
+    @Test void tracksFundsSeparatelyFromLegacyProgressAndIncomeExpense() throws Exception {
+        start();
+        save(owner, "legacy", 100_000, "2026-11-20").andExpect(status().isOk());
+        mvc.perform(get(ENDPOINT + "/funds").with(auth(owner))).andExpect(status().isNoContent());
+        deposit("pre-migration", 1).andExpect(status().isServiceUnavailable());
+
+        applyMigration("V010__create_savings_fund_movements.sql");
+        applyMigration("V010__create_savings_fund_movements.sql");
+        ledger(owner, "INCOME", "6000000.25", "2026-10-10");
+        ledger(owner, "EXPENSE", "1000000", "2026-11-20");
+        ledger(owner, "INCOME", "9999999", "2027-01-01");
+        mvc.perform(get(ENDPOINT + "/funds")).andExpect(status().isUnauthorized());
+        mvc.perform(get(ENDPOINT + "/funds").with(auth(owner))).andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalBalance").value(5000000.25))
+                .andExpect(jsonPath("$.reservedBalance").value(0));
+        var other = newUser();
+        withdraw(other, "foreign", 1).andExpect(status().isNotFound());
+        deposit("too-large", 6_000_000).andExpect(status().isConflict());
+
+        for (int retry = 0; retry < 2; retry++) {
+            deposit("fund-1", 400_000).andExpect(status().isOk())
+                    .andExpect(jsonPath("$.challenge.fundBalance").value(400_000))
+                    .andExpect(jsonPath("$.challenge.savings.length()").value(2))
+                    .andExpect(jsonPath("$.funds.availableBalance").value(4600000.25))
+                    .andExpect(jsonPath("$.reward.unlocked").value(true));
+        }
+        deposit("fund-1", 400_001).andExpect(status().isConflict());
+        withdraw(owner, "over-limit", 400_001).andExpect(status().isConflict());
+
+        today("2026-12-19T17:00:00Z");
+        withdraw(owner, "withdraw-1", 400_000).andExpect(status().isOk())
+                .andExpect(jsonPath("$.challenge.fundBalance").value(0))
+                .andExpect(jsonPath("$.challenge.completedOn").value("2026-11-20"))
+                .andExpect(jsonPath("$.challenge.withdrawals[0].date").value("2026-12-20"))
+                .andExpect(jsonPath("$.challenge.withdrawals[0].amount").value(400_000))
+                .andExpect(jsonPath("$.funds.availableBalance").value(5000000.25))
+                .andExpect(jsonPath("$.reward.unlocked").value(true));
+        today("2026-12-20T17:00:00Z");
+        withdraw(owner, "withdraw-1", 400_000).andExpect(status().isOk())
+                .andExpect(jsonPath("$.challenge.withdrawals.length()").value(1))
+                .andExpect(jsonPath("$.challenge.withdrawals[0].date").value("2026-12-20"));
+        mvc.perform(get(ENDPOINT).with(auth(owner))).andExpect(status().isOk())
+                .andExpect(jsonPath("$.challenges[0].savings[0].amount").value(100_000))
+                .andExpect(jsonPath("$.funds.reservedBalance").value(0))
+                .andExpect(jsonPath("$.reward.unlocked").value(true));
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM transactions WHERE user_id = ?", Long.class, owner.getId()))
+                .isEqualTo(3L);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM savings_fund_movements", Long.class))
+                .isEqualTo(2L);
+    }
+
+    @Test void concurrentDepositsAcrossChallengesCannotSpendTheSameBalance() throws Exception {
+        applyMigration("V010__create_savings_fund_movements.sql");
+        start();
+        mvc.perform(post(ENDPOINT).with(auth(owner)).contentType(MediaType.APPLICATION_JSON)
+                .content(START.replace("challenge-1", "challenge-2"))).andExpect(status().isOk());
+        ledger(owner, "INCOME", "500000", "2026-11-20");
+        var entered = new CountDownLatch(1);
+        try (var executor = Executors.newFixedThreadPool(2)) {
+            var calls = java.util.stream.IntStream.rangeClosed(1, 2).mapToObj(i -> executor.submit(() -> {
+                entered.await();
+                try {
+                    service.deposit(owner.getId(), "challenge-" + i,
+                            new Saving("deposit-" + i, 300_000L, LocalDate.of(2026, 11, 20), ""));
+                    return 200;
+                } catch (org.springframework.web.server.ResponseStatusException rejected) {
+                    return rejected.getStatusCode().value();
+                }
+            })).toList();
+            entered.countDown();
+            assertThat(java.util.List.of(calls.get(0).get(15, SECONDS), calls.get(1).get(15, SECONDS)))
+                    .containsExactlyInAnyOrder(200, 409);
+        }
+        assertThat(service.funds(owner.getId()).availableBalance()).isEqualByComparingTo("200000");
+    }
+
+    private org.springframework.test.web.servlet.ResultActions deposit(String key, long amount) throws Exception {
+        return mvc.perform(post(ENDPOINT + "/challenge-1/fund/deposits").with(auth(owner))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {"id":"%s","amount":%d,"date":"2026-11-20","note":"để dành"}
+                        """.formatted(key, amount)));
+    }
+
+    private org.springframework.test.web.servlet.ResultActions withdraw(User user, String key, long amount) throws Exception {
+        return mvc.perform(post(ENDPOINT + "/challenge-1/fund/withdrawals").with(auth(user))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {"id":"%s","amount":%d,"note":"về số dư"}
+                        """.formatted(key, amount)));
+    }
+
+    private void ledger(User user, String type, String amount, String date) {
+        jdbc.update("INSERT INTO categories (user_id, name, type, created_at) VALUES (?, ?, ?, NOW())",
+                user.getId(), "Savings " + date, type);
+        Long category = jdbc.queryForObject("SELECT id FROM categories WHERE user_id = ? AND name = ?", Long.class,
+                user.getId(), "Savings " + date);
+        jdbc.update("""
+                INSERT INTO transactions (user_id, category_id, type, amount, transaction_date, note, created_at)
+                VALUES (?, ?, ?, ?, ?, '', NOW())
+                """, user.getId(), category, type, new BigDecimal(amount), LocalDate.parse(date));
+    }
+
+    private void applyMigration(String filename) {
+        new ResourceDatabasePopulator(new FileSystemResource("../database/migrations/" + filename)).execute(dataSource);
+    }
+
+    private static String withCover(String payload, String dataUrl) {
+        int end = payload.lastIndexOf('}');
+        return payload.substring(0, end) + ",\"coverImage\":\"" + dataUrl + "\"}";
+    }
+
+    private static String jpegData(int width, int height) throws Exception {
+        var image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        var bytes = new ByteArrayOutputStream();
+        ImageIO.write(image, "jpeg", bytes);
+        return "data:image/jpeg;base64," + Base64.getEncoder().encodeToString(bytes.toByteArray());
+    }
     private void start() throws Exception {
         mvc.perform(post(ENDPOINT).with(auth(owner)).contentType(MediaType.APPLICATION_JSON).content(START))
                 .andExpect(status().isOk())

@@ -1,7 +1,9 @@
 package com.smartexpense.backend.dto;
 
+import com.smartexpense.backend.util.SavingsCoverImage;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -17,7 +19,8 @@ public final class SavingsDtos {
             @NotBlank @Size(max = 80) String title,
             @NotNull @Positive @Max(MAX_AMOUNT) Long target,
             @NotNull @Min(1) @Max(365) Integer days,
-            @NotNull @Pattern(regexp = LEVEL) String level) {
+            @NotNull @Pattern(regexp = LEVEL) String level,
+            @Size(max = SavingsCoverImage.MAX_DATA_LENGTH) String coverImage) {
         @Override public String toString() { return "CreateChallenge[redacted]"; }
     }
 
@@ -40,10 +43,23 @@ public final class SavingsDtos {
         @Override public String toString() { return "ImportChallenge[redacted]"; }
     }
 
-    public record Challenge(String id, String title, long target, String level,
-                            LocalDate startDate, LocalDate endDate, List<Saving> savings) {}
+    public record Withdrawal(
+            @NotBlank @Pattern(regexp = KEY) String id,
+            @NotNull @Positive @Max(MAX_AMOUNT) Long amount,
+            @Size(max = 250) String note) {
+        @Override public String toString() { return "Withdrawal[redacted]"; }
+    }
+
+    public record Challenge(String id, String title, long target, String level, LocalDate startDate,
+                            LocalDate endDate, List<Saving> savings, boolean hasCover,
+                            long fundBalance, List<Saving> withdrawals, LocalDate completedOn) {}
+
+    public record Funds(BigDecimal totalBalance, BigDecimal reservedBalance, BigDecimal availableBalance) {}
+
+    public record FundUpdate(Challenge challenge, Funds funds, Reward reward) {}
 
     public record PreferenceRequest(@NotNull Boolean useGoldenPig) {}
     public record Reward(boolean unlocked, boolean useGoldenPig) {}
-    public record Overview(LocalDate today, List<Challenge> challenges, Reward reward) {}
+    public record Overview(LocalDate today, List<Challenge> challenges, Reward reward,
+                           boolean coverUploadEnabled, Funds funds) {}
 }
