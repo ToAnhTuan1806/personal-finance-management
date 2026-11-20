@@ -7,16 +7,17 @@ import { Button } from '../components/ui/button'
 import { Card, CardContent } from '../components/ui/card'
 import { SavingsAchievementsCard, SavingsSuggestionCard } from '../components/savings/SavingsOverviewCards.jsx'
 import SavingsChallengeCatalog, { SavingsDifficultyBadge } from '../components/savings/SavingsChallengeCatalog.jsx'
+import { SavingsCover, SavingsCoverPicker } from '../components/savings/SavingsCover.jsx'
 import { formatMoney } from '../components/budget/categoryBudgetUtils.js'
 import { localToday } from '../utils/transactionForm.js'
 import { getApiErrorMessage } from '../api/errors'
 import {
-  getSavingsOverview, importSavingsChallenge, setSavingsMascot, startSavingsChallenge, submitSaving,
+  depositSavingsFund, getSavingsOverview, importSavingsChallenge, setSavingsMascot, startSavingsChallenge, submitSaving, withdrawSavingsFund,
 } from '../services/savingsChallengeService.js'
 import {
-  createSavingsKey, formatSavingsDate, getSavingsAchievements, getSavingsChart, getSavingsCompletion,
-  getSavingsMilestones, getSavingsProgress, getSavingsSuggestion,
-  GOLDEN_PIG_IMAGE, hasGoldenPig, normalizeSavingsDefinition, readSavingsState, recordChallengeSaving,
+  createSavingsKey, formatSavingsAmountInput, formatSavingsDate, getSavingsAchievements, getSavingsChart, getSavingsCompletion,
+  getSavingsHistory, getSavingsMilestones, getSavingsProgress, getSavingsSuggestion,
+  GOLDEN_PIG_IMAGE, hasGoldenPig, normalizeSavingsDefinition, prepareSavingsWithdrawal, readSavingsState, recordChallengeSaving,
   SAVINGS_LEVELS, SAVINGS_TEMPLATES,
 } from '../utils/savingsChallenges.js'
 
@@ -24,19 +25,58 @@ const ROUTE = '/savings-challenges'
 const inputClass = 'w-full min-h-11 rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-ring'
 const labelClass = 'grid min-w-0 gap-1.5 text-sm font-semibold'
 
-function ChallengeDialog({ mode, template, challenge, today, onClose, onSubmit }) {
+function SavingsAmountInput({ name, placeholder, initialValue = '' }) {
+  const [value, setValue] = useState(() => formatSavingsAmountInput(initialValue))
+
+  const changeValue = (event) => {
+    const input = event.currentTarget
+    const raw = input.value
+    const { data, inputType } = event.nativeEvent
+    const deleting = inputType?.startsWith('delete')
+    // When editing an auto-grouped amount, separators can temporarily shift out of place.
+    const editingGroupedDigits = /^\d{1,3}(?:\.\d{3})+$/.test(value)
+      && (deleting || (inputType === 'insertText' && /^\d+$/.test(data ?? '')))
+    const formatted = formatSavingsAmountInput(raw, editingGroupedDigits)
+
+    if (formatted !== raw) {
+      const digitsBeforeCaret = raw.slice(0, input.selectionStart).replace(/\D/g, '').length
+      let caret = 0
+      let digits = 0
+      while (digits < digitsBeforeCaret && caret < formatted.length) {
+        if (formatted[caret] !== '.') digits += 1
+        caret += 1
+      }
+      if (inputType === 'deleteContentForward' && formatted === value && formatted[caret] === '.') {
+        caret += 1
+      }
+      input.value = formatted
+      input.setSelectionRange(caret, caret)
+    }
+    setValue(formatted)
+  }
+
+  return <input className={inputClass} name={name} required inputMode="numeric" placeholder={placeholder} value={value} onChange={changeValue} />
+}
+
+function ChallengeDialog({ mode, template, challenge, today, funds, canUploadCover, onClose, onSubmit }) {
   const dialogRef = useRef(null)
   const savingRef = useRef(false)
   const requestId = useRef(null)
   const [saving, setSaving] = useState(false)
+  const [cover, setCover] = useState('')
+  const [preparingCover, setPreparingCover] = useState(false)
   const [error, setError] = useState('')
-  const create = mode !== 'record'
+  const create = mode === 'start'
+  const withdraw = mode === 'withdraw'
   const title = {
     start: template ? 'Tham gia thử thách' : 'Tự tạo thử thách',
     record: 'Ghi nhận tiết kiệm',
+    withdraw: 'Rút khỏi quỹ',
   }[mode]
   const submitLabel = {
-    start: 'Bắt đầu thử thách', record: 'Xác nhận ghi nhận',
+    start: 'Bắt đầu thử thách',
+    record: funds ? 'Xác nhận nạp quỹ' : 'Xác nhận ghi nhận',
+    withdraw: 'Xác nhận rút tiền',
   }[mode]
 
   useEffect(() => {
@@ -50,14 +90,14 @@ function ChallengeDialog({ mode, template, challenge, today, onClose, onSubmit }
 
   const submit = async (event) => {
     event.preventDefault()
-    if (savingRef.current) return
+    if (savingRef.current || preparingCover) return
     const values = Object.fromEntries(new FormData(event.currentTarget))
     savingRef.current = true
     setSaving(true)
     setError('')
     try {
       requestId.current ??= createSavingsKey()
-      await onSubmit({ ...values, id: requestId.current })
+      await onSubmit({ ...values, id: requestId.current, ...(cover && { coverImage: cover }) })
     } catch (failure) {
       setError(failure.response ? getApiErrorMessage(failure) : failure.message)
     } finally {
@@ -86,7 +126,7 @@ function ChallengeDialog({ mode, template, challenge, today, onClose, onSubmit }
               <input className={inputClass} name="title" required maxLength={80} defaultValue={template?.title ?? ''} />
             </label>
             <label className={labelClass}>Mục tiêu (₫)
-              <input className={inputClass} name="target" required inputMode="numeric" placeholder="500.000" maxLength={17} defaultValue={template?.target ?? ''} />
+              <SavingsAmountInput name="target" placeholder="500.000" initialValue={template?.target} />
             </label>
             <label className={labelClass}>Thời hạn (ngày)
               <input className={inputClass} name="days" type="number" required min={1} max={365} defaultValue={template?.days ?? 30} />
@@ -97,28 +137,43 @@ function ChallengeDialog({ mode, template, challenge, today, onClose, onSubmit }
                 {SAVINGS_LEVELS.map(({ value, label }) => <option key={value} value={value}>{label}</option>)}
               </select>
             </div>
+            {canUploadCover && (
+              <SavingsCoverPicker image={cover} onChange={setCover} onPreparing={setPreparingCover} disabled={saving} />
+            )}
             <p className="text-sm text-muted-foreground">
               Thử thách bắt đầu hôm nay, {formatSavingsDate(today)}.
             </p>
           </>
         ) : (
           <>
-            <label className={labelClass}>Số tiền đã để dành (₫)
-              <input className={inputClass} name="amount" required inputMode="numeric" placeholder="50.000" maxLength={17} />
+            <label className={labelClass}>{withdraw ? 'Số tiền muốn rút (₫)' : 'Số tiền đã để dành (₫)'}
+              <SavingsAmountInput name="amount" placeholder="50.000" />
             </label>
-            <label className={labelClass}>Ngày ghi nhận
-              <input className={inputClass} name="date" type="date" required min={challenge.startDate} max={today} defaultValue={today} />
-            </label>
+            {!withdraw && (
+              <label className={labelClass}>Ngày ghi nhận
+                <input className={inputClass} name="date" type="date" required min={challenge.startDate} max={today} defaultValue={today} />
+              </label>
+            )}
             <label className={labelClass}>Ghi chú <span className="sr-only">(tùy chọn)</span>
               <textarea className={inputClass} name="note" rows={2} maxLength={250} placeholder="Không bắt buộc" />
             </label>
-            <p className="text-sm text-muted-foreground">Khoản này được lưu riêng vào tiến độ thử thách.</p>
+            {withdraw ? (
+              <p className="text-sm text-muted-foreground">
+                Quỹ đang có <strong>{formatMoney(challenge.fundBalance)}</strong>. Tiền rút sẽ về số dư khả dụng và giảm tiến độ tương ứng.
+              </p>
+            ) : funds ? (
+              <p className="text-sm text-muted-foreground">
+                Số dư khả dụng <strong>{formatMoney(funds.availableBalance)}</strong>. Khoản này sẽ được dành riêng trong quỹ của thử thách.
+              </p>
+            ) : (
+              <p className="text-sm text-muted-foreground">Khoản này được lưu riêng vào tiến độ thử thách.</p>
+            )}
           </>
         )}
         {error && <p role="alert" className="text-sm font-semibold text-expense">{error}</p>}
         <div className="flex flex-wrap justify-end gap-2">
           <Button variant="outline" onClick={close} disabled={saving}>Hủy</Button>
-          <Button type="submit" disabled={saving}>{saving ? 'Đang lưu…' : submitLabel}</Button>
+          <Button type="submit" disabled={saving || preparingCover}>{saving ? 'Đang lưu…' : submitLabel}</Button>
         </div>
       </form>
     </dialog>
@@ -196,12 +251,12 @@ function ChallengeProgressChart({ challenge, today }) {
   )
 }
 
-function ChallengeDetail({ challenge, today, reward, onRecord }) {
+function ChallengeDetail({ challenge, today, reward, funds, onRecord, onWithdraw }) {
   const progress = getSavingsProgress(challenge, today)
-  const completion = progress.completed ? getSavingsCompletion(challenge) : null
+  const completion = progress.completed || challenge.completedOn ? getSavingsCompletion(challenge) : null
   const status = progress.completed ? 'Hoàn thành đúng hạn' : progress.expired ? 'Đã hết hạn' : 'Đang tham gia'
   const timeLeft = progress.completed || progress.expired ? 'Đã kết thúc' : progress.daysLeft === 0 ? 'Hôm nay' : progress.daysLeft + ' ngày'
-  const history = [...challenge.savings].sort((left, right) => right.date.localeCompare(left.date))
+  const history = getSavingsHistory(challenge).reverse().sort((left, right) => right.date.localeCompare(left.date))
   return (
     <>
       <Link to={ROUTE} className="inline-flex min-h-11 items-center gap-2 rounded-xl px-1 text-sm font-semibold text-primary hover:underline">
@@ -224,6 +279,14 @@ function ChallengeDetail({ challenge, today, reward, onRecord }) {
             <Button onClick={onRecord}><Plus size={17} aria-hidden="true" /> Ghi nhận tiết kiệm</Button>
           )}
         </div>
+        {challenge.hasCover && (
+          <SavingsCover
+            challengeId={challenge.id}
+            alt={'Ảnh mục tiêu ' + challenge.title}
+            className="h-44 w-full sm:h-56"
+            contain
+          />
+        )}
         <div className="space-y-2">
           <p className="flex flex-wrap items-baseline justify-between gap-1 text-sm font-semibold"><span>Mục tiêu {formatMoney(challenge.target)}</span><span className="text-primary">{progress.percentage}% hoàn thành</span></p>
           <ProgressBar value={progress.percentage} />
@@ -233,13 +296,27 @@ function ChallengeDetail({ challenge, today, reward, onRecord }) {
           <div className="rounded-2xl border border-border bg-card p-3"><dt className="text-xs text-muted-foreground">Còn thiếu</dt><dd className="mt-0.5 break-words font-bold tabular-nums">{formatMoney(progress.remaining)}</dd></div>
           <div className="rounded-2xl border border-border bg-card p-3"><dt className="text-xs text-muted-foreground">Thời hạn còn lại</dt><dd className="mt-0.5 font-bold">{timeLeft}</dd></div>
         </dl>
+        {funds && (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-card p-3 sm:px-4">
+            <div className="min-w-0">
+              <h2 className="text-sm font-semibold text-muted-foreground">Tiền trong quỹ này</h2>
+              <p className="wrap-anywhere text-lg font-extrabold tabular-nums text-primary">{formatMoney(challenge.fundBalance)}</p>
+              {progress.saved > challenge.fundBalance && (
+                <p className="text-xs text-muted-foreground">Tiến độ gồm {formatMoney(progress.saved - challenge.fundBalance)} đã ghi nhận trước khi có quỹ.</p>
+              )}
+            </div>
+            {challenge.fundBalance > 0 && <Button variant="outline" onClick={onWithdraw}>Rút khỏi quỹ</Button>}
+          </div>
+        )}
       </section>
 
       {completion && (
         <div className="flex items-start gap-3 rounded-2xl border border-border bg-accent p-4 text-accent-foreground">
           <Trophy size={22} className="shrink-0" aria-hidden="true" />
           <div>
-            <p className="font-bold">Bạn đã để dành {formatMoney(progress.saved)} trong {completion.days} ngày.</p>
+            <p className="font-bold">{progress.completed
+              ? 'Bạn đã đạt mục tiêu trong ' + completion.days + ' ngày.'
+              : 'Bạn từng đạt mục tiêu của thử thách này.'}</p>
             <p className="mt-0.5 text-sm">Về đích ngày <time dateTime={completion.date}>{formatSavingsDate(completion.date)}</time>.</p>
           </div>
         </div>
@@ -257,9 +334,12 @@ function ChallengeDetail({ challenge, today, reward, onRecord }) {
                     <li key={entry.id} className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1 py-2.5 text-sm">
                       <div className="min-w-0">
                         <time dateTime={entry.date} className="font-semibold">{formatSavingsDate(entry.date)}</time>
+                        {entry.amount < 0 && <span className="ml-2 text-muted-foreground">Rút khỏi quỹ</span>}
                         {entry.note && <p className="wrap-anywhere text-muted-foreground">{entry.note}</p>}
                       </div>
-                      <span className="shrink-0 font-bold tabular-nums text-income">+{formatMoney(entry.amount)}</span>
+                      <span className={'shrink-0 font-bold tabular-nums ' + (entry.amount < 0 ? 'text-expense' : 'text-income')}>
+                        {entry.amount < 0 ? '−' : '+'}{formatMoney(Math.abs(entry.amount))}
+                      </span>
                     </li>
                   ))}
                 </ul>
@@ -338,9 +418,10 @@ export default function SavingsChallenges() {
     return () => controller.abort()
   }, [userId, loadAttempt])
 
-  const replaceChallenge = (updated) => {
+  const replaceChallenge = (updated, fundUpdate) => {
     setState((current) => ({
       ...current,
+      ...(fundUpdate && { funds: fundUpdate.funds, reward: fundUpdate.reward }),
       challenges: current.challenges.some(({ id }) => id === updated.id)
         ? current.challenges.map((item) => item.id === updated.id ? updated : item)
         : [updated, ...current.challenges],
@@ -349,16 +430,25 @@ export default function SavingsChallenges() {
 
   const save = async (input) => {
     if (dialog.mode === 'start') {
-      const created = await startSavingsChallenge({ id: input.id, ...normalizeSavingsDefinition(input) })
+      const created = await startSavingsChallenge({
+        id: input.id,
+        ...normalizeSavingsDefinition(input),
+        ...(input.coverImage && { coverImage: input.coverImage }),
+      })
       replaceChallenge(created)
       setSearchParams({ id: created.id })
       setNotice('Đã bắt đầu thử thách.')
+    } else if (dialog.mode === 'withdraw') {
+      const result = await withdrawSavingsFund(challenge.id, prepareSavingsWithdrawal(challenge, input))
+      replaceChallenge(result.challenge, result)
+      setNotice('Đã đưa tiền về số dư khả dụng.')
     } else {
       const previous = getSavingsProgress(challenge, today)
       const draft = recordChallengeSaving(challenge, input, today).savings.at(-1)
-      const updated = await submitSaving(challenge.id, draft)
+      const result = state.funds ? await depositSavingsFund(challenge.id, draft) : null
+      const updated = result ? result.challenge : await submitSaving(challenge.id, draft)
       const progress = getSavingsProgress(updated, today)
-      replaceChallenge(updated)
+      replaceChallenge(updated, result)
       if (progress.completed) {
         setNotice(unlocked
           ? 'Bạn đã hoàn thành thử thách đúng hạn!'
@@ -366,7 +456,7 @@ export default function SavingsChallenges() {
       } else if (progress.halfway && !previous.halfway) {
         setNotice('Đã nhận huy hiệu Nửa chặng đường. Còn thiếu ' + formatMoney(progress.remaining) + ' để về đích.')
       } else {
-        setNotice('Đã ghi nhận khoản tiết kiệm.')
+        setNotice(result ? 'Đã nạp vào quỹ của thử thách.' : 'Đã ghi nhận khoản tiết kiệm.')
       }
     }
     setError('')
@@ -447,7 +537,14 @@ export default function SavingsChallenges() {
         </Card>
       )}
       {challenge ? (
-        <ChallengeDetail challenge={challenge} today={today} reward={reward} onRecord={() => { setNotice(''); setDialog({ mode: 'record' }) }} />
+        <ChallengeDetail
+          challenge={challenge}
+          today={today}
+          reward={reward}
+          funds={state.funds}
+          onRecord={() => { setNotice(''); setDialog({ mode: 'record' }) }}
+          onWithdraw={() => { setNotice(''); setDialog({ mode: 'withdraw' }) }}
+        />
       ) : (
         <>
           <section className="se-hero grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 overflow-hidden rounded-3xl border border-border p-4 sm:gap-6 sm:p-7">
@@ -478,8 +575,9 @@ export default function SavingsChallenges() {
                         <Link key={item.id} to={ROUTE + '?id=' + item.id} className="group block min-w-0 rounded-2xl focus-visible:outline-2 focus-visible:outline-ring">
                           <Card className="h-full rounded-2xl group-hover:border-primary">
                             <CardContent>
-                              <div className="flex items-start justify-between gap-3">
-                                <div className="min-w-0">
+                              <div className="flex items-start gap-3">
+                                {item.hasCover && <SavingsCover challengeId={item.id} className="size-14 sm:size-16" />}
+                                <div className="min-w-0 flex-1">
                                   <p className="text-xs font-semibold text-muted-foreground">{progress.completed ? 'Hoàn thành đúng hạn' : progress.expired ? 'Đã hết hạn' : 'Đang tham gia'}</p>
                                   <h3 className="mt-1 wrap-anywhere text-base font-bold">{item.title}</h3>
                                 </div>
@@ -525,6 +623,8 @@ export default function SavingsChallenges() {
           template={dialog.template}
           challenge={challenge}
           today={today}
+          funds={state.funds}
+          canUploadCover={state.coverUploadEnabled === true}
           onClose={() => setDialog(null)}
           onSubmit={save}
         />

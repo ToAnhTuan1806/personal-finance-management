@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
   createSavingsKey, getSavingsAchievements, getSavingsChart, getSavingsCompletion, getSavingsMilestones, getSavingsProgress, getSavingsSuggestion,
-  hasGoldenPig, normalizeSavingsDefinition, recordChallengeSaving, readSavingsState, SAVINGS_STORAGE_PREFIX, shiftSavingsDate,
+  hasGoldenPig, normalizeSavingsDefinition, prepareSavingsWithdrawal, recordChallengeSaving, readSavingsState, SAVINGS_STORAGE_PREFIX, shiftSavingsDate,
 } from '../src/utils/savingsChallenges.js'
 import { localToday } from '../src/utils/transactionForm.js'
 
@@ -62,6 +62,23 @@ test('biểu đồ ngày và tuần cộng dồn theo ngày ghi nhận kể cả
   assert.deepEqual(getSavingsChart(challenge, '2026-11-09', 'day').slice(-3), [
     { date: '2026-11-07', total: 100000 }, { date: '2026-11-08', total: 150000 }, { date: '2026-11-09', total: 150000 },
   ])
+})
+
+test('rút tiền giảm tiến độ và biểu đồ, kể cả sau hạn thử thách', () => {
+  const challenge = {
+    ...recordChallengeSaving(makeChallenge(), { amount: '300.000', date: start }, start),
+    fundBalance: 200000,
+    withdrawals: [{ id: 'withdrawal-1', amount: 100000, date: '2026-12-01' }],
+  }
+  assert.equal(getSavingsProgress(challenge, '2026-12-01').percentage, 40)
+  assert.deepEqual(getSavingsChart(challenge, '2026-12-01', 'day').slice(-2), [
+    { date: '2026-11-30', total: 300000 }, { date: '2026-12-01', total: 200000 },
+  ])
+  assert.equal(getSavingsAchievements([challenge], '2026-12-01').total, 200000)
+  assert.throws(() => prepareSavingsWithdrawal(challenge, { amount: '200.001' }), /vượt quá/)
+  assert.deepEqual(prepareSavingsWithdrawal(challenge, { id: 'retry-key', amount: '200.000', note: ' Quay về số dư ' }), {
+    id: 'retry-key', amount: 200000, note: 'Quay về số dư',
+  })
 })
 
 test('đọc đúng dữ liệu cũ theo tài khoản để chuyển lên máy chủ', () => {
