@@ -50,7 +50,7 @@ import AnimatedGradientText from '../components/motion/AnimatedGradientText'
 import ShinyText from '../components/motion/ShinyText'
 import { getGreetingName } from '../utils/greetingName.js'
 import { GOLDEN_PIG_IMAGE } from '../utils/savingsChallenges.js'
-import { getSavingsReward } from '../services/savingsChallengeService.js'
+import { getSavingsFunds, getSavingsReward } from '../services/savingsChallengeService.js'
 
 const formatMoney = (amount) =>
   new Intl.NumberFormat('vi-VN', {
@@ -132,6 +132,22 @@ function AuthenticatedDashboard() {
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState('')
   const [reloadKey, setReloadKey] = useState(0)
+  const [fundState, setFundState] = useState(null)
+  const funds = fundState?.userId === user?.id ? fundState?.balances : null
+  const fundError = fundState?.userId === user?.id && fundState?.error
+
+  useEffect(() => {
+    const controller = new AbortController()
+    getSavingsFunds({ signal: controller.signal })
+      .then((balances) => {
+        if (!controller.signal.aborted) setFundState({ userId: user?.id, balances })
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setFundState({ userId: user?.id, error: true })
+      })
+    return () => controller.abort()
+  }, [user?.id, reloadKey, mutationVersion])
+
   const { current, previous, summary } = useDashboardMonths(selectedMonth, reloadKey, mutationVersion)
   const summaryError = current.status === 'error' ? getApiErrorMessage(current.error) : ''
 
@@ -453,7 +469,7 @@ function AuthenticatedDashboard() {
         <div className="relative overflow-hidden rounded-2xl border-2 border-blue-500/40 bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-indigo-500/10 p-5 sm:p-6 shadow-md dark:border-blue-500/40 dark:from-card dark:to-muted transition-all hover:shadow-lg">
           <div className="flex items-center justify-between">
             <span className="text-xs font-black uppercase tracking-wider text-blue-600 dark:text-blue-400">
-              Số dư
+              Số dư tháng
             </span>
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm shadow-blue-500/30">
               <Wallet size={20} />
@@ -472,6 +488,32 @@ function AuthenticatedDashboard() {
           </p>
         </div>
       </div>
+
+      {funds && (
+        <section aria-label="Số dư khả dụng và quỹ tiết kiệm" className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-card p-4 sm:px-5">
+          <dl className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="min-w-0">
+              <dt className="text-xs font-semibold text-muted-foreground">Số dư khả dụng</dt>
+              <dd className="wrap-anywhere font-extrabold tabular-nums text-primary">{formatMoney(funds.availableBalance)}</dd>
+            </div>
+            <div className="min-w-0">
+              <dt className="text-xs font-semibold text-muted-foreground">Đang giữ trong các quỹ</dt>
+              <dd className="wrap-anywhere font-bold tabular-nums">{formatMoney(funds.reservedBalance)}</dd>
+            </div>
+            <div className="min-w-0">
+              <dt className="text-xs font-semibold text-muted-foreground">Tổng tiền đang có</dt>
+              <dd className="wrap-anywhere font-bold tabular-nums">{formatMoney(funds.totalBalance)}</dd>
+            </div>
+          </dl>
+          <Link to="/savings-challenges" className="inline-flex min-h-11 items-center text-sm font-semibold text-primary hover:underline">Xem quỹ tiết kiệm</Link>
+        </section>
+      )}
+      {fundError && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-card px-4 py-2">
+          <p className="text-sm text-muted-foreground">Chưa tải được số dư khả dụng.</p>
+          <Button variant="ghost" size="sm" onClick={() => setReloadKey((key) => key + 1)}>Thử lại</Button>
+        </div>
+      )}
 
       {/* Ngân sách và cơ cấu chi tiêu */}
       {loading ? (

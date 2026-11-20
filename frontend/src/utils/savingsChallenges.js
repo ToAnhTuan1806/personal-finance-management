@@ -31,9 +31,21 @@ export function formatSavingsDate(date) {
   return date.split('-').reverse().join('/')
 }
 
+const wholeAmountPattern = /^(?:\d+|\d{1,3}(?:[. ]\d{3})+)$/
+
+export function formatSavingsAmountInput(value, editingGroupedDigits = false) {
+  const text = String(value ?? '').trim()
+  const isWholeAmount = wholeAmountPattern.test(text)
+  if (!isWholeAmount && !(editingGroupedDigits && /^[\d.]*$/.test(text))) return value
+
+  const digits = text.replace(/[. ]/g, '')
+  if (digits.length > String(MAX_AMOUNT).length) return value
+  return digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+}
+
 function parseAmount(value) {
   const text = String(value ?? '').trim()
-  if (!/^(?:\d+|\d{1,3}(?:[. ]\d{3})+)$/.test(text)) return null
+  if (!wholeAmountPattern.test(text)) return null
   const amount = Number(text.replace(/[. ]/g, ''))
   return Number.isSafeInteger(amount) && amount >= 1 && amount <= MAX_AMOUNT ? amount : null
 }
@@ -52,8 +64,13 @@ export function normalizeSavingsDefinition(input) {
   return { title, target, days, level }
 }
 
+export function getSavingsHistory(challenge) {
+  const withdrawals = (challenge.withdrawals ?? []).map((entry) => ({ ...entry, amount: -entry.amount }))
+  return [...challenge.savings, ...withdrawals]
+}
+
 export function getSavingsProgress(challenge, today = localToday()) {
-  const saved = challenge.savings.reduce((sum, entry) => sum + entry.amount, 0)
+  const saved = getSavingsHistory(challenge).reduce((sum, entry) => sum + entry.amount, 0)
   const completed = saved >= challenge.target
   return {
     saved,
@@ -80,6 +97,15 @@ export function recordChallengeSaving(challenge, input, today = localToday()) {
   return { ...challenge, savings: [...challenge.savings, { id: input.id ?? createSavingsKey(), amount, date, note }] }
 }
 
+export function prepareSavingsWithdrawal(challenge, input) {
+  const amount = parseAmount(input.amount)
+  const note = String(input.note ?? '').trim()
+  if (amount === null) throw new Error('Nhập số tiền rút nguyên dương, tính bằng đồng.')
+  if (amount > (challenge.fundBalance ?? 0)) throw new Error('Số tiền rút vượt quá số tiền trong quỹ này.')
+  if (note.length > 250) throw new Error('Ghi chú tối đa 250 ký tự.')
+  return { id: input.id ?? createSavingsKey(), amount, note }
+}
+
 export function getSavingsMilestones(challenge) {
   const duration = daysBetween(challenge.startDate, challenge.endDate) + 1
   return [
@@ -90,7 +116,7 @@ export function getSavingsMilestones(challenge) {
 
 export function getSavingsChart(challenge, today, mode) {
   const endDate = today < challenge.endDate ? today : challenge.endDate
-  const entries = [...challenge.savings].sort((left, right) => left.date.localeCompare(right.date))
+  const entries = getSavingsHistory(challenge).sort((left, right) => left.date.localeCompare(right.date))
   const step = mode === 'week' ? 7 : 1
   const points = []
   let entryIndex = 0
@@ -105,16 +131,24 @@ export function getSavingsChart(challenge, today, mode) {
     points.push({ date: through, total })
     date = shiftSavingsDate(date, step)
   }
+  while (entryIndex < entries.length && entries[entryIndex].date <= today) {
+    const { date } = entries[entryIndex]
+    do {
+      total += entries[entryIndex].amount
+      entryIndex += 1
+    } while (entries[entryIndex]?.date === date)
+    points.push({ date, total })
+  }
   return points
 }
 
 export function getSavingsCompletion(challenge) {
-  const point = getSavingsChart(challenge, challenge.endDate, 'day').find(({ total }) => total >= challenge.target)
-  return point ? { date: point.date, days: daysBetween(challenge.startDate, point.date) + 1 } : null
+  const date = challenge.completedOn ?? getSavingsChart(challenge, challenge.endDate, 'day').find(({ total }) => total >= challenge.target)?.date
+  return date ? { date, days: daysBetween(challenge.startDate, date) + 1 } : null
 }
 
 export function hasGoldenPig(state) {
-  return state.challenges.some((challenge) => getSavingsProgress(challenge).completed)
+  return state.challenges.some((challenge) => challenge.completedOn || getSavingsProgress(challenge).completed)
 }
 
 const emptySavingsState = () => ({ challenges: [], customTemplates: [], useGoldenPig: false })
@@ -150,12 +184,14 @@ export function getSavingsAchievements(challenges, today = localToday()) {
     longestStreak = Math.max(longestStreak, streak)
     previousDay = date
   }
-  const total = entries.reduce((sum, { amount }) => sum + amount, 0)
+  const total = challenges.flatMap(getSavingsHistory)
+    .filter(({ date }) => date <= today)
+    .reduce((sum, { amount }) => sum + amount, 0)
   return {
     hasSaved: entries.length > 0,
     longestStreak,
     total,
-    completed: challenges.some((challenge) => getSavingsProgress(challenge, today).completed),
+    completed: challenges.some((challenge) => challenge.completedOn || getSavingsProgress(challenge, today).completed),
   }
 }
 
