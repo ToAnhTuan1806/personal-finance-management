@@ -90,6 +90,7 @@ export function recordChallengeSaving(challenge, input, today = localToday()) {
   const date = input.date
   const note = String(input.note ?? '').trim()
   if (amount === null) throw new Error('Nhập số tiền tiết kiệm nguyên dương, tính bằng đồng.')
+  if (amount > progress.remaining) throw new Error('Số tiền vượt quá phần còn thiếu của thử thách: ' + formatSavingsAmountInput(progress.remaining) + ' ₫.')
   if (!isValidDate(date) || date < challenge.startDate || date > today || date > challenge.endDate) {
     throw new Error('Ngày ghi nhận phải từ ngày bắt đầu đến hôm nay và nằm trong thời hạn thử thách.')
   }
@@ -215,4 +216,39 @@ export function getSavingsSuggestion(challenges, today = localToday()) {
     template: SAVINGS_TEMPLATES.find(({ target }) => target > completedTarget),
     returning: completedTarget > 0,
   }
+}
+
+
+// Keep caret tied to digits, including deleting through a grouping separator.
+export function editSavingsAmount(previous, raw, selection, inputType = '') {
+  let digitsBefore = raw.slice(0, selection ?? raw.length).replace(/\D/g, '').length
+  let candidate = raw
+  if (inputType.startsWith('delete') && raw !== previous
+      && raw.replace(/\D/g, '') === previous.replace(/\D/g, '')) {
+    const digits = raw.replace(/\D/g, '')
+    const index = inputType === 'deleteContentForward' ? digitsBefore : digitsBefore - 1
+    if (index >= 0 && index < digits.length) {
+      candidate = digits.slice(0, index) + digits.slice(index + 1)
+      if (inputType !== 'deleteContentForward') digitsBefore -= 1
+    }
+  }
+  const value = formatSavingsAmountInput(candidate, inputType.startsWith('delete') || (inputType === 'insertText' && candidate.length === previous.length + 1 && /^\d{1,3}(?:\.\d{3})+$/.test(previous)))
+  let caret = 0, seen = 0
+  while (caret < value.length && seen < digitsBefore) {
+    if (/\d/.test(value[caret])) seen += 1
+    caret += 1
+  }
+  return { value, caret }
+}
+
+export const SAVINGS_MASCOTS = [
+  { name: 'Heo Vàng', image: GOLDEN_PIG_IMAGE },
+  { name: 'Thỏ May Mắn', image: '/images/savings-rabbit.svg' },
+  { name: 'Mèo Thịnh Vượng', image: '/images/savings-cat.svg' },
+  { name: 'Cáo Kiên Trì', image: '/images/savings-fox.svg' },
+  { name: 'Gấu Trúc Bền Bỉ', image: '/images/savings-panda.svg' },
+]
+export function getSavingsMascot(reward = {}) {
+  const count = Math.max(1, Math.floor(Number(reward.completedChallenges) || 1))
+  return { ...SAVINGS_MASCOTS[(count - 1) % SAVINGS_MASCOTS.length], count }
 }

@@ -49,7 +49,7 @@ import { Card, CardContent } from '../components/ui/card'
 import AnimatedGradientText from '../components/motion/AnimatedGradientText'
 import ShinyText from '../components/motion/ShinyText'
 import { getGreetingName } from '../utils/greetingName.js'
-import { GOLDEN_PIG_IMAGE } from '../utils/savingsChallenges.js'
+import { getSavingsMascot } from '../utils/savingsChallenges.js'
 import { getSavingsFunds, getSavingsReward } from '../services/savingsChallengeService.js'
 
 const formatMoney = (amount) =>
@@ -110,11 +110,13 @@ function ErrorSection({ message }) {
 
 function AuthenticatedDashboard() {
   const { user } = useAuth()
-  const [useGoldenPig, setUseGoldenPig] = useState(false)
+  const [mascotReward, setMascotReward] = useState({})
+  const useGoldenPig = mascotReward.useGoldenPig
+  const mascot = getSavingsMascot(mascotReward)
   useEffect(() => {
     const controller = new AbortController()
     getSavingsReward({ signal: controller.signal }).then((reward) => {
-      if (!controller.signal.aborted) setUseGoldenPig(reward.useGoldenPig)
+      if (!controller.signal.aborted) setMascotReward(reward)
     }).catch(() => { /* Giữ linh vật mặc định nếu chưa tải được lựa chọn. */ })
     return () => controller.abort()
   }, [user?.id])
@@ -370,8 +372,8 @@ function AuthenticatedDashboard() {
           </CardContent>
           <img
             className="se-hero-art"
-            src={useGoldenPig ? GOLDEN_PIG_IMAGE : '/images/savings-pig.png'}
-            alt={useGoldenPig ? 'Heo Vàng' : ''}
+            src={useGoldenPig ? mascot.image : '/images/savings-pig.png'}
+            alt={useGoldenPig ? mascot.name : ''}
             width={550} height={useGoldenPig ? 550 : 408}
             decoding="async"
           />

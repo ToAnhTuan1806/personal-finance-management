@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { ArrowLeft, ArrowRight, CalendarDays, Check, Coins, LockKeyhole, Plus, Sprout, Trophy, X } from 'lucide-react'
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
@@ -15,9 +15,9 @@ import {
   depositSavingsFund, getSavingsOverview, importSavingsChallenge, setSavingsMascot, startSavingsChallenge, submitSaving, withdrawSavingsFund,
 } from '../services/savingsChallengeService.js'
 import {
-  createSavingsKey, formatSavingsAmountInput, formatSavingsDate, getSavingsAchievements, getSavingsChart, getSavingsCompletion,
+  createSavingsKey, editSavingsAmount, getSavingsMascot, formatSavingsAmountInput, formatSavingsDate, getSavingsAchievements, getSavingsChart, getSavingsCompletion,
   getSavingsHistory, getSavingsMilestones, getSavingsProgress, getSavingsSuggestion,
-  GOLDEN_PIG_IMAGE, hasGoldenPig, normalizeSavingsDefinition, prepareSavingsWithdrawal, readSavingsState, recordChallengeSaving,
+  hasGoldenPig, normalizeSavingsDefinition, prepareSavingsWithdrawal, readSavingsState, recordChallengeSaving,
   SAVINGS_LEVELS, SAVINGS_TEMPLATES,
 } from '../utils/savingsChallenges.js'
 
@@ -28,34 +28,23 @@ const labelClass = 'grid min-w-0 gap-1.5 text-sm font-semibold'
 function SavingsAmountInput({ name, placeholder, initialValue = '' }) {
   const [value, setValue] = useState(() => formatSavingsAmountInput(initialValue))
 
+  const inputRef = useRef(null)
+  const caretRef = useRef(null)
+  useLayoutEffect(() => {
+    if (caretRef.current != null && inputRef.current === document.activeElement) {
+      inputRef.current.setSelectionRange(caretRef.current, caretRef.current)
+    }
+  }, [value])
   const changeValue = (event) => {
     const input = event.currentTarget
-    const raw = input.value
-    const { data, inputType } = event.nativeEvent
-    const deleting = inputType?.startsWith('delete')
-    // When editing an auto-grouped amount, separators can temporarily shift out of place.
-    const editingGroupedDigits = /^\d{1,3}(?:\.\d{3})+$/.test(value)
-      && (deleting || (inputType === 'insertText' && /^\d+$/.test(data ?? '')))
-    const formatted = formatSavingsAmountInput(raw, editingGroupedDigits)
-
-    if (formatted !== raw) {
-      const digitsBeforeCaret = raw.slice(0, input.selectionStart).replace(/\D/g, '').length
-      let caret = 0
-      let digits = 0
-      while (digits < digitsBeforeCaret && caret < formatted.length) {
-        if (formatted[caret] !== '.') digits += 1
-        caret += 1
-      }
-      if (inputType === 'deleteContentForward' && formatted === value && formatted[caret] === '.') {
-        caret += 1
-      }
-      input.value = formatted
-      input.setSelectionRange(caret, caret)
-    }
-    setValue(formatted)
+    const next = editSavingsAmount(value, input.value, input.selectionStart, event.nativeEvent.inputType)
+    caretRef.current = next.caret
+    input.value = next.value
+    input.setSelectionRange(next.caret, next.caret)
+    setValue(next.value)
   }
+  return <input ref={inputRef} className={inputClass} name={name} required inputMode="numeric" placeholder={placeholder} value={value} onChange={changeValue} />
 
-  return <input className={inputClass} name={name} required inputMode="numeric" placeholder={placeholder} value={value} onChange={changeValue} />
 }
 
 function ChallengeDialog({ mode, template, challenge, today, funds, canUploadCover, onClose, onSubmit }) {
@@ -163,7 +152,7 @@ function ChallengeDialog({ mode, template, challenge, today, funds, canUploadCov
               </p>
             ) : funds ? (
               <p className="text-sm text-muted-foreground">
-                Số dư khả dụng <strong>{formatMoney(funds.availableBalance)}</strong>. Khoản này sẽ được dành riêng trong quỹ của thử thách.
+                Còn thiếu <strong>{formatMoney(getSavingsProgress(challenge, today).remaining)}</strong>. Số dư khả dụng <strong>{formatMoney(funds.availableBalance)}</strong>. Khoản này sẽ được dành riêng trong quỹ của thử thách.
               </p>
             ) : (
               <p className="text-sm text-muted-foreground">Khoản này được lưu riêng vào tiến độ thử thách.</p>
@@ -180,26 +169,26 @@ function ChallengeDialog({ mode, template, challenge, today, funds, canUploadCov
   )
 }
 
-function RewardCard({ unlocked, equipped, onEquip, pending }) {
+function RewardCard({ unlocked, equipped, onEquip, pending, mascot }) {
   return (
     <Card className="overflow-hidden bg-linear-to-br from-amber-50 to-card dark:from-amber-950/35">
       <CardContent>
         <div className="flex items-start justify-between gap-3">
           <div>
             <h2 className="flex items-center gap-2 text-lg font-bold">
-              <Trophy size={20} className="text-amber-700 dark:text-amber-300" aria-hidden="true" /> Heo Vàng
+              <Trophy size={20} className="text-amber-700 dark:text-amber-300" aria-hidden="true" /> {mascot.name}
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              {unlocked ? 'Bạn có thể dùng Heo Vàng làm linh vật trên Tổng quan.' : 'Đạt đủ mục tiêu trong thời hạn để mở khóa linh vật.'}
+              {unlocked ? 'Đã hoàn thành ' + mascot.count + ' thử thách. Linh vật mới được tự động dùng trên Tổng quan.' : 'Đạt đủ mục tiêu trong thời hạn để mở khóa linh vật.'}
             </p>
           </div>
           {unlocked ? <Check size={19} className="shrink-0 text-income" aria-label="Đã mở khóa" /> : <LockKeyhole size={18} className="shrink-0 text-muted-foreground" aria-label="Chưa mở khóa" />}
         </div>
-        <img src={GOLDEN_PIG_IMAGE} width={1264} height={1264} alt="" className={'mx-auto my-1 h-28 w-28 object-contain ' + (unlocked ? '' : 'opacity-55 grayscale')} loading="lazy" />
+        <img src={mascot.image} width={1264} height={1264} alt="" className={'mx-auto my-1 h-28 w-28 object-contain ' + (unlocked ? '' : 'opacity-55 grayscale')} loading="lazy" />
         {unlocked && (
           <div className="flex flex-wrap items-center gap-2">
             <Button onClick={onEquip} variant={equipped ? 'outline' : 'default'} disabled={pending}>
-              {equipped ? 'Dùng heo mặc định' : 'Dùng trên Tổng quan'}
+              {equipped ? 'Dùng linh vật mặc định' : 'Dùng trên Tổng quan'}
             </Button>
             {equipped && <Link to="/" className="inline-flex min-h-11 items-center gap-1 rounded-lg px-2 text-sm font-semibold text-primary hover:underline">Xem Tổng quan <ArrowRight size={15} aria-hidden="true" /></Link>}
           </div>
@@ -452,7 +441,7 @@ export default function SavingsChallenges() {
       if (progress.completed) {
         setNotice(unlocked
           ? 'Bạn đã hoàn thành thử thách đúng hạn!'
-          : 'Bạn đã hoàn thành thử thách và mở khóa Heo Vàng!')
+          : 'Bạn đã hoàn thành thử thách và mở khóa linh vật mới!')
       } else if (progress.halfway && !previous.halfway) {
         setNotice('Đã nhận huy hiệu Nửa chặng đường. Còn thiếu ' + formatMoney(progress.remaining) + ' để về đích.')
       } else {
@@ -469,7 +458,7 @@ export default function SavingsChallenges() {
     try {
       const reward = await setSavingsMascot(!state.reward.useGoldenPig)
       setState((current) => ({ ...current, reward }))
-      setNotice(reward.useGoldenPig ? 'Heo Vàng đang được dùng trên Tổng quan.' : 'Đã đổi về linh vật mặc định.')
+      setNotice(reward.useGoldenPig ? 'Linh vật phần thưởng đang được dùng trên Tổng quan.' : 'Đã đổi về linh vật mặc định.')
     } catch (failure) {
       setError(getApiErrorMessage(failure))
     } finally {
@@ -510,7 +499,7 @@ export default function SavingsChallenges() {
     )
   }
 
-  const reward = { unlocked, equipped: unlocked && state.reward.useGoldenPig, onEquip: equip, pending: equipping }
+  const reward = { unlocked, equipped: unlocked && state.reward.useGoldenPig, onEquip: equip, pending: equipping, mascot: getSavingsMascot(state?.reward) }
   const achievements = getSavingsAchievements(challenges, today)
   const suggestion = getSavingsSuggestion(challenges, today)
   const openCreation = (template) => {
