@@ -58,7 +58,8 @@ public class SavingsChallengeService {
 
     private Reward reward(long owner, boolean fundsAvailable) {
         boolean unlocked = rewardUnlocked(owner, fundsAvailable);
-        return new Reward(unlocked, unlocked && repository.usesGoldenPig(owner));
+        return new Reward(unlocked, unlocked && repository.usesGoldenPig(owner),
+                Math.max(unlocked ? 1 : 0, repository.completedCount(owner, fundsAvailable)));
     }
 
     private boolean rewardUnlocked(long owner, boolean fundsAvailable) {
@@ -117,8 +118,12 @@ public class SavingsChallengeService {
         if (today.isAfter(row.endDate()) || sum(records) + reserved(movements) >= row.target()) {
             throw conflict("Thử thách đã kết thúc.");
         }
+        if (saving.amount() > row.target() - sum(records) - reserved(movements)) {
+            throw conflict("Số tiền vượt quá phần còn thiếu của thử thách.");
+        }
         validateDate(row, saving.date(), today);
         repository.insertSaving(row.id(), saving);
+        if (sum(records) + reserved(movements) + saving.amount() >= row.target()) repository.savePreference(owner, true);
         return load(row);
     }
 
@@ -162,6 +167,9 @@ public class SavingsChallengeService {
         long progress = sum(records) + fundBalance;
         if (depositing) {
             if (today.isAfter(row.endDate()) || progress >= row.target()) throw conflict("Thử thách đã kết thúc.");
+            if (amount > row.target() - progress) {
+                throw conflict("Số tiền nạp vượt quá phần còn thiếu của thử thách.");
+            }
             validateDate(row, date, today);
             if (fundRepository.balances(owner, today).availableBalance().compareTo(BigDecimal.valueOf(amount)) < 0) {
                 throw conflict("Số tiền nạp vượt quá số dư khả dụng.");
@@ -177,6 +185,7 @@ public class SavingsChallengeService {
         }
         Movement movement = new Movement(movementKey, amount, date, note, completedOn);
         fundRepository.insert(row.id(), movement);
+        if (completedOn != null) repository.savePreference(owner, true);
         var updated = new ArrayList<>(movements);
         updated.add(movement);
         return fundUpdate(owner, row, records, updated, today);
@@ -231,7 +240,7 @@ public class SavingsChallengeService {
         boolean unlocked = rewardUnlocked(owner, fundRepository.available());
         if (enabled && !unlocked) throw conflict("Bạn chưa mở khóa Heo Vàng.");
         repository.savePreference(owner, enabled);
-        return new Reward(unlocked, unlocked && enabled);
+        return reward(owner, fundRepository.available());
     }
 
     private void lockOwner(long owner) {

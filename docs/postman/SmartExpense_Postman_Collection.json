@@ -62,6 +62,26 @@
     {
       "key": "legacyAccessToken",
       "value": ""
+    },
+    {
+      "key": "challengeId",
+      "value": "challenge-test",
+      "type": "string"
+    },
+    {
+      "key": "depositId",
+      "value": "deposit-test-1",
+      "type": "string"
+    },
+    {
+      "key": "withdrawalId",
+      "value": "withdrawal-test-1",
+      "type": "string"
+    },
+    {
+      "key": "savingDate",
+      "value": "",
+      "type": "string"
     }
   ],
   "item": [
@@ -1432,6 +1452,93 @@
               }
             }
           ]
+        }
+      ]
+    },
+    {
+      "name": "06 Savings challenges & funds",
+      "item": [
+        {
+          "name": "Overview",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/savings-challenges"
+          }
+        },
+        {
+          "name": "Funds",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/savings-challenges/funds"
+          }
+        },
+        {
+          "name": "Create challenge",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/savings-challenges",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"{{challengeId}}\",\n  \"title\": \"Mục tiêu kiểm thử\",\n  \"target\": 500000,\n  \"days\": 30,\n  \"level\": \"medium\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Deposit",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/savings-challenges/{{challengeId}}/fund/deposits",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"{{depositId}}\",\n  \"amount\": 10000,\n  \"date\": \"{{savingDate}}\",\n  \"note\": \"Nạp kiểm thử\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Withdraw",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/savings-challenges/{{challengeId}}/fund/withdrawals",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"{{withdrawalId}}\",\n  \"amount\": 10000,\n  \"note\": \"Rút kiểm thử\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
         }
       ]
     }

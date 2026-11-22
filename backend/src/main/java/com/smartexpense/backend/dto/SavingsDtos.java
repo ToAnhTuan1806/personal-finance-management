@@ -59,7 +59,11 @@ public final class SavingsDtos {
     public record FundUpdate(Challenge challenge, Funds funds, Reward reward) {}
 
     public record PreferenceRequest(@NotNull Boolean useGoldenPig) {}
-    public record Reward(boolean unlocked, boolean useGoldenPig) {}
+    public record Reward(boolean unlocked, boolean useGoldenPig, int completedChallenges) {
+        public Reward(boolean unlocked, boolean useGoldenPig) {
+            this(unlocked, useGoldenPig, unlocked ? 1 : 0);
+        }
+    }
     public record Overview(LocalDate today, List<Challenge> challenges, Reward reward,
                            boolean coverUploadEnabled, Funds funds) {}
 }

@@ -1,8 +1,66 @@
-# V007 — lịch tự động giao dịch định kỳ (11/2026)
+# Migration SmartExpense
 
-File mới: `V007__recurring_automation_schedule.sql`, chạy một lần sau V006 và trước Backend tự động định kỳ. Chỉ thêm cột lịch nullable và index; không ghi thu/chi hoặc ghi bù kỳ cũ. Hướng dẫn, kiểm thử và thứ tự phát hành: [RECURRING_AUTOMATION.md](../../docs/qa/RECURRING_AUTOMATION.md).
+Cập nhật ngày 22/11/2026. SQL được áp dụng riêng bởi người vận hành; CD hiện cập nhật code/image. Trạng thái một database cần được kiểm tra trực tiếp.
 
-Phần D06 bên dưới được giữ làm tài liệu lịch sử của migration V002.
+## Danh sách hiện hành
+
+| Version | Nội dung |
+| --- | --- |
+| V002 | Icon/màu danh mục |
+| V003 | Ngân sách theo danh mục |
+| V004 | Mẫu giao dịch định kỳ |
+| V005 | Marker áp dụng mẫu theo kỳ |
+| V006 | Token đặt lại mật khẩu và phiên JWT |
+| V007 | Ngày chạy kế tiếp cho định kỳ tự động |
+| V008 | Thử thách, ghi nhận tiết kiệm và tùy chọn linh vật |
+| V009 | Ảnh mục tiêu riêng theo thử thách |
+| V010 | Lịch sử nạp/rút quỹ tiết kiệm |
+
+Repository bắt đầu từ schema MVP, không có V001. V007 là thay đổi cột cần kiểm tra trước khi chạy lại. V008–V010 tạo bảng IF NOT EXISTS. Việc có bảng vẫn cần đối chiếu đúng cột và ràng buộc nếu database từng được sửa thủ công.
+
+## Nâng cấp V009 và V010 trên stack đã có V008
+
+Từ thư mục triển khai trên VPS, sao lưu trước. Các lệnh dùng thông tin môi trường sẵn có trong container MySQL.
+
+~~~bash
+cd /opt/smartexpense
+set -e
+umask 077
+backup_file="/root/smartexpense-before-funds-$(date +%Y%m%d-%H%M%S).sql"
+
+docker compose exec -T mysql sh -c \
+  'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysqldump -u root --single-transaction --quick --no-tablespaces "$MYSQL_DATABASE"' \
+  > "$backup_file"
+test -s "$backup_file"
+
+for migration in \
+  database/migrations/V009__create_savings_challenge_covers.sql \
+  database/migrations/V010__create_savings_fund_movements.sql
+do
+  test -f "$migration"
+  docker compose exec -T mysql sh -c \
+    'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql -u root "$MYSQL_DATABASE"' < "$migration"
+done
+
+docker compose exec -T mysql sh -c \
+  'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql -u root --batch "$MYSQL_DATABASE"' <<'SQL'
+SELECT DATABASE();
+SHOW CREATE TABLE savings_challenge_covers;
+SHOW CREATE TABLE savings_fund_movements;
+SQL
+~~~
+
+Sau đó tải lại web, kiểm tra ảnh, nạp/rút, tiến độ và số dư khả dụng. Khoản tiết kiệm cũ tiếp tục tính tiến độ; quỹ tính từ movement mới.
+
+Ngày 22/11, người dùng gửi terminal xác nhận hai bảng tồn tại, backup thành công và sau đó xác nhận quỹ hoạt động. Đây là xác nhận do người vận hành cung cấp.
+
+## Backup và rollback
+
+Giữ dump, image và commit trước phát hành. Cột/bảng bổ sung tương thích có thể được giữ khi quay lại binary cũ. Đối chiếu dữ liệu và schema trước khi restore. Hướng dẫn PowerShell nằm ở scripts/backup-db.ps1 và scripts/restore-db.ps1.
+
+## Hồ sơ kỹ thuật V002 trước đây
+
+Phần dưới giữ các kiểm tra D06 chuyên biệt. Các trạng thái “đề xuất/chờ duyệt” thuộc thời điểm lập hồ sơ D06.
 
 # D06 — migration đề xuất, chờ Hương Quỳnh/DB/QA duyệt
 
