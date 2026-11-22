@@ -785,3 +785,10 @@ V010 tạo bảng `savings_fund_movements`. Các ghi nhận có trước V010 ti
 Số dư khả dụng bằng tổng thu trừ tổng chi đã ghi đến hôm nay, sau đó trừ tổng tiền đang giữ trong các quỹ. Khoản nạp/rút được lưu riêng với sổ thu chi. Không thể nạp vượt số dư khả dụng hoặc rút vượt số tiền đang giữ. Hai API ghi trả `{ challenge, funds, reward }` và dùng ID để xử lý gửi lại. Thử thách trả thêm `fundBalance`, `withdrawals` và `completedOn` khi đã đạt mục tiêu qua quỹ. Rút tiền làm giảm tiến độ hiện tại. Phần thưởng đã đạt được lưu lại.
 
 Overview trả `funds: null` trước khi áp dụng V010. Sau khi áp dụng V010, tải lại giao diện để bật chế độ nạp/rút quỹ.
+
+
+### Cập nhật giới hạn quỹ và linh vật
+- Khoản ghi nhận/nạp mới không vượt phần còn thiếu của mục tiêu; vi phạm trả 409. Lịch sử nhập từ bản cũ được giữ nguyên.
+- Reward bổ sung completedChallenges (số thử thách đã hoàn thành, đếm duy nhất). Các trường unlocked/useGoldenPig giữ tương thích; useGoldenPig hiện bật linh vật phần thưởng theo cấp hoàn thành.
+- Lần đầu hoàn thành một thử thách tự bật linh vật phần thưởng. Chuỗi hiện tại: Heo Vàng, Thỏ, Mèo, Cáo, Gấu Trúc; lặp sau 5 mốc.
+- Rút tiền không xóa thành tích đã đạt; hoàn thành lại cùng thử thách không tăng số thành tích.

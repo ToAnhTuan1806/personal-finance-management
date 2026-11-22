@@ -192,6 +192,29 @@ class SavingsChallengeIntegrationTests extends MySqlIntegrationTestSupport {
                 .andExpect(jsonPath("$.challenges[0].hasCover").value(false));
     }
 
+    @Test void limitsDepositsAndKeepsDistinctCompletionCountAcrossRetriesAndWithdrawals() throws Exception {
+        start();
+        applyMigration("V010__create_savings_fund_movements.sql");
+        ledger(owner, "INCOME", "5000000", "2026-11-20");
+        deposit("partial", 300_000).andExpect(status().isOk());
+        deposit("over-target", 200_001).andExpect(status().isConflict());
+        deposit("finish", 200_000).andExpect(status().isOk())
+                .andExpect(jsonPath("$.reward.completedChallenges").value(1))
+                .andExpect(jsonPath("$.reward.useGoldenPig").value(true));
+        deposit("finish", 200_000).andExpect(status().isOk())
+                .andExpect(jsonPath("$.reward.completedChallenges").value(1));
+        withdraw(owner, "take-back", 100_000).andExpect(status().isOk())
+                .andExpect(jsonPath("$.reward.completedChallenges").value(1));
+        deposit("finish-again", 100_000).andExpect(status().isOk())
+                .andExpect(jsonPath("$.reward.completedChallenges").value(1));
+        mvc.perform(post(ENDPOINT).with(auth(owner)).contentType(MediaType.APPLICATION_JSON)
+                .content(START.replace("challenge-1", "challenge-2"))).andExpect(status().isOk());
+        mvc.perform(post(ENDPOINT + "/challenge-2/fund/deposits").with(auth(owner))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"id\":\"second-finish\",\"amount\":500000,\"date\":\"2026-11-20\",\"note\":\"\"}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.reward.completedChallenges").value(2));
+    }
+
     @Test void tracksFundsSeparatelyFromLegacyProgressAndIncomeExpense() throws Exception {
         start();
         save(owner, "legacy", 100_000, "2026-11-20").andExpect(status().isOk());

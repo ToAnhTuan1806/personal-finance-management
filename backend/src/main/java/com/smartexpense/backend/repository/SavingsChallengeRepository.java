@@ -85,6 +85,14 @@ public class SavingsChallengeRepository {
                 """, Boolean.class, owner));
     }
 
+    public int completedCount(long owner, boolean includeFunds) {
+        String earned = includeFunds ? " OR EXISTS (SELECT 1 FROM savings_fund_movements m WHERE m.challenge_id = c.id AND m.completed_on IS NOT NULL)" : "";
+        return jdbc.queryForObject("""
+                SELECT COUNT(*) FROM savings_challenges c WHERE c.user_id = ? AND (
+                COALESCE((SELECT SUM(r.amount) FROM savings_records r WHERE r.challenge_id = c.id), 0) >= c.target
+                """ + earned + ")", Integer.class, owner);
+    }
+
     public boolean usesGoldenPig(long owner) {
         return jdbc.query("SELECT use_golden_pig FROM savings_preferences WHERE user_id = ?",
                 (rs, ignored) -> rs.getBoolean(1), owner).stream().findFirst().orElse(false);
