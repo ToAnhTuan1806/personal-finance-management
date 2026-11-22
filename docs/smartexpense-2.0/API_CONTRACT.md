@@ -1,10 +1,30 @@
-# SmartExpense 2.0 — API cho FE/BE
+# SmartExpense — API cho Frontend và Backend
 
-> **Đối chiếu ngày 18/11/2026:** mô tả mã nguồn đã tích hợp tại `dev 88be77a3a582f0f5b5654ed66ae70270783d80a1`. Đây là cập nhật tài liệu, không đổi endpoint, DTO/JSON, schema hoặc Auth. Calendar, Reports, CSV, định kỳ, Forgot/Reset Password và AI đã có trong bản tích hợp; việc gửi email tới hộp thư thật và vận hành VPS vẫn cần xác nhận riêng.
+Đối chiếu ngày 22/11/2026 với Backend a81b616 và Frontend 0bb5ada. Ảnh GitHub Actions người dùng cung cấp xác nhận bản tích hợp dev 37fe844 đã qua CI #186 và CD #96. Người dùng xác nhận V009/V010 cùng luồng quỹ trên VPS.
 
-> **Bổ sung đang phát triển:** mục “Phân tích chi tiêu, dự báo và mô phỏng” bên dưới mô tả mở rộng API trong working tree, chưa nằm trong SHA đối chiếu nêu trên.
+Nguồn yêu cầu [SRS 2.4](../SmartExpense_SRS_v2.docx), [Master Plan và hiện trạng](../SmartExpense_QuanTriDuAn.xlsx), [bàn giao hiện hành](RELEASE_CURRENT.md). Các nhãn Dxx và ngày cũ bên dưới giữ bối cảnh hình thành hợp đồng; phần hiện hành và các bổ sung mới có ưu tiên khi đọc hành vi hiện tại.
 
-Nguồn yêu cầu: [SRS 2.3](../SmartExpense_SRS_v2.docx) và [Master Plan](../SmartExpense_QuanTriDuAn.xlsx). Lịch Sprint 3 trong các nguồn này là snapshot ngày 08/11. Xem [bàn giao kỹ thuật và release](RELEASE_D16_D18.md), [mục lục tài liệu](../README.md). Các mục đề xuất chưa triển khai được giữ riêng ở mục 4.
+## Đọc nhanh hợp đồng hiện hành
+
+| Nhóm | Quy tắc cần nhớ |
+| --- | --- |
+| Owner | JWT xác định chủ dữ liệu, mọi ID cần thuộc tài khoản |
+| Thu chi | Tiền BigDecimal, giữ tối đa hai chữ số lẻ theo contract |
+| Số dư tháng | Tổng thu tháng trừ tổng chi tháng |
+| Quỹ | Tiền nguyên đồng, tiền dành riêng có lịch sử movement |
+| Số dư khả dụng | Tổng thu trừ chi đến hôm nay, qua mọi tháng, trừ toàn bộ quỹ |
+| Định kỳ | Worker ghi khi đến ngày theo giờ Việt Nam; có marker chống trùng |
+| Gemini | Câu hỏi mở phụ thuộc previewOpenQuestions/autoSendGemini, bộ lọc và cài đặt trợ lý |
+| Thử thách | V008 nền, V009 ảnh, V010 quỹ |
+| Triển khai | CD cập nhật code/image; người vận hành chạy SQL riêng |
+
+### Bổ sung trợ lý hiện hành
+
+GREETING trả lời chào. CREATE_EXPENSE trả suggestedExpense với amount, categoryId, categoryName, note, transactionDate và type. Backend soạn đề xuất; Frontend gọi Transaction API sau khi người dùng xác nhận.
+
+Các câu hỏi ngày, hồ sơ và hướng dẫn ứng dụng được xử lý theo ngữ cảnh đã xác thực và khả năng định tuyến hiện có. SPENDING_INSIGHT, BUDGET_FORECAST và PURCHASE_SIMULATION dùng số liệu/công thức nội bộ. Hợp đồng phân tích chi tiết nằm trong mục nâng cấp ngày 18/11.
+
+Các mô tả “chỉ ADVICE gọi Gemini” trong phần lịch sử D11/D13 là hành vi ban đầu. Hiện câu hỏi mở có thể đi qua Gemini khi previewOpenQuestions bật, theo luồng xem trước hoặc autoSendGemini. Với autoSendGemini tắt, Backend trả geminiPreview để người dùng duyệt. FE lưu thiết lập theo tài khoản trên trình duyệt và source hiện tại mặc định tắt.
 
 ## 1. Quy ước chung
 
@@ -423,8 +443,8 @@ Người dùng có thể bật **Tự động hỏi Gemini** trong cài đặt t
 - Tham khảo chính thức đã đối chiếu: [Interactions overview](https://ai.google.dev/gemini-api/docs/interactions-overview), [REST v1 schema](https://ai.google.dev/api/interactions-api-v1). Bản sửa Hybrid chỉ gửi yêu cầu tư vấn chung, không gửi số liệu/context tài chính; không lưu hội thoại trong DB hoặc chủ động log request/response/key. DTO Chat che nội dung trong `toString()` để Spring MVC DEBUG không ghi prompt/phản hồi; CSV trả Resource với mô tả trung lập để tránh log byte payload.
 - Local: cung cấp `GEMINI_API_KEY` và `GEMINI_MODEL` qua môi trường tiến trình/IDE hoặc file env riêng, không đặt key trong React/Git. Script `scripts/start-backend.ps1` nạp DB/JWT/SMTP/Gemini từ file env; giá trị được khai báo trong file (kể cả rỗng) có ưu tiên, SMTP/Gemini chỉ kế thừa môi trường khi không khai báo trong file. Các biến tiến trình được khôi phục khi dừng, kể cả khi Gradle lỗi. `-CheckOnly` chỉ báo đủ/thiếu cấu hình, không gọi Google hoặc xác nhận quota. Compose truyền hai biến Gemini vào Backend và không đặt model mặc định. Model mẫu được chọn ngày 18/11/2026 là `gemini-3.5-flash-lite`, cần xác minh quyền truy cập/quota bằng lời gọi thật. API vẫn khởi động bình thường khi thiếu Gemini; riêng ADVICE trả lỗi cấu hình.
 - Prompt tư vấn yêu cầu tối đa 3 gạch đầu dòng, mỗi ý một câu và tổng không quá 90 từ; đây là chỉ dẫn cho model, không phải bảo đảm mọi phản hồi live đều tuân thủ.
-- Connect timeout 3 giây, nằm trong deadline toàn request/body **25 giây**. `generation_config` gửi `thinking_level="low"` và `max_output_tokens=1024`; không dùng minimal, không đổi model từ GEMINI_MODEL. Không tự retry. Tối đa 8 request provider đồng thời/instance, body provider ≤65.536 byte, nội dung provider ≤4.000 ký tự; quá giới hạn trả lỗi an toàn. Các lỗi provider chỉ phát sinh trên ADVICE: HTTP 503 → 503 AI_UNAVAILABLE, 429 → 429 AI_QUOTA_EXCEEDED; chỉ timeout mới trả 504 AI_TIMEOUT.
-- Bàn giao FE: timeout riêng cho Chat cần lớn hơn 25 giây và có khoảng đệm cho DB/network. Axios mặc định 10 giây trong worktree hiện tại chưa được đổi trong bản sửa BE này; không đổi JSON response thành công.
+- Connect timeout 3 giây, nằm trong deadline toàn request/body **25 giây**. `generation_config` gửi `thinking_level="low"` và `max_output_tokens=1024`; không dùng minimal, không đổi model từ GEMINI_MODEL. Không tự retry. Tối đa 8 request provider đồng thời/instance, body provider ≤65.536 byte, nội dung provider ≤4.000 ký tự; quá giới hạn trả lỗi an toàn. Lỗi provider có thể phát sinh khi lời gọi Gemini được thực hiện: HTTP 503 → 503 AI_UNAVAILABLE, 429 → 429 AI_QUOTA_EXCEEDED; chỉ timeout mới trả 504 AI_TIMEOUT.
+- Timeout riêng cho Chat phải lớn hơn deadline provider và có khoảng đệm DB/network. Đối chiếu cấu hình sendChat trên Frontend khi tích hợp.
 - **10 câu hỏi/phút/JWT owner/instance**, cửa sổ 60 giây tính từ request đầu; tính cả từ chối và provider lỗi. Hết hạn mức trả 429/Retry-After:60, không query/call provider thêm. Bộ nhớ limiter tối đa 10.000 owner còn hiệu lực; quá dung lượng trả 503. Restart làm mất bộ đếm; nhiều instance chưa có shared limiter. Khi scale phải review limiter dùng chung trước.
 - Thành công/lỗi D11 đặc thù có `Cache-Control:no-store`. Giữ schema ApiError `{status,code,message}`; 400/401 dùng quy tắc D02, không đổi mã lỗi API cũ. Các code riêng chỉ áp dụng CSV/Chat:
 
@@ -725,7 +745,7 @@ Application = { id, templateId, year, month, transactionId, transaction:Transact
 - Chưa có Idempotency-Key với storage/TTL/replay, refresh token hoặc API admin/deploy/theme mới. Cần thiết kế và duyệt riêng trước triển khai.
 - Filter keyword hiện dùng LIKE theo repository; thay đổi `%`/`_` thành tìm literal sẽ đổi semantics, cần task/contract riêng. Không tự coi ghi chú đề xuất cũ là code đã có.
 - CSV trong Reports đã tích hợp bằng chuyển khoảng tháng sang range ngày. Cross-origin đọc Content-Disposition vẫn cần cấu hình expose header được review; same-origin `/api` không cần mở rộng CORS.
-- DB/QA và người vận hành còn chốt migration runner/ddl-auto, backup production, image digest/rollback và kiểm tra VPS. Xem [Migration, backup và rollback](../../README.md#migration-backup-và-rollback) cùng [bàn giao kỹ thuật](RELEASE_D16_D18.md).
+- DB/QA và người vận hành còn chốt migration runner/ddl-auto, backup production, image digest/rollback và kiểm tra VPS. Xem [Migration, backup và rollback](../../README.md#migration-backup-và-rollback) cùng [bàn giao kỹ thuật](RELEASE_CURRENT.md).
 - SMTP nhận thư/reset thực tế và Gemini ADVICE phụ thuộc cấu hình/quota. Không xác nhận thành công bằng phản hồi forgot chung hoặc response thống kê do Backend tạo. Cảnh báo CSRF giữ OPEN để review có thẩm quyền, không bật/tắt bảo mật chỉ để vượt Quality Gate.
 
 FR-01 tài khoản, FR-02 danh mục, FR-03 Quick Add, FR-04 lịch, FR-05 giao dịch, FR-06 ngân sách tổng, FR-07 ngân sách danh mục, FR-08 định kỳ, FR-09 báo cáo và FR-10 CSV có contract triển khai ở trên. FR-11 UI/UX và FR-12 QA/DevOps yêu cầu kiểm thử/review; nội dung tài liệu không tự đổi trạng thái Trello hoặc ký nghiệm thu thay thành viên.

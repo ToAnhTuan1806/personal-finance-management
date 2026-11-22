@@ -1,12 +1,14 @@
-# Kiểm thử SmartExpense 2.0 theo từng ngày
+# Kiểm thử SmartExpense
+## Nghiệm thu trước demo 23/11
 
-Mỗi ngày có một báo cáo chung cho **Backend (BE), Frontend (FE) và dữ liệu/QA**. Mở báo cáo của ngày cần xem thay vì ghép nhiều hồ sơ BE/DB riêng.
+Lượt mới ngày 22/11 đạt **1.427/1.427 test Backend**, 55 suite, không failure/error/skipped; gate D03 55/55 là tập con. Frontend đạt **725/725**, lint/build đạt. Đã kiểm tra web công khai và bộ dự phòng. Chi tiết và giới hạn trong [báo cáo trước demo](PRE_DEMO_2026-11-22.md).
 
-## Snapshot hiện hành — 18/11/2026
 
-Phiên bản tích hợp `dev 88be77a` đã có code BE/FE/DB và CI/CD SUCCESS. Kết quả local đã đối chiếu ngày 17/11: Backend 1.279 PASS, Frontend 617 PASS; D03 55/55 là tập con Backend. Backup/restore scripts 22 PASS, HTTP/SQL/restore 13 PASS. Số liệu theo từng lượt/tập con, không cộng vào tổng mới; không chạy lại tests chỉ để sửa tài liệu này.
+## Hiện trạng ngày 22/11/2026
 
-Xem [bàn giao kỹ thuật](../smartexpense-2.0/RELEASE_D16_D18.md) cho SHA, CI/CD và giới hạn nghiệm thu. Các bảng D01–D15 và review Sprint 2 bên dưới là hồ sơ lịch sử, không dùng những trạng thái FAIL/chưa merge ban đầu làm trạng thái bản hiện tại. Báo cáo D16_D18 và evidence mới còn local ở worktree DB/QA, chưa được đưa vào commit code.
+Quỹ đã chạy 270/270 test Backend liên quan và 725/725 Frontend, lint/build đạt. Chín ca MySQL quỹ nằm trong tổng Backend. Playwright dùng API mẫu. Người dùng gửi terminal xác nhận V009/V010 trên VPS và xác nhận quỹ hoạt động.
+
+[Bàn giao hiện hành](../smartexpense-2.0/RELEASE_CURRENT.md) ghi phiên bản, nguồn và giới hạn xác nhận. Các mục phía dưới là hồ sơ lịch sử, giữ nguyên baseline và kết quả từng lượt.
 
 ## Mục lục
 

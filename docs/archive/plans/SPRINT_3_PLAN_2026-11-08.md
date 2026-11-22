@@ -1,6 +1,6 @@
 # Lưu trữ — Kế hoạch Sprint 3 ngày 08/11/2026
 
-> **Tài liệu lịch sử:** nội dung kế hoạch bên dưới là snapshot ngày 08/11/2026, không đại diện tiến độ hoặc phạm vi nghiệm thu ngày 18/11. Xem [mục lục hiện hành](../../README.md) và [bàn giao kỹ thuật](../../smartexpense-2.0/RELEASE_D16_D18.md).
+> **Tài liệu lịch sử:** nội dung kế hoạch bên dưới là snapshot ngày 08/11/2026, không đại diện tiến độ hoặc phạm vi nghiệm thu ngày 18/11. Xem [mục lục hiện hành](../../README.md) và [bàn giao kỹ thuật](../../smartexpense-2.0/RELEASE_CURRENT.md).
 
 Cập nhật **08/11/2026** theo [Trello SmartExpense](https://trello.com/b/RAHIOc4b/smartexpense-personal-finance-management) và xác nhận của người dùng. Ngày/giờ dưới đây dùng UTC+07; hạn các thẻ là 23:59.
 

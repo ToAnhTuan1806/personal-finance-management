@@ -9,7 +9,7 @@ Migration thuộc `feature/quynh`; Backend thuộc `feature/tuan`; Frontend thu�
 3. Phát hành Backend và Frontend mới theo quy trình hiện có. Worker bật mặc định; biến môi trường Spring `APP_RECURRING_AUTOMATIC_ENABLED=false` trong process/container có thể dừng worker khi cần. Nếu dùng Compose, cần truyền biến vào container; chỉ đặt ở file `.env` chưa bảo đảm biến được truyền. Binary mới vẫn cần cột V007 kể cả khi worker tắt.
 4. Mẫu cũ đang bật và chưa có ngày chạy sẽ được đặt lịch từ hôm nay theo giờ Việt Nam. Nếu đến hạn hôm nay, mẫu được xử lý trong lượt quét khởi tạo. Kiểm tra API trả `nextRunDate`, UI hiển thị đúng ngày. Xác minh bằng tài khoản thử nghiệm: mỗi mẫu/kỳ chỉ có một marker và một khoản thu/chi, số tiền và số dư chính xác.
 
-Không chạy lịch bù: server tắt qua cả ngày đến hạn sẽ bỏ kỳ đó. Tắt/bật lại mẫu vào ngày đến hạn bắt đầu từ tháng sau. Ngày 31 được giới hạn theo tháng ngắn, rồi trở lại ngày 31 ở tháng phù hợp.
+Không chạy lịch bù: server tắt qua cả ngày đến hạn sẽ bỏ kỳ đó. Tạo hoặc bật lại mẫu đúng ngày đến hạn bắt đầu ngay trong tháng này; worker xử lý ở lượt quét kế tiếp. Ngày đã qua chuyển sang tháng sau. Ngày 31 được giới hạn theo tháng ngắn, rồi trở lại ngày 31 ở tháng phù hợp.
 
 ## Kiểm thử local
 
@@ -19,7 +19,7 @@ BE: `./gradlew test` từ `backend/` sau tích hợp V007. Trước merge, có t
 
 Rollback binary có thể giữ lại cột nullable/index V007 vì tương thích với binary cũ. Không tự xóa giao dịch hoặc marker đã tạo. Nếu cần dừng ghi nhận, tắt worker hoặc tắt mẫu; không drop cột khi Backend mới còn chạy.
 
-Tài liệu này mô tả thay đổi local; không xác nhận đã áp dụng trên VPS.
+Cập nhật 22/11/2026 theo source sau bản sửa lịch cùng ngày. Hồ sơ kiểm thử bên trên mô tả phạm vi local. Trạng thái phát hành xem RELEASE_CURRENT.md.
 
 ## Kết quả kiểm thử local — 18/11/2026
 
